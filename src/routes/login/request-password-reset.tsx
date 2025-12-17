@@ -1,0 +1,204 @@
+import { createSignal, createEffect, onCleanup, Show } from "solid-js";
+import { A, useNavigate } from "@solidjs/router";
+import CountdownCircleTimer from "~/components/CountdownCircleTimer";
+import { isValidEmail } from "~/lib/validation";
+import { getClientCookie } from "~/lib/cookies.client";
+
+export default function RequestPasswordResetPage() {
+  const navigate = useNavigate();
+
+  // State management
+  const [loading, setLoading] = createSignal(false);
+  const [countDown, setCountDown] = createSignal(0);
+  const [showSuccessMessage, setShowSuccessMessage] = createSignal(false);
+  const [error, setError] = createSignal("");
+
+  // Form refs
+  let emailRef: HTMLInputElement | undefined;
+  let timerInterval: number | undefined;
+
+  // Calculate remaining time from cookie
+  const calcRemainder = (timer: string) => {
+    const expires = new Date(timer);
+    const remaining = expires.getTime() - Date.now();
+    const remainingInSeconds = remaining / 1000;
+
+    if (remainingInSeconds <= 0) {
+      setCountDown(0);
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    } else {
+      setCountDown(remainingInSeconds);
+    }
+  };
+
+  // Check for existing timer on mount
+  createEffect(() => {
+    const timer = getClientCookie("passwordResetRequested");
+    if (timer) {
+      timerInterval = setInterval(() => calcRemainder(timer), 1000) as unknown as number;
+      onCleanup(() => {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+        }
+      });
+    }
+  });
+
+  // Form submission handler
+  const requestPasswordResetTrigger = async (e: Event) => {
+    e.preventDefault();
+    setError("");
+    setShowSuccessMessage(false);
+
+    if (!emailRef) {
+      setError("Please enter an email address");
+      return;
+    }
+
+    const email = emailRef.value;
+
+    // Validate email
+    if (!isValidEmail(email)) {
+      setError("Invalid email address");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/trpc/auth.requestPasswordReset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.result?.data) {
+        setShowSuccessMessage(true);
+        setError("");
+
+        // Start countdown timer
+        const timer = getClientCookie("passwordResetRequested");
+        if (timer) {
+          if (timerInterval) {
+            clearInterval(timerInterval);
+          }
+          timerInterval = setInterval(() => {
+            calcRemainder(timer);
+          }, 1000) as unknown as number;
+        }
+      } else {
+        const errorMsg = result.error?.message || "Failed to send reset email";
+        if (errorMsg.includes("countdown not expired")) {
+          setError("Please wait before requesting another reset email");
+        } else {
+          setError(errorMsg);
+        }
+      }
+    } catch (err) {
+      console.error("Password reset request error:", err);
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderTime = () => {
+    return (
+      <div class="timer">
+        <div class="value">{countDown().toFixed(0)}</div>
+      </div>
+    );
+  };
+
+  return (
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      <div class="pt-24 text-center text-xl font-semibold text-slate-800 dark:text-slate-100">
+        Password Reset Request
+      </div>
+
+      <form
+        onSubmit={(e) => requestPasswordResetTrigger(e)}
+        class="mt-4 flex w-full justify-center"
+      >
+        <div class="flex flex-col justify-center">
+          {/* Email Input */}
+          <div class="input-group mx-4">
+            <input
+              ref={emailRef}
+              name="email"
+              type="text"
+              required
+              disabled={loading()}
+              placeholder=" "
+              class="underlinedInput w-full bg-transparent"
+            />
+            <span class="bar"></span>
+            <label class="underlinedInputLabel">Enter Email</label>
+          </div>
+
+          {/* Countdown Timer or Submit Button */}
+          <Show
+            when={countDown() > 0}
+            fallback={
+              <button
+                type="submit"
+                disabled={loading()}
+                class={`${
+                  loading()
+                    ? "bg-zinc-400"
+                    : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
+                } flex justify-center rounded transition-all duration-300 ease-out my-6 px-4 py-2 text-white font-medium`}
+              >
+                {loading() ? "Sending..." : "Request Password Reset"}
+              </button>
+            }
+          >
+            <div class="mx-auto pt-4">
+              <CountdownCircleTimer
+                isPlaying={true}
+                duration={300}
+                initialRemainingTime={countDown()}
+                size={48}
+                strokeWidth={6}
+                colors="#60a5fa"
+                onComplete={() => false}
+              >
+                {renderTime}
+              </CountdownCircleTimer>
+            </div>
+          </Show>
+        </div>
+      </form>
+
+      {/* Success Message */}
+      <div
+        class={`${
+          showSuccessMessage() ? "" : "select-none opacity-0"
+        } text-green-500 italic transition-opacity flex justify-center duration-300 ease-in-out`}
+      >
+        If email exists, you will receive an email shortly!
+      </div>
+
+      {/* Error Message */}
+      <Show when={error()}>
+        <div class="flex justify-center mt-4">
+          <div class="text-red-500 text-sm italic">{error()}</div>
+        </div>
+      </Show>
+
+      {/* Back to Login Link */}
+      <div class="flex justify-center mt-6">
+        <A
+          href="/login"
+          class="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-4 transition-colors"
+        >
+          Back to Login
+        </A>
+      </div>
+    </div>
+  );
+}
