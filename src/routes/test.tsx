@@ -23,7 +23,8 @@ const routerSections: RouterSection[] = [
   // ============================================================
   {
     name: "Example Router",
-    description: "Example endpoints demonstrating public, protected, and admin procedures",
+    description:
+      "Example endpoints demonstrating public, protected, and admin procedures",
     endpoints: [
       {
         name: "Hello",
@@ -31,7 +32,7 @@ const routerSections: RouterSection[] = [
         procedure: "hello",
         method: "query",
         description: "Simple hello world endpoint",
-        sampleInput: "World",
+        sampleInput: "World"
       },
       {
         name: "Get Profile",
@@ -39,7 +40,7 @@ const routerSections: RouterSection[] = [
         procedure: "getProfile",
         method: "query",
         description: "Get authenticated user profile",
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Admin Dashboard",
@@ -47,9 +48,9 @@ const routerSections: RouterSection[] = [
         procedure: "adminDashboard",
         method: "query",
         description: "Access admin dashboard",
-        requiresAdmin: true,
-      },
-    ],
+        requiresAdmin: true
+      }
+    ]
   },
 
   // ============================================================
@@ -68,8 +69,8 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           email: "newuser@example.com",
           password: "SecurePass123!",
-          passwordConfirmation: "SecurePass123!",
-        },
+          passwordConfirmation: "SecurePass123!"
+        }
       },
       {
         name: "Email Password Login",
@@ -80,8 +81,8 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           email: "test@example.com",
           password: "SecurePass123!",
-          rememberMe: true,
-        },
+          rememberMe: true
+        }
       },
       {
         name: "Request Email Link Login",
@@ -91,8 +92,8 @@ const routerSections: RouterSection[] = [
         description: "Request magic link login email",
         sampleInput: {
           email: "test@example.com",
-          rememberMe: false,
-        },
+          rememberMe: false
+        }
       },
       {
         name: "Email Login (with token)",
@@ -103,8 +104,8 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           email: "test@example.com",
           token: "eyJhbGciOiJIUzI1NiJ9...",
-          rememberMe: true,
-        },
+          rememberMe: true
+        }
       },
       {
         name: "Request Password Reset",
@@ -113,8 +114,8 @@ const routerSections: RouterSection[] = [
         method: "mutation",
         description: "Send password reset email",
         sampleInput: {
-          email: "test@example.com",
-        },
+          email: "test@example.com"
+        }
       },
       {
         name: "Reset Password",
@@ -125,8 +126,8 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           token: "eyJhbGciOiJIUzI1NiJ9...",
           newPassword: "NewSecurePass123!",
-          newPasswordConfirmation: "NewSecurePass123!",
-        },
+          newPasswordConfirmation: "NewSecurePass123!"
+        }
       },
       {
         name: "Resend Email Verification",
@@ -135,8 +136,8 @@ const routerSections: RouterSection[] = [
         method: "mutation",
         description: "Resend verification email",
         sampleInput: {
-          email: "test@example.com",
-        },
+          email: "test@example.com"
+        }
       },
       {
         name: "Email Verification",
@@ -146,15 +147,15 @@ const routerSections: RouterSection[] = [
         description: "Verify email with token",
         sampleInput: {
           email: "test@example.com",
-          token: "eyJhbGciOiJIUzI1NiJ9...",
-        },
+          token: "eyJhbGciOiJIUzI1NiJ9..."
+        }
       },
       {
         name: "Sign Out",
         router: "auth",
         procedure: "signOut",
         method: "mutation",
-        description: "Clear session cookies and sign out",
+        description: "Clear session cookies and sign out"
       },
       {
         name: "GitHub Callback",
@@ -162,7 +163,7 @@ const routerSections: RouterSection[] = [
         procedure: "githubCallback",
         method: "mutation",
         description: "Complete GitHub OAuth flow",
-        sampleInput: { code: "github_oauth_code_here" },
+        sampleInput: { code: "github_oauth_code_here" }
       },
       {
         name: "Google Callback",
@@ -170,9 +171,9 @@ const routerSections: RouterSection[] = [
         procedure: "googleCallback",
         method: "mutation",
         description: "Complete Google OAuth flow",
-        sampleInput: { code: "google_oauth_code_here" },
-      },
-    ],
+        sampleInput: { code: "google_oauth_code_here" }
+      }
+    ]
   },
 
   // ============================================================
@@ -188,7 +189,7 @@ const routerSections: RouterSection[] = [
         procedure: "getCommentReactions",
         method: "query",
         description: "Get all reactions for a comment",
-        sampleInput: { commentID: "comment_123" },
+        sampleInput: { commentID: "comment_123" }
       },
       {
         name: "Add Comment Reaction",
@@ -199,8 +200,8 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           type: "👍",
           comment_id: "comment_123",
-          user_id: "user_123",
-        },
+          user_id: "user_123"
+        }
       },
       {
         name: "Remove Comment Reaction",
@@ -211,10 +212,10 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           type: "👍",
           comment_id: "comment_123",
-          user_id: "user_123",
-        },
-      },
-    ],
+          user_id: "user_123"
+        }
+      }
+    ]
   },
   {
     name: "Database - Comments",
@@ -225,7 +226,7 @@ const routerSections: RouterSection[] = [
         router: "database",
         procedure: "getAllComments",
         method: "query",
-        description: "Fetch all comments in the system",
+        description: "Fetch all comments in the system"
       },
       {
         name: "Get Comments by Post ID",
@@ -233,9 +234,9 @@ const routerSections: RouterSection[] = [
         procedure: "getCommentsByPostId",
         method: "query",
         description: "Fetch comments for a specific post",
-        sampleInput: { post_id: "post_123" },
-      },
-    ],
+        sampleInput: { post_id: "post_123" }
+      }
+    ]
   },
   {
     name: "Database - Posts",
@@ -247,7 +248,7 @@ const routerSections: RouterSection[] = [
         procedure: "getPostById",
         method: "query",
         description: "Fetch a post by ID with tags",
-        sampleInput: { category: "blog", id: 1 },
+        sampleInput: { category: "blog", id: 1 }
       },
       {
         name: "Get Post by Title",
@@ -255,7 +256,7 @@ const routerSections: RouterSection[] = [
         procedure: "getPostByTitle",
         method: "query",
         description: "Fetch post with comments, likes, and tags",
-        sampleInput: { category: "project", title: "My Project" },
+        sampleInput: { category: "project", title: "My Project" }
       },
       {
         name: "Create Post",
@@ -271,8 +272,8 @@ const routerSections: RouterSection[] = [
           banner_photo: null,
           published: false,
           tags: ["tech", "coding"],
-          author_id: "user_123",
-        },
+          author_id: "user_123"
+        }
       },
       {
         name: "Update Post",
@@ -284,10 +285,10 @@ const routerSections: RouterSection[] = [
           id: 1,
           title: "Updated Title",
           published: true,
-          author_id: "user_123",
-        },
-      },
-    ],
+          author_id: "user_123"
+        }
+      }
+    ]
   },
   {
     name: "Database - Post Likes",
@@ -299,7 +300,7 @@ const routerSections: RouterSection[] = [
         procedure: "addPostLike",
         method: "mutation",
         description: "Add a like to a post",
-        sampleInput: { user_id: "user_123", post_id: "post_123" },
+        sampleInput: { user_id: "user_123", post_id: "post_123" }
       },
       {
         name: "Remove Post Like",
@@ -307,9 +308,9 @@ const routerSections: RouterSection[] = [
         procedure: "removePostLike",
         method: "mutation",
         description: "Remove a like from a post",
-        sampleInput: { user_id: "user_123", post_id: "post_123" },
-      },
-    ],
+        sampleInput: { user_id: "user_123", post_id: "post_123" }
+      }
+    ]
   },
   {
     name: "Database - Users",
@@ -321,7 +322,7 @@ const routerSections: RouterSection[] = [
         procedure: "getUserById",
         method: "query",
         description: "Fetch complete user data by ID",
-        sampleInput: { id: "user_123" },
+        sampleInput: { id: "user_123" }
       },
       {
         name: "Get User Public Data",
@@ -329,7 +330,7 @@ const routerSections: RouterSection[] = [
         procedure: "getUserPublicData",
         method: "query",
         description: "Fetch public user data (email, name, image)",
-        sampleInput: { id: "user_123" },
+        sampleInput: { id: "user_123" }
       },
       {
         name: "Get User Image",
@@ -337,7 +338,7 @@ const routerSections: RouterSection[] = [
         procedure: "getUserImage",
         method: "query",
         description: "Fetch user image URL",
-        sampleInput: { id: "user_123" },
+        sampleInput: { id: "user_123" }
       },
       {
         name: "Update User Image",
@@ -345,7 +346,7 @@ const routerSections: RouterSection[] = [
         procedure: "updateUserImage",
         method: "mutation",
         description: "Update user profile image",
-        sampleInput: { id: "user_123", imageURL: "path/to/image.jpg" },
+        sampleInput: { id: "user_123", imageURL: "path/to/image.jpg" }
       },
       {
         name: "Update User Email",
@@ -356,10 +357,10 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           id: "user_123",
           newEmail: "new@example.com",
-          oldEmail: "old@example.com",
-        },
-      },
-    ],
+          oldEmail: "old@example.com"
+        }
+      }
+    ]
   },
 
   // ============================================================
@@ -375,7 +376,7 @@ const routerSections: RouterSection[] = [
         procedure: "getProfile",
         method: "query",
         description: "Get current user's profile",
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Update Email",
@@ -384,7 +385,7 @@ const routerSections: RouterSection[] = [
         method: "mutation",
         description: "Update user's email address",
         sampleInput: { email: "newemail@example.com" },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Update Display Name",
@@ -393,7 +394,7 @@ const routerSections: RouterSection[] = [
         method: "mutation",
         description: "Update user's display name",
         sampleInput: { displayName: "New Display Name" },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Update Profile Image",
@@ -402,7 +403,7 @@ const routerSections: RouterSection[] = [
         method: "mutation",
         description: "Update user's profile image URL",
         sampleInput: { imageUrl: "https://example.com/image.jpg" },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Change Password",
@@ -413,9 +414,9 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           oldPassword: "oldpass123",
           newPassword: "newpass123",
-          newPasswordConfirmation: "newpass123",
+          newPasswordConfirmation: "newpass123"
         },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Set Password",
@@ -425,9 +426,9 @@ const routerSections: RouterSection[] = [
         description: "Set password for OAuth users",
         sampleInput: {
           newPassword: "newpass123",
-          newPasswordConfirmation: "newpass123",
+          newPasswordConfirmation: "newpass123"
         },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Delete Account",
@@ -436,9 +437,9 @@ const routerSections: RouterSection[] = [
         method: "mutation",
         description: "Delete account (anonymize user data)",
         sampleInput: { password: "mypassword123" },
-        requiresAuth: true,
-      },
-    ],
+        requiresAuth: true
+      }
+    ]
   },
 
   // ============================================================
@@ -454,9 +455,9 @@ const routerSections: RouterSection[] = [
         procedure: "getDownloadUrl",
         method: "query",
         description: "Get signed S3 URL for asset download",
-        sampleInput: { asset_name: "shapes-with-abigail" },
-      },
-    ],
+        sampleInput: { asset_name: "shapes-with-abigail" }
+      }
+    ]
   },
   {
     name: "Misc - S3 Operations",
@@ -471,8 +472,8 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           type: "blog",
           title: "my-post",
-          filename: "image.jpg",
-        },
+          filename: "image.jpg"
+        }
       },
       {
         name: "Delete Image",
@@ -484,8 +485,8 @@ const routerSections: RouterSection[] = [
           key: "blog/my-post/image.jpg",
           newAttachmentString: "[]",
           type: "Post",
-          id: 1,
-        },
+          id: 1
+        }
       },
       {
         name: "Simple Delete Image",
@@ -493,9 +494,9 @@ const routerSections: RouterSection[] = [
         procedure: "simpleDeleteImage",
         method: "mutation",
         description: "Delete image from S3 only",
-        sampleInput: { key: "blog/my-post/image.jpg" },
-      },
-    ],
+        sampleInput: { key: "blog/my-post/image.jpg" }
+      }
+    ]
   },
   {
     name: "Misc - Password Utilities",
@@ -507,7 +508,7 @@ const routerSections: RouterSection[] = [
         procedure: "hashPassword",
         method: "mutation",
         description: "Hash a password with bcrypt",
-        sampleInput: { password: "mypassword123" },
+        sampleInput: { password: "mypassword123" }
       },
       {
         name: "Check Password",
@@ -517,10 +518,10 @@ const routerSections: RouterSection[] = [
         description: "Verify password against hash",
         sampleInput: {
           password: "mypassword123",
-          hash: "$2b$10$...",
-        },
-      },
-    ],
+          hash: "$2b$10$..."
+        }
+      }
+    ]
   },
 
   // ============================================================
@@ -535,44 +536,44 @@ const routerSections: RouterSection[] = [
         router: "lineage.jsonService",
         procedure: "items",
         method: "query",
-        description: "Get all item data (weapons, armor, potions, etc.)",
+        description: "Get all item data (weapons, armor, potions, etc.)"
       },
       {
         name: "Get Attacks",
         router: "lineage.jsonService",
         procedure: "attacks",
         method: "query",
-        description: "Get all attack and spell data",
+        description: "Get all attack and spell data"
       },
       {
         name: "Get Conditions",
         router: "lineage.jsonService",
         procedure: "conditions",
         method: "query",
-        description: "Get all condition and debilitation data",
+        description: "Get all condition and debilitation data"
       },
       {
         name: "Get Dungeons",
         router: "lineage.jsonService",
         procedure: "dungeons",
         method: "query",
-        description: "Get all dungeon and encounter data",
+        description: "Get all dungeon and encounter data"
       },
       {
         name: "Get Enemies",
         router: "lineage.jsonService",
         procedure: "enemies",
         method: "query",
-        description: "Get all enemy and boss data",
+        description: "Get all enemy and boss data"
       },
       {
         name: "Get Misc",
         router: "lineage.jsonService",
         procedure: "misc",
         method: "query",
-        description: "Get misc game data (jobs, activities, etc.)",
-      },
-    ],
+        description: "Get misc game data (jobs, activities, etc.)"
+      }
+    ]
   },
   {
     name: "Lineage - Authentication",
@@ -587,8 +588,8 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           email: "test@example.com",
           password: "password123",
-          password_conf: "password123",
-        },
+          password_conf: "password123"
+        }
       },
       {
         name: "Email Login",
@@ -597,7 +598,7 @@ const routerSections: RouterSection[] = [
         method: "mutation",
         description: "Login with email/password (requires verified email)",
         sampleInput: { email: "test@example.com", password: "password123" },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Email Verification",
@@ -605,7 +606,7 @@ const routerSections: RouterSection[] = [
         procedure: "emailVerification",
         method: "mutation",
         description: "Verify email with token from email",
-        sampleInput: { token: "eyJhbGciOiJIUzI1NiJ9..." },
+        sampleInput: { token: "eyJhbGciOiJIUzI1NiJ9..." }
       },
       {
         name: "Refresh Verification Email",
@@ -613,7 +614,7 @@ const routerSections: RouterSection[] = [
         procedure: "refreshVerification",
         method: "mutation",
         description: "Resend verification email",
-        sampleInput: { email: "test@example.com" },
+        sampleInput: { email: "test@example.com" }
       },
       {
         name: "Refresh Auth Token",
@@ -623,9 +624,9 @@ const routerSections: RouterSection[] = [
         description: "Refresh expired JWT token",
         sampleInput: {
           email: "test@example.com",
-          authToken: "eyJhbGciOiJIUzI1NiJ9...",
+          authToken: "eyJhbGciOiJIUzI1NiJ9..."
         },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Google Registration",
@@ -633,7 +634,7 @@ const routerSections: RouterSection[] = [
         procedure: "googleRegistration",
         method: "mutation",
         description: "Register/login with Google OAuth",
-        sampleInput: { idToken: "google_id_token_here" },
+        sampleInput: { idToken: "google_id_token_here" }
       },
       {
         name: "Apple Registration",
@@ -643,8 +644,8 @@ const routerSections: RouterSection[] = [
         description: "Register/login with Apple Sign In",
         sampleInput: {
           userString: "apple_user_string_here",
-          email: "user@privaterelay.appleid.com",
-        },
+          email: "user@privaterelay.appleid.com"
+        }
       },
       {
         name: "Apple Get Email",
@@ -652,9 +653,9 @@ const routerSections: RouterSection[] = [
         procedure: "appleGetEmail",
         method: "mutation",
         description: "Get email from Apple user string",
-        sampleInput: { userString: "apple_user_string_here" },
-      },
-    ],
+        sampleInput: { userString: "apple_user_string_here" }
+      }
+    ]
   },
   {
     name: "Lineage - Database Management",
@@ -669,9 +670,9 @@ const routerSections: RouterSection[] = [
         sampleInput: {
           email: "test@example.com",
           provider: "email",
-          authToken: "jwt_token_here",
+          authToken: "jwt_token_here"
         },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Init Deletion",
@@ -683,9 +684,9 @@ const routerSections: RouterSection[] = [
           email: "test@example.com",
           db_name: "db_name",
           db_token: "db_token",
-          authToken: "jwt_token",
+          authToken: "jwt_token"
         },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Check Deletion Status",
@@ -697,9 +698,9 @@ const routerSections: RouterSection[] = [
           email: "test@example.com",
           db_name: "db_name",
           db_token: "db_token",
-          authToken: "jwt_token",
+          authToken: "jwt_token"
         },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Cancel Deletion",
@@ -711,18 +712,18 @@ const routerSections: RouterSection[] = [
           email: "test@example.com",
           db_name: "db_name",
           db_token: "db_token",
-          authToken: "jwt_token",
+          authToken: "jwt_token"
         },
-        requiresAuth: true,
+        requiresAuth: true
       },
       {
         name: "Deletion Cron",
         router: "lineage.database",
         procedure: "deletionCron",
         method: "query",
-        description: "Cleanup expired databases (runs via cron)",
-      },
-    ],
+        description: "Cleanup expired databases (runs via cron)"
+      }
+    ]
   },
   {
     name: "Lineage - PvP",
@@ -748,17 +749,17 @@ const routerSections: RouterSection[] = [
             resistanceTable: "{}",
             damageTable: "{}",
             attackStrings: "[]",
-            knownSpells: "[]",
+            knownSpells: "[]"
           },
-          linkID: "unique_player_id_here",
-        },
+          linkID: "unique_player_id_here"
+        }
       },
       {
         name: "Get Opponents",
         router: "lineage.pvp",
         procedure: "getOpponents",
         method: "query",
-        description: "Get 3 random PvP opponents",
+        description: "Get 3 random PvP opponents"
       },
       {
         name: "Record Battle Result",
@@ -768,10 +769,10 @@ const routerSections: RouterSection[] = [
         description: "Record PvP battle outcome",
         sampleInput: {
           winnerID: "player_id_1",
-          loserID: "player_id_2",
-        },
-      },
-    ],
+          loserID: "player_id_2"
+        }
+      }
+    ]
   },
   {
     name: "Lineage - Misc",
@@ -791,8 +792,8 @@ const routerSections: RouterSection[] = [
           proficiencies: { fire: 3 },
           jobs: { blacksmith: 2 },
           resistanceTable: { fire: 10 },
-          damageTable: { physical: 5 },
-        },
+          damageTable: { physical: 5 }
+        }
       },
       {
         name: "Update Device Token",
@@ -800,16 +801,16 @@ const routerSections: RouterSection[] = [
         procedure: "tokens",
         method: "mutation",
         description: "Register/update push notification token",
-        sampleInput: { token: "device_push_token_here" },
+        sampleInput: { token: "device_push_token_here" }
       },
       {
         name: "Offline Secret",
         router: "lineage.misc",
         procedure: "offlineSecret",
         method: "query",
-        description: "Get offline serialization secret",
-      },
-    ],
+        description: "Get offline serialization secret"
+      }
+    ]
   },
   {
     name: "Lineage - Maintenance (Admin Only)",
@@ -821,7 +822,7 @@ const routerSections: RouterSection[] = [
         procedure: "findLooseDatabases",
         method: "query",
         description: "Find orphaned databases not linked to users",
-        requiresAdmin: true,
+        requiresAdmin: true
       },
       {
         name: "Cleanup Expired Databases",
@@ -829,15 +830,15 @@ const routerSections: RouterSection[] = [
         procedure: "cleanupExpiredDatabases",
         method: "query",
         description: "Delete databases past 24hr deletion window",
-        requiresAdmin: true,
-      },
-    ],
-  },
+        requiresAdmin: true
+      }
+    ]
+  }
 ];
 
 export default function TestPage() {
   const [expandedSections, setExpandedSections] = createSignal<Set<string>>(
-    new Set(),
+    new Set()
   );
   const [results, setResults] = createSignal<Record<string, any>>({});
   const [loading, setLoading] = createSignal<Record<string, boolean>>({});
@@ -875,7 +876,7 @@ export default function TestPage() {
       let url = `/api/trpc/${endpoint.router}.${endpoint.procedure}`;
       const options: RequestInit = {
         method: endpoint.method === "query" ? "GET" : "POST",
-        headers: {},
+        headers: {}
       };
 
       // For queries, input goes in URL parameter
@@ -883,7 +884,7 @@ export default function TestPage() {
         const encodedInput = encodeURIComponent(JSON.stringify(input));
         url += `?input=${encodedInput}`;
       }
-      
+
       // For mutations, input goes in body
       if (endpoint.method === "mutation" && input !== undefined) {
         options.headers = { "Content-Type": "application/json" };
@@ -910,16 +911,17 @@ export default function TestPage() {
   };
 
   return (
-    <main class="min-h-screen bg-gray-100 p-8">
-      <div class="max-w-6xl mx-auto">
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 class="text-3xl font-bold mb-2">tRPC API Testing Dashboard</h1>
-          <p class="text-gray-600 mb-4">
-            Complete API coverage: Example, Auth, Database, User, Misc, and Lineage routers
+    <main class="min-h-screen p-8">
+      <div class="mx-auto max-w-6xl">
+        <div class="bg-surface0 mb-6 rounded-lg p-6 shadow-lg">
+          <h1 class="mb-2 text-3xl font-bold">tRPC API Testing Dashboard</h1>
+          <p class="text-text mb-4">
+            Complete API coverage: Example, Auth, Database, User, Misc, and
+            Lineage routers
           </p>
 
-          <div class="bg-blue-50 border border-blue-200 rounded p-4">
-            <p class="text-sm text-blue-800">
+          <div class="border-lavender bg-mauve rounded border p-4">
+            <p class="text-base text-sm">
               <strong>Quick Start:</strong> Expand any section below to test
               endpoints. Public endpoints work immediately. Auth-required
               endpoints need valid tokens.
@@ -933,30 +935,28 @@ export default function TestPage() {
               const isExpanded = () => expandedSections().has(section.name);
 
               return (
-                <div class="bg-white rounded-lg shadow">
+                <div class="bg-surface0 rounded-lg shadow">
                   {/* Section Header */}
                   <button
                     onClick={() => toggleSection(section.name)}
-                    class="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition"
+                    class="flex w-full items-center justify-between px-6 py-4 transition"
                   >
                     <div class="text-left">
-                      <h2 class="text-xl font-bold text-gray-800">
-                        {section.name}
-                      </h2>
-                      <p class="text-sm text-gray-600">{section.description}</p>
-                      <p class="text-xs text-gray-500 mt-1">
+                      <h2 class="text-xl font-bold">{section.name}</h2>
+                      <p class="text-subtext0 text-sm">{section.description}</p>
+                      <p class="text-subtext1 mt-1 text-xs">
                         {section.endpoints.length} endpoint
                         {section.endpoints.length !== 1 ? "s" : ""}
                       </p>
                     </div>
-                    <div class="text-2xl text-gray-400">
+                    <div class="text-subtext1 text-2xl">
                       {isExpanded() ? "−" : "+"}
                     </div>
                   </button>
 
                   {/* Section Content */}
                   <Show when={isExpanded()}>
-                    <div class="border-t border-gray-200 p-6 space-y-4">
+                    <div class="border-base space-y-4 border-t p-6">
                       <For each={section.endpoints}>
                         {(endpoint) => {
                           const key = `${endpoint.router}.${endpoint.procedure}`;
@@ -966,44 +966,51 @@ export default function TestPage() {
                               return inputEdits()[key];
                             }
                             // Handle primitive values (string, number, boolean)
-                            if (typeof endpoint.sampleInput === 'string') {
+                            if (typeof endpoint.sampleInput === "string") {
                               return `"${endpoint.sampleInput}"`;
                             }
-                            if (typeof endpoint.sampleInput === 'number' || typeof endpoint.sampleInput === 'boolean') {
+                            if (
+                              typeof endpoint.sampleInput === "number" ||
+                              typeof endpoint.sampleInput === "boolean"
+                            ) {
                               return String(endpoint.sampleInput);
                             }
                             // Handle objects and arrays
-                            return JSON.stringify(endpoint.sampleInput, null, 2);
+                            return JSON.stringify(
+                              endpoint.sampleInput,
+                              null,
+                              2
+                            );
                           };
 
                           return (
-                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <div class="bg-surface2 border-surface1 rounded-lg border p-4">
                               {/* Endpoint Header */}
-                              <div class="flex justify-between items-start mb-3">
+                              <div class="mb-3 flex items-start justify-between">
                                 <div class="flex-1">
                                   <div class="flex items-center gap-2">
-                                    <h3 class="text-lg font-semibold text-gray-800">
+                                    <h3 class="text-subtext0 text-lg font-semibold">
                                       {endpoint.name}
                                     </h3>
                                     <Show when={endpoint.requiresAuth}>
-                                      <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                      <span class="bg-surface1 text-yellow rounded px-2 py-1 text-xs">
                                         🔒 Auth Required
                                       </span>
                                     </Show>
                                     <Show when={endpoint.requiresAdmin}>
-                                      <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                                      <span class="bg-maroon rounded px-2 py-1 text-base text-xs">
                                         👑 Admin Only
                                       </span>
                                     </Show>
                                   </div>
-                                  <p class="text-sm text-gray-600 mt-1">
+                                  <p class="mt-1 text-sm text-gray-600">
                                     {endpoint.description}
                                   </p>
-                                  <div class="flex gap-2 mt-2">
-                                    <code class="text-xs bg-gray-200 px-2 py-1 rounded">
+                                  <div class="mt-2 flex gap-2">
+                                    <code class="bg-surface0 rounded px-2 py-1 text-xs">
                                       {key}
                                     </code>
-                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                    <span class="bg-blue text-text rounded px-2 py-1 text-xs">
                                       {endpoint.method === "query"
                                         ? "GET"
                                         : "POST"}
@@ -1013,7 +1020,7 @@ export default function TestPage() {
                                 <button
                                   onClick={() => testEndpoint(endpoint)}
                                   disabled={loading()[key]}
-                                  class="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded transition whitespace-nowrap ml-4"
+                                  class="bg-green ml-4 rounded px-4 py-2 text-base font-semibold whitespace-nowrap transition hover:brightness-125 disabled:brightness-50"
                                 >
                                   {loading()[key] ? "Testing..." : "Test"}
                                 </button>
@@ -1022,7 +1029,7 @@ export default function TestPage() {
                               {/* Input Editor */}
                               <Show when={hasInput}>
                                 <div class="mb-3">
-                                  <label class="text-xs font-semibold text-gray-700 mb-1 block">
+                                  <label class="text-text mb-1 block text-xs font-semibold">
                                     Request Body (edit JSON):
                                   </label>
                                   <textarea
@@ -1030,7 +1037,7 @@ export default function TestPage() {
                                     onInput={(e) =>
                                       updateInput(key, e.currentTarget.value)
                                     }
-                                    class="w-full font-mono text-xs bg-white border border-gray-300 rounded p-2 min-h-[100px]"
+                                    class="border-lavender bg-crust min-h-[100px] w-full rounded border p-2 font-mono text-xs"
                                     spellcheck={false}
                                   />
                                 </div>
@@ -1038,11 +1045,11 @@ export default function TestPage() {
 
                               {/* Error Display */}
                               <Show when={errors()[key]}>
-                                <div class="bg-red-50 border border-red-200 rounded p-3 mb-3">
-                                  <p class="text-red-800 text-sm font-semibold">
+                                <div class="mb-3 rounded border border-red-200 bg-red-50 p-3">
+                                  <p class="text-sm font-semibold text-red-800">
                                     Error:
                                   </p>
-                                  <p class="text-red-600 text-sm font-mono">
+                                  <p class="font-mono text-sm text-red-600">
                                     {errors()[key]}
                                   </p>
                                 </div>
@@ -1050,11 +1057,11 @@ export default function TestPage() {
 
                               {/* Results Display */}
                               <Show when={results()[key]}>
-                                <div class="bg-gray-900 rounded p-3">
-                                  <p class="text-xs font-semibold text-green-400 mb-2">
+                                <div class="rounded bg-gray-900 p-3">
+                                  <p class="mb-2 text-xs font-semibold text-green-400">
                                     ✓ Response:
                                   </p>
-                                  <pre class="text-xs overflow-auto max-h-60 text-green-400">
+                                  <pre class="max-h-60 overflow-auto text-xs text-green-400">
                                     {JSON.stringify(results()[key], null, 2)}
                                   </pre>
                                 </div>
@@ -1072,13 +1079,13 @@ export default function TestPage() {
         </div>
 
         {/* Footer Instructions */}
-        <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
-          <h2 class="text-2xl font-bold mb-4">Testing Guide</h2>
+        <div class="bg-overlay2 mt-6 rounded-lg p-6 shadow-lg">
+          <h2 class="text-crust mb-4 text-2xl font-bold">Testing Guide</h2>
 
-          <div class="space-y-4 text-gray-700">
+          <div class="space-y-4 text-base">
             <div>
-              <h3 class="font-semibold text-lg mb-2">🟢 No Auth Required</h3>
-              <ul class="list-disc ml-6 space-y-1 text-sm">
+              <h3 class="mb-2 text-lg font-semibold">🟢 No Auth Required</h3>
+              <ul class="ml-6 list-disc space-y-1 text-sm">
                 <li>
                   <strong>Example Router</strong> - Hello endpoint
                 </li>
@@ -1087,10 +1094,12 @@ export default function TestPage() {
                   immediately
                 </li>
                 <li>
-                  <strong>Database</strong> - All endpoints (comments, posts, users, reactions, likes)
+                  <strong>Database</strong> - All endpoints (comments, posts,
+                  users, reactions, likes)
                 </li>
                 <li>
-                  <strong>Misc</strong> - Downloads, S3 operations, password utilities
+                  <strong>Misc</strong> - Downloads, S3 operations, password
+                  utilities
                 </li>
                 <li>
                   <strong>Lineage Misc</strong> - Offline Secret, Get Opponents
@@ -1102,60 +1111,77 @@ export default function TestPage() {
             </div>
 
             <div>
-              <h3 class="font-semibold text-lg mb-2">🟡 Auth Required</h3>
-              <p class="text-sm mb-2">
+              <h3 class="mb-2 text-lg font-semibold">🟡 Auth Required</h3>
+              <p class="mb-2 text-sm">
                 These need valid JWT tokens from login/registration:
               </p>
-              <ul class="list-disc ml-6 space-y-1 text-sm">
-                <li><strong>Example Router</strong> - Get Profile</li>
-                <li><strong>User Router</strong> - All endpoints (profile updates, password, account deletion)</li>
-                <li><strong>Lineage Auth</strong> - Email Login, Refresh Token</li>
-                <li><strong>Lineage Database</strong> - Get Credentials, Deletion endpoints</li>
+              <ul class="ml-6 list-disc space-y-1 text-sm">
+                <li>
+                  <strong>Example Router</strong> - Get Profile
+                </li>
+                <li>
+                  <strong>User Router</strong> - All endpoints (profile updates,
+                  password, account deletion)
+                </li>
+                <li>
+                  <strong>Lineage Auth</strong> - Email Login, Refresh Token
+                </li>
+                <li>
+                  <strong>Lineage Database</strong> - Get Credentials, Deletion
+                  endpoints
+                </li>
               </ul>
             </div>
 
             <div>
-              <h3 class="font-semibold text-lg mb-2">🔴 Admin Required</h3>
-              <p class="text-sm mb-2">
+              <h3 class="mb-2 text-lg font-semibold">🔴 Admin Required</h3>
+              <p class="mb-2 text-sm">
                 Maintenance endpoints require admin privileges (userIDToken
                 cookie with ADMIN_ID).
               </p>
-              <ul class="list-disc ml-6 space-y-1 text-sm">
-                <li><strong>Example Router</strong> - Admin Dashboard</li>
-                <li><strong>Lineage Maintenance</strong> - Find Loose Databases, Cleanup Expired</li>
+              <ul class="ml-6 list-disc space-y-1 text-sm">
+                <li>
+                  <strong>Example Router</strong> - Admin Dashboard
+                </li>
+                <li>
+                  <strong>Lineage Maintenance</strong> - Find Loose Databases,
+                  Cleanup Expired
+                </li>
               </ul>
             </div>
 
             <div>
-              <h3 class="font-semibold text-lg mb-2">📝 Typical Workflows</h3>
-              <ol class="list-decimal ml-6 space-y-2 text-sm">
+              <h3 class="mb-2 text-lg font-semibold">📝 Typical Workflows</h3>
+              <ol class="ml-6 list-decimal space-y-2 text-sm">
                 <li>
-                  <strong>Test public endpoints:</strong> Start with Example Hello, 
-                  Lineage JSON Service, or Database queries
+                  <strong>Test public endpoints:</strong> Start with Example
+                  Hello, Lineage JSON Service, or Database queries
                 </li>
                 <li>
-                  <strong>OAuth flow:</strong> Use Auth router callbacks with OAuth codes 
-                  from GitHub/Google
+                  <strong>OAuth flow:</strong> Use Auth router callbacks with
+                  OAuth codes from GitHub/Google
                 </li>
                 <li>
-                  <strong>Email auth flow:</strong> Register → verify email → login → use JWT
+                  <strong>Email auth flow:</strong> Register → verify email →
+                  login → use JWT
                 </li>
                 <li>
-                  <strong>Blog/Project management:</strong> Create posts → add comments/likes → 
-                  upload images via S3
+                  <strong>Blog/Project management:</strong> Create posts → add
+                  comments/likes → upload images via S3
                 </li>
                 <li>
-                  <strong>Lineage game data:</strong> Fetch JSON data → register character → 
-                  find PvP opponents
+                  <strong>Lineage game data:</strong> Fetch JSON data → register
+                  character → find PvP opponents
                 </li>
               </ol>
             </div>
 
-            <div class="bg-yellow-50 border border-yellow-200 rounded p-4 mt-4">
-              <p class="text-sm text-yellow-800">
-                <strong>Note:</strong> Some endpoints require specific setup (e.g., OAuth codes, 
-                existing database records, valid S3 keys). Check the sample input to understand 
-                what data each endpoint expects.
+            <div class="border-rosewater bg-rosewater mt-4 rounded border p-4">
+              <p class="text-crust text-sm">
+                <strong>Note:</strong> Some endpoints require specific setup
+                (e.g., OAuth codes, existing database records, valid S3 keys).
+                Check the sample input to understand what data each endpoint
+                expects.
               </p>
             </div>
           </div>
