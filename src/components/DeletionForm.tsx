@@ -34,7 +34,10 @@ export default function DeletionForm() {
   createEffect(() => {
     const timer = getClientCookie("deletionRequestSent");
     if (timer) {
-      timerInterval = setInterval(() => calcRemainder(timer), 1000) as unknown as number;
+      timerInterval = setInterval(
+        () => calcRemainder(timer),
+        1000,
+      ) as unknown as number;
       onCleanup(() => {
         if (timerInterval) {
           clearInterval(timerInterval);
@@ -74,10 +77,14 @@ export default function DeletionForm() {
           if (timerInterval) {
             clearInterval(timerInterval);
           }
-          timerInterval = setInterval(() => calcRemainder(timer), 1000) as unknown as number;
+          timerInterval = setInterval(
+            () => calcRemainder(timer),
+            1000,
+          ) as unknown as number;
         }
       } else {
-        const errorMsg = result.error?.message || "Failed to send deletion request";
+        const errorMsg =
+          result.error?.message || "Failed to send deletion request";
         setError(errorMsg);
       }
     } catch (err: any) {
@@ -127,9 +134,9 @@ export default function DeletionForm() {
                     disabled={loading()}
                     class={`${
                       loading()
-                        ? "bg-zinc-400"
-                        : "bg-red-400 hover:bg-red-500 active:scale-90 dark:bg-red-600 dark:hover:bg-red-700"
-                    } flex w-36 justify-center rounded py-3 font-light text-white shadow-lg shadow-red-300 transition-all duration-300 ease-out dark:shadow-red-700`}
+                        ? "bg-lavender"
+                        : "bg-maroon hover:brightness-125 active:scale-90"
+                    } flex w-36 justify-center rounded py-3 font-light text-white shadow-lg shadow-maroon transition-all duration-300 ease-out`}
                   >
                     <Show when={loading()} fallback="Send Deletion Request">
                       <LoadingSpinner height={24} width={24} />
@@ -153,9 +160,9 @@ export default function DeletionForm() {
         <div
           class={`${
             emailSent()
-              ? "text-green-400"
+              ? "text-green"
               : error() !== ""
-              ? "text-red-400"
+              ? "text-red"
               : "select-none opacity-0"
           } mt-4 flex justify-center text-center italic transition-opacity duration-300 ease-in-out`}
         >

@@ -24,8 +24,10 @@ export default function LoginPage() {
   const [showPasswordInput, setShowPasswordInput] = createSignal(false);
   const [showPasswordConfInput, setShowPasswordConfInput] = createSignal(false);
   const [passwordsMatch, setPasswordsMatch] = createSignal(false);
-  const [showPasswordLengthWarning, setShowPasswordLengthWarning] = createSignal(false);
-  const [passwordLengthSufficient, setPasswordLengthSufficient] = createSignal(false);
+  const [showPasswordLengthWarning, setShowPasswordLengthWarning] =
+    createSignal(false);
+  const [passwordLengthSufficient, setPasswordLengthSufficient] =
+    createSignal(false);
   const [passwordBlurred, setPasswordBlurred] = createSignal(false);
 
   // Form refs
@@ -60,7 +62,10 @@ export default function LoginPage() {
   createEffect(() => {
     const timer = getClientCookie("emailLoginLinkRequested");
     if (timer) {
-      timerInterval = setInterval(() => calcRemainder(timer), 1000) as unknown as number;
+      timerInterval = setInterval(
+        () => calcRemainder(timer),
+        1000,
+      ) as unknown as number;
       onCleanup(() => {
         if (timerInterval) {
           clearInterval(timerInterval);
@@ -130,7 +135,11 @@ export default function LoginPage() {
         const response = await fetch("/api/trpc/auth.emailRegistration", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, passwordConfirmation: passwordConf }),
+          body: JSON.stringify({
+            email,
+            password,
+            passwordConfirmation: passwordConf,
+          }),
         });
 
         const result = await response.json();
@@ -138,8 +147,14 @@ export default function LoginPage() {
         if (response.ok && result.result?.data) {
           navigate("/account");
         } else {
-          const errorMsg = result.error?.message || result.result?.data?.message || "Registration failed";
-          if (errorMsg.includes("duplicate") || errorMsg.includes("already exists")) {
+          const errorMsg =
+            result.error?.message ||
+            result.result?.data?.message ||
+            "Registration failed";
+          if (
+            errorMsg.includes("duplicate") ||
+            errorMsg.includes("already exists")
+          ) {
             setError("duplicate");
           } else {
             setError(errorMsg);
@@ -206,10 +221,16 @@ export default function LoginPage() {
             if (timerInterval) {
               clearInterval(timerInterval);
             }
-            timerInterval = setInterval(() => calcRemainder(timer), 1000) as unknown as number;
+            timerInterval = setInterval(
+              () => calcRemainder(timer),
+              1000,
+            ) as unknown as number;
           }
         } else {
-          const errorMsg = result.error?.message || result.result?.data?.message || "Failed to send email";
+          const errorMsg =
+            result.error?.message ||
+            result.result?.data?.message ||
+            "Failed to send email";
           setError(errorMsg);
         }
       }
@@ -248,7 +269,11 @@ export default function LoginPage() {
   };
 
   const passwordLengthBlurCheck = () => {
-    if (!passwordLengthSufficient() && passwordRef && passwordRef.value !== "") {
+    if (
+      !passwordLengthSufficient() &&
+      passwordRef &&
+      passwordRef.value !== ""
+    ) {
       setShowPasswordLengthWarning(true);
     }
     setPasswordBlurred(true);
@@ -271,27 +296,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div class="flex h-[100dvh] flex-row justify-evenly">
+    <div class="flex h-dvh flex-row justify-evenly">
       {/* Logo section - hidden on mobile */}
-      <div class="hidden md:flex">
+      {/* <div class="hidden md:flex">
         <div class="vertical-rule-around z-0 flex justify-center">
           <picture class="-mr-8">
-            <source srcSet="/WhiteLogo.png" media="(prefers-color-scheme: dark)" />
+            <source srcset="/WhiteLogo.png" media="(prefers-color-scheme: dark)" />
             <img src="/BlackLogo.png" alt="logo" width={64} height={64} />
           </picture>
         </div>
-      </div>
+      </div> */}
 
       {/* Main content */}
       <div class="pt-24 md:pt-48">
         {/* Error message */}
         <div class="absolute -mt-12 text-center text-3xl italic text-red-400">
-          <Show when={error() === "passwordMismatch"}>Passwords did not match!</Show>
+          <Show when={error() === "passwordMismatch"}>
+            Passwords did not match!
+          </Show>
           <Show when={error() === "duplicate"}>Email Already Exists!</Show>
         </div>
 
         {/* Title */}
-        <div class="py-2 pl-6 text-2xl md:pl-0">{register() ? "Register" : "Login"}</div>
+        <div class="py-2 pl-6 text-2xl md:pl-0">
+          {register() ? "Register" : "Login"}
+        </div>
 
         {/* Toggle Register/Login */}
         <Show
@@ -304,7 +333,7 @@ export default function LoginPage() {
                   setRegister(false);
                   setUsePassword(false);
                 }}
-                class="pl-1 text-blue-400 underline dark:text-blue-600 hover:text-blue-300 dark:hover:text-blue-500"
+                class="pl-1 text-blue underline hover:brightness-125"
               >
                 Click here to Login
               </button>
@@ -318,7 +347,7 @@ export default function LoginPage() {
                 setRegister(true);
                 setUsePassword(false);
               }}
-              class="pl-1 text-blue-400 underline dark:text-blue-600 hover:text-blue-300 dark:hover:text-blue-500"
+              class="pl-1 text-blue underline hover:brightness-125"
             >
               Click here to Register
             </button>
@@ -470,8 +499,12 @@ export default function LoginPage() {
                 : "select-none opacity-0"
             } flex min-h-[16px] justify-center italic transition-opacity duration-300 ease-in-out`}
           >
-            <Show when={showPasswordError()}>Credentials did not match any record</Show>
-            <Show when={showPasswordSuccess()}>Login Success! Redirecting...</Show>
+            <Show when={showPasswordError()}>
+              Credentials did not match any record
+            </Show>
+            <Show when={showPasswordSuccess()}>
+              Login Success! Redirecting...
+            </Show>
           </div>
 
           {/* Submit button or countdown timer */}
@@ -485,10 +518,14 @@ export default function LoginPage() {
                   class={`${
                     loading()
                       ? "bg-zinc-400"
-                      : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
-                  } flex w-36 justify-center rounded py-3 text-white shadow-lg shadow-blue-300 transition-all duration-300 ease-out dark:shadow-blue-700`}
+                      : "bg-blue hover:brightness-125 active:scale-90"
+                  } flex w-36 justify-center rounded py-3 text-white  transition-all duration-300 ease-out`}
                 >
-                  {register() ? "Sign Up" : usePassword() ? "Sign In" : "Get Link"}
+                  {register()
+                    ? "Sign Up"
+                    : usePassword()
+                    ? "Sign In"
+                    : "Get Link"}
                 </button>
               }
             >
@@ -530,7 +567,7 @@ export default function LoginPage() {
           <div class="pb-4 text-center text-sm">
             Trouble Logging In?{" "}
             <A
-              class="text-blue-500 underline underline-offset-4 hover:text-blue-400"
+              class="text-blue underline underline-offset-4 hover:brightness-125"
               href="/login/request-password-reset"
             >
               Reset Password
@@ -542,7 +579,7 @@ export default function LoginPage() {
         <div
           class={`${
             emailSent() ? "" : "user-select opacity-0"
-          } flex min-h-[16px] justify-center text-center italic text-green-400 transition-opacity duration-300 ease-in-out`}
+          } flex min-h-4 justify-center text-center italic text-green transition-opacity duration-300 ease-in-out`}
         >
           <Show when={emailSent()}>Email Sent!</Show>
         </div>

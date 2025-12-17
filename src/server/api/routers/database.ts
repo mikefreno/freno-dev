@@ -364,6 +364,46 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
+  deletePost: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      try {
+        const conn = ConnectionFactory();
+        
+        // Delete associated tags first
+        await conn.execute({
+          sql: "DELETE FROM Tag WHERE post_id = ?",
+          args: [input.id.toString()],
+        });
+        
+        // Delete associated likes
+        await conn.execute({
+          sql: "DELETE FROM PostLike WHERE post_id = ?",
+          args: [input.id.toString()],
+        });
+        
+        // Delete associated comments
+        await conn.execute({
+          sql: "DELETE FROM Comment WHERE post_id = ?",
+          args: [input.id],
+        });
+        
+        // Finally delete the post
+        await conn.execute({
+          sql: "DELETE FROM Post WHERE id = ?",
+          args: [input.id],
+        });
+        
+        return { success: true };
+      } catch (error) {
+        console.error(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete post",
+        });
+      }
+    }),
+
   // ============================================================
   // Post Likes Routes
   // ============================================================
