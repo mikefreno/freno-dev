@@ -3,13 +3,13 @@ import { HttpStatusCode } from "@solidjs/start";
 import { useNavigate } from "@solidjs/router";
 import { createEffect, createSignal, For } from "solid-js";
 
-export default function NotFound() {
+export default function Page_401() {
   const navigate = useNavigate();
-  const [glitchText, setGlitchText] = createSignal("404");
+  const [glitchText, setGlitchText] = createSignal("401");
 
   createEffect(() => {
     const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
-    const originalText = "404";
+    const originalText = "401";
 
     const glitchInterval = setInterval(() => {
       if (Math.random() > 0.85) {
@@ -32,7 +32,7 @@ export default function NotFound() {
   });
 
   const createParticles = () => {
-    return Array.from({ length: 50 }, (_, i) => ({
+    return Array.from({ length: 45 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
@@ -41,11 +41,15 @@ export default function NotFound() {
     }));
   };
 
+  function doubleBack() {
+    window.history.go(-2);
+  }
+
   return (
     <>
-      <Title>404 - Not Found</Title>
-      <HttpStatusCode code={404} />
-      <div class="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-black dark:via-slate-900 dark:to-black">
+      <Title>401 - Unauthorized</Title>
+      <HttpStatusCode code={401} />
+      <div class="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-slate-900 via-amber-950/20 to-slate-900 dark:from-black dark:via-amber-950/30 dark:to-black">
         {/* Animated particle background */}
         <div class="absolute inset-0 overflow-hidden">
           <For each={createParticles()}>
@@ -59,7 +63,7 @@ export default function NotFound() {
                   "animation-duration": particle.animationDuration
                 }}
               >
-                <div class="h-1 w-1 rounded-full bg-blue-400 opacity-30 dark:bg-blue-300" />
+                <div class="h-1 w-1 rounded-full bg-amber-400 opacity-30 dark:bg-amber-300" />
               </div>
             )}
           </For>
@@ -71,8 +75,8 @@ export default function NotFound() {
             class="h-full w-full"
             style={{
               "background-image": `
-              linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)
+              linear-gradient(rgba(251, 191, 36, 0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(251, 191, 36, 0.3) 1px, transparent 1px)
             `,
               "background-size": "50px 50px",
               animation: "grid-move 20s linear infinite"
@@ -80,36 +84,59 @@ export default function NotFound() {
           />
         </div>
 
+        {/* Logo overlay */}
+        <div class="absolute inset-0 flex items-center justify-center opacity-10">
+          <picture class="h-80 object-cover sm:h-96">
+            <source
+              srcSet="/WhiteLogo.png"
+              media="(prefers-color-scheme: dark)"
+            />
+            <img
+              src="/BlackLogo.png"
+              alt="logo"
+              class="mx-auto brightness-50"
+            />
+          </picture>
+        </div>
+
         {/* Main content */}
         <div class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 text-center">
-          {/* Glitchy 404 */}
+          {/* Glitchy 401 */}
           <div class="mb-8">
             <h1
-              class="bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 bg-clip-text text-8xl font-bold text-transparent select-none md:text-9xl"
+              class="bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 bg-clip-text text-8xl font-bold text-transparent select-none md:text-9xl"
               style={{
-                "text-shadow": "0 0 30px rgba(59, 130, 246, 0.5)",
-                filter: "drop-shadow(0 0 10px rgba(59, 130, 246, 0.3))"
+                "text-shadow": "0 0 30px rgba(251, 191, 36, 0.5)",
+                filter: "drop-shadow(0 0 10px rgba(251, 191, 36, 0.3))"
               }}
             >
               {glitchText()}
             </h1>
-            <div class="mx-auto mt-2 h-1 w-32 animate-pulse bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
+            <div class="mx-auto mt-2 h-1 w-32 animate-pulse bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
           </div>
 
-          {/* Error message with typewriter effect */}
+          {/* Error message */}
           <div class="max-w-2xl space-y-4">
             <h2 class="animate-fade-in text-2xl font-light text-slate-300 md:text-3xl dark:text-slate-400">
-              You seem to have drifted off into space...
+              Access Denied
             </h2>
             <p class="animate-fade-in-delay text-lg text-slate-400 dark:text-slate-500">
-              ...or the page you're looking for has drifted into the void.
+              You lack authentication sufficient for that page.
               <br />
-              But don't worry, we can navigate you back to safety.
+              Please log in or return to a safe location.
             </p>
           </div>
 
           {/* Action buttons */}
           <div class="mt-12 flex flex-col gap-4 sm:flex-row">
+            <button
+              onClick={() => navigate("/login")}
+              class="group relative overflow-hidden rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 px-8 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-amber-500/25 active:scale-95"
+            >
+              <div class="absolute inset-0 bg-gradient-to-r from-amber-700 to-orange-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <span class="relative flex items-center gap-2">🔐 Login</span>
+            </button>
+
             <button
               onClick={() => navigate("/")}
               class="group relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25 active:scale-95"
@@ -121,8 +148,8 @@ export default function NotFound() {
             </button>
 
             <button
-              onClick={() => window.history.back()}
-              class="group relative overflow-hidden rounded-lg border-2 border-slate-600 bg-transparent px-8 py-4 text-lg font-medium text-slate-300 transition-all duration-300 hover:border-blue-500 hover:bg-blue-500/10 hover:text-blue-400 active:scale-95"
+              onClick={doubleBack}
+              class="group relative overflow-hidden rounded-lg border-2 border-slate-600 bg-transparent px-8 py-4 text-lg font-medium text-slate-300 transition-all duration-300 hover:border-amber-500 hover:bg-amber-500/10 hover:text-amber-400 active:scale-95"
             >
               <span class="relative flex items-center gap-2">← Go Back</span>
             </button>
@@ -130,14 +157,14 @@ export default function NotFound() {
 
           {/* Floating elements */}
           <div class="animate-bounce-slow absolute top-20 left-10">
-            <div class="h-6 w-6 rotate-45 bg-gradient-to-br from-blue-400 to-purple-500 opacity-60" />
+            <div class="h-6 w-6 rotate-45 bg-gradient-to-br from-amber-400 to-orange-500 opacity-60" />
           </div>
           <div class="animate-bounce-slow-delay absolute top-32 right-16">
-            <div class="h-4 w-4 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 opacity-60" />
+            <div class="h-4 w-4 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 opacity-60" />
           </div>
           <div class="animate-bounce-slow absolute bottom-20 left-20">
             <div
-              class="h-5 w-5 bg-gradient-to-br from-blue-500 to-purple-400 opacity-60"
+              class="h-5 w-5 bg-gradient-to-br from-amber-500 to-orange-400 opacity-60"
               style={{ "clip-path": "polygon(50% 0%, 0% 100%, 100% 100%)" }}
             />
           </div>
@@ -145,7 +172,7 @@ export default function NotFound() {
           {/* Footer */}
           <div class="absolute bottom-8 left-1/2 -translate-x-1/2">
             <p class="text-sm text-slate-500 dark:text-slate-600">
-              Error Code: 404 • Page Not Found
+              Error Code: 401 • Unauthorized Access
             </p>
           </div>
         </div>

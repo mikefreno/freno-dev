@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /projects
+Disallow: /login
+Disallow: /debug/
+Disallow: /databaseMGMT
+
+Sitemap: https://www.freno.me/sitemap.xml
