@@ -6,6 +6,7 @@ import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
 import { ConnectionFactory } from "~/server/utils";
 import * as bcrypt from "bcrypt";
+import { getCookie, setCookie } from "vinxi/http";
 
 const assets: Record<string, string> = {
   "shapes-with-abigail": "shapes-with-abigail.apk",
@@ -198,6 +199,93 @@ export const miscRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to check password",
+        });
+      }
+    }),
+
+  // ============================================================
+  // Account Deletion Request
+  // ============================================================
+
+  sendDeletionRequestEmail: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      // Check if deletion request was recently sent
+      const deletionExp = getCookie("deletionRequestSent");
+      let remaining = 0;
+      
+      if (deletionExp) {
+        const expires = new Date(deletionExp);
+        remaining = expires.getTime() - Date.now();
+      }
+
+      if (remaining > 0) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "countdown not expired",
+        });
+      }
+
+      const apiKey = env.SENDINBLUE_KEY;
+      const apiUrl = "https://api.sendinblue.com/v3/smtp/email";
+
+      // Email to admin
+      const sendinblueMyData = {
+        sender: {
+          name: "freno.me",
+          email: "michael@freno.me",
+        },
+        to: [{ email: "michael@freno.me" }],
+        htmlContent: `<html><head></head><body><div>Request Name: Life and Lineage Account Deletion</div><div>Request Email: ${input.email}</div></body></html>`,
+        subject: "Life and Lineage Acct Deletion",
+      };
+
+      // Email to user
+      const sendinblueUserData = {
+        sender: {
+          name: "freno.me",
+          email: "michael@freno.me",
+        },
+        to: [{ email: input.email }],
+        htmlContent: `<html><head></head><body><div>Request Name: Life and Lineage Account Deletion</div><div>Account to delete: ${input.email}</div><div>You can email michael@freno.me in the next 24hrs to cancel the deletion, email with subject line "Account Deletion Cancellation"</div></body></html>`,
+        subject: "Life and Lineage Acct Deletion",
+      };
+
+      try {
+        // Send both emails
+        await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "api-key": apiKey,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(sendinblueMyData),
+        });
+
+        await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "api-key": apiKey,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(sendinblueUserData),
+        });
+
+        // Set cookie to prevent spam (60 second cooldown)
+        const exp = new Date(Date.now() + 1 * 60 * 1000);
+        setCookie("deletionRequestSent", exp.toUTCString(), {
+          expires: exp,
+          path: "/",
+        });
+
+        return { message: "request sent" };
+      } catch (error) {
+        console.error(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "SMTP server error: Sorry! You can reach me at michael@freno.me",
         });
       }
     }),

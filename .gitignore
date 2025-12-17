@@ -23,7 +23,7 @@ tasks
 
 # Temp
 gitignore
-*_migration_source
+#*_migration_source
 
 # System Files
 .DS_Store
