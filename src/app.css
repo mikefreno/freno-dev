@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+:root {
+  /* Comments indicate what they are used for in vim/term
+  /* Base Colors (Background/Text) */
+  --color-base: #fbf1c7; /* Main background color (lightest) */
+  --color-mantle: #f3eac1; /* Secondary background (slightly darker) */
+  --color-crust: #e7deb7; /* Lowest background layer (darkest) */
+
+  /* Text Colors */
+  --color-text: #654735; /* Primary text color */
+  --color-subtext1: #7b5d44; /* Secondary text (comments, less important) */
+  --color-subtext0: #8f6f56; /* Tertiary text (even less important) */
+
+  /* Surface Colors */
+  --color-surface0: #dfd6b1; /* Surface layer 0 (medium background) */
+  --color-surface1: #c9c19f; /* Surface layer 1 (darker surface) */
+  --color-surface2: #a79c86; /* Surface layer 2 (darkest surface) */
+
+  /* Overlay Colors */
+  --color-overlay0: #c9aa8c; /* Overlay layer 0 */
+  --color-overlay1: #b6977a; /* Overlay layer 1 */
+  --color-overlay2: #a28368; /* Overlay layer 2 */
+
+  /* Accent Colors (Syntax/Highlighting) */
+  --color-red: #c14a4a; /* Error messages, important keywords */
+  --color-maroon: #c14a4a; /* Error messages, critical elements */
+  --color-peach: #c35e0a; /* Warning messages, operators */
+  --color-yellow: #a96b2c; /* Variables, parameters, attributes */
+  --color-green: #6c782e; /* Strings, literals, constants */
+  --color-teal: #4c7a5d; /* Functions, methods, built-ins */
+  --color-sky: #4c7a5d; /* Functions, methods (alternative) */
+  --color-sapphire: #4c7a5d; /* Functions, methods (alternative) */
+  --color-blue: #45707a; /* Keywords, types, classes */
+  --color-lavender: #45707a; /* Comments, documentation strings */
+  --color-pink: #945e80; /* Special syntax elements, identifiers */
+  --color-mauve: #945e80; /* Special syntax elements (alternative) */
+  --color-flamingo: #c14a4a; /* Error messages, critical elements */
+  --color-rosewater: #c14a4a; /* Error messages, critical elements */
+}
+
+@theme {
+  --color-rosewater: #c14a4a;
+  --color-flamingo: #c14a4a;
+  --color-pink: #945e80;
+  --color-mauve: #945e80;
+  --color-red: #c14a4a;
+  --color-maroon: #c14a4a;
+  --color-peach: #c35e0a;
+  --color-yellow: #a96b2c;
+  --color-green: #6c782e;
+  --color-teal: #4c7a5d;
+  --color-sky: #4c7a5d;
+  --color-sapphire: #4c7a5d;
+  --color-blue: #45707a;
+  --color-lavender: #45707a;
+  --color-text: #654735;
+  --color-subtext1: #7b5d44;
+  --color-subtext0: #8f6f56;
+  --color-overlay2: #a28368;
+  --color-overlay1: #b6977a;
+  --color-overlay0: #c9aa8c;
+  --color-surface2: #a79c86;
+  --color-surface1: #c9c19f;
+  --color-surface0: #dfd6b1;
+  --color-base: #fbf1c7;
+  --color-mantle: #f3eac1;
+  --color-crust: #e7deb7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-rosewater: #efc9c2;
+    --color-flamingo: #ebb2b2;
+    --color-pink: #f2a7de;
+    --color-mauve: #b889f4;
+    --color-red: #ea7183;
+    --color-maroon: #ea838c;
+    --color-peach: #f39967;
+    --color-yellow: #eaca89;
+    --color-green: #96d382;
+    --color-teal: #78cec1;
+    --color-sky: #91d7e3;
+    --color-sapphire: #68bae0;
+    --color-blue: #739df2;
+    --color-lavender: #a0a8f6;
+    --color-text: #b5c1f1;
+    --color-subtext1: #a6b0d8;
+    --color-subtext0: #959ec2;
+    --color-overlay2: #848cad;
+    --color-overlay1: #717997;
+    --color-overlay0: #63677f;
+    --color-surface2: #505469;
+    --color-surface1: #3e4255;
+    --color-surface0: #2c2f40;
+    --color-base: #1e1e2e;
+    --color-mantle: #141620;
+    --color-crust: #0e0f16;
+  }
+  @theme {
+    --color-rosewater: #efc9c2;
+    --color-flamingo: #ebb2b2;
+    --color-pink: #f2a7de;
+    --color-mauve: #b889f4;
+    --color-red: #ea7183;
+    --color-maroon: #ea838c;
+    --color-peach: #f39967;
+    --color-yellow: #eaca89;
+    --color-green: #96d382;
+    --color-teal: #78cec1;
+    --color-sky: #91d7e3;
+    --color-sapphire: #68bae0;
+    --color-blue: #739df2;
+    --color-lavender: #a0a8f6;
+    --color-text: #b5c1f1;
+    --color-subtext1: #a6b0d8;
+    --color-subtext0: #959ec2;
+    --color-overlay2: #848cad;
+    --color-overlay1: #717997;
+    --color-overlay0: #63677f;
+    --color-surface2: #505469;
+    --color-surface1: #3e4255;
+    --color-surface0: #2c2f40;
+    --color-base: #1e1e2e;
+    --color-mantle: #141620;
+    --color-crust: #0e0f16;
+  }
+}
+
+:root {
+  font-family: "Source Code Pro", monospace;
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-crust);
+}
+
+.cursor-typing {
+  display: inline-block;
+  width: 2px;
+  background-color: var(--color-text);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  position: absolute;
+}
+
+/* Block cursor when done typing */
+.cursor-block {
+  display: inline-block;
+  width: 1ch;
+  background-color: var(--color-text);
+  vertical-align: text-bottom;
+  animation: blink 1s infinite;
+  margin-left: 2px;
+  position: absolute;
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
