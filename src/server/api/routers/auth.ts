@@ -3,28 +3,51 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { v4 as uuidV4 } from "uuid";
 import { env } from "~/env/server";
-import { ConnectionFactory } from "~/server/utils";
+import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
 import { SignJWT, jwtVerify } from "jose";
-import { setCookie } from "vinxi/http";
+import { setCookie, getCookie } from "vinxi/http";
+import type { User } from "~/types/user";
 
 // Helper to create JWT token
-async function createJWT(userId: string): Promise<string> {
+async function createJWT(userId: string, expiresIn: string = "14d"): Promise<string> {
   const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
   const token = await new SignJWT({ id: userId })
     .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("14d") // 14 days
+    .setExpirationTime(expiresIn)
     .sign(secret);
   return token;
 }
 
-// User type for database rows
-interface User {
-  id: string;
-  email?: string;
-  display_name?: string;
-  provider?: string;
-  image?: string;
-  email_verified?: boolean;
+// Helper to send email via Brevo/SendInBlue
+async function sendEmail(to: string, subject: string, htmlContent: string) {
+  const apiKey = env.SENDINBLUE_KEY;
+  const apiUrl = "https://api.sendinblue.com/v3/smtp/email";
+
+  const sendinblueData = {
+    sender: {
+      name: "freno.me",
+      email: "no_reply@freno.me",
+    },
+    to: [{ email: to }],
+    htmlContent,
+    subject,
+  };
+
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(sendinblueData),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to send email");
+  }
+
+  return response;
 }
 
 export const authRouter = createTRPCRouter({
@@ -323,4 +346,471 @@ export const authRouter = createTRPCRouter({
         });
       }
     }),
+
+  // Email/password registration
+  emailRegistration: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        password: z.string().min(8),
+        passwordConfirmation: z.string().min(8),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { email, password, passwordConfirmation } = input;
+
+      if (password !== passwordConfirmation) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "passwordMismatch",
+        });
+      }
+
+      const passwordHash = await hashPassword(password);
+      const conn = ConnectionFactory();
+      const userId = uuidV4();
+
+      try {
+        await conn.execute({
+          sql: "INSERT INTO User (id, email, password_hash, provider) VALUES (?, ?, ?, ?)",
+          args: [userId, email, passwordHash, "email"],
+        });
+
+        // Create JWT token
+        const token = await createJWT(userId);
+
+        // Set cookie
+        setCookie(ctx.event.nativeEvent, "userIDToken", token, {
+          maxAge: 60 * 60 * 24 * 14, // 14 days
+          path: "/",
+          httpOnly: true,
+          secure: env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+
+        return { success: true, message: "success" };
+      } catch (e) {
+        console.error("Registration error:", e);
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "duplicate",
+        });
+      }
+    }),
+
+  // Email/password login
+  emailPasswordLogin: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        password: z.string(),
+        rememberMe: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { email, password, rememberMe } = input;
+
+      const conn = ConnectionFactory();
+      const res = await conn.execute({
+        sql: "SELECT * FROM User WHERE email = ? AND provider = ?",
+        args: [email, "email"],
+      });
+
+      if (res.rows.length === 0) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "no-match",
+        });
+      }
+
+      const user = res.rows[0] as unknown as User;
+
+      if (!user.password_hash) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "no-match",
+        });
+      }
+
+      const passwordMatch = await checkPassword(password, user.password_hash);
+
+      if (!passwordMatch) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "no-match",
+        });
+      }
+
+      // Create JWT token with appropriate expiry
+      const expiresIn = rememberMe ? "14d" : "12h";
+      const token = await createJWT(user.id, expiresIn);
+
+      // Set cookie
+      const cookieOptions: any = {
+        path: "/",
+        httpOnly: true,
+        secure: env.NODE_ENV === "production",
+        sameSite: "lax",
+      };
+
+      if (rememberMe) {
+        cookieOptions.maxAge = 60 * 60 * 24 * 14; // 14 days
+      }
+
+      setCookie(ctx.event.nativeEvent, "userIDToken", token, cookieOptions);
+
+      return { success: true, message: "success" };
+    }),
+
+  // Request email login link
+  requestEmailLinkLogin: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        rememberMe: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { email, rememberMe } = input;
+
+      // Check rate limiting
+      const requested = getCookie(ctx.event.nativeEvent, "emailLoginLinkRequested");
+      if (requested) {
+        const expires = new Date(requested);
+        const remaining = expires.getTime() - Date.now();
+        if (remaining > 0) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "countdown not expired",
+          });
+        }
+      }
+
+      const conn = ConnectionFactory();
+      const res = await conn.execute({
+        sql: "SELECT * FROM User WHERE email = ?",
+        args: [email],
+      });
+
+      if (res.rows.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
+      // Create JWT token for email link (15min expiry)
+      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+      const token = await new SignJWT({ email, rememberMe: rememberMe ?? false })
+        .setProtectedHeader({ alg: "HS256" })
+        .setExpirationTime("15m")
+        .sign(secret);
+
+      // Send email
+      const domain = env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN;
+      const htmlContent = `<html>
+<head>
+    <style>
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #007BFF;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="center">
+        <p>Click the button below to log in</p>
+    </div>
+    <br/>
+    <div class="center">
+        <a href="${domain}/api/auth/email-login-callback?email=${email}&token=${token}&rememberMe=${rememberMe}" class="button">Log In</a>
+    </div>
+    <div class="center">
+        <p>You can ignore this if you did not request this email, someone may have requested it in error</p>
+    </div>
+</body>
+</html>`;
+
+      await sendEmail(email, "freno.me login link", htmlContent);
+
+      // Set rate limit cookie (2 minutes)
+      const exp = new Date(Date.now() + 2 * 60 * 1000);
+      setCookie(ctx.event.nativeEvent, "emailLoginLinkRequested", exp.toUTCString(), {
+        maxAge: 2 * 60,
+        path: "/",
+      });
+
+      return { success: true, message: "email sent" };
+    }),
+
+  // Request password reset
+  requestPasswordReset: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      const { email } = input;
+
+      // Check rate limiting
+      const requested = getCookie(ctx.event.nativeEvent, "passwordResetRequested");
+      if (requested) {
+        const expires = new Date(requested);
+        const remaining = expires.getTime() - Date.now();
+        if (remaining > 0) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "countdown not expired",
+          });
+        }
+      }
+
+      const conn = ConnectionFactory();
+      const res = await conn.execute({
+        sql: "SELECT * FROM User WHERE email = ?",
+        args: [email],
+      });
+
+      if (res.rows.length === 0) {
+        // Don't reveal if user exists
+        return { success: true, message: "email sent" };
+      }
+
+      const user = res.rows[0] as unknown as User;
+
+      // Create JWT token with user ID (15min expiry)
+      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+      const token = await new SignJWT({ id: user.id })
+        .setProtectedHeader({ alg: "HS256" })
+        .setExpirationTime("15m")
+        .sign(secret);
+
+      // Send email
+      const domain = env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN;
+      const htmlContent = `<html>
+<head>
+    <style>
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #007BFF;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="center">
+        <p>Click the button below to reset password</p>
+    </div>
+    <br/>
+    <div class="center">
+        <a href="${domain}/login/password-reset?token=${token}" class="button">Reset Password</a>
+    </div>
+    <div class="center">
+        <p>You can ignore this if you did not request this email, someone may have requested it in error</p>
+    </div>
+</body>
+</html>`;
+
+      await sendEmail(email, "password reset", htmlContent);
+
+      // Set rate limit cookie (5 minutes)
+      const exp = new Date(Date.now() + 5 * 60 * 1000);
+      setCookie(ctx.event.nativeEvent, "passwordResetRequested", exp.toUTCString(), {
+        maxAge: 5 * 60,
+        path: "/",
+      });
+
+      return { success: true, message: "email sent" };
+    }),
+
+  // Reset password with token
+  resetPassword: publicProcedure
+    .input(
+      z.object({
+        token: z.string(),
+        newPassword: z.string().min(8),
+        newPasswordConfirmation: z.string().min(8),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { token, newPassword, newPasswordConfirmation } = input;
+
+      if (newPassword !== newPasswordConfirmation) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Password Mismatch",
+        });
+      }
+
+      try {
+        // Verify JWT token
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        const { payload } = await jwtVerify(token, secret);
+
+        if (!payload.id || typeof payload.id !== "string") {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "bad token",
+          });
+        }
+
+        const conn = ConnectionFactory();
+        const passwordHash = await hashPassword(newPassword);
+
+        await conn.execute({
+          sql: "UPDATE User SET password_hash = ? WHERE id = ?",
+          args: [passwordHash, payload.id],
+        });
+
+        // Clear any session cookies
+        setCookie(ctx.event.nativeEvent, "emailToken", "", {
+          maxAge: 0,
+          path: "/",
+        });
+        setCookie(ctx.event.nativeEvent, "userIDToken", "", {
+          maxAge: 0,
+          path: "/",
+        });
+
+        return { success: true, message: "success" };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Password reset error:", error);
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "token expired",
+        });
+      }
+    }),
+
+  // Resend email verification
+  resendEmailVerification: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      const { email } = input;
+
+      // Check rate limiting
+      const requested = getCookie(ctx.event.nativeEvent, "emailVerificationRequested");
+      if (requested) {
+        const time = parseInt(requested);
+        const currentTime = Date.now();
+        const difference = (currentTime - time) / (1000 * 60);
+        
+        if (difference < 15) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "Please wait before requesting another verification email",
+          });
+        }
+      }
+
+      const conn = ConnectionFactory();
+      const res = await conn.execute({
+        sql: "SELECT * FROM User WHERE email = ?",
+        args: [email],
+      });
+
+      if (res.rows.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
+      // Create JWT token (15min expiry)
+      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+      const token = await new SignJWT({ email })
+        .setProtectedHeader({ alg: "HS256" })
+        .setExpirationTime("15m")
+        .sign(secret);
+
+      // Send email
+      const domain = env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN;
+      const htmlContent = `<html>
+<head>
+    <style>
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #007BFF;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="center">
+        <p>Click the button below to verify email</p>
+    </div>
+    <br/>
+    <div class="center">
+        <a href="${domain}/api/auth/email-verification-callback?email=${email}&token=${token}" class="button">Verify Email</a>
+    </div>
+</body>
+</html>`;
+
+      await sendEmail(email, "freno.me email verification", htmlContent);
+
+      // Set rate limit cookie
+      setCookie(ctx.event.nativeEvent, "emailVerificationRequested", Date.now().toString(), {
+        maxAge: 15 * 60,
+        path: "/",
+      });
+
+      return { success: true, message: "Verification email sent" };
+    }),
+
+  // Sign out
+  signOut: publicProcedure.mutation(async ({ ctx }) => {
+    setCookie(ctx.event.nativeEvent, "userIDToken", "", {
+      maxAge: 0,
+      path: "/",
+    });
+    setCookie(ctx.event.nativeEvent, "emailToken", "", {
+      maxAge: 0,
+      path: "/",
+    });
+
+    return { success: true };
+  }),
 });

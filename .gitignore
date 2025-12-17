@@ -19,9 +19,11 @@ app.config.timestamp_*.js
 .classpath
 *.launch
 .settings/
+tasks
 
 # Temp
 gitignore
+#*_migration_source
 
 # System Files
 .DS_Store
