@@ -1,0 +1,129 @@
+[
+  {
+    "name": "apprentice hood",
+    "baseValue": 1000,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "armor": 3,
+      "manaRegen": 1
+    },
+    "requirements": {
+      "intelligence": 5
+    }
+  },
+  {
+    "name": "adept hood",
+    "baseValue": 2500,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "armor": 3,
+      "mana": 20,
+      "manaRegen": 1
+    },
+    "requirements": {
+      "intelligence": 5
+    }
+  },
+  {
+    "name": "mage hood",
+    "baseValue": 2500,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "armor": 5,
+      "mana": 100
+    },
+    "requirements": {
+      "intelligence": 8
+    }
+  },
+  {
+    "name": "gorgeous hood",
+    "baseValue": 4500,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "armor": 5,
+      "mana": 30,
+      "manaRegen": 2
+    },
+    "requirements": {
+      "intelligence": 10
+    }
+  },
+  {
+    "name": "expert hood",
+    "baseValue": 10000,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "armor": 5,
+      "mana": 50,
+      "manaRegen": 4
+    },
+    "requirements": {
+      "intelligence": 15
+    }
+  },
+  {
+    "name": "rouge magi's hood",
+    "baseValue": 17500,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "armor": 8,
+      "manaRegen": 8
+    },
+    "requirements": {
+      "strength": 5,
+      "intelligence": 12
+    }
+  },
+  {
+    "name": "war mage's cap",
+    "baseValue": 65000,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "armor": 15,
+      "mana": 40,
+      "manaRegen": 5,
+      "health": 40
+    },
+    "requirements": {
+      "strength": 10,
+      "intelligence": 15
+    }
+  },
+  {
+    "name": "ancient veil",
+    "baseValue": 100000,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "mana": 200,
+      "manaRegen": 10
+    },
+    "requirements": {
+      "intelligence": 25
+    }
+  },
+  {
+    "name": "arch-mage's veil",
+    "baseValue": 350000,
+    "icon": "Wizard_Hat",
+    "slot": "head",
+    "stats": {
+      "armor": 8,
+      "mana": 150,
+      "health": 50,
+      "manaRegen": 10
+    },
+    "requirements": {
+      "intelligence": 35
+    }
+  }
+]
+

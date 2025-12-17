@@ -1,0 +1,900 @@
+[
+  {
+    "name": "zombie",
+    "sprite": "zombie",
+    "beingType": "undead",
+    "sanity": null,
+    "health": 80,
+    "mana": {
+      "maximum": 50,
+      "regen": 5
+    },
+    "attackStrings": [
+      "grab",
+      "zombie bite"
+    ],
+    "animationStrings": {
+      "grab": "attack_1",
+      "zombie bite": "attack_1"
+    },
+    "baseResistanceTable": {
+      "physical": 15,
+      "poison": 75,
+      "fire": 15,
+      "cold": 15,
+      "holy": -50
+    },
+    "baseDamageTable": {
+      "physical": 6
+    },
+    "drops": [
+      {
+        "item": "chunk of flesh",
+        "itemType": "junk",
+        "chance": 0.75
+      },
+      {
+        "item": "chunk of flesh",
+        "itemType": "junk",
+        "chance": 0.75
+      }
+    ],
+    "goldDropRange": {
+      "minimum": 100,
+      "maximum": 150
+    }
+  },
+  {
+    "name": "necromancer",
+    "beingType": "human",
+    "sprite": "necromancer",
+    "sanity": 50,
+    "health": 130,
+    "mana": {
+      "maximum": 80,
+      "regen": 8
+    },
+    "attackStrings": [
+      "dark burst",
+      "raise skeleton",
+      "terrorize"
+    ],
+    "animationStrings": {
+      "dark burst": "attack_1",
+      "raise skeleton": "attack_2",
+      "terrorize": "attack_3"
+    },
+    "baseResistanceTable": {
+      "physical": 15,
+      "poison": 10,
+      "fire": 5,
+      "cold": 15,
+      "holy": -20
+    },
+    "baseDamageTable": {
+      "physical": 8
+    },
+    "phases": [
+      {
+        "triggerHealth": 0,
+        "health": 70,
+        "sprite": "reaper",
+        "dialogue": {
+          "1": "Witness my true power!"
+        },
+        "baseResistanceTable": {
+          "physical": 15,
+          "poison": 50,
+          "fire": 15,
+          "cold": 30,
+          "holy": -75
+        },
+        "baseDamageTable": {
+          "poison": 5,
+          "cold": 12
+        },
+        "attackStrings": [
+          "soul strike",
+          "death blade"
+        ],
+        "animationStrings": {
+          "soul strike": "attack_1",
+          "death blade": "attack_2"
+        }
+      }
+    ],
+    "drops": [
+      {
+        "item": "dagger",
+        "itemType": "melee",
+        "chance": 0.15
+      },
+      {
+        "item": "dagger",
+        "itemType": "melee",
+        "chance": 0.15
+      },
+      {
+        "item": "adept robes",
+        "itemType": "robe",
+        "chance": 1.0
+      }
+    ],
+    "storyDrops": [
+      {
+        "item": "the deed to the whispering raven inn"
+      }
+    ],
+    "goldDropRange": {
+      "minimum": 250,
+      "maximum": 450
+    }
+  },
+  {
+    "name": "kobold",
+    "beingType": "demi-human",
+    "sprite": "kobold",
+    "sanity": null,
+    "health": 160,
+    "mana": {
+      "maximum": 60,
+      "regen": 15
+    },
+    "baseResistanceTable": {
+      "lightning": 15,
+      "cold": -10,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 6,
+      "lightning": 10
+    },
+    "attackStrings": [
+      "stab",
+      "cleave",
+      "chop",
+      "charged pierce"
+    ],
+    "animationStrings": {
+      "stab": "attack_1",
+      "cleave": "attack_2",
+      "chop": "attack_3",
+      "charged pierce": "attack_4"
+    },
+    "drops": [
+      {
+        "item": "longsword",
+        "itemType": "melee",
+        "chance": 0.65
+      },
+      {
+        "item": "longsword",
+        "itemType": "melee",
+        "chance": 0.65
+      }
+    ],
+    "goldDropRange": {
+      "minimum": 100,
+      "maximum": 150
+    }
+  },
+  {
+    "name": "goblin mage",
+    "sprite": "goblin_mage",
+    "beingType": "demi-human",
+    "sanity": 50,
+    "health": 140,
+    "mana": {
+      "maximum": 100,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 10,
+      "poison": -5,
+      "lightning": -5
+    },
+    "baseDamageTable": {
+      "magic": 16
+    },
+    "attackStrings": [
+      "pulse",
+      "dark bolt"
+    ],
+    "animationStrings": {
+      "pulse": "attack_1",
+      "dark bolt": "attack_2"
+    },
+    "drops": [
+      {
+        "item": "goblin totem",
+        "itemType": "staff",
+        "chance": 1.0
+      }
+    ],
+    "storyDrops": [
+      {
+        "item": "head of goblin shaman"
+      }
+    ],
+    "goldDropRange": {
+      "minimum": 100,
+      "maximum": 150
+    }
+  },
+  {
+    "name": "warg",
+    "sprite": "wolf_black",
+    "beingType": "beast",
+    "sanity": null,
+    "health": 160,
+    "mana": {
+      "maximum": 50,
+      "regen": 5
+    },
+    "baseResistanceTable": {
+      "physical": 15,
+      "cold": 10,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 18
+    },
+    "attackStrings": [
+      "bite",
+      "claw"
+    ],
+    "animationStrings": {
+      "bite": "attack_1",
+      "claw": "attack_2"
+    },
+    "drops": [
+      {
+        "item": "patch of hair",
+        "itemType": "junk",
+        "chance": 0.85
+      },
+      {
+        "item": "patch of hair",
+        "itemType": "junk",
+        "chance": 0.85
+      },
+      {
+        "item": "bone",
+        "itemType": "ingredient",
+        "chance": 0.75
+      },
+      {
+        "item": "bone",
+        "itemType": "ingredient",
+        "chance": 0.75
+      }
+    ],
+    "goldDropRange": {
+      "minimum": 40,
+      "maximum": 55
+    }
+  },
+  {
+    "name": "bandit",
+    "beingType": "human",
+    "sprite": "bandit_light",
+    "sanity": 50,
+    "health": 75,
+    "mana": {
+      "maximum": 50,
+      "regen": 3
+    },
+    "baseResistanceTable": {
+      "physical": 15,
+      "poison": -15,
+      "cold": -10,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 16
+    },
+    "attackStrings": [
+      "stab",
+      "pocket sand",
+      "serrate"
+    ],
+    "animationStrings": {
+      "stab": "attack_1",
+      "pocket sand": "attack_1",
+      "serrate": "attack_1"
+    },
+    "drops": [
+      {
+        "item": "shortsword",
+        "itemType": "melee",
+        "chance": 0.15
+      },
+      {
+        "item": "cheap leather chestpiece",
+        "itemType": "bodyArmor",
+        "chance": 0.15
+      },
+      {
+        "item": "leather headgear",
+        "itemType": "helmet",
+        "chance": 0.15
+      }
+    ],
+    "goldDropRange": {
+      "minimum": 70,
+      "maximum": 100
+    },
+    "armorValue": 15
+  },
+  {
+    "name": "bandit heavy",
+    "sprite": "bandit_heavy",
+    "beingType": "human",
+    "sanity": 25,
+    "health": 155,
+    "mana": {
+      "maximum": 30,
+      "regen": 2
+    },
+    "baseResistanceTable": {
+      "physical": 25,
+      "poison": -15,
+      "cold": -10,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 14
+    },
+    "attackStrings": [
+      "pommel strike",
+      "heavy swing"
+    ],
+    "animationStrings": {
+      "pommel strike": "attack_1",
+      "heavy swing": "attack_1"
+    },
+    "drops": [
+      {
+        "item": "longsword",
+        "itemType": "melee",
+        "chance": 0.25
+      },
+      {
+        "item": "cheap iron chestpiece",
+        "itemType": "bodyArmor",
+        "chance": 0.25
+      }
+    ],
+    "goldDropRange": {
+      "minimum": 80,
+      "maximum": 100
+    },
+    "armorValue": 15
+  },
+  {
+    "name": "huge knight",
+    "beingType": "human",
+    "sprite": "huge_knight",
+    "sanity": 50,
+    "health": 200,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 35,
+      "poison": -15,
+      "cold": -20,
+      "fire": -15
+    },
+    "baseDamageTable": {
+      "physical": 18
+    },
+    "attackStrings": [
+      "heavy swing",
+      "call backup",
+      "stab"
+    ],
+    "animationStrings": {
+      "heavy swing": "attack_1",
+      "call backup": "attack_1",
+      "stab": "attack_1"
+    },
+    "drops": [],
+    "storyDrops": [
+      {
+        "item": "broken seal contract"
+      }
+    ],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 30
+  },
+  {
+    "name": "giant venomous spider",
+    "beingType": "beast",
+    "sprite": "spider_default",
+    "sanity": null,
+    "health": 140,
+    "mana": {
+      "maximum": 40,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": 75,
+      "cold": -10,
+      "lightning": -10,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 10,
+      "poison": 20
+    },
+    "attackStrings": [
+      "venomous bite"
+    ],
+    "animationStrings": {
+      "venomous bite": "attack_1"
+    },
+    "drops": [],
+    "goldDropRange": {
+      "minimum": 40,
+      "maximum": 50
+    }
+  },
+  {
+    "name": "brood mother",
+    "beingType": "beast",
+    "sprite": "spider_default_brood",
+    "sanity": null,
+    "health": 240,
+    "mana": {
+      "maximum": 40,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": 75,
+      "cold": -10,
+      "lightning": -10,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 4,
+      "poison": 20
+    },
+    "attackStrings": [
+      "venomous bite"
+    ],
+    "animationStrings": {
+      "venomous bite": "attack_1"
+    },
+    "drops": [],
+    "goldDropRange": {
+      "minimum": 40,
+      "maximum": 50
+    }
+  },
+  {
+    "name": "adept air mage",
+    "beingType": "human",
+    "sprite": "wizard_gray",
+    "sanity": 50,
+    "health": 150,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": -15,
+      "cold": -10,
+      "fire": -10,
+      "holy": 5
+    },
+    "baseDamageTable": {
+      "physical": 36
+    },
+    "attackStrings": [
+      "bonk",
+      "gust"
+    ],
+    "animationStrings": {
+      "gust": "attack_1",
+      "bonk": "attack_2"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 10
+  },
+  {
+    "name": "adept water mage",
+    "sprite": "wizard_classic",
+    "beingType": "human",
+    "sanity": 50,
+    "health": 150,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": -15,
+      "cold": -10,
+      "fire": -10,
+      "holy": 5
+    },
+    "baseDamageTable": {
+      "cold": 35
+    },
+    "attackStrings": [
+      "bonk",
+      "frost"
+    ],
+    "animationStrings": {
+      "frost": "attack_1",
+      "bonk": "attack_2"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 10
+  },
+  {
+    "name": "master earthen monk",
+    "sprite": "ground_monk",
+    "beingType": "human",
+    "sanity": 100,
+    "health": 190,
+    "mana": {
+      "maximum": 100,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 10,
+      "poison": -15,
+      "cold": -10,
+      "fire": -10,
+      "holy": 5
+    },
+    "baseDamageTable": {
+      "physical": 24,
+      "raw": 16
+    },
+    "attackStrings": [
+      "kick",
+      "punch",
+      "flurry",
+      "rock spike",
+      "burial"
+    ],
+    "animationStrings": {
+      "kick": "attack_1",
+      "punch": "attack_2",
+      "flurry": "attack_3",
+      "rock spike": "attack_4",
+      "burial": "attack_5"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 10
+  },
+  {
+    "name": "master fire mage",
+    "sprite": "pyromancer",
+    "beingType": "human",
+    "sanity": 100,
+    "health": 180,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 10,
+      "poison": -15,
+      "cold": -10,
+      "fire": 50,
+      "holy": 5
+    },
+    "baseDamageTable": {
+      "fire": 40
+    },
+    "attackStrings": [
+      "fire bolt"
+    ],
+    "animationStrings": {
+      "fire bolt": "attack_1"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 10
+  },
+  {
+    "name": "centaur",
+    "beingType": "demi-human",
+    "sprite": "centaur",
+    "sanity": 50,
+    "health": 200,
+    "mana": {
+      "maximum": 40,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 15,
+      "poison": 20,
+      "cold": -5,
+      "holy": 25
+    },
+    "baseDamageTable": {
+      "physical": 45
+    },
+    "attackStrings": [
+      "stampede",
+      "chop"
+    ],
+    "animationStrings": {
+      "chop": "attack_1",
+      "stampede": "attack_2"
+    },
+    "drops": [],
+    "goldDropRange": {
+      "minimum": 40,
+      "maximum": 50
+    }
+  },
+  {
+    "name": "gryphon",
+    "sprite": "gryphon",
+    "beingType": "beast",
+    "sanity": null,
+    "health": 225,
+    "mana": {
+      "maximum": 60,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 15,
+      "poison": 20,
+      "cold": 10,
+      "holy": 25,
+      "lightning": -35
+    },
+    "baseDamageTable": {
+      "physical": 45
+    },
+    "attackStrings": [
+      "claw",
+      "wing buffet"
+    ],
+    "animationStrings": {
+      "claw": "attack_1",
+      "wing buffet": "attack_2"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 10
+  },
+  {
+    "name": "gladiator",
+    "sprite": "gladiator_ls",
+    "beingType": "human",
+    "sanity": 50,
+    "health": 220,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": -15,
+      "cold": -10,
+      "fire": -10,
+      "holy": 5
+    },
+    "baseDamageTable": {
+      "physical": 40
+    },
+    "attackStrings": [
+      "pierce"
+    ],
+    "animationStrings": {
+      "pierce": "attack_1"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 50
+  },
+  {
+    "name": "lizardman",
+    "sprite": "lizardman",
+    "beingType": "demi-human",
+    "sanity": null,
+    "health": 180,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": 35,
+      "cold": 70,
+      "fire": 30,
+      "holy": 5,
+      "lightning": -5
+    },
+    "baseDamageTable": {
+      "physical": 40,
+      "poison": 10
+    },
+    "attackStrings": [
+      "cleave"
+    ],
+    "animationStrings": {
+      "cleave": "attack_1"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 50
+  },
+  {
+    "name": "the hammer",
+    "sprite": "gladiator_hammer",
+    "beingType": "human",
+    "sanity": 50,
+    "health": 295,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": -15,
+      "cold": -10,
+      "fire": -10,
+      "holy": 5
+    },
+    "baseDamageTable": {
+      "physical": 40,
+      "raw": 15
+    },
+    "attackStrings": [
+      "heavy swing"
+    ],
+    "animationStrings": {
+      "heavy swing": "attack_1"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 50
+  },
+  {
+    "name": "the spear",
+    "sprite": "gladiator_spear",
+    "beingType": "human",
+    "sanity": 50,
+    "health": 270,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": -15,
+      "cold": -10,
+      "fire": -10,
+      "holy": 5
+    },
+    "baseDamageTable": {
+      "physical": 55
+    },
+    "attackStrings": [
+      "pierce"
+    ],
+    "animationStrings": {
+      "pierce": "attack_1"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 50
+  },
+  {
+    "name": "the deadeye",
+    "sprite": "gladiator_archer",
+    "beingType": "human",
+    "sanity": 50,
+    "health": 245,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": -15,
+      "cold": -10,
+      "fire": -10,
+      "holy": 5
+    },
+    "baseDamageTable": {
+      "physical": 55
+    },
+    "attackStrings": [
+      "shoot"
+    ],
+    "animationStrings": {
+      "shoot": "attack_1"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 50
+  },
+  {
+    "name": "her",
+    "sprite": "gladiator_female",
+    "beingType": "human",
+    "sanity": 50,
+    "health": 285,
+    "attackPower": 30,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "poison": -15,
+      "cold": -10,
+      "fire": -10,
+      "holy": 15
+    },
+    "baseDamageTable": {
+      "physical": 60
+    },
+    "attackStrings": [
+      "cleave",
+      "stab"
+    ],
+    "animationStrings": {
+      "cleave": "attack_1",
+      "stab": "attack_2"
+    },
+    "drops": [],
+    "storyDrops": [],
+    "goldDropRange": {
+      "minimum": 2500,
+      "maximum": 3000
+    },
+    "armorValue": 50
+  }
+]
+

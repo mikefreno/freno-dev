@@ -1,0 +1,198 @@
+[
+  {
+    "name": "basic healing potion",
+    "icon": "Red_Potion",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 20,
+        "max": 50
+      },
+      "isPoison": false
+    },
+    "baseValue": 100
+  },
+  {
+    "name": "moderate healing potion",
+    "icon": "Red_Potion",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 40,
+        "max": 80
+      },
+      "isPoison": false
+    },
+    "baseValue": 500
+  },
+  {
+    "name": "strong healing potion",
+    "icon": "Red_Potion_2",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 70,
+        "max": 100
+      },
+      "isPoison": false
+    },
+    "baseValue": 2000
+  },
+  {
+    "name": "intense healing potion",
+    "icon": "Red_Potion_2",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 100,
+        "max": 180
+      },
+      "isPoison": false
+    },
+    "baseValue": 4000
+  },
+  {
+    "name": "extreme healing potion",
+    "icon": "Red_Potion_3",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 150,
+        "max": 300
+      },
+      "isPoison": false
+    },
+    "baseValue": 7500
+  },
+  {
+    "name": "ultimate healing potion",
+    "icon": "Red_Potion_3",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 250,
+        "max": 500
+      },
+      "isPoison": false
+    },
+    "baseValue": 10000
+  },
+  {
+    "name": "basic mana potion",
+    "icon": "Blue_Potion",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 20,
+        "max": 50
+      },
+      "isPoison": false
+    },
+    "baseValue": 100
+  },
+  {
+    "name": "moderate mana potion",
+    "icon": "Blue_Potion",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 40,
+        "max": 80
+      },
+      "isPoison": false
+    },
+    "baseValue": 500
+  },
+  {
+    "name": "strong mana potion",
+    "icon": "Blue_Potion_2",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 70,
+        "max": 100
+      },
+      "isPoison": false
+    },
+    "baseValue": 2000
+  },
+  {
+    "name": "intense mana potion",
+    "icon": "Blue_Potion_2",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 100,
+        "max": 180
+      },
+      "isPoison": false
+    },
+    "baseValue": 4000
+  },
+  {
+    "name": "extreme mana potion",
+    "icon": "Blue_Potion_3",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 150,
+        "max": 300
+      },
+      "isPoison": false
+    },
+    "baseValue": 7500
+  },
+  {
+    "name": "ultimate mana potion",
+    "icon": "Blue_Potion_3",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 250,
+        "max": 500
+      },
+      "isPoison": false
+    },
+    "baseValue": 10000
+  },
+  {
+    "name": "basic calming potion",
+    "icon": "Purple_Potion",
+    "effect": {
+      "stat": "sanity",
+      "amount": {
+        "min": 20,
+        "max": 35
+      },
+      "isPoison": false
+    },
+    "baseValue": 100
+  },
+  {
+    "name": "strong calming potion",
+    "icon": "Purple_Potion_2",
+    "effect": {
+      "stat": "sanity",
+      "amount": {
+        "min": 50,
+        "max": 75
+      },
+      "isPoison": false
+    },
+    "baseValue": 2000
+  },
+  {
+    "name": "ultimate calming potion",
+    "icon": "Purple_Potion_3",
+    "effect": {
+      "stat": "sanity",
+      "amount": {
+        "min": 100,
+        "max": 150
+      },
+      "isPoison": false
+    },
+    "baseValue": 10000
+  }
+]
+

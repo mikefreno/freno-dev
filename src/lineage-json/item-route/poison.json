@@ -1,0 +1,120 @@
+[
+  {
+    "name": "basic wounding poison",
+    "icon": "Green_Potion",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 10,
+        "max": 30
+      },
+      "isPoison": true
+    },
+    "baseValue": 500
+  },
+  {
+    "name": "strong wounding poison",
+    "icon": "Green_Potion_2",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 50,
+        "max": 75
+      },
+      "isPoison": true
+    },
+    "baseValue": 2500
+  },
+  {
+    "name": "ultimate wounding poison",
+    "icon": "Green_Potion_3",
+    "effect": {
+      "stat": "health",
+      "amount": {
+        "min": 125,
+        "max": 175
+      },
+      "isPoison": true
+    },
+    "baseValue": 10000
+  },
+  {
+    "name": "basic lethargic poison",
+    "icon": "Green_Potion",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 10,
+        "max": 30
+      },
+      "isPoison": true
+    },
+    "baseValue": 500
+  },
+  {
+    "name": "strong lethargic poison",
+    "icon": "Green_Potion_2",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 50,
+        "max": 75
+      },
+      "isPoison": true
+    },
+    "baseValue": 2500
+  },
+  {
+    "name": "ultimate lethargic poison",
+    "icon": "Green_Potion_3",
+    "effect": {
+      "stat": "sanity",
+      "amount": {
+        "min": 125,
+        "max": 175
+      },
+      "isPoison": true
+    },
+    "baseValue": 10000
+  },
+  {
+    "name": "basic madness poison",
+    "icon": "Green_Potion",
+    "effect": {
+      "stat": "sanity",
+      "amount": {
+        "min": 10,
+        "max": 30
+      },
+      "isPoison": true
+    },
+    "baseValue": 500
+  },
+  {
+    "name": "strong madness poison",
+    "icon": "Green_Potion_2",
+    "effect": {
+      "stat": "mana",
+      "amount": {
+        "min": 50,
+        "max": 75
+      },
+      "isPoison": true
+    },
+    "baseValue": 2500
+  },
+  {
+    "name": "ultimate madness poison",
+    "icon": "Green_Potion_3",
+    "effect": {
+      "stat": "sanity",
+      "amount": {
+        "min": 125,
+        "max": 175
+      },
+      "isPoison": true
+    },
+    "baseValue": 10000
+  }
+]
+

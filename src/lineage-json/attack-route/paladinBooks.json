@@ -1,0 +1,262 @@
+[
+  {
+    "name": "book of flash heal",
+    "type": "spell",
+    "teaches": "flash heal",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of minor blessing",
+    "type": "spell",
+    "teaches": "minor blessing",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of holy light",
+    "type": "spell",
+    "teaches": "holy light",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of rejuvenating light",
+    "type": "spell",
+    "teaches": "rejuvenating light",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of turn undead",
+    "type": "spell",
+    "teaches": "turn undead",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of cleansing light",
+    "type": "spell",
+    "teaches": "cleansing light",
+    "icon": "Book",
+    "baseValue": 10000
+  },
+  {
+    "name": "book of delayed heal",
+    "type": "spell",
+    "teaches": "delayed heal",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of moderate heal",
+    "type": "spell",
+    "teaches": "moderate heal",
+    "icon": "Book_2",
+    "baseValue": 75000
+  },
+  {
+    "name": "book of holy nova",
+    "type": "spell",
+    "teaches": "holy nova",
+    "icon": "Book_2",
+    "baseValue": 100000
+  },
+  {
+    "name": "book of revoke undead",
+    "type": "spell",
+    "teaches": "revoke undead",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of great rejuvenating light",
+    "type": "spell",
+    "teaches": "great rejuvenating light",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "sacred healing techniques vol. 1",
+    "type": "spell",
+    "teaches": "overwhelming glow",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "sacred healing techniques vol. 2",
+    "type": "spell",
+    "teaches": "unending cure",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of judgment",
+    "type": "spell",
+    "teaches": "judgment",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of righteous fury",
+    "type": "spell",
+    "teaches": "righteous fury",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of holy bolt",
+    "type": "spell",
+    "teaches": "holy bolt",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of holy strike",
+    "type": "spell",
+    "teaches": "holy strike",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of righteous blow",
+    "type": "spell",
+    "teaches": "righteous blow",
+    "icon": "Book",
+    "baseValue": 10000
+  },
+  {
+    "name": "book of consecrated blade",
+    "type": "spell",
+    "teaches": "consecrated blade",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of holy wrath",
+    "type": "spell",
+    "teaches": "holy wrath",
+    "icon": "Book_2",
+    "baseValue": 75000
+  },
+  {
+    "name": "book of smite",
+    "type": "spell",
+    "teaches": "smite",
+    "icon": "Book_2",
+    "baseValue": 100000
+  },
+  {
+    "name": "book of holy nova",
+    "type": "spell",
+    "teaches": "holy nova",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of righteous condemnation",
+    "type": "spell",
+    "teaches": "righteous condemnation",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "sacred vengeance techniques vol. 1",
+    "type": "spell",
+    "teaches": "divine judgment",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "sacred vengeance techniques vol. 2",
+    "type": "spell",
+    "teaches": "holy cataclysm",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of blessed guard",
+    "type": "spell",
+    "teaches": "blessed guard",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of protection aura",
+    "type": "spell",
+    "teaches": "protection aura",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of divine fortitude",
+    "type": "spell",
+    "teaches": "divine fortitude",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of reflective bulwark",
+    "type": "spell",
+    "teaches": "reflective bulwark",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of readied guard",
+    "type": "spell",
+    "teaches": "readied guard",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of holy ward",
+    "type": "spell",
+    "teaches": "holy ward",
+    "icon": "Book",
+    "baseValue": 10000
+  },
+  {
+    "name": "book of blessed shield",
+    "type": "spell",
+    "teaches": "blessed shield",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of divine resilience",
+    "type": "spell",
+    "teaches": "divine resilience",
+    "icon": "Book_2",
+    "baseValue": 75000
+  },
+  {
+    "name": "book of divine intervention",
+    "type": "spell",
+    "teaches": "divine intervention",
+    "icon": "Book_2",
+    "baseValue": 100000
+  },
+  {
+    "name": "book of holy sanctuary",
+    "type": "spell",
+    "teaches": "holy sanctuary",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of holy barrier",
+    "type": "spell",
+    "teaches": "holy barrier",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "sacred protection techniques",
+    "type": "spell",
+    "teaches": "aegis of light",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  }
+]
+

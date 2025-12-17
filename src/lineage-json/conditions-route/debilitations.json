@@ -1,0 +1,134 @@
+[
+  {
+    "name": "cataracts",
+    "style": "debuff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "accuracy reduction"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "blind"
+  },
+  {
+    "name": "bad back",
+    "style": "debuff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "weaken"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "broken_sword"
+  },
+  {
+    "name": "bad knee",
+    "style": "debuff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "armor decrease"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "broken_shield"
+  },
+  {
+    "name": "weakened heart",
+    "style": "debuff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "healthMax decrease"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.2
+    ],
+    "icon": "split_heart"
+  },
+  {
+    "name": "alzheimer's",
+    "style": "debuff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "sanityMax decrease"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.5
+    ],
+    "icon": "hollow_disk"
+  },
+  {
+    "name": "carpal tunnel",
+    "style": "debuff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "weaken"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.1
+    ],
+    "icon": "rock_hands"
+  },
+  {
+    "name": "demential",
+    "style": "debuff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "sanityMax decrease",
+      "manaMax decrease"
+    ],
+    "effectStyle": [
+      "percentage",
+      "percentage"
+    ],
+    "effectAmount": [
+      0.15,
+      0.15
+    ],
+    "icon": "blank"
+  },
+  {
+    "name": "heart failure",
+    "style": "debuff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      10
+    ],
+    "icon": "split_heart"
+  }
+]
+

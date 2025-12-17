@@ -1,0 +1,413 @@
+[
+  {
+    "name": {
+      "4": "soldier",
+      "3": "warrior",
+      "2": "champion",
+      "1": "hero"
+    },
+    "modifier": {
+      "physicalDamageAdded": [
+        {
+          "4": {
+            "min": 6,
+            "max": 8
+          },
+          "3": {
+            "min": 9,
+            "max": 11
+          },
+          "2": {
+            "min": 12,
+            "max": 14
+          },
+          "1": {
+            "min": 15,
+            "max": 18
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "smoldering",
+      "3": "burning",
+      "2": "scorching",
+      "1": "infernal"
+    },
+    "modifier": {
+      "fireDamageAdded": [
+        {
+          "4": {
+            "min": 6,
+            "max": 8
+          },
+          "3": {
+            "min": 9,
+            "max": 11
+          },
+          "2": {
+            "min": 12,
+            "max": 14
+          },
+          "1": {
+            "min": 15,
+            "max": 18
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "chilled",
+      "3": "frozen",
+      "2": "glacier",
+      "1": "arctic"
+    },
+    "modifier": {
+      "coldDamageAdded": [
+        {
+          "4": {
+            "min": 6,
+            "max": 8
+          },
+          "3": {
+            "min": 9,
+            "max": 11
+          },
+          "2": {
+            "min": 12,
+            "max": 14
+          },
+          "1": {
+            "min": 15,
+            "max": 18
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "static",
+      "3": "shocked",
+      "2": "electrified",
+      "1": "thunderous"
+    },
+    "modifier": {
+      "lightningDamageAdded": [
+        {
+          "4": {
+            "min": 6,
+            "max": 8
+          },
+          "3": {
+            "min": 9,
+            "max": 11
+          },
+          "2": {
+            "min": 12,
+            "max": 14
+          },
+          "1": {
+            "min": 15,
+            "max": 18
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "noxious",
+      "3": "venomous",
+      "2": "virulent",
+      "1": "pestilent"
+    },
+    "modifier": {
+      "poisonDamageAdded": [
+        {
+          "4": {
+            "min": 6,
+            "max": 8
+          },
+          "3": {
+            "min": 9,
+            "max": 11
+          },
+          "2": {
+            "min": 12,
+            "max": 14
+          },
+          "1": {
+            "min": 15,
+            "max": 18
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "challenger",
+      "3": "gladiator",
+      "2": "marauder",
+      "1": "conqueror"
+    },
+    "modifier": {
+      "physicalDamageMultiplier": [
+        {
+          "4": {
+            "min": 0.05,
+            "max": 0.08
+          },
+          "3": {
+            "min": 0.09,
+            "max": 0.12
+          },
+          "2": {
+            "min": 0.13,
+            "max": 0.16
+          },
+          "1": {
+            "min": 0.17,
+            "max": 0.20
+          }
+        }
+      ],
+      "strength": [
+        {
+          "4": {
+            "min": 1,
+            "max": 1
+          },
+          "3": {
+            "min": 1,
+            "max": 2
+          },
+          "2": {
+            "min": 2,
+            "max": 3
+          },
+          "1": {
+            "min": 3,
+            "max": 4
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "imp",
+      "3": "fiend",
+      "2": "demon",
+      "1": "devil"
+    },
+    "modifier": {
+      "fireDamageMultiplier": [
+        {
+          "4": {
+            "min": 0.05,
+            "max": 0.08
+          },
+          "3": {
+            "min": 0.09,
+            "max": 0.12
+          },
+          "2": {
+            "min": 0.13,
+            "max": 0.16
+          },
+          "1": {
+            "min": 0.17,
+            "max": 0.20
+          }
+        }
+      ],
+      "fireDamageAdded": [
+        {
+          "4": {
+            "min": 1,
+            "max": 2
+          },
+          "3": {
+            "min": 2,
+            "max": 3
+          },
+          "2": {
+            "min": 3,
+            "max": 4
+          },
+          "1": {
+            "min": 4,
+            "max": 5
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "chilly",
+      "3": "frigid",
+      "2": "frozen",
+      "1": "arctic"
+    },
+    "modifier": {
+      "coldDamageMultiplier": [
+        {
+          "4": {
+            "min": 0.05,
+            "max": 0.08
+          },
+          "3": {
+            "min": 0.09,
+            "max": 0.12
+          },
+          "2": {
+            "min": 0.13,
+            "max": 0.16
+          },
+          "1": {
+            "min": 0.17,
+            "max": 0.20
+          }
+        }
+      ],
+      "coldDamageAdded": [
+        {
+          "4": {
+            "min": 1,
+            "max": 2
+          },
+          "3": {
+            "min": 2,
+            "max": 3
+          },
+          "2": {
+            "min": 3,
+            "max": 4
+          },
+          "1": {
+            "min": 4,
+            "max": 5
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "charged",
+      "3": "arcing",
+      "2": "thunderous",
+      "1": "superconducting"
+    },
+    "modifier": {
+      "lightningDamageMultiplier": [
+        {
+          "4": {
+            "min": 0.05,
+            "max": 0.08
+          },
+          "3": {
+            "min": 0.09,
+            "max": 0.12
+          },
+          "2": {
+            "min": 0.13,
+            "max": 0.16
+          },
+          "1": {
+            "min": 0.17,
+            "max": 0.20
+          }
+        }
+      ],
+      "lightningDamageAdded": [
+        {
+          "4": {
+            "min": 1,
+            "max": 2
+          },
+          "3": {
+            "min": 2,
+            "max": 3
+          },
+          "2": {
+            "min": 3,
+            "max": 4
+          },
+          "1": {
+            "min": 4,
+            "max": 5
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "toxic",
+      "3": "virulent",
+      "2": "malignant",
+      "1": "plague-bearer"
+    },
+    "modifier": {
+      "poisonDamageMultiplier": [
+        {
+          "4": {
+            "min": 0.05,
+            "max": 0.08
+          },
+          "3": {
+            "min": 0.09,
+            "max": 0.12
+          },
+          "2": {
+            "min": 0.13,
+            "max": 0.16
+          },
+          "1": {
+            "min": 0.17,
+            "max": 0.20
+          }
+        }
+      ],
+      "poisonDamageAdded": [
+        {
+          "4": {
+            "min": 1,
+            "max": 2
+          },
+          "3": {
+            "min": 2,
+            "max": 3
+          },
+          "2": {
+            "min": 3,
+            "max": 4
+          },
+          "1": {
+            "min": 4,
+            "max": 5
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  }
+]
+

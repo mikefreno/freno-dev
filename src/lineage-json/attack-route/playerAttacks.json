@@ -1,0 +1,265 @@
+[
+  {
+    "name": "punch",
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {},
+    "animation": {
+      "sprite": "puft",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "hit",
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {},
+    "animation": {
+      "sprite": "puft",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "stab",
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {},
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.2
+      }
+    ],
+    "animation": {
+      "sprite": "smallCross",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "spark",
+    "targets": "single",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "lightning": 2
+    },
+    "debuffNames": [
+      {
+        "name": "shocked",
+        "chance": 0.15
+      }
+    ]
+  },
+  {
+    "name": "torch stab",
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "fire": 2
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.85
+      }
+    ],
+    "animation": {
+      "sprite": "puft",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "slash",
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {},
+    "animation": {
+      "sprite": "slashHorizontal",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "cleave",
+    "targets": "dual",
+    "baseHitChance": 0.85,
+    "damageTable": {},
+    "animation": {
+      "sprite": "slashHorizontal",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "crushing blow",
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {},
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "crowning",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "",
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {},
+    "debuffNames": [
+      {
+        "name": "execute",
+        "chance": 0.05
+      }
+    ]
+  },
+  {
+    "name": "cast",
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {},
+    "animation": {
+      "sprite": "puft",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "bonk",
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {},
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.05
+      }
+    ],
+    "animation": {
+      "sprite": "crowning",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "shoot",
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {},
+    "animation": {
+      "sprite": "chainedArrowHit",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7,
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "rooting shot",
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {},
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "chainedArrowRooting",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7,
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "hack",
+    "targets": "single",
+    "baseHitChance": 0.85,
+    "damageTable": {},
+    "debuffNames": [
+      {
+        "name": "execute",
+        "chance": 0.1
+      }
+    ],
+    "animation": {
+      "sprite": "crowning",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "rapid shot",
+    "targets": "single",
+    "baseHitChance": 0.55,
+    "damageTable": {},
+    "hits": 3,
+    "animation": {
+      "sprite": "chainedArrowHit",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7
+    }
+  },
+  {
+    "name": "careful shot",
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {},
+    "animation": {
+      "sprite": "chainedArrowHit",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7
+    }
+  },
+  {
+    "name": "poison shot",
+    "targets": "single",
+    "baseHitChance": 0.9,
+    "damageTable": {
+      "poison": 3
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 0.65
+      }
+    ],
+    "animation": {
+      "sprite": "chainedPoisonArrowHit",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7
+    }
+  },
+  {
+    "name": "overdraw",
+    "targets": "single",
+    "baseHitChance": 0.80,
+    "damageTable": {
+      "physical": 4
+    },
+    "animation": {
+      "sprite": "chainedArrowHit",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7
+    }
+  }
+]
+

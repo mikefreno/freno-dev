@@ -1,0 +1,224 @@
+[
+  {
+    "name": "walk in the Enchanted Forest",
+    "cost": 0,
+    "alone": {
+      "meetingSomeone": 0.15,
+      "nothingHappens": 0.25,
+      "randomGood": 0.40,
+      "randomBad": 0.20
+    },
+    "dateCooldown": 5,
+    "date": {
+      "increaseAffection": 0.85,
+      "increaseAffectionRange": {
+        "min": 1,
+        "max": 10
+      },
+      "decreaseAffection": 0.15,
+      "decreaseAffectionRange": {
+        "min": 1,
+        "max": 5
+      }
+    },
+    "randomBad": [
+      {
+        "name": "Mugged!",
+        "buyOff": {
+          "price": 300
+        },
+        "dungeonTitle": "Enchanted Forest",
+        "fight": {
+          "enemies": [
+            {
+              "name": "bandit",
+              "image": "bandit_light",
+              "scaler": 1,
+              "count": 1
+            }
+          ]
+        }
+      }
+    ],
+    "randomGood": [
+      {
+        "name": "Found a gold pouch!",
+        "effect": {
+          "gold": 50
+        }
+      },
+      {
+        "name": "Had a beautiful restorative walk",
+        "effect": {
+          "healthRestore": 25,
+          "sanityRestore": 25
+        }
+      }
+    ]
+  },
+  {
+    "name": "go to a Library",
+    "cost": 0,
+    "alone": {
+      "meetingSomeone": 0.40,
+      "nothingHappens": 0.40,
+      "randomGood": 0.10,
+      "randomBad": 0.10
+    },
+    "dateCooldown": 10,
+    "date": {
+      "increaseAffection": 0.85,
+      "increaseAffectionRange": {
+        "min": 3,
+        "max": 7
+      },
+      "decreaseAffection": 0.15,
+      "decreaseAffectionRange": {
+        "min": 1,
+        "max": 4
+      }
+    },
+    "randomBad": [
+      {
+        "name": "Read a disturbing book",
+        "effect": {
+          "sanityDamage": 25
+        }
+      }
+    ],
+    "randomGood": [
+      {
+        "name": "Read from your favorite author",
+        "effect": {
+          "sanityRestore": 25
+        }
+      },
+      {
+        "name": "Found a gold pouch!",
+        "effect": {
+          "gold": 25
+        }
+      }
+    ]
+  },
+  {
+    "name": "go to the Pub",
+    "cost": 25,
+    "alone": {
+      "meetingSomeone": 0.30,
+      "nothingHappens": 0.20,
+      "randomGood": 0.15,
+      "randomBad": 0.35
+    },
+    "dateCooldown": 10,
+    "date": {
+      "increaseAffection": 0.80,
+      "increaseAffectionRange": {
+        "min": 5,
+        "max": 15
+      },
+      "decreaseAffection": 0.20,
+      "decreaseAffectionRange": {
+        "min": 3,
+        "max": 10
+      }
+    },
+    "randomBad": [
+      {
+        "name": "Bar Fight",
+        "dungeonTitle": "Local Pub",
+        "fight": {
+          "enemies": [
+            {
+              "name": "bandit heavy",
+              "image": "bandit_heavy",
+              "scaler": 1,
+              "count": 1
+            }
+          ]
+        }
+      }
+    ],
+    "randomGood": [
+      {
+        "name": "Free Round",
+        "effect": {
+          "gold": 25,
+          "sanityRestore": 25
+        }
+      },
+      {
+        "name": "Found a gold pouch!",
+        "effect": {
+          "gold": 75
+        }
+      }
+    ]
+  },
+  {
+    "name": "go to a Festival",
+    "cost": 50,
+    "alone": {
+      "meetingSomeone": 0.40,
+      "nothingHappens": 0.40,
+      "randomGood": 0.10,
+      "randomBad": 0.10
+    },
+    "dateCooldown": 15,
+    "date": {
+      "increaseAffection": 0.85,
+      "increaseAffectionRange": {
+        "min": 5,
+        "max": 15
+      },
+      "decreaseAffection": 0.15,
+      "decreaseAffectionRange": {
+        "min": 3,
+        "max": 10
+      }
+    },
+    "randomBad": [
+      {
+        "name": "Raucous Local",
+        "dungeonTitle": "Festival",
+        "fight": {
+          "enemies": [
+            {
+              "name": "bandit heavy",
+              "image": "bandit_heavy",
+              "scaler": 1,
+              "count": 1
+            }
+          ]
+        }
+      },
+      {
+        "name": "Ride broke down!",
+        "effect": {
+          "healthDamage": 20,
+          "sanityDamage": 25
+        }
+      }
+    ],
+    "randomGood": [
+      {
+        "name": "Found a gold pouch!",
+        "effect": {
+          "gold": 100
+        }
+      }
+    ]
+  },
+  {
+    "name": "visit a Soul-Thread Weaver",
+    "cost": 250,
+    "aloneCooldown": 20,
+    "alone": {
+      "meetingSomeone": 0.65,
+      "nothingHappens": 0.35,
+      "randomGood": 0.00,
+      "randomBad": 0.00
+    }
+  }
+]
+

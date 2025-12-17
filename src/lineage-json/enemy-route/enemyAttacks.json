@@ -1,0 +1,854 @@
+[
+  {
+    "name": "stab",
+    "manaCost": 5,
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.20
+      }
+    ]
+  },
+  {
+    "name": "serrate",
+    "manaCost": 15,
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "hemmorage",
+        "chance": 0.25
+      }
+    ]
+  },
+  {
+    "name": "bite",
+    "manaCost": 8,
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "diseased",
+        "chance": 0.10
+      }
+    ]
+  },
+  {
+    "name": "zombie bite",
+    "manaCost": 15,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 3,
+      "poison": 4
+    },
+    "debuffNames": [
+      {
+        "name": "diseased",
+        "chance": 0.50
+      }
+    ]
+  },
+  {
+    "name": "vampiric bite",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "physical": 4,
+      "poison": 1
+    },
+    "debuffNames": [
+      {
+        "name": "lifesteal",
+        "chance": 0.65
+      }
+    ]
+  },
+  {
+    "name": "venomous bite",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "physical": 2,
+      "poison": 3
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 0.65
+      }
+    ]
+  },
+  {
+    "name": "torch stab",
+    "manaCost": 5,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 2,
+      "fire": 3
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.75
+      }
+    ]
+  },
+  {
+    "name": "cleave",
+    "manaCost": 10,
+    "targets": "dual",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 5
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.35
+      }
+    ]
+  },
+  {
+    "name": "blunt cleave",
+    "manaCost": 10,
+    "targets": "dual",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 3,
+      "raw": 2
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.35
+      }
+    ]
+  },
+  {
+    "name": "kick",
+    "manaCost": 5,
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "physical": 5,
+      "raw": 2
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.15
+      }
+    ]
+  },
+  {
+    "name": "rock throw",
+    "manaCost": 5,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 5,
+      "raw": 2
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.15
+      }
+    ]
+  },
+  {
+    "name": "rock spike",
+    "manaCost": 20,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 5,
+      "raw": 4
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.65
+      }
+    ]
+  },
+  {
+    "name": "burial",
+    "manaCost": 75,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 5,
+      "raw": 20
+    },
+    "debuffNames": [
+      {
+        "name": "heavy stun",
+        "chance": 0.75
+      }
+    ]
+  },
+  {
+    "name": "grab",
+    "manaCost": 20,
+    "targets": "single",
+    "baseHitChance": 0.75,
+    "damageTable": {
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.35
+      }
+    ]
+  },
+  {
+    "name": "tackle",
+    "manaCost": 20,
+    "targets": "single",
+    "baseHitChance": 0.75,
+    "damageTable": {
+      "physical": 3,
+      "raw": 2
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.8
+      }
+    ]
+  },
+  {
+    "name": "stomp",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 2,
+      "raw": 4
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.1
+      }
+    ]
+  },
+  {
+    "name": "bolder throw",
+    "manaCost": 25,
+    "targets": "area",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "physical": 2,
+      "raw": 4
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.25
+      }
+    ]
+  },
+  {
+    "name": "pocket sand",
+    "manaCost": 5,
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "raw": 1
+    },
+    "debuffNames": [
+      {
+        "name": "blind",
+        "chance": 0.75
+      }
+    ]
+  },
+  {
+    "name": "poison spray",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "poison": 5
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 0.85
+      }
+    ]
+  },
+  {
+    "name": "poisoned shot",
+    "manaCost": 15,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 5,
+      "poison": 3
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 0.5
+      }
+    ]
+  },
+  {
+    "name": "maddening shot",
+    "manaCost": 20,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {},
+    "sanityDamage": 5
+  },
+  {
+    "name": "wail",
+    "manaCost": 20,
+    "targets": "area",
+    "baseHitChance": 0.85,
+    "damageTable": {},
+    "sanityDamage": 5,
+    "debuffNames": [
+      {
+        "name": "fear",
+        "chance": 0.50
+      }
+    ]
+  },
+  {
+    "name": "shoot",
+    "manaCost": 15,
+    "targets": "single",
+    "baseHitChance": 0.75,
+    "damageTable": {
+      "physical": 11
+    }
+  },
+  {
+    "name": "head slam",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "raw": 2,
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.10
+      }
+    ]
+  },
+  {
+    "name": "stampede",
+    "manaCost": 15,
+    "targets": "area",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "raw": 2,
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.50
+      }
+    ]
+  },
+  {
+    "name": "heavy swing",
+    "manaCost": 20,
+    "targets": "single",
+    "baseHitChance": 0.80,
+    "damageTable": {
+      "physical": 10
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.20
+      }
+    ]
+  },
+  {
+    "name": "flurry",
+    "manaCost": 20,
+    "targets": "single",
+    "baseHitChance": 0.65,
+    "hitsPerTurn": 4,
+    "damageTable": {
+      "physical": 5,
+      "raw": 2
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.15
+      }
+    ]
+  },
+  {
+    "name": "chop",
+    "manaCost": 5,
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "physical": 6
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.25
+      }
+    ]
+  },
+  {
+    "name": "headbutt",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "raw": 2,
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.20
+      }
+    ]
+  },
+  {
+    "name": "pommel strike",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "raw": 2,
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.20
+      }
+    ]
+  },
+  {
+    "name": "punch",
+    "manaCost": 5,
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "physical": 5
+    }
+  },
+  {
+    "name": "call backup",
+    "manaCost": 30,
+    "damageTable": {},
+    "summonNames": [
+      "bandit"
+    ]
+  },
+  {
+    "name": "raise skeleton",
+    "damageTable": {},
+    "manaCost": 35,
+    "summonNames": [
+      "skeleton"
+    ]
+  },
+  {
+    "name": "teeth",
+    "manaCost": 15,
+    "targets": "dual",
+    "damageTable": {
+      "raw": 6,
+      "physical": 2
+    }
+  },
+  {
+    "name": "frenzy",
+    "damageTable": {},
+    "manaCost": 10,
+    "buffNames": [
+      "frenzy"
+    ]
+  },
+  {
+    "name": "chug beer",
+    "damageTable": {},
+    "manaCost": 10,
+    "buffNames": [
+      "frenzy"
+    ]
+  },
+  {
+    "name": "spark",
+    "manaCost": 25,
+    "targets": "single",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "lightning": 6
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.5
+      }
+    ]
+  },
+  {
+    "name": "bonk",
+    "manaCost": 5,
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "physical": 3
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.1
+      }
+    ]
+  },
+  {
+    "name": "pluck eye",
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "physical": 3
+    },
+    "debuffNames": [
+      {
+        "name": "blind",
+        "chance": 0.9
+      }
+    ]
+  },
+  {
+    "name": "scratch",
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 6
+    }
+  },
+  {
+    "name": "pulse",
+    "manaCost": 10,
+    "target": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "magic": 6
+    }
+  },
+  {
+    "name": "dark burst",
+    "manaCost": 15,
+    "target": "area",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "poison": 2,
+      "physical": 1
+    }
+  },
+  {
+    "name": "dark bolt",
+    "manaCost": 20,
+    "target": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "poison": 3,
+      "physical": 3
+    }
+  },
+  {
+    "name": "fire bolt",
+    "manaCost": 20,
+    "target": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "fire": 10
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.25
+      }
+    ]
+  },
+  {
+    "name": "frost",
+    "manaCost": 20,
+    "target": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "cold": 6
+    },
+    "debuffNames": [
+      {
+        "name": "chill",
+        "chance": 0.5
+      }
+    ]
+  },
+  {
+    "name": "gust",
+    "manaCost": 10,
+    "target": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "physical": 6
+    }
+  },
+  {
+    "name": "rock toss",
+    "manaCost": 15,
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "physical": 4,
+      "raw": 2
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.10
+      }
+    ]
+  },
+  {
+    "name": "life drain",
+    "manaCost": 25,
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "raw": 5
+    },
+    "debuffNames": [
+      {
+        "name": "lifesteal",
+        "chance": 0.5
+      },
+      {
+        "name": "dulled mind",
+        "chance": 0.35
+      }
+    ]
+  },
+  {
+    "name": "terrorize",
+    "manaCost": 30,
+    "targets": "area",
+    "baseHitChance": 0.85,
+    "sanityDamage": 10,
+    "damageTable": {},
+    "debuffNames": [
+      {
+        "name": "fear",
+        "chance": 0.75
+      }
+    ]
+  },
+  {
+    "name": "soul strike",
+    "manaCost": 20,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "raw": 6
+    },
+    "sanityDamage": 5
+  },
+  {
+    "name": "death blade",
+    "manaCost": 25,
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "raw": 12
+    },
+    "debuffNames": [
+      {
+        "name": "hemmorage",
+        "chance": 0.50
+      }
+    ]
+  },
+  {
+    "name": "corrupted cleave",
+    "manaCost": 35,
+    "targets": "dual",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "raw": 15
+    },
+    "debuffNames": [
+      {
+        "name": "necrotic wound",
+        "chance": 0.45
+      }
+    ]
+  },
+  {
+    "name": "death bolt",
+    "manaCost": 30,
+    "targets": "single",
+    "baseHitChance": 1.0,
+    "damageTable": {
+      "raw": 15
+    },
+    "debuffNames": [
+      {
+        "name": "necrotic wound",
+        "chance": 0.65
+      }
+    ]
+  },
+  {
+    "name": "soul rip",
+    "manaCost": 45,
+    "targets": "single",
+    "baseHitChance": 0.85,
+    "sanityDamage": 15,
+    "damageTable": {
+      "raw": 20
+    },
+    "debuffNames": [
+      {
+        "name": "dulled mind",
+        "chance": 0.75
+      }
+    ]
+  },
+  {
+    "name": "curse",
+    "manaCost": 40,
+    "targets": "single",
+    "baseHitChance": 0.90,
+    "damageTable": {},
+    "debuffNames": [
+      {
+        "name": "death mark",
+        "chance": 1.0
+      }
+    ]
+  },
+  {
+    "name": "claw",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 4
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.25
+      }
+    ]
+  },
+  {
+    "name": "dive",
+    "manaCost": 15,
+    "targets": "single",
+    "baseHitChance": 0.80,
+    "damageTable": {
+      "physical": 10
+    }
+  },
+  {
+    "name": "gust",
+    "manaCost": 15,
+    "targets": "area",
+    "baseHitChance": 0.95,
+    "damageTable": {
+      "physical": 6
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.1
+      }
+    ]
+  },
+  {
+    "name": "fire breath",
+    "manaCost": 20,
+    "targets": "area",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "fire": 6
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.4
+      }
+    ]
+  },
+  {
+    "name": "wing buffet",
+    "manaCost": 25,
+    "targets": "area",
+    "baseHitChance": 0.90,
+    "damageTable": {
+      "physical": 8
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.25
+      }
+    ]
+  },
+  {
+    "name": "pierce",
+    "manaCost": 10,
+    "targets": "single",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "physical": 8
+    }
+  },
+  {
+    "name": "charged pierce",
+    "manaCost": 35,
+    "targets": "single",
+    "baseHitChance": 0.85,
+    "damageTable": {
+      "lightning": 8,
+      "physical": 8
+    },
+    "debuffNames": [
+      {
+        "name": "shocked",
+        "chance": 0.5
+      }
+    ]
+  }
+]
+

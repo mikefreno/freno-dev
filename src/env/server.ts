@@ -22,6 +22,19 @@ const serverEnvSchema = z.object({
   TURSO_LINEAGE_TOKEN: z.string().min(1),
   TURSO_DB_API_TOKEN: z.string().min(1),
   LINEAGE_OFFLINE_SERIALIZATION_SECRET: z.string().min(1),
+  // Client-side variables accessible on server
+  VITE_DOMAIN: z.string().min(1).optional(),
+  VITE_AWS_BUCKET_STRING: z.string().min(1).optional(),
+  VITE_GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1).optional(),
+  VITE_GITHUB_CLIENT_ID: z.string().min(1).optional(),
+  VITE_WEBSOCKET: z.string().min(1).optional(),
+  // Aliases for backward compatibility
+  NEXT_PUBLIC_DOMAIN: z.string().min(1).optional(),
+  NEXT_PUBLIC_AWS_BUCKET_STRING: z.string().min(1).optional(),
+  NEXT_PUBLIC_GITHUB_CLIENT_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1).optional(),
 });
 
 const clientEnvSchema = z.object({
@@ -66,15 +79,21 @@ export const validateServerEnv = (
       const formattedErrors = error.format();
       const missingVars = Object.entries(formattedErrors)
         .filter(
-          ([_, value]) =>
-            value._errors.length > 0 && value._errors[0] === "Required",
+          ([key, value]) =>
+            key !== "_errors" &&
+            typeof value === "object" &&
+            value._errors?.length > 0 &&
+            value._errors[0] === "Required",
         )
         .map(([key, _]) => key);
 
       const invalidVars = Object.entries(formattedErrors)
         .filter(
-          ([_, value]) =>
-            value._errors.length > 0 && value._errors[0] !== "Required",
+          ([key, value]) =>
+            key !== "_errors" &&
+            typeof value === "object" &&
+            value._errors?.length > 0 &&
+            value._errors[0] !== "Required",
         )
         .map(([key, value]) => ({
           key,
@@ -116,15 +135,21 @@ export const validateClientEnv = (
       const formattedErrors = error.format();
       const missingVars = Object.entries(formattedErrors)
         .filter(
-          ([_, value]) =>
-            value._errors.length > 0 && value._errors[0] === "Required",
+          ([key, value]) =>
+            key !== "_errors" &&
+            typeof value === "object" &&
+            value._errors?.length > 0 &&
+            value._errors[0] === "Required",
         )
         .map(([key, _]) => key);
 
       const invalidVars = Object.entries(formattedErrors)
         .filter(
-          ([_, value]) =>
-            value._errors.length > 0 && value._errors[0] !== "Required",
+          ([key, value]) =>
+            key !== "_errors" &&
+            typeof value === "object" &&
+            value._errors?.length > 0 &&
+            value._errors[0] !== "Required",
         )
         .map(([key, value]) => ({
           key,
@@ -158,8 +183,8 @@ export const validateClientEnv = (
 // Environment validation for server startup with better error reporting
 export const env = (() => {
   try {
-    // Validate server environment variables
-    const validatedServerEnv = validateServerEnv(import.meta.env);
+    // Validate server environment variables using process.env
+    const validatedServerEnv = validateServerEnv(process.env);
 
     console.log("✅ Environment validation successful");
     return validatedServerEnv;
@@ -194,12 +219,20 @@ export const getClientEnvValidation = () => {
 
 // Helper function to check if a variable is missing
 export const isMissingEnvVar = (varName: string): boolean => {
+  return !process.env[varName] || process.env[varName]?.trim() === "";
+};
+
+// Helper function to check if a client variable is missing
+export const isMissingClientEnvVar = (varName: string): boolean => {
   return !import.meta.env[varName] || import.meta.env[varName]?.trim() === "";
 };
 
 // Helper function to get all missing environment variables
-export const getMissingEnvVars = (): string[] => {
-  const requiredVars = [
+export const getMissingEnvVars = (): {
+  server: string[];
+  client: string[];
+} => {
+  const requiredServerVars = [
     "NODE_ENV",
     "ADMIN_EMAIL",
     "ADMIN_ID",
@@ -222,5 +255,19 @@ export const getMissingEnvVars = (): string[] => {
     "LINEAGE_OFFLINE_SERIALIZATION_SECRET",
   ];
 
-  return requiredVars.filter((varName) => isMissingEnvVar(varName));
+  const requiredClientVars = [
+    "VITE_DOMAIN",
+    "VITE_AWS_BUCKET_STRING",
+    "VITE_GOOGLE_CLIENT_ID",
+    "VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE",
+    "VITE_GITHUB_CLIENT_ID",
+    "VITE_WEBSOCKET",
+  ];
+
+  return {
+    server: requiredServerVars.filter((varName) => isMissingEnvVar(varName)),
+    client: requiredClientVars.filter((varName) =>
+      isMissingClientEnvVar(varName),
+    ),
+  };
 };

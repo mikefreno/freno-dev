@@ -1,0 +1,708 @@
+[
+  {
+    "name": "flash heal",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 25,
+    "selfDamageTable": {
+      "raw": -35
+    },
+    "animation": {
+      "sprite": "goldenHeal",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "minor blessing",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 15,
+    "buffNames": [
+      "minor fortitude"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "holy light",
+    "element": "holy",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 20,
+    "damageTable": {
+      "holy": 15
+    },
+    "debuffNames": [
+      {
+        "name": "blind",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "glow": "#FBD44F",
+      "position": "field"
+    }
+  },
+  {
+    "name": "rejuvenating light",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 20,
+    "buffNames": [
+      "quickened mind"
+    ],
+    "animation": {
+      "glow": "#FBD44F",
+      "position": "field"
+    }
+  },
+  {
+    "name": "turn undead",
+    "element": "holy",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 50,
+    "damageTable": {
+      "holy": 20
+    },
+    "debuffNames": [
+      {
+        "name": "undead cower",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "corruptSword",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "cleansing light",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 40,
+    "selfDamageTable": {
+      "raw": -25
+    },
+    "buffNames": [
+      "purify"
+    ],
+    "animation": {
+      "glow": "#FBD44F",
+      "position": "field"
+    }
+  },
+  {
+    "name": "delayed heal",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 75,
+    "buffNames": [
+      "delayed heal"
+    ],
+    "animation": {
+      "sprite": "goldenHeal",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "moderate heal",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 75,
+    "selfDamageTable": {
+      "raw": -85
+    },
+    "animation": {
+      "sprite": "goldenHeal",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "holy nova",
+    "element": "holy",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 85,
+    "damageTable": {
+      "holy": 65
+    },
+    "selfDamageTable": {
+      "raw": -30
+    },
+    "debuffNames": [
+      {
+        "name": "blind",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "holyOrb",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "revoke undead",
+    "element": "holy",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 100,
+    "damageTable": {
+      "holy": 75
+    },
+    "debuffNames": [
+      {
+        "name": "revoke undead",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "corruptSword",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "great rejuvenating light",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 200,
+    "buffNames": [
+      "greater quickened mind"
+    ],
+    "animation": {
+      "glow": "#FBD44F",
+      "position": "field"
+    }
+  },
+  {
+    "name": "overwhelming glow",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "master",
+    "manaCost": 200,
+    "selfDamageTable": {
+      "raw": -120
+    },
+    "buffNames": [
+      "overwhelming glow"
+    ],
+    "animation": {
+      "sprite": "holyBeam",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "unending cure",
+    "element": "holy",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 250,
+    "duration": 3,
+    "selfDamageTable": {
+      "raw": -100
+    },
+    "buffNames": [
+      "overwhelming glow"
+    ],
+    "animation": {
+      "sprite": "goldenHeal",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "judgment",
+    "element": "vengeance",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "novice",
+    "manaCost": 25,
+    "damageTable": {
+      "holy": 5
+    },
+    "animation": {
+      "sprite": "holyArc",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.5
+    }
+  },
+  {
+    "name": "righteous fury",
+    "element": "vengeance",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 15,
+    "buffNames": [
+      "minor fury"
+    ],
+    "animation": {
+      "sprite": "crossedSwords",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "holy bolt",
+    "element": "vengeance",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 20,
+    "damageTable": {
+      "holy": 20
+    },
+    "animation": {
+      "sprite": "holyDart",
+      "style": "missile",
+      "position": "enemy",
+      "scale": 0.3,
+      "reachTargetAtFrame": 10
+    }
+  },
+  {
+    "name": "holy strike",
+    "element": "vengeance",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 35,
+    "damageTable": {
+      "holy": 35
+    },
+    "debuffNames": [
+      {
+        "name": "sunder",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "glowingBlade",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "righteous blow",
+    "element": "vengeance",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 40,
+    "damageTable": {
+      "holy": 45
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "holyFist",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "consecrated blade",
+    "element": "vengeance",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "adept",
+    "manaCost": 50,
+    "damageTable": {
+      "holy": 45
+    },
+    "buffNames": [
+      "blessed defense"
+    ],
+    "animation": {
+      "sprite": "glowingBlade",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "holy wrath",
+    "element": "vengeance",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 65,
+    "damageTable": {
+      "holy": 55
+    },
+    "debuffNames": [
+      {
+        "name": "weakened",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "holyShred",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "smite",
+    "element": "vengeance",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "expert",
+    "manaCost": 75,
+    "damageTable": {
+      "holy": 85
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "holySword",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "holy nova",
+    "element": "vengeance",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "master",
+    "manaCost": 150,
+    "damageTable": {
+      "holy": 125
+    },
+    "buffNames": [
+      "protection aura"
+    ],
+    "animation": {
+      "sprite": "holyTrails",
+      "style": "static",
+      "position": "field"
+    }
+  },
+  {
+    "name": "righteous condemnation",
+    "element": "vengeance",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "master",
+    "manaCost": 175,
+    "damageTable": {
+      "holy": 150
+    },
+    "debuffNames": [
+      {
+        "name": "sunder",
+        "chance": 0.75
+      },
+      {
+        "name": "weakened",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "glowingBlade",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "divine judgment",
+    "element": "vengeance",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "legend",
+    "manaCost": 200,
+    "damageTable": {
+      "holy": 250
+    },
+    "debuffNames": [
+      {
+        "name": "execute",
+        "chance": 0.2
+      }
+    ],
+    "animation": {
+      "sprite": "corruptSword",
+      "style": "static",
+      "position": "field"
+    }
+  },
+  {
+    "name": "holy cataclysm",
+    "element": "vengeance",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 300,
+    "damageTable": {
+      "holy": 200
+    },
+    "buffNames": [
+      "righteous fury"
+    ],
+    "debuffNames": [
+      {
+        "name": "severe sunder",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "holySword",
+      "style": "static",
+      "position": "field"
+    }
+  },
+  {
+    "name": "blessed guard",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "shield",
+    "proficiencyNeeded": "novice",
+    "manaCost": 25,
+    "buffNames": [
+      "guard"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "protection aura",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 25,
+    "buffNames": [
+      "protection aura"
+    ],
+    "animation": {
+      "glow": "#FBD44F",
+      "position": "field"
+    }
+  },
+  {
+    "name": "divine fortitude",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 20,
+    "buffNames": [
+      "minor fortitude"
+    ],
+    "animation": {
+      "sprite": "holyFist",
+      "style": "static",
+      "position": "field"
+    }
+  },
+  {
+    "name": "reflective bulwark",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "shield",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 50,
+    "buffNames": [
+      "reflective bulwark"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "readied guard",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "shield",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 10,
+    "buffNames": [
+      "empowered guarding"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "holy ward",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 45,
+    "buffNames": [
+      "spell resistance"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "blessed shield",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "shield",
+    "proficiencyNeeded": "adept",
+    "manaCost": 65,
+    "buffNames": [
+      "blessed defense"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "divine resilience",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 70,
+    "buffNames": [
+      "fortitude",
+      "spell resistance"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "divine intervention",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "shield",
+    "proficiencyNeeded": "expert",
+    "manaCost": 100,
+    "buffNames": [
+      "guard",
+      "blessed defense"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "holy sanctuary",
+    "element": "protection",
+    "targets": "area",
+    "type": "defense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 125,
+    "selfDamageTable": {
+      "raw": -40
+    },
+    "buffNames": [
+      "protection aura",
+      "minor fortitude"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "holy barrier",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "shield",
+    "proficiencyNeeded": "master",
+    "manaCost": 150,
+    "buffNames": [
+      "protection aura",
+      "reflective bulwark"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "aegis of light",
+    "element": "protection",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "shield",
+    "proficiencyNeeded": "legend",
+    "manaCost": 250,
+    "buffNames": [
+      "protection aura",
+      "blessed defense",
+      "reflective bulwark"
+    ],
+    "animation": {
+      "sprite": "holyShield",
+      "style": "static",
+      "position": "self"
+    }
+  }
+]
+

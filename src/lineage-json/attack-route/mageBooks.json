@@ -1,0 +1,248 @@
+[
+  {
+    "name": "book of fire bolt",
+    "type": "spell",
+    "teaches": "fire bolt",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of catch flame",
+    "type": "spell",
+    "teaches": "catch flame",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of scorch",
+    "type": "spell",
+    "teaches": "scorch",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of fireballs",
+    "type": "spell",
+    "teaches": "fireball",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of fire wall",
+    "type": "spell",
+    "teaches": "fire wall",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of rain fire",
+    "type": "spell",
+    "teaches": "rain fire",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "forbidden fire techniques vol. 1",
+    "type": "spell",
+    "teaches": "dragons breath",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "forbidden fire techniques vol. 2",
+    "type": "spell",
+    "teaches": "sunbeam",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of frost",
+    "type": "spell",
+    "teaches": "frost",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of water whip",
+    "type": "spell",
+    "teaches": "water whip",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of soothing waters",
+    "type": "spell",
+    "teaches": "soothing waters",
+    "icon": "Book",
+    "baseValue": 10000
+  },
+  {
+    "name": "book of cone of cold",
+    "type": "spell",
+    "teaches": "cone of cold",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of steam blast",
+    "type": "spell",
+    "teaches": "steam blast",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of ice spike",
+    "type": "spell",
+    "teaches": "ice spike",
+    "icon": "Book_2",
+    "baseValue": 100000
+  },
+  {
+    "name": "book of healing rain",
+    "type": "spell",
+    "teaches": "healing rain",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of orb of cold",
+    "type": "spell",
+    "teaches": "orb of cold",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "forbidden water techniques vol. 1",
+    "type": "spell",
+    "teaches": "torrent",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "forbidden water techniques vol. 2",
+    "type": "spell",
+    "teaches": "spike field",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of air burst",
+    "type": "spell",
+    "teaches": "air burst",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of sparks",
+    "type": "spell",
+    "teaches": "sparks",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of lightning",
+    "type": "spell",
+    "teaches": "lightning",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of thunder clap",
+    "type": "spell",
+    "teaches": "thunder clap",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of chain lightning",
+    "type": "spell",
+    "teaches": "chain lightning",
+    "icon": "Book_2",
+    "baseValue": 100000
+  },
+  {
+    "name": "book of wind blades",
+    "type": "spell",
+    "teaches": "wind blades",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of gale",
+    "type": "spell",
+    "teaches": "surrounding gale",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "forbidden air techniques vol. 1",
+    "type": "spell",
+    "teaches": "tornado",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "forbidden air techniques vol. 2",
+    "type": "spell",
+    "teaches": "suffocate",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of rock toss",
+    "type": "spell",
+    "teaches": "rock toss",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of stone hands",
+    "type": "spell",
+    "teaches": "stone hands",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of stone salvo",
+    "type": "spell",
+    "teaches": "stone salvo",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of rock armor",
+    "type": "spell",
+    "teaches": "rock armor",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of stalactite storm",
+    "type": "spell",
+    "teaches": "stalactite storm",
+    "icon": "Book_2",
+    "baseValue": 100000
+  },
+  {
+    "name": "book of rock wall",
+    "type": "spell",
+    "teaches": "rock wall",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "forbidden earth techniques vol. 1",
+    "type": "spell",
+    "teaches": "earthquake",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "forbidden earth techniques vol. 2",
+    "type": "spell",
+    "teaches": "collider",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  }
+]
+

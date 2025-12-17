@@ -1,0 +1,244 @@
+[
+  {
+    "name": "Apprentice Wand",
+    "baseValue": 1000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "magicDamage": 5.0
+    }
+  },
+  {
+    "name": "Scorching Wand",
+    "baseValue": 5000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "fireDamage": 8.0
+    }
+  },
+  {
+    "name": "Frozen Wand",
+    "baseValue": 12000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "coldDamage": 12.0
+    }
+  },
+  {
+    "name": "Wand of the Prodigy",
+    "baseValue": 18000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "magicDamage": 18.0
+    }
+  },
+  {
+    "name": "Adept Wand",
+    "baseValue": 22000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "magicDamage": 20.0
+    }
+  },
+  {
+    "name": "Wand of the Inferno",
+    "baseValue": 26000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "fireDamage": 23.0
+    }
+  },
+  {
+    "name": "Enchanted Wand",
+    "baseValue": 31000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "magicDamage": 27.0
+    }
+  },
+  {
+    "name": "Wand of Blizzards",
+    "baseValue": 40000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "coldDamage": 31.0
+    }
+  },
+  {
+    "name": "Expert Wand",
+    "baseValue": 48000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "magicDamage": 34.0
+    }
+  },
+  {
+    "name": "Wand of Decay",
+    "baseValue": 65000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "poisonDamage": 38.0
+    }
+  },
+  {
+    "name": "Master's Wand",
+    "baseValue": 84000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "magicDamage": 42.0
+    }
+  },
+  {
+    "name": "Ethereal Wand",
+    "baseValue": 121000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "magicDamage": 45.0
+    }
+  },
+  {
+    "name": "Celestial Wand",
+    "baseValue": 145000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "magicDamage": 48.0
+    }
+  },
+  {
+    "name": "Wand of Destiny",
+    "baseValue": 185000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "holyDamage": 52.0
+    }
+  },
+  {
+    "name": "Wand of Misfortune",
+    "baseValue": 245000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "poisonDamage": 55.0
+    }
+  },
+  {
+    "name": "Light's End",
+    "baseValue": 285000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "lightningDamage": 58.0
+    }
+  },
+  {
+    "name": "Wand of the Forgotten",
+    "baseValue": 335000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "physicalDamage": 60.0
+    }
+  },
+  {
+    "name": "Divine Wand",
+    "baseValue": 410000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "holyDamage": 62.0
+    }
+  },
+  {
+    "name": "Death Ray",
+    "baseValue": 520000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "poisonDamage": 65.0
+    }
+  },
+  {
+    "name": "Finger of God",
+    "baseValue": 750000,
+    "icon": "Magic_Wand",
+    "slot": "one-hand",
+    "attacks": [
+      "cast"
+    ],
+    "stats": {
+      "holyDamage": 50.0,
+      "magicDamage": 20.0
+    }
+  }
+]
+

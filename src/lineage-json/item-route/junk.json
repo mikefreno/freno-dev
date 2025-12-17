@@ -1,0 +1,18 @@
+[
+  {
+    "name": "patch of fur",
+    "icon": "Patch_of_Fur",
+    "baseValue": 5
+  },
+  {
+    "name": "vampiric tooth",
+    "icon": "Fang",
+    "baseValue": 25
+  },
+  {
+    "name": "chunk of flesh",
+    "icon": "Chunk_of_Flesh",
+    "baseValue": 40
+  }
+]
+

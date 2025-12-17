@@ -1,0 +1,1600 @@
+[
+  {
+    "name": "training grounds",
+    "bgName": "Castle_Atrium",
+    "isComplete": true,
+    "id": 0,
+    "difficulty": 0,
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 0,
+        "unlocked": true,
+        "normalEncounters": [
+          [
+            {
+              "name": "training dummy",
+              "scaler": 1
+            }
+          ]
+        ],
+        "bossEncounter": [],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": []
+  },
+  {
+    "name": "nearby cave",
+    "bgName": "Cave",
+    "isComplete": true,
+    "id": 1,
+    "difficulty": 1,
+    "instanceDrops": [
+      {
+        "item": "stick",
+        "itemType": "melee",
+        "chance": 0.2
+      }
+    ],
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 15,
+        "unlocked": true,
+        "normalEncounters": [
+          [
+            {
+              "name": "giant rat",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "bat",
+              "scaler": 1
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "zombie",
+            "scaler": 1
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "1": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0.1,
+              "1": 0.8,
+              "2": 0.1
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "tiles": 15,
+        "normalEncounters": [
+          [
+            {
+              "name": "skeleton",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "skeleton mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "ghost",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "bat",
+              "scaler": 0.75
+            },
+            {
+              "name": "bat",
+              "scaler": 0.75
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "zombie",
+            "scaler": 1.25
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "1": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0.1,
+              "1": 0.8,
+              "2": 0.1
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "0": 0.5,
+              "1": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0.5,
+              "1": 0.5
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "tiles": 25,
+        "normalEncounters": [
+          [
+            {
+              "name": "skeleton",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "skeleton mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "ghost",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "zombie",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "skeleton",
+              "scaler": 0.75
+            },
+            {
+              "name": "skeleton",
+              "scaler": 0.75
+            }
+          ],
+          [
+            {
+              "name": "skeleton",
+              "scaler": 0.75
+            },
+            {
+              "name": "skeleton mage",
+              "scaler": 0.75
+            }
+          ],
+          [
+            {
+              "name": "skeleton mage",
+              "scaler": 0.75
+            },
+            {
+              "name": "skeleton mage",
+              "scaler": 0.75
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "necromancer",
+            "scaler": 1
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "2": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0.1,
+              "1": 0.8,
+              "2": 0.1
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "0": 0.5,
+              "1": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0.5,
+              "1": 0.5
+            },
+            "scaler": 1
+          }
+        ]
+      }
+    ],
+    "unlocks": [
+      "goblin cave",
+      "bandit hideout"
+    ]
+  },
+  {
+    "name": "goblin cave",
+    "bgName": "Cave",
+    "isComplete": true,
+    "id": 2,
+    "difficulty": 2,
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "unlocked": true,
+        "normalEncounters": [
+          [
+            {
+              "name": "goblin",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "warg",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "bat",
+              "scaler": 0.75
+            },
+            {
+              "name": "bat",
+              "scaler": 0.75
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "kobold",
+            "scaler": 1
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "1": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0.1,
+              "1": 0.8,
+              "2": 0.1
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "0": 0.5,
+              "1": 0.5
+            },
+            "scaler": 1.5
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [
+          [
+            {
+              "name": "goblin",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "warg",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "kobold",
+              "scaler": 0.75
+            },
+            {
+              "name": "goblin",
+              "scaler": 0.75
+            }
+          ],
+          [
+            {
+              "name": "goblin",
+              "scaler": 0.75
+            },
+            {
+              "name": "warg",
+              "scaler": 0.75
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "warg",
+            "scaler": 1.0
+          },
+          {
+            "name": "goblin mage",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "2": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0.1,
+              "1": 0.5,
+              "2": 0.4
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "0": 0.5,
+              "1": 0.5
+            },
+            "scaler": 1.5
+          }
+        ]
+      }
+    ],
+    "unlocks": [
+      "frost spire fortress"
+    ]
+  },
+  {
+    "name": "bandit hideout",
+    "bgName": "Plains",
+    "isComplete": true,
+    "id": 3,
+    "difficulty": 3,
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "unlocked": true,
+        "normalEncounters": [
+          [
+            {
+              "name": "bandit",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "bandit",
+              "scaler": 0.65
+            },
+            {
+              "name": "bandit",
+              "scaler": 0.65
+            }
+          ],
+          [
+            {
+              "name": "bandit heavy",
+              "scaler": 1
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "bandit heavy",
+            "scaler": 1
+          },
+          {
+            "name": "bandit",
+            "scaler": 0.65
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "1": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0,
+              "2": 0.4,
+              "3": 0.6
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0.5,
+              "1": 0.5
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "tiles": 30,
+        "normalEncounters": [
+          [
+            {
+              "name": "bandit",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "bandit",
+              "scaler": 0.65
+            },
+            {
+              "name": "bandit",
+              "scaler": 0.65
+            }
+          ],
+          [
+            {
+              "name": "bandit heavy",
+              "scaler": 1
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "huge knight",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "2": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0,
+              "2": 0.1,
+              "3": 0.5,
+              "4": 0.4
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      }
+    ],
+    "unlocks": [
+      "infestation",
+      "ancient arena"
+    ]
+  },
+  {
+    "name": "frost spire fortress",
+    "id": 4,
+    "isComplete": true,
+    "difficulty": 5,
+    "bgName": "SnowyMountain",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 10,
+        "normalEncounters": [
+          [
+            {
+              "name": "novice fire mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "novice air mage",
+              "scaler": 1
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "adept air mage",
+            "scaler": 1
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "1": 1
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "tiles": 10,
+        "normalEncounters": [
+          [
+            {
+              "name": "novice fire mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "novice water mage",
+              "scaler": 1
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "adept water mage",
+            "scaler": 1
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "1": 1
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "tiles": 10,
+        "normalEncounters": [
+          [
+            {
+              "name": "novice air mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "novice earth mage",
+              "scaler": 1
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "master earthen monk",
+            "scaler": 1
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "1": 1
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "tiles": 15,
+        "normalEncounters": [
+          [
+            {
+              "name": "novice air mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "novice earth mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "novice fire mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "novice water mage",
+              "scaler": 1
+            }
+          ],
+          [
+            {
+              "name": "novice fire mage",
+              "scaler": 0.75
+            },
+            {
+              "name": "novice air mage",
+              "scaler": 0.75
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "master fire mage",
+            "scaler": 1
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "2": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "ritual altar",
+            "countChances": {
+              "1": 1
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      }
+    ],
+    "unlocks": [
+      "dark forest"
+    ]
+  },
+  {
+    "name": "infestation",
+    "isComplete": true,
+    "id": 5,
+    "difficulty": 6,
+    "bgName": "SpiderLair",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [
+          [
+            {
+              "name": "spider",
+              "scaler": 1.0
+            },
+            {
+              "name": "spider",
+              "scaler": 1.0
+            },
+            {
+              "name": "spider",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "giant spider",
+              "scaler": 1.0
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "giant venomous spider",
+            "scaler": 1
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "1": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [
+          [
+            {
+              "name": "spider",
+              "scaler": 1.0
+            },
+            {
+              "name": "spider",
+              "scaler": 1.0
+            },
+            {
+              "name": "spider",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "venomous spider",
+              "scaler": 1.0
+            },
+            {
+              "name": "venomous spider",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "giant spider",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "giant venomous spider",
+              "scaler": 1.0
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "brood mother",
+            "scaler": 1.0
+          },
+          {
+            "name": "giant venomous spider",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "2": 1.0
+            },
+            "scaler": 1
+          },
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          }
+        ]
+      }
+    ],
+    "unlocks": [
+      "crystal labyrinthine - first excavation"
+    ]
+  },
+  {
+    "name": "dark forest",
+    "id": 6,
+    "difficulty": 6,
+    "isComplete": true,
+    "bgName": "DemonWoods",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 25,
+        "normalEncounters": [
+          [
+            {
+              "name": "satyr",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "harpy",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "harpy",
+              "scaler": 0.7
+            },
+            {
+              "name": "harpy",
+              "scaler": 0.7
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "centaur",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "2": 1.0
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "tiles": 30,
+        "normalEncounters": [
+          [
+            {
+              "name": "centaur",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "satyr",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "harpy",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "harpy",
+              "scaler": 0.7
+            },
+            {
+              "name": "harpy",
+              "scaler": 0.7
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "gryphon",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "camp",
+            "countChances": {
+              "3": 1.0
+            },
+            "scaler": 1
+          }
+        ]
+      }
+    ],
+    "unlocks": [
+      "ancient arena"
+    ]
+  },
+  {
+    "name": "ancient arena",
+    "id": 7,
+    "difficulty": 8,
+    "isComplete": true,
+    "bgName": "dungeon",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 10,
+        "normalEncounters": [
+          [
+            {
+              "name": "legionnaire",
+              "scaler": 1.0
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "gladiator",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "tiles": 10,
+        "normalEncounters": [
+          [
+            {
+              "name": "legionnaire",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "gladiator",
+              "scaler": 1.0
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "lizardman",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "tiles": 10,
+        "normalEncounters": [
+          [
+            {
+              "name": "lizardman",
+              "scaler": 0.75
+            },
+            {
+              "name": "lizardman",
+              "scaler": 0.75
+            }
+          ],
+          [
+            {
+              "name": "legionnaire",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "gladiator",
+              "scaler": 1.0
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "the hammer",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "tiles": 10,
+        "normalEncounters": [
+          [
+            {
+              "name": "lizardman",
+              "scaler": 0.75
+            },
+            {
+              "name": "lizardman",
+              "scaler": 0.75
+            }
+          ],
+          [
+            {
+              "name": "legionnaire",
+              "scaler": 1.0
+            }
+          ],
+          [
+            {
+              "name": "gladiator",
+              "scaler": 1.0
+            }
+          ]
+        ],
+        "bossEncounter": [
+          {
+            "name": "her",
+            "scaler": 1.0
+          },
+          {
+            "name": "the deadeye",
+            "scaler": 1.0
+          },
+          {
+            "name": "the spear",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": [
+          {
+            "name": "chest",
+            "countChances": {
+              "0": 0,
+              "1": 0.5,
+              "2": 0.5
+            },
+            "scaler": 1
+          },
+          {
+            "name": "water basin",
+            "countChances": {
+              "0": 0,
+              "1": 1
+            },
+            "scaler": 1
+          }
+        ]
+      }
+    ],
+    "unlocks": []
+  },
+  {
+    "name": "crystal labyrinthine - first excavation",
+    "id": 7,
+    "difficulty": 8,
+    "isComplete": false,
+    "bgName": "CrystalCave_1",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "isComplete": false,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "crystal labyrinthine - second excavation"
+    ]
+  },
+  {
+    "name": "crystal labyrinthine - second excavation",
+    "id": 8,
+    "difficulty": 9,
+    "isComplete": false,
+    "bgName": "CrystalCave_2",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "crystal labyrinthine - third excavation"
+    ]
+  },
+  {
+    "name": "crystal labyrinthine - third excavation",
+    "id": 9,
+    "difficulty": 10,
+    "isComplete": false,
+    "bgName": "CrystalCave_3",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "crystal labyrinthine - fourth excavation"
+    ]
+  },
+  {
+    "name": "crystal labyrinthine - fourth excavation",
+    "id": 10,
+    "difficulty": 11,
+    "isComplete": false,
+    "bgName": "CrystalCave_4",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "corrupted temple - outer terrace"
+    ]
+  },
+  {
+    "name": "corrupted temple - outer terrace",
+    "id": 11,
+    "difficulty": 12,
+    "isComplete": false,
+    "bgName": "Castle_Entrance",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "corrupted temple - ramparts"
+    ]
+  },
+  {
+    "name": "corrupted temple - ramparts",
+    "id": 12,
+    "difficulty": 14,
+    "isComplete": false,
+    "bgName": "Castle_Ramparts",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "corrupted temple - hall"
+    ]
+  },
+  {
+    "name": "corrupted temple - hall",
+    "id": 13,
+    "difficulty": 16,
+    "isComplete": false,
+    "bgName": "Castle_Hall",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": []
+  },
+  {
+    "name": "corrupted temple - atrium",
+    "id": 14,
+    "difficulty": 18,
+    "isComplete": false,
+    "bgName": "Castle_Atrium",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 25,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "ronin's redoubt"
+    ]
+  },
+  {
+    "name": "ronin's redoubt",
+    "id": 15,
+    "difficulty": 20,
+    "isComplete": false,
+    "bgName": "AutumnForest",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 2,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "samurai old",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "blade fortress"
+    ]
+  },
+  {
+    "name": "kōtetsu moses",
+    "id": 16,
+    "difficulty": 25,
+    "isComplete": false,
+    "bgName": "AutumnForest",
+    "levels": [
+      {
+        "level": 1,
+        "tiles": 20,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "samurai old",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 2,
+        "tiles": 30,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "samurai old",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      },
+      {
+        "level": 3,
+        "tiles": 10,
+        "normalEncounters": [],
+        "bossEncounter": [
+          {
+            "name": "samurai old",
+            "scaler": 1.0
+          }
+        ],
+        "specialEncounters": []
+      }
+    ],
+    "unlocks": [
+      "ronin's redoubt"
+    ]
+  }
+]
+

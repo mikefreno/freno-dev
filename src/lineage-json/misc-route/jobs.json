@@ -1,0 +1,89 @@
+[
+  {
+    "title": "Broomstick Boxer",
+    "cost": {
+      "mana": 5
+    },
+    "qualifications": null,
+    "experienceToPromote": 50,
+    "reward": {
+      "gold": 20
+    },
+    "rankMultiplier": 0.15
+  },
+  {
+    "title": "Crusty Cauldron Cleaner",
+    "cost": {
+      "mana": 5,
+      "health": 3
+    },
+    "qualifications": null,
+    "experienceToPromote": 50,
+    "reward": {
+      "gold": 30
+    },
+    "rankMultiplier": 0.20
+  },
+  {
+    "title": "Apprentice Scribe",
+    "cost": {
+      "mana": 8
+    },
+    "qualifications": [
+      "high school education"
+    ],
+    "experienceToPromote": 50,
+    "reward": {
+      "gold": 45
+    },
+    "rankMultiplier": 0.20
+  },
+  {
+    "title": "Imp CareTaker",
+    "cost": {
+      "mana": 7,
+      "health": 4
+    },
+    "qualifications": [
+      "high school education"
+    ],
+    "experienceToPromote": 50,
+    "reward": {
+      "gold": 55
+    },
+    "rankMultiplier": 0.25
+  },
+  {
+    "title": "Private Dueling Partner",
+    "cost": {
+      "mana": 10,
+      "health": 4
+    },
+    "qualifications": [
+      "high school education",
+      "defense course"
+    ],
+    "experienceToPromote": 50,
+    "reward": {
+      "gold": 90
+    },
+    "rankMultiplier": 0.25
+  },
+  {
+    "title": "Wild Monster Hunter",
+    "cost": {
+      "mana": 10,
+      "health": 6
+    },
+    "qualifications": [
+      "high school education",
+      "defense course"
+    ],
+    "experienceToPromote": 50,
+    "reward": {
+      "gold": 120
+    },
+    "rankMultiplier": 0.30
+  }
+]
+

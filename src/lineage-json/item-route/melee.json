@@ -1,0 +1,308 @@
+[
+  {
+    "name": "stick",
+    "baseValue": 50,
+    "slot": "one-hand",
+    "attacks": [
+      "hit"
+    ],
+    "icon": "Wood_Log",
+    "stats": {
+      "physicalDamage": 2.5
+    }
+  },
+  {
+    "name": "big stick",
+    "baseValue": 75,
+    "slot": "two-hand",
+    "attacks": [
+      "hit"
+    ],
+    "icon": "Wood_Log",
+    "stats": {
+      "physicalDamage": 4.5
+    },
+    "requirements": {
+      "strength": 5
+    }
+  },
+  {
+    "name": "torch",
+    "baseValue": 300,
+    "slot": "one-hand",
+    "attacks": [
+      "torch stab"
+    ],
+    "icon": "Torch",
+    "stats": {
+      "physicalDamage": 1.5,
+      "fireDamage": 1.5
+    }
+  },
+  {
+    "name": "dagger",
+    "baseValue": 400,
+    "slot": "one-hand",
+    "attacks": [
+      "stab"
+    ],
+    "icon": "Knife",
+    "stats": {
+      "physicalDamage": 4.5
+    }
+  },
+  {
+    "name": "shortsword",
+    "baseValue": 1200,
+    "slot": "one-hand",
+    "attacks": [
+      "slash"
+    ],
+    "icon": "Iron_Sword",
+    "stats": {
+      "physicalDamage": 7.5
+    }
+  },
+  {
+    "name": "mace",
+    "baseValue": 1100,
+    "slot": "one-hand",
+    "attacks": [
+      "crushing blow"
+    ],
+    "icon": "Hammer",
+    "stats": {
+      "physicalDamage": 6.5
+    },
+    "requirements": {
+      "strength": 8
+    }
+  },
+  {
+    "name": "rat-smasher",
+    "baseValue": 2000,
+    "slot": "two-hand",
+    "attacks": [
+      "crushing blow"
+    ],
+    "icon": "Hammer",
+    "stats": {
+      "physicalDamage": 10.5
+    },
+    "requirements": {
+      "strength": 10
+    }
+  },
+  {
+    "name": "longsword",
+    "baseValue": 10000,
+    "slot": "one-hand",
+    "attacks": [
+      "slash"
+    ],
+    "icon": "Iron_Sword",
+    "stats": {
+      "physicalDamage": 10.0
+    },
+    "requirements": {
+      "strength": 8,
+      "dexterity": 5
+    }
+  },
+  {
+    "name": "bastard sword",
+    "baseValue": 15000,
+    "slot": "two-hand",
+    "attacks": [
+      "slash",
+      "cleave"
+    ],
+    "icon": "Iron_Sword",
+    "stats": {
+      "physicalDamage": 20.0
+    },
+    "requirements": {
+      "strength": 12
+    }
+  },
+  {
+    "name": "elegant blade",
+    "baseValue": 20000,
+    "slot": "one-hand",
+    "attacks": [
+      "slash"
+    ],
+    "icon": "Silver_Sword",
+    "stats": {
+      "physicalDamage": 16.0
+    },
+    "requirements": {
+      "strength": 10,
+      "dexterity": 8
+    }
+  },
+  {
+    "name": "axe",
+    "baseValue": 25000,
+    "slot": "one-hand",
+    "attacks": [
+      "slash",
+      "cleave"
+    ],
+    "icon": "Axe",
+    "stats": {
+      "physicalDamage": 20.0
+    },
+    "requirements": {
+      "strength": 15
+    }
+  },
+  {
+    "name": "zweihänder",
+    "baseValue": 34000,
+    "slot": "two-hand",
+    "attacks": [
+      "slash",
+      "cleave"
+    ],
+    "icon": "Iron_Sword",
+    "stats": {
+      "physicalDamage": 29.5
+    },
+    "requirements": {
+      "strength": 20
+    }
+  },
+  {
+    "name": "grotesque dagger",
+    "baseValue": 38000,
+    "slot": "one-hand",
+    "attacks": [
+      "slash",
+      "serrate"
+    ],
+    "icon": "Knife",
+    "stats": {
+      "physicalDamage": 18.0,
+      "poisonDamage": 4.0
+    },
+    "requirements": {
+      "strength": 10,
+      "dexterity": 20
+    }
+  },
+  {
+    "name": "greataxe",
+    "baseValue": 65000,
+    "slot": "two-hand",
+    "attacks": [
+      "hack"
+    ],
+    "icon": "Axe",
+    "stats": {
+      "physicalDamage": 33.5
+    },
+    "requirements": {
+      "strength": 28
+    }
+  },
+  {
+    "name": "greatsword",
+    "baseValue": 65000,
+    "slot": "two-hand",
+    "attacks": [
+      "slash",
+      "cleave"
+    ],
+    "icon": "Iron_Sword",
+    "stats": {
+      "physicalDamage": 37.5
+    },
+    "requirements": {
+      "strength": 30
+    }
+  },
+  {
+    "name": "royal longsword",
+    "baseValue": 85000,
+    "slot": "two-hand",
+    "attacks": [
+      "slash",
+      "cleave"
+    ],
+    "icon": "Golden_Sword",
+    "stats": {
+      "physicalDamage": 30.0,
+      "magicDamage": 5.0
+    },
+    "requirements": {
+      "strength": 25,
+      "dexterity": 15
+    }
+  },
+  {
+    "name": "barbarian war axe",
+    "baseValue": 150000,
+    "slot": "one-hand",
+    "attacks": [
+      "hack"
+    ],
+    "icon": "Axe",
+    "stats": {
+      "physicalDamage": 30.5
+    },
+    "requirements": {
+      "strength": 33
+    }
+  },
+  {
+    "name": "knight's greatsword",
+    "baseValue": 225000,
+    "slot": "two-hand",
+    "attacks": [
+      "slash",
+      "cleave"
+    ],
+    "icon": "Golden_Sword",
+    "stats": {
+      "physicalDamage": 35.5
+    },
+    "requirements": {
+      "strength": 32
+    }
+  },
+  {
+    "name": "crusader's longsword",
+    "baseValue": 310000,
+    "slot": "one-hand",
+    "attacks": [
+      "slash",
+      "cleave"
+    ],
+    "icon": "Golden_Sword",
+    "stats": {
+      "physicalDamage": 27.0,
+      "holyDamage": 6.0
+    },
+    "requirements": {
+      "strength": 30,
+      "dexterity": 15
+    }
+  },
+  {
+    "name": "crusader's war hammer",
+    "baseValue": 310000,
+    "slot": "two-hand",
+    "attacks": [
+      "crushing blow"
+    ],
+    "icon": "Golden_Hammer",
+    "stats": {
+      "physicalDamage": 45.0
+    },
+    "requirements": {
+      "strength": 45
+    }
+  }
+]
+

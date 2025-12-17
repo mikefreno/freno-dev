@@ -1,0 +1,353 @@
+[
+  {
+    "name": "flying skull",
+    "beingType": "undead",
+    "sprite": null,
+    "health": 30,
+    "baseResistanceTable": {
+      "poison": 10,
+      "holy": -50
+    },
+    "baseDamageTable": {
+      "physical": 2
+    },
+    "mana": {
+      "maximum": 50,
+      "regen": 5
+    },
+    "attackStrings": [
+      "head slam"
+    ],
+    "turns": 5
+  },
+  {
+    "name": "skeleton",
+    "beingType": "undead",
+    "health": 50,
+    "sprite": "skeleton",
+    "baseStrength": 5,
+    "baseResistanceTable": {
+      "poison": 10,
+      "holy": -50
+    },
+    "baseDamageTable": {
+      "physical": 3
+    },
+    "mana": {
+      "maximum": 50,
+      "regen": 5
+    },
+    "attackStrings": [
+      "stab",
+      "cleave"
+    ],
+    "turns": 8
+  },
+  {
+    "name": "zombie",
+    "beingType": "undead",
+    "health": 100,
+    "sprite": "zombie",
+    "baseStrength": 8,
+    "baseResistanceTable": {
+      "poison": 10,
+      "fire": -20,
+      "cold": 20,
+      "holy": -75
+    },
+    "baseDamageTable": {
+      "physical": 10
+    },
+    "mana": {
+      "maximum": 50,
+      "regen": 3
+    },
+    "attackStrings": [
+      "zombie bite",
+      "grab"
+    ],
+    "turns": 10
+  },
+  {
+    "name": "wraith",
+    "beingType": "undead",
+    "health": 100,
+    "sprite": "ghost",
+    "baseIntelligence": 15,
+    "baseResistanceTable": {
+      "poison": 40,
+      "fire": -20,
+      "cold": 40,
+      "holy": -50
+    },
+    "baseDamageTable": {
+      "magic": 20
+    },
+    "mana": {
+      "maximum": 75,
+      "regen": 8
+    },
+    "attackStrings": [
+      "life drain",
+      "terrorize"
+    ],
+    "turns": 10
+  },
+  {
+    "name": "death knight",
+    "beingType": "undead",
+    "health": 200,
+    "baseStrength": 20,
+    "sprite": null,
+    "baseResistanceTable": {
+      "poison": 40,
+      "fire": 10,
+      "cold": 40,
+      "lightning": -20,
+      "holy": -75
+    },
+    "baseDamageTable": {
+      "physical": 35
+    },
+    "mana": {
+      "maximum": 100,
+      "regen": 10
+    },
+    "attackStrings": [
+      "soul strike",
+      "death blade",
+      "corrupted cleave"
+    ],
+    "turns": 5
+  },
+  {
+    "name": "lich",
+    "beingType": "undead",
+    "health": 175,
+    "baseStrength": 30,
+    "sprite": null,
+    "baseResistanceTable": {
+      "poison": 60,
+      "fire": 15,
+      "cold": 30,
+      "lightning": -20,
+      "holy": -75
+    },
+    "baseDamageTable": {
+      "physical": 20,
+      "magic": 32
+    },
+    "mana": {
+      "maximum": 150,
+      "regen": 15
+    },
+    "attackStrings": [
+      "death bolt",
+      "soul rip",
+      "curse"
+    ],
+    "turns": 10
+  },
+  {
+    "name": "bandit",
+    "beingType": "human",
+    "sanity": 50,
+    "health": 50,
+    "sprite": "bandit_light",
+    "baseStrength": 8,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 15,
+      "poison": -15,
+      "cold": -10,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 16
+    },
+    "attackStrings": [
+      "stab",
+      "pocket sand",
+      "serrate"
+    ],
+    "turns": 100
+  },
+  {
+    "name": "hobgoblin",
+    "beingType": "demi-human",
+    "sanity": null,
+    "health": 160,
+    "sprite": "goblin",
+    "baseStrength": 15,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 15,
+      "poison": -15,
+      "cold": -10,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 24
+    },
+    "attackStrings": [
+      "stab",
+      "frenzy"
+    ],
+    "turns": 1000
+  },
+  {
+    "name": "raven",
+    "beingType": "beast",
+    "sprite": null,
+    "health": 50,
+    "baseStrength": 2,
+    "mana": {
+      "maximum": 50,
+      "regen": 5
+    },
+    "baseResistanceTable": {
+      "physical": 5,
+      "lightning": -25,
+      "cold": 10,
+      "fire": -15
+    },
+    "baseDamageTable": {
+      "physical": 1
+    },
+    "attackStrings": [
+      "pluck eye",
+      "scratch"
+    ],
+    "turns": 1000
+  },
+  {
+    "name": "wolf",
+    "sprite": "wolf_black",
+    "beingType": "beast",
+    "health": 100,
+    "baseStrength": 8,
+    "mana": {
+      "maximum": 50,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 10,
+      "cold": 15,
+      "fire": -15
+    },
+    "baseDamageTable": {
+      "physical": 8
+    },
+    "attackStrings": [
+      "bite"
+    ],
+    "turns": 1000
+  },
+  {
+    "name": "bear",
+    "beingType": "beast",
+    "health": 200,
+    "baseStrength": 10,
+    "mana": {
+      "maximum": 50,
+      "regen": 3
+    },
+    "baseResistanceTable": {
+      "physical": 45,
+      "cold": 30,
+      "fire": -10
+    },
+    "baseDamageTable": {
+      "physical": 10
+    },
+    "attackStrings": [
+      "bite",
+      "scratch"
+    ],
+    "turns": 1000
+  },
+  {
+    "name": "dragon welp",
+    "beingType": "draconic",
+    "health": 225,
+    "baseStrength": 15,
+    "mana": {
+      "maximum": 100,
+      "regen": 15
+    },
+    "baseResistanceTable": {
+      "physical": 45,
+      "cold": 30,
+      "fire": 75,
+      "lightning": -30
+    },
+    "baseDamageTable": {
+      "physical": 8,
+      "fire": 10
+    },
+    "attackStrings": [
+      "bite",
+      "scratch",
+      "fire breath"
+    ],
+    "turns": 1000
+  },
+  {
+    "name": "griffon",
+    "beingType": "beast",
+    "health": 300,
+    "baseStrength": 25,
+    "mana": {
+      "maximum": 100,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 45,
+      "cold": 30,
+      "fire": -15,
+      "lightning": -30
+    },
+    "baseDamageTable": {
+      "physical": 24
+    },
+    "attackStrings": [
+      "claw",
+      "bite",
+      "wing buffet"
+    ],
+    "turns": 1000
+  },
+  {
+    "name": "dragon",
+    "beingType": "draconic",
+    "health": 500,
+    "baseStrength": 30,
+    "mana": {
+      "maximum": 100,
+      "regen": 10
+    },
+    "baseResistanceTable": {
+      "physical": 45,
+      "cold": 30,
+      "fire": 75,
+      "lightning": -30
+    },
+    "baseDamageTable": {
+      "physical": 22,
+      "fire": 20
+    },
+    "attackStrings": [
+      "fire breath",
+      "bite",
+      "scratch"
+    ],
+    "turns": 1000
+  }
+]
+

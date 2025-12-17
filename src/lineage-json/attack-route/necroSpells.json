@@ -1,0 +1,580 @@
+[
+  {
+    "name": "pull blood",
+    "element": "blood",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 20,
+    "damageTable": {
+      "physical": 5
+    },
+    "buffNames": [
+      "blood orb"
+    ],
+    "animation": {
+      "sprite": "bloodCone",
+      "style": "static",
+      "position": "enemy",
+      "leftOffset": 5,
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "orb burst(mana)",
+    "element": "blood",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": -35,
+    "buffNames": [
+      "consume blood orb"
+    ],
+    "animation": {
+      "sprite": "bloodBurst",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "orb burst(health)",
+    "element": "blood",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 5,
+    "selfDamageTable": {
+      "raw": -30
+    },
+    "buffNames": [
+      "consume blood orb"
+    ],
+    "animation": {
+      "sprite": "bloodBurst",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "vampiric touch",
+    "element": "blood",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 65,
+    "damageTable": {
+      "physical": 25
+    },
+    "selfDamageTable": {
+      "raw": -20
+    },
+    "buffNames": [
+      "blood orb"
+    ],
+    "animation": {
+      "glow": "#7f1d1d80",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "blood spear",
+    "element": "blood",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "damageTable": {
+      "physical": 90
+    },
+    "manaCost": 75,
+    "buffNames": [
+      "consume blood orb"
+    ],
+    "animation": {
+      "sprite": "bloodLongBolts",
+      "style": "span",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "blood lance",
+    "element": "blood",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "master",
+    "manaCost": 150,
+    "damageTable": {
+      "physical": 125
+    },
+    "selfDamageTable": {
+      "raw": 25
+    },
+    "buffNames": [
+      "consume blood orb",
+      "consume blood orb"
+    ],
+    "debuffNames": [
+      {
+        "name": "hemmorage",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "bloodSimpleBolts",
+      "style": "span",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "blood storm",
+    "element": "blood",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 300,
+    "damageTable": {
+      "physical": 200
+    },
+    "selfDamageTable": {
+      "raw": 50
+    },
+    "buffNames": [
+      "blood orb",
+      "blood orb"
+    ],
+    "debuffNames": [
+      {
+        "name": "hemmorage",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "bloodRain",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "blood spike",
+    "element": "blood",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 750,
+    "damageTable": {
+      "physical": 350
+    },
+    "selfDamageTable": {
+      "raw": 75
+    },
+    "buffNames": [
+      "blood orb",
+      "blood orb",
+      "blood orb"
+    ],
+    "debuffNames": [
+      {
+        "name": "severe hemmorage",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "bloodSpikes",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "summon flying skull",
+    "element": "summoning",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 50,
+    "summonNames": [
+      "flying skull"
+    ]
+  },
+  {
+    "name": "raise skeleton",
+    "element": "summoning",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 50,
+    "summonNames": [
+      "skeleton"
+    ]
+  },
+  {
+    "name": "raise zombie",
+    "element": "summoning",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 50,
+    "summonNames": [
+      "skeleton"
+    ]
+  },
+  {
+    "name": "summon lich",
+    "element": "summoning",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 150,
+    "summonNames": [
+      "lich"
+    ]
+  },
+  {
+    "name": "summon wraith",
+    "element": "summoning",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "master",
+    "manaCost": 250,
+    "summonNames": [
+      "wraith"
+    ]
+  },
+  {
+    "name": "summon death knight",
+    "element": "summoning",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 500,
+    "summonNames": [
+      "death knight"
+    ]
+  },
+  {
+    "name": "mass raise dead",
+    "element": "summoning",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 750,
+    "summonNames": [
+      "skeleton",
+      "skeleton",
+      "skeleton"
+    ]
+  },
+  {
+    "name": "teeth",
+    "element": "bone",
+    "targets": "dual",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 15,
+    "damageTable": {
+      "physical": 7
+    },
+    "animation": {
+      "sprite": "teeth",
+      "style": "span",
+      "position": "field"
+    }
+  },
+  {
+    "name": "bone shield",
+    "element": "bone",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 15,
+    "buffNames": [
+      "bone shield"
+    ],
+    "animation": {
+      "sprite": "boneShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "bone wall",
+    "element": "bone",
+    "targets": "area",
+    "type": "defense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 60,
+    "buffNames": [
+      "projectile suppression"
+    ],
+    "animation": {
+      "sprite": "boneWall",
+      "style": "static",
+      "position": "field"
+    }
+  },
+  {
+    "name": "bone spear",
+    "element": "bone",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 45,
+    "damageTable": {
+      "physical": 40
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "boneLance",
+      "style": "span",
+      "position": "field"
+    }
+  },
+  {
+    "name": "bone armor",
+    "element": "bone",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "master",
+    "manaCost": 75,
+    "buffNames": [
+      "guard"
+    ],
+    "animation": {
+      "sprite": "boneShield",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "bone prison",
+    "element": "bone",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "master",
+    "manaCost": 125,
+    "damageTable": {
+      "physical": 100
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "boneOrb",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "bone blade",
+    "element": "bone",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 200,
+    "damageTable": {
+      "physical": 300
+    },
+    "animation": {
+      "sprite": "boneBlade",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "poison dart",
+    "element": "pestilence",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 20,
+    "damageTable": {
+      "poison": 5
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "poisonDart",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 10,
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "plague cloud",
+    "element": "pestilence",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 35,
+    "damageTable": {
+      "poison": 15
+    },
+    "debuffNames": [
+      {
+        "name": "diseased",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "poisonPuft",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "poison stream",
+    "element": "pestilence",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 60,
+    "damageTable": {
+      "poison": 5
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 0.75
+      },
+      {
+        "name": "poison",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "poisonStream",
+      "style": "span",
+      "position": "field"
+    }
+  },
+  {
+    "name": "disease ward",
+    "element": "pestilence",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 50,
+    "buffNames": [
+      "disease immunity"
+    ],
+    "animation": {
+      "sprite": "poisonShield",
+      "style": "span",
+      "position": "field"
+    }
+  },
+  {
+    "name": "miasma",
+    "element": "pestilence",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 100,
+    "damageTable": {
+      "poison": 45
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 1.0
+      },
+      {
+        "name": "diseased",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "poisonOrbBurst",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "plague bearer",
+    "element": "pestilence",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "master",
+    "manaCost": 175,
+    "damageTable": {
+      "poison": 75
+    },
+    "buffNames": [
+      "siphon poison"
+    ],
+    "debuffNames": [
+      {
+        "name": "diseased",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "glow": "#53DF2E",
+      "position": "field"
+    }
+  },
+  {
+    "name": "death cloud",
+    "element": "pestilence",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 300,
+    "damageTable": {
+      "poison": 150
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 1.0
+      },
+      {
+        "name": "diseased",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "poisonSmallBurst",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "virulent explosion",
+    "element": "pestilence",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 500,
+    "damageTable": {
+      "poison": 250
+    },
+    "debuffNames": [
+      {
+        "name": "severe poison",
+        "chance": 1.0
+      },
+      {
+        "name": "severe disease",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "poisonLargeBurst",
+      "style": "static",
+      "position": "enemy"
+    }
+  }
+]
+

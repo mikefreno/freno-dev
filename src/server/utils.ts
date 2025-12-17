@@ -1,38 +1,35 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
-import { cookies } from "next/headers";
+import { getCookie, setCookie, type H3Event } from "vinxi/http";
+import { jwtVerify, type JWTPayload, SignJWT } from "jose";
+import { env } from "~/env/server";
+import { createClient, Row } from "@libsql/client/web";
+import { v4 as uuid } from "uuid";
+import { createClient as createAPIClient } from "@tursodatabase/api";
+import { OAuth2Client } from "google-auth-library";
+import * as bcrypt from "bcrypt";
 
 export const LINEAGE_JWT_EXPIRY = "14d";
 
-export async function getPrivilegeLevel(): Promise<
-  "anonymous" | "admin" | "user"
-> {
+// Helper function to get privilege level from H3Event (for use outside tRPC)
+export async function getPrivilegeLevel(
+  event: H3Event,
+): Promise<"anonymous" | "admin" | "user"> {
   try {
-    const userIDToken = (await cookies()).get("userIDToken");
+    const userIDToken = getCookie(event, "userIDToken");
 
     if (userIDToken) {
-      const decoded = await new Promise<JwtPayload | undefined>((resolve) => {
-        jwt.verify(
-          userIDToken.value,
-          env.JWT_SECRET_KEY,
-          async (err, decoded) => {
-            if (err) {
-              console.log("Failed to authenticate token.");
-              (await cookies()).set({
-                name: "userIDToken",
-                value: "",
-                maxAge: 0,
-                expires: new Date("2016-10-05"),
-              });
-              resolve(undefined);
-            } else {
-              resolve(decoded as JwtPayload);
-            }
-          },
-        );
-      });
+      try {
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        const { payload } = await jwtVerify(userIDToken, secret);
 
-      if (decoded) {
-        return decoded.id === env.ADMIN_ID ? "admin" : "user";
+        if (payload.id && typeof payload.id === "string") {
+          return payload.id === env.ADMIN_ID ? "admin" : "user";
+        }
+      } catch (err) {
+        console.log("Failed to authenticate token.");
+        setCookie(event, "userIDToken", "", {
+          maxAge: 0,
+          expires: new Date("2016-10-05"),
+        });
       }
     }
   } catch (e) {
@@ -40,34 +37,26 @@ export async function getPrivilegeLevel(): Promise<
   }
   return "anonymous";
 }
-export async function getUserID(): Promise<string | null> {
+
+// Helper function to get user ID from H3Event (for use outside tRPC)
+export async function getUserID(event: H3Event): Promise<string | null> {
   try {
-    const userIDToken = (await cookies()).get("userIDToken");
+    const userIDToken = getCookie(event, "userIDToken");
 
     if (userIDToken) {
-      const decoded = await new Promise<JwtPayload | undefined>((resolve) => {
-        jwt.verify(
-          userIDToken.value,
-          env.JWT_SECRET_KEY,
-          async (err, decoded) => {
-            if (err) {
-              console.log("Failed to authenticate token.");
-              (await cookies()).set({
-                name: "userIDToken",
-                value: "",
-                maxAge: 0,
-                expires: new Date("2016-10-05"),
-              });
-              resolve(undefined);
-            } else {
-              resolve(decoded as JwtPayload);
-            }
-          },
-        );
-      });
+      try {
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        const { payload } = await jwtVerify(userIDToken, secret);
 
-      if (decoded) {
-        return decoded.id;
+        if (payload.id && typeof payload.id === "string") {
+          return payload.id;
+        }
+      } catch (err) {
+        console.log("Failed to authenticate token.");
+        setCookie(event, "userIDToken", "", {
+          maxAge: 0,
+          expires: new Date("2016-10-05"),
+        });
       }
     }
   } catch (e) {
@@ -75,9 +64,6 @@ export async function getUserID(): Promise<string | null> {
   }
   return null;
 }
-
-import { createClient, Row } from "@libsql/client/web";
-import { env } from "@/env.mjs";
 
 // Turso
 export function ConnectionFactory() {
@@ -99,11 +85,6 @@ export function LineageConnectionFactory() {
   const conn = createClient(config);
   return conn;
 }
-
-import { v4 as uuid } from "uuid";
-import { createClient as createAPIClient } from "@tursodatabase/api";
-import { checkPassword } from "./api/passwordHashing";
-import { OAuth2Client } from "google-auth-library";
 
 export async function LineageDBInit() {
   const turso = createAPIClient({
@@ -220,11 +201,13 @@ export async function validateLineageRequest({
 }): Promise<boolean> {
   const { provider, email } = userRow;
   if (provider === "email") {
-    const decoded = jwt.verify(
-      auth_token,
-      env.JWT_SECRET_KEY,
-    ) as jwt.JwtPayload;
-    if (email !== decoded.email) {
+    try {
+      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+      const { payload } = await jwtVerify(auth_token, secret);
+      if (email !== payload.email) {
+        return false;
+      }
+    } catch (err) {
       return false;
     }
   } else if (provider == "apple") {
@@ -233,7 +216,12 @@ export async function validateLineageRequest({
       return false;
     }
   } else if (provider == "google") {
-    const CLIENT_ID = env.NEXT_PUBLIC_GOOGLE_CLIENT_ID_MAGIC_DELVE;
+    // Note: Using client env var - should be available via import.meta.env in actual runtime
+    const CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE;
+    if (!CLIENT_ID) {
+      console.error("Missing VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE");
+      return false;
+    }
     const client = new OAuth2Client(CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: auth_token,
@@ -246,4 +234,111 @@ export async function validateLineageRequest({
     return false;
   }
   return true;
+}
+
+// Password hashing utilities
+export async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 10;
+  const salt = await bcrypt.genSalt(saltRounds);
+  const hashedPassword = await bcrypt.hash(password, salt);
+  return hashedPassword;
+}
+
+export async function checkPassword(
+  password: string,
+  hash: string
+): Promise<boolean> {
+  const match = await bcrypt.compare(password, hash);
+  return match;
+}
+
+// Email service utilities
+export async function sendEmailVerification(userEmail: string): Promise<{
+  success: boolean;
+  messageId?: string;
+  message?: string;
+}> {
+  const apiKey = env.SENDINBLUE_KEY;
+  const apiUrl = "https://api.brevo.com/v3/smtp/email";
+
+  const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+  const token = await new SignJWT({ email: userEmail })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("15m")
+    .sign(secret);
+
+  const domain = env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN || "https://freno.me";
+
+  const emailPayload = {
+    sender: {
+      name: "MikeFreno",
+      email: "lifeandlineage_no_reply@freno.me",
+    },
+    to: [
+      {
+        email: userEmail,
+      },
+    ],
+    htmlContent: `<html>
+<head>
+    <style>
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #007BFF;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="center">
+        <p>Click the button below to verify email</p>
+    </div>
+    <br/>
+    <div class="center">
+        <a href="${domain}/api/lineage/email/verification/${userEmail}/?token=${token}" class="button">Verify Email</a>
+    </div>
+</body>
+</html>
+`,
+    subject: `Life and Lineage email verification`,
+  };
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": apiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(emailPayload),
+    });
+
+    if (!res.ok) {
+      return { success: false, message: "Failed to send email" };
+    }
+
+    const json = await res.json() as { messageId?: string };
+    if (json.messageId) {
+      return { success: true, messageId: json.messageId };
+    }
+    return { success: false, message: "No messageId in response" };
+  } catch (error) {
+    console.error("Email sending error:", error);
+    return { success: false, message: "Email service error" };
+  }
 }

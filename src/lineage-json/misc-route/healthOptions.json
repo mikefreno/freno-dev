@@ -1,0 +1,12 @@
+[
+   {
+      "serviceName": "Recover Alone",
+      "cost": 0,
+      "heathRestore": 15
+   },
+   {
+      "serviceName": "Visit Master Priest",
+      "cost": 150,
+      "heathRestore": "fill" 
+   }
+]

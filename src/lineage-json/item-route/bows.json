@@ -1,0 +1,147 @@
+[
+  {
+    "name": "short bow",
+    "baseValue": 300,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "rooting shot"
+    ],
+    "icon": "Bow",
+    "stats": {
+      "physicalDamage": 5.5
+    }
+  },
+  {
+    "name": "recurve bow",
+    "baseValue": 500,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "rapid shot"
+    ],
+    "icon": "Bow",
+    "stats": {
+      "physicalDamage": 7.5
+    },
+    "requirements": {
+      "dexterity": 5
+    }
+  },
+  {
+    "name": "long bow",
+    "baseValue": 1000,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "careful shot"
+    ],
+    "icon": "Bow",
+    "stats": {
+      "physicalDamage": 10.5
+    },
+    "requirements": {
+      "dexterity": 7
+    }
+  },
+  {
+    "name": "serpent bow",
+    "baseValue": 5000,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "poison shot"
+    ],
+    "icon": "Bow",
+    "stats": {
+      "physicalDamage": 12.5
+    },
+    "requirements": {
+      "dexterity": 12
+    }
+  },
+  {
+    "name": "great bow",
+    "baseValue": 9500,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "overdraw"
+    ],
+    "icon": "Great_Bow",
+    "stats": {
+      "physicalDamage": 19
+    },
+    "requirements": {
+      "strength": 10,
+      "dexterity": 10
+    }
+  },
+  {
+    "name": "great serpent bow",
+    "baseValue": 35000,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "poison shot"
+    ],
+    "icon": "Great_Bow",
+    "stats": {
+      "physicalDamage": 22
+    },
+    "requirements": {
+      "strength": 10,
+      "dexterity": 15
+    }
+  },
+  {
+    "name": "harp bow",
+    "baseValue": 75000,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "rapid shot"
+    ],
+    "icon": "Harp_Bow",
+    "stats": {
+      "physicalDamage": 25
+    },
+    "requirements": {
+      "dexterity": 20
+    }
+  },
+  {
+    "name": "black bow",
+    "baseValue": 150000,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "seeking shot"
+    ],
+    "icon": "Black_Bow",
+    "stats": {
+      "physicalDamage": 29
+    },
+    "requirements": {
+      "dexterity": 30
+    }
+  },
+  {
+    "name": "hunter of bael",
+    "baseValue": 450000,
+    "slot": "two-hand",
+    "attacks": [
+      "shoot",
+      "overdraw"
+    ],
+    "icon": "Great_Bow",
+    "stats": {
+      "physicalDamage": 32
+    },
+    "requirements": {
+      "strength": 20,
+      "dexterity": 20
+    }
+  }
+]
+

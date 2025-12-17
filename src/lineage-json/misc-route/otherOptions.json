@@ -1,0 +1,12 @@
+[
+   {
+      "serviceName": "Visit Witch Doctor",
+      "cost": 25,
+      "removeDebuffs": 1
+   },
+   {
+      "serviceName": "Seek Paladin Aid",
+      "cost": 150,
+      "removeDebuffs": 5
+   }
+]

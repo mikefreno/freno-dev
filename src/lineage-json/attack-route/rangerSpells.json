@@ -1,0 +1,590 @@
+[
+  {
+    "name": "throw shuriken",
+    "element": "assassination",
+    "proficiencyNeeded": "novice",
+    "targets": "single",
+    "type": "offense",
+    "manaCost": 10,
+    "damageTable": {
+      "physical": 15
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "shuriken",
+      "style": "missile",
+      "position": "enemy",
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "poison blade",
+    "element": "assassination",
+    "proficiencyNeeded": "novice",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "manaCost": 15,
+    "damageTable": {
+      "physical": 5,
+      "poison": 5
+    },
+    "debuffNames": [
+      {
+        "name": "poison",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "poisonDart",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 10,
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "quick strike",
+    "element": "assassination",
+    "proficiencyNeeded": "novice",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "manaCost": 10,
+    "damageTable": {
+      "physical": 2
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "slashHorizontal",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "below the belt",
+    "element": "assassination",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 20,
+    "damageTable": {
+      "physical": 15
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "puft",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "dual slice",
+    "element": "assassination",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 25,
+    "damageTable": {
+      "physical": 30
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "smallCross",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "shadow cover",
+    "element": "assassination",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 50,
+    "buffNames": [
+      "stealth"
+    ],
+    "animation": {
+      "sprite": "smoke",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "backstab",
+    "element": "assassination",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "adept",
+    "manaCost": 75,
+    "damageTable": {
+      "physical": 85,
+      "raw": 10
+    },
+    "buffNames": [
+      "remove stealth"
+    ],
+    "animation": {
+      "sprite": "slashHit",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "venomous strike",
+    "element": "assassination",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "adept",
+    "manaCost": 60,
+    "damageTable": {
+      "physical": 5,
+      "poison": 35
+    },
+    "debuffNames": [
+      {
+        "name": "severe poison",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "poisonSmallCross",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "dance of daggers",
+    "element": "assassination",
+    "targets": "self",
+    "type": "defense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "expert",
+    "manaCost": 100,
+    "buffNames": [
+      "dance of daggers"
+    ],
+    "animation": {
+      "sprite": "desaturatedCrossSwords",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "garrote",
+    "element": "assassination",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "expert",
+    "manaCost": 125,
+    "damage": {
+      "physical": 75
+    },
+    "debuffNames": [
+      {
+        "name": "silence",
+        "chance": 0.75
+      },
+      {
+        "name": "severe bleed",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "crossAndBleed",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "shadow step",
+    "element": "assassination",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "master",
+    "manaCost": 250,
+    "damageTable": {
+      "physical": 100
+    },
+    "buffNames": [
+      "stealth"
+    ],
+    "animation": {
+      "sprite": "slashAndDust",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "blade fan",
+    "element": "assassination",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 400,
+    "damageTable": {
+      "physical": 275
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "teeth",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "finalé",
+    "element": "assassination",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "melee",
+    "proficiencyNeeded": "legend",
+    "manaCost": 500,
+    "damageTable": {
+      "physical": 250,
+      "raw": 250
+    },
+    "buffNames": [
+      "remove stealth"
+    ],
+    "animation": {
+      "sprite": "largeCrossAndBleed",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "call raven",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 10,
+    "rangerPetName": "raven"
+  },
+  {
+    "name": "call wolf",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 15,
+    "rangerPetName": "wolf"
+  },
+  {
+    "name": "animal instinct",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 20,
+    "effects": {
+      "damage": null,
+      "buffNames": [
+        "minor fortitude"
+      ],
+      "debuffNames": null
+    }
+  },
+  {
+    "name": "rat trap",
+    "element": "beastMastery",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 20,
+    "buffNames": [
+      "rat trap"
+    ]
+  },
+  {
+    "name": "beast bond",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 35,
+    "buffNames": [
+      "beast empowerment"
+    ]
+  },
+  {
+    "name": "call bear",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 50,
+    "rangerPetName": "bear"
+  },
+  {
+    "name": "bear trap",
+    "element": "beastMastery",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 100,
+    "buffNames": [
+      "bear trap"
+    ]
+  },
+  {
+    "name": "call dragon welp",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 125,
+    "rangerPetName": "dragon welp"
+  },
+  {
+    "name": "beastial fury",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 75,
+    "buffNames": [
+      "dual rage"
+    ]
+  },
+  {
+    "name": "dragon trap",
+    "element": "beastMastery",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 200,
+    "buffNames": [
+      "dragon trap"
+    ]
+  },
+  {
+    "name": "call griffon",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "master",
+    "manaCost": 200,
+    "rangerPetName": "griffon"
+  },
+  {
+    "name": "entangle",
+    "element": "beastMastery",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "master",
+    "manaCost": 300,
+    "duration": 5,
+    "damageTable": {
+      "physical": 75
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.75
+      }
+    ]
+  },
+  {
+    "name": "call dragon",
+    "element": "beastMastery",
+    "targets": "self",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 600,
+    "rangerPetName": "dragon"
+  },
+  {
+    "name": "arcane shot",
+    "element": "arcane",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "bow",
+    "proficiencyNeeded": "novice",
+    "manaCost": 20,
+    "damageTable": {
+      "physical": 5,
+      "magic": 5
+    },
+    "animation": {
+      "sprite": "arcaneArrow",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7,
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "enchanted quiver",
+    "element": "arcane",
+    "targets": "self",
+    "type": "offense",
+    "usesWeapon": "bow",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 25,
+    "buffNames": [
+      "enchanted quiver"
+    ],
+    "animation": {
+      "sprite": "risingBlue",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "arcane arrow",
+    "element": "arcane",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "bow",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 35,
+    "damageTable": {
+      "physical": 15,
+      "magic": 25
+    },
+    "animation": {
+      "sprite": "arcaneArrow",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7,
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "seeking arrow",
+    "element": "arcane",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "bow",
+    "proficiencyNeeded": "adept",
+    "manaCost": 65,
+    "damageTable": {
+      "physical": 35,
+      "magic": 15
+    },
+    "animation": {
+      "sprite": "arcaneArrow",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7,
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "arcane missiles",
+    "element": "arcane",
+    "targets": "single",
+    "type": "offense",
+    "usesWeapon": "bow",
+    "proficiencyNeeded": "master",
+    "manaCost": 100,
+    "damageTable": {
+      "magic": 90
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.4
+      }
+    ],
+    "animation": {
+      "sprite": "risingBlue",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "moon call",
+    "element": "arcane",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "master",
+    "manaCost": 125,
+    "buffNames": [
+      "guard",
+      "quickened mind"
+    ],
+    "animation": {
+      "sprite": "moonCall",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "torrent",
+    "element": "arcane",
+    "targets": "area",
+    "type": "offense",
+    "usesWeapon": "bow",
+    "proficiencyNeeded": "legend",
+    "duration": 3,
+    "manaCost": 500,
+    "damageTable": {
+      "magic": 100
+    },
+    "animation": {
+      "sprite": "arrowTorrent",
+      "style": "missile",
+      "position": "enemy",
+      "reachTargetAtFrame": 7,
+      "topOffset": 30
+    }
+  },
+  {
+    "name": "moon fire",
+    "element": "arcane",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "duration": 5,
+    "manaCost": 1250,
+    "damageTable": {
+      "fire": 25,
+      "magic": 75
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "blueBeam",
+      "style": "static",
+      "position": "enemy"
+    }
+  }
+]
+

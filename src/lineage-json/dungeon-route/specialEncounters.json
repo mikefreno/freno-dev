@@ -1,0 +1,126 @@
+[
+  {
+    "name": "camp",
+    "image": "camp",
+    "prompt": "This seems like a good place to rest... Set up camp and rest a while?",
+    "goodOutcome": {
+      "chance": 0.25,
+      "message": "You awaken massively restored.",
+      "result": {
+        "effect": {
+          "sanity": 50,
+          "health": 50
+        }
+      }
+    },
+    "neutralOutcome": {
+      "chance": 0.65,
+      "message": "You feel rested.",
+      "result": {
+        "effect": {
+          "sanity": 10,
+          "health": 10
+        }
+      }
+    },
+    "badOutcome": {
+      "chance": 0.1,
+      "message": "Ambush! Prepare for battle!",
+      "result": {
+        "battle": [
+          "bandit"
+        ]
+      }
+    }
+  },
+  {
+    "name": "chest",
+    "image": "chest",
+    "prompt": "You come across a chest. Do you open it?",
+    "goodOutcome": {
+      "chance": 0.65,
+      "message": "For the explorer, the spoils...",
+      "result": {
+        "drops": [
+          {
+            "name": "iron chestpiece",
+            "itemType": "bodyArmor",
+            "chance": 0.1
+          }
+        ],
+        "gold": {
+          "min": 50,
+          "max": 250
+        }
+      }
+    },
+    "neutralOutcome": {
+      "chance": 0.25,
+      "message": "The chest appears to already have been looted, also you got a splinter",
+      "result": {
+        "effect": {
+          "sanity": -5,
+          "health": -1
+        }
+      }
+    },
+    "badOutcome": {
+      "chance": 0.10,
+      "message": "There is more here than it seems... Prepare for battle!",
+      "result": {
+        "battle": [
+          "mimic"
+        ]
+      }
+    }
+  },
+  {
+    "name": "ritual altar",
+    "image": "ritual_altar",
+    "prompt": "You come across an ominous altar. Do you approach it?",
+    "goodOutcome": {
+      "chance": 0.5,
+      "message": "A soothing calm comes over you...",
+      "result": {
+        "effect": {
+          "health": 50,
+          "sanity": 30
+        }
+      }
+    },
+    "badOutcome": {
+      "chance": 0.5,
+      "message": "A feeling of dread overwhelms you.",
+      "result": {
+        "effect": {
+          "sanity": -30
+        }
+      }
+    }
+  },
+  {
+    "name": "water basin",
+    "image": "water_basin",
+    "prompt": "You come across an ominous altar. Do you approach it?",
+    "goodOutcome": {
+      "chance": 0.5,
+      "message": "A soothing calm comes over you...",
+      "result": {
+        "effect": {
+          "health": 50,
+          "sanity": 30
+        }
+      }
+    },
+    "badOutcome": {
+      "chance": 0.5,
+      "message": "A feeling of dread overwhelms you.",
+      "result": {
+        "effect": {
+          "sanity": -30
+        }
+      }
+    }
+  }
+]
+

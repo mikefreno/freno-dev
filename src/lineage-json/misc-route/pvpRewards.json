@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "name": "respec potion",
+    "price": 5,
+    "icon": "flask",
+    "description": "gives the user the ability to respec their attributes"
+  },
+  {
+    "id": 2,
+    "name": "tome of knowledge",
+    "price": 15,
+    "icon": "book",
+    "description": "provides 1 skill point"
+  },
+  {
+    "id": 3,
+    "name": "potion of undeath",
+    "price": 20,
+    "icon": "potion",
+    "description": "reduces the users age by 1 year"
+  }
+]
+

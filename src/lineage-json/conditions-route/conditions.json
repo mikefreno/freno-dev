@@ -1,0 +1,1069 @@
+[
+  {
+    "name": "stun",
+    "style": "debuff",
+    "turns": 1,
+    "effect": [
+      "stun"
+    ],
+    "effectStyle": [
+      null
+    ],
+    "effectAmount": [
+      null
+    ],
+    "icon": "stun"
+  },
+  {
+    "name": "heavy stun",
+    "style": "debuff",
+    "turns": 2,
+    "effect": [
+      "stun"
+    ],
+    "effectStyle": [
+      null
+    ],
+    "effectAmount": [
+      null
+    ],
+    "icon": "stun"
+  },
+  {
+    "name": "blind",
+    "style": "debuff",
+    "turns": 3,
+    "effect": [
+      "accuracy reduction"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.20
+    ],
+    "icon": "blind"
+  },
+  {
+    "name": "keen eye",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "accuracy increase"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.35
+    ],
+    "icon": "eagle"
+  },
+  {
+    "name": "bleed",
+    "style": "debuff",
+    "turns": 4,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.020
+    ],
+    "icon": "bleed"
+  },
+  {
+    "name": "hemmorage",
+    "style": "debuff",
+    "turns": 2,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.050
+    ],
+    "icon": "bleed"
+  },
+  {
+    "name": "poison",
+    "style": "debuff",
+    "turns": 10,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.05
+    ],
+    "icon": "skull_and_crossbones"
+  },
+  {
+    "name": "diseased",
+    "style": "debuff",
+    "turns": 10,
+    "effect": [
+      "health damage",
+      "accuracy reduction"
+    ],
+    "effectStyle": [
+      "percentage",
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.010,
+      0.05
+    ],
+    "icon": "viruses"
+  },
+  {
+    "name": "burn",
+    "style": "debuff",
+    "turns": 4,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.35
+    ],
+    "icon": "flame"
+  },
+  {
+    "name": "chill",
+    "style": "debuff",
+    "turns": 2,
+    "effect": [
+      "weaken"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "snowflake"
+  },
+  {
+    "name": "fear",
+    "style": "debuff",
+    "turns": 5,
+    "effect": [
+      "sanity damage"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      2
+    ],
+    "icon": "scarecrow"
+  },
+  {
+    "name": "undead cower",
+    "style": "debuff",
+    "turns": 5,
+    "effect": [
+      "undead cower"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.5
+    ],
+    "icon": "scarecrow"
+  },
+  {
+    "name": "revoke undead",
+    "style": "debuff",
+    "turns": 1,
+    "effect": [
+      "destroy undead"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      100
+    ],
+    "icon": "scarecrow"
+  },
+  {
+    "name": "lasting heal",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "heal"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      25
+    ],
+    "icon": "holding_heart"
+  },
+  {
+    "name": "delayed heal",
+    "style": "buff",
+    "turns": 2,
+    "effect": [
+      "heal"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      100
+    ],
+    "icon": "holding_heart"
+  },
+  {
+    "name": "head trauma",
+    "style": "debuff",
+    "turns": 5,
+    "effect": [
+      "healthMax decrease"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.1
+    ],
+    "icon": "holding_heart"
+  },
+  {
+    "name": "guard",
+    "style": "buff",
+    "turns": 7,
+    "effect": [
+      "armor increase"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      25
+    ],
+    "icon": "shield"
+  },
+  {
+    "name": "sunder",
+    "style": "debuff",
+    "turns": 4,
+    "effect": [
+      "armor decrease"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "broken_shield"
+  },
+  {
+    "name": "blessed defense",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "armor increase"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.5
+    ],
+    "icon": "shield"
+  },
+  {
+    "name": "frenzy",
+    "style": "buff",
+    "turns": 3,
+    "effect": [
+      "strengthen"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "anger"
+  },
+  {
+    "name": "enlighten",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "manaMax increase"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "glow_star"
+  },
+  {
+    "name": "quickened mind",
+    "style": "buff",
+    "turns": 10,
+    "effect": [
+      "mana regen"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      5
+    ],
+    "icon": "glow_star"
+  },
+  {
+    "name": "greater quickened mind",
+    "style": "buff",
+    "turns": 10,
+    "effect": [
+      "mana regen"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      50
+    ],
+    "icon": "glow_star"
+  },
+  {
+    "name": "dulled mind",
+    "style": "debuff",
+    "turns": 5,
+    "effect": [
+      "manaMax decrease"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.1
+    ],
+    "icon": "hollow_disk"
+  },
+  {
+    "name": "calm",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "sanity heal"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      10
+    ],
+    "icon": "pray_hands"
+  },
+  {
+    "name": "overwhelming glow",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "blur"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.75
+    ],
+    "icon": "pray_hands"
+  },
+  {
+    "name": "unending cure",
+    "style": "buff",
+    "turns": 15,
+    "effect": [
+      "heal"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      50
+    ],
+    "icon": "pray_hands"
+  },
+  {
+    "name": "reflective bulwark",
+    "style": "buff",
+    "turns": 10,
+    "effect": [
+      "thorns"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      20
+    ],
+    "icon": "pray_hands"
+  },
+  {
+    "name": "dance of daggers",
+    "style": "buff",
+    "turns": 4,
+    "effect": [
+      "thorns"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      50
+    ],
+    "icon": "dagger_ring"
+  },
+  {
+    "name": "empowered guarding",
+    "style": "buff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "revenge",
+      "mana drain"
+    ],
+    "effectStyle": [
+      "multiplier",
+      "flat"
+    ],
+    "effectAmount": [
+      500,
+      5
+    ],
+    "icon": "pray_hands"
+  },
+  {
+    "name": "protection aura",
+    "style": "buff",
+    "turns": -1,
+    "aura": true,
+    "effect": [
+      "armor increase"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      75
+    ],
+    "icon": "pray_hands"
+  },
+  {
+    "name": "blood orb",
+    "style": "buff",
+    "turns": 25,
+    "aura": false,
+    "effect": [
+      "blood magic consumable"
+    ],
+    "effectStyle": [
+      null
+    ],
+    "effectAmount": [
+      null
+    ],
+    "icon": "blood_orb"
+  },
+  {
+    "name": "execute",
+    "style": "buff",
+    "turns": 1,
+    "aura": false,
+    "effect": [
+      "execute"
+    ],
+    "effectStyle": [
+      null
+    ],
+    "effectAmount": [
+      null
+    ],
+    "icon": "skull_and_crossbones"
+  },
+  {
+    "name": "shadow cover",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "blur"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.75
+    ],
+    "icon": "hollow_disk"
+  },
+  {
+    "name": "stone hands",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "strengthen"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      10
+    ],
+    "icon": "rock_hands"
+  },
+  {
+    "name": "rat trap",
+    "style": "buff",
+    "turns": 10,
+    "trapSetupTime": 2,
+    "effect": [
+      "trap"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      10
+    ],
+    "icon": "trap"
+  },
+  {
+    "name": "bear trap",
+    "style": "buff",
+    "turns": 10,
+    "trapSetupTime": 2,
+    "effect": [
+      "trap"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      100
+    ],
+    "icon": "trap"
+  },
+  {
+    "name": "dragon trap",
+    "style": "buff",
+    "turns": 15,
+    "trapSetupTime": 5,
+    "effect": [
+      "trap"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      300
+    ],
+    "icon": "trap"
+  },
+  {
+    "name": "enchanted quiver",
+    "style": "buff",
+    "turns": 10,
+    "effect": [
+      "strengthen"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      5
+    ],
+    "icon": "glow_star"
+  },
+  {
+    "name": "bone shield",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "armor increase"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      15
+    ],
+    "icon": "shield"
+  },
+  {
+    "name": "stealth",
+    "style": "buff",
+    "turns": 3,
+    "effect": [
+      "stealth"
+    ],
+    "effectStyle": null,
+    "effectAmount": null,
+    "icon": "hidden"
+  },
+  {
+    "name": "remove stealth",
+    "style": "buff",
+    "turns": 1,
+    "effect": [
+      "remove stealth"
+    ],
+    "effectStyle": null,
+    "effectAmount": null,
+    "icon": null
+  },
+  {
+    "name": "siphon poison",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "siphon poison"
+    ],
+    "effectStyle": null,
+    "effectAmount": null,
+    "icon": "poison_heart"
+  },
+  {
+    "name": "weaken",
+    "style": "debuff",
+    "turns": 3,
+    "effect": [
+      "weaken"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "broken_sword"
+  },
+  {
+    "name": "shocked",
+    "style": "debuff",
+    "turns": 1,
+    "effect": [
+      "stun",
+      "mana drain"
+    ],
+    "effectStyle": [
+      null,
+      "flat"
+    ],
+    "effectAmount": [
+      null,
+      20
+    ],
+    "icon": "lightning"
+  },
+  {
+    "name": "severe burn",
+    "style": "debuff",
+    "turns": 6,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.75
+    ],
+    "icon": "flame"
+  },
+  {
+    "name": "severe bleed",
+    "style": "debuff",
+    "turns": 5,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.08
+    ],
+    "icon": "bleed"
+  },
+  {
+    "name": "severe poison",
+    "style": "debuff",
+    "turns": 15,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.1
+    ],
+    "icon": "skull_and_crossbones"
+  },
+  {
+    "name": "severe disease",
+    "style": "debuff",
+    "turns": 15,
+    "effect": [
+      "health damage",
+      "accuracy reduction"
+    ],
+    "effectStyle": [
+      "percentage",
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.03,
+      0.5
+    ],
+    "icon": "viruses"
+  },
+  {
+    "name": "severe hemmorage",
+    "style": "debuff",
+    "turns": 4,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.1
+    ],
+    "icon": "bleed"
+  },
+  {
+    "name": "severe sunder",
+    "style": "debuff",
+    "turns": 6,
+    "effect": [
+      "armor decrease"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.5
+    ],
+    "icon": "shield"
+  },
+  {
+    "name": "silence",
+    "style": "debuff",
+    "turns": 3,
+    "effect": [
+      "silenced"
+    ],
+    "effectStyle": [
+      null
+    ],
+    "effectAmount": [
+      null
+    ],
+    "icon": "blank"
+  },
+  {
+    "name": "weakened",
+    "style": "debuff",
+    "turns": 3,
+    "effect": [
+      "weaken"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "broken_sword"
+  },
+  {
+    "name": "projectile suppression",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "blur"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.5
+    ],
+    "icon": "shield"
+  },
+  {
+    "name": "projectile negation",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "blur"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.9
+    ],
+    "icon": "shield"
+  },
+  {
+    "name": "spell resistance",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "armor increase"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "magic_shield"
+  },
+  {
+    "name": "disease immunity",
+    "style": "buff",
+    "turns": 10,
+    "effect": [
+      "blur"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      1.0
+    ],
+    "icon": "viruses"
+  },
+  {
+    "name": "hard to see",
+    "style": "buff",
+    "turns": 4,
+    "effect": [
+      "blur"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.6
+    ],
+    "icon": "hidden"
+  },
+  {
+    "name": "damaging to hit",
+    "style": "buff",
+    "turns": 4,
+    "effect": [
+      "thorns"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      25
+    ],
+    "icon": "wind"
+  },
+  {
+    "name": "minor fortitude",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "healthMax increase"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.1
+    ],
+    "icon": "heart"
+  },
+  {
+    "name": "fortitude",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "healthMax increase"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "heart"
+  },
+  {
+    "name": "minor fury",
+    "style": "buff",
+    "turns": 3,
+    "effect": [
+      "strengthen"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.15
+    ],
+    "icon": "anger"
+  },
+  {
+    "name": "righteous fury",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "strengthen"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.4
+    ],
+    "icon": "anger"
+  },
+  {
+    "name": "beast empowerment",
+    "style": "buff",
+    "turns": 10,
+    "effect": [
+      "strengthen"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.8
+    ],
+    "icon": "paw"
+  },
+  {
+    "name": "dual rage",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "strengthen"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.4
+    ],
+    "icon": "dual_rage"
+  },
+  {
+    "name": "rock armor",
+    "style": "buff",
+    "turns": 8,
+    "effect": [
+      "armor increase"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      50
+    ],
+    "icon": "rock_shield"
+  },
+  {
+    "name": "steady aim",
+    "style": "buff",
+    "turns": 5,
+    "effect": [
+      "accuracy increase"
+    ],
+    "effectStyle": [
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.25
+    ],
+    "icon": "target"
+  },
+  {
+    "name": "purify",
+    "style": "buff",
+    "turns": 1,
+    "effect": [
+      "heal",
+      "sanity heal"
+    ],
+    "effectStyle": [
+      "flat",
+      "flat"
+    ],
+    "effectAmount": [
+      25,
+      10
+    ],
+    "icon": "holy_water"
+  },
+  {
+    "name": "necrotic wound",
+    "style": "debuff",
+    "turns": 5,
+    "effect": [
+      "sanityMax decrease",
+      "healthMax decrease",
+      "weaken"
+    ],
+    "effectStyle": [
+      "multiplier",
+      "multiplier",
+      "multiplier"
+    ],
+    "effectAmount": [
+      0.15,
+      0.15,
+      0.15
+    ],
+    "icon": "necrotic"
+  },
+  {
+    "name": "death mark",
+    "style": "debuff",
+    "turns": 2,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.15
+    ],
+    "icon": "death_mark"
+  }
+]
+

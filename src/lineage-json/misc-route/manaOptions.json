@@ -1,0 +1,12 @@
+[  
+   {
+      "serviceName": "Meditate On The Elements",
+      "cost": 0,
+      "manaRestore": 25
+   },
+   {
+      "serviceName": "Hire Shamanic Guide",
+      "cost": 150,
+      "manaRestore": "fill"
+   }
+]

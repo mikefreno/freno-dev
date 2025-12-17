@@ -1,0 +1,241 @@
+[
+  {
+    "name": "book of throw shuriken",
+    "type": "spell",
+    "teaches": "throw shuriken",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of poison blade",
+    "type": "spell",
+    "teaches": "poison blade",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of quick strike",
+    "type": "spell",
+    "teaches": "quick strike",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of below the belt",
+    "type": "spell",
+    "teaches": "below the belt",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of dual slice",
+    "type": "spell",
+    "teaches": "dual slice",
+    "icon": "Book",
+    "baseValue": 10000
+  },
+  {
+    "name": "book of shadow cover",
+    "type": "spell",
+    "teaches": "shadow cover",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of backstab",
+    "type": "spell",
+    "teaches": "backstab",
+    "icon": "Book_2",
+    "baseValue": 75000
+  },
+  {
+    "name": "book of venomous strike",
+    "type": "spell",
+    "teaches": "venomous strike",
+    "icon": "Book_2",
+    "baseValue": 75000
+  },
+  {
+    "name": "book of dance of daggers",
+    "type": "spell",
+    "teaches": "dance of daggers",
+    "icon": "Book_2",
+    "baseValue": 100000
+  },
+  {
+    "name": "book of garrote",
+    "type": "spell",
+    "teaches": "garrote",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of shadow step",
+    "type": "spell",
+    "teaches": "shadow step",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "forbidden assassination techniques vol. 1",
+    "type": "spell",
+    "teaches": "blade fan",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "forbidden assassination techniques vol. 2",
+    "type": "spell",
+    "teaches": "finalé",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of the raven",
+    "type": "spell",
+    "teaches": "call raven",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of the wolf",
+    "type": "spell",
+    "teaches": "call wolf",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of animal instinct",
+    "type": "spell",
+    "teaches": "animal instinct",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of rat trap",
+    "type": "spell",
+    "teaches": "rat trap",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of the bear",
+    "type": "spell",
+    "teaches": "call bear",
+    "icon": "Book",
+    "baseValue": 10000
+  },
+  {
+    "name": "book of beast bond",
+    "type": "spell",
+    "teaches": "beast bond",
+    "icon": "Book",
+    "baseValue": 10000
+  },
+  {
+    "name": "book of bear trap",
+    "type": "spell",
+    "teaches": "bear trap",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of the dragon welp",
+    "type": "spell",
+    "teaches": "call dragon welp",
+    "icon": "Book_2",
+    "baseValue": 75000
+  },
+  {
+    "name": "book of beast fury",
+    "type": "spell",
+    "teaches": "beastial fury",
+    "icon": "Book_2",
+    "baseValue": 75000
+  },
+  {
+    "name": "book of dragon trap",
+    "type": "spell",
+    "teaches": "dragon trap",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of the griffon",
+    "type": "spell",
+    "teaches": "call griffon",
+    "icon": "Book_3",
+    "baseValue": 200000
+  },
+  {
+    "name": "book of entangle",
+    "type": "spell",
+    "teaches": "entangle",
+    "icon": "Book_3",
+    "baseValue": 300000
+  },
+  {
+    "name": "forbidden beast mastery techniques vol. 1",
+    "type": "spell",
+    "teaches": "call dragon",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "book of arcane shot",
+    "type": "spell",
+    "teaches": "arcane shot",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of enchanted quiver",
+    "type": "spell",
+    "teaches": "enchanted quiver",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of arcane arrow",
+    "type": "spell",
+    "teaches": "arcane arrow",
+    "icon": "Book",
+    "baseValue": 10000
+  },
+  {
+    "name": "book of seeking arrow",
+    "type": "spell",
+    "teaches": "seeking arrow",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of arcane missiles",
+    "type": "spell",
+    "teaches": "arcane missiles",
+    "icon": "Book_3",
+    "baseValue": 200000
+  },
+  {
+    "name": "book of moon call",
+    "type": "spell",
+    "teaches": "moon call",
+    "icon": "Book_3",
+    "baseValue": 200000
+  },
+  {
+    "name": "forbidden arcane techniques vol. 1",
+    "type": "spell",
+    "teaches": "torrent",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "forbidden arcane techniques vol. 2",
+    "type": "spell",
+    "teaches": "moon fire",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  }
+]
+

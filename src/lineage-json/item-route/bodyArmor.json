@@ -1,0 +1,122 @@
+[
+  {
+    "name": "cheap leather chestpiece",
+    "baseValue": 400,
+    "icon": "Leather_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 7.0
+    }
+  },
+  {
+    "name": "leather chestpiece",
+    "baseValue": 800,
+    "icon": "Leather_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 10.0
+    }
+  },
+  {
+    "name": "cheap iron chestpiece",
+    "baseValue": 1500,
+    "icon": "Iron_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 15.0
+    }
+  },
+  {
+    "name": "iron chestpiece",
+    "baseValue": 2000,
+    "icon": "Iron_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 20.0
+    },
+    "requirements": {
+      "strength": 5
+    }
+  },
+  {
+    "name": "steel chestpiece",
+    "baseValue": 5000,
+    "icon": "Iron_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 25.0
+    },
+    "requirements": {
+      "strength": 10
+    }
+  },
+  {
+    "name": "barbarian king armor",
+    "baseValue": 10000,
+    "icon": "Leather_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 20.0,
+      "health": 50
+    },
+    "requirements": {
+      "strength": 15
+    }
+  },
+  {
+    "name": "knight's breastplate",
+    "baseValue": 15000,
+    "icon": "Iron_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 30.0
+    },
+    "requirements": {
+      "strength": 10,
+      "intelligence": 5
+    }
+  },
+  {
+    "name": "crusader's breastplate",
+    "baseValue": 75000,
+    "icon": "Iron_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 30.0,
+      "health": 100,
+      "mana": 100
+    },
+    "requirements": {
+      "strength": 25,
+      "intelligence": 10
+    }
+  },
+  {
+    "name": "soldier of fortune",
+    "baseValue": 225000,
+    "icon": "Iron_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 58.0
+    },
+    "requirements": {
+      "strength": 35
+    }
+  },
+  {
+    "name": "kingsman chestpiece",
+    "baseValue": 550000,
+    "icon": "Iron_Armor",
+    "slot": "body",
+    "stats": {
+      "armor": 50.0,
+      "health": 250,
+      "mana": 100
+    },
+    "requirements": {
+      "strength": 30,
+      "intelligence": 10
+    }
+  }
+]
+

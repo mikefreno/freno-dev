@@ -1,0 +1,171 @@
+[
+  {
+    "name": "heart attack",
+    "style": "debuff",
+    "turns": 5,
+    "effect": [
+      "health damage"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.10
+    ],
+    "icon": "split_heart"
+  },
+  {
+    "name": "distraught",
+    "style": "debuff",
+    "turns": 3,
+    "effect": [
+      "sanity damage"
+    ],
+    "effectStyle": [
+      "flat"
+    ],
+    "effectAmount": [
+      5
+    ],
+    "icon": "distraught"
+  },
+  {
+    "name": "paranoia",
+    "style": "debuff",
+    "turns": 4,
+    "effect": [
+      "accuracy reduction",
+      "sanity damage"
+    ],
+    "effectStyle": [
+      "percentage",
+      "flat"
+    ],
+    "effectAmount": [
+      0.15,
+      2
+    ],
+    "icon": "scarecrow"
+  },
+  {
+    "name": "hallucination",
+    "style": "debuff",
+    "turns": 3,
+    "effect": [
+      "accuracy reduction",
+      "blur"
+    ],
+    "effectStyle": [
+      "percentage",
+      null
+    ],
+    "effectAmount": [
+      0.25,
+      null
+    ],
+    "icon": "blind"
+  },
+  {
+    "name": "trembling",
+    "style": "debuff",
+    "turns": 2,
+    "effect": [
+      "weaken"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.20
+    ],
+    "icon": "broken_sword"
+  },
+  {
+    "name": "delirium",
+    "style": "debuff",
+    "turns": 3,
+    "effect": [
+      "sanity damage",
+      "accuracy reduction"
+    ],
+    "effectStyle": [
+      "flat",
+      "percentage"
+    ],
+    "effectAmount": [
+      3,
+      0.15
+    ],
+    "icon": "viruses"
+  },
+  {
+    "name": "phobia",
+    "style": "debuff",
+    "turns": 4,
+    "effect": [
+      "weaken",
+      "sanity damage"
+    ],
+    "effectStyle": [
+      "percentage",
+      "flat"
+    ],
+    "effectAmount": [
+      0.25,
+      2
+    ],
+    "icon": "skull_and_crossbones"
+  },
+  {
+    "name": "dissociation",
+    "style": "debuff",
+    "turns": 3,
+    "effect": [
+      "armor decrease"
+    ],
+    "effectStyle": [
+      "percentage"
+    ],
+    "effectAmount": [
+      0.30
+    ],
+    "icon": "broken_shield"
+  },
+  {
+    "name": "madness_whispers",
+    "style": "debuff",
+    "turns": 4,
+    "effect": [
+      "sanity damage",
+      "silenced"
+    ],
+    "effectStyle": [
+      "flat",
+      null
+    ],
+    "effectAmount": [
+      2,
+      null
+    ],
+    "icon": "hidden"
+  },
+  {
+    "name": "despair",
+    "style": "debuff",
+    "turns": 5,
+    "effect": [
+      "sanityMax decrease",
+      "healthMax decrease"
+    ],
+    "effectStyle": [
+      "percentage",
+      "percentage"
+    ],
+    "effectAmount": [
+      0.10,
+      0.10
+    ],
+    "icon": "distraught"
+  }
+]
+

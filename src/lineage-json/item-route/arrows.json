@@ -1,0 +1,75 @@
+[
+  {
+    "name": "iron arrow",
+    "baseValue": 2,
+    "slot": "quiver",
+    "icon": "Arrow",
+    "stackable": true,
+    "stats": {
+      "physicalDamage": 1.0
+    }
+  },
+  {
+    "name": "steel arrow",
+    "baseValue": 4,
+    "slot": "quiver",
+    "icon": "Arrow",
+    "stats": {
+      "physicalDamage": 1.5
+    },
+    "requirements": {
+      "dexterity": 5
+    }
+  },
+  {
+    "name": "refined arrow",
+    "baseValue": 8,
+    "slot": "quiver",
+    "icon": "Arrow",
+    "stats": {
+      "physicalDamage": 2.5
+    },
+    "requirements": {
+      "dexterity": 10
+    }
+  },
+  {
+    "name": "barbed arrow",
+    "baseValue": 15,
+    "slot": "quiver",
+    "icon": "Arrow",
+    "stats": {
+      "physicalDamage": 3.5
+    },
+    "requirements": {
+      "dexterity": 15
+    }
+  },
+  {
+    "name": "great arrow",
+    "baseValue": 20,
+    "slot": "quiver",
+    "icon": "Arrow",
+    "stats": {
+      "physicalDamage": 4.0
+    },
+    "requirements": {
+      "strength": 10,
+      "dexterity": 15
+    }
+  },
+  {
+    "name": "explosive arrow",
+    "baseValue": 40,
+    "slot": "quiver",
+    "icon": "Arrow",
+    "stats": {
+      "physicalDamage": 5.0
+    },
+    "requirements": {
+      "strength": 10,
+      "dexterity": 25
+    }
+  }
+]
+

@@ -1,0 +1,121 @@
+[
+  {
+    "name": "feather",
+    "baseValue": 100,
+    "icon": "Feather",
+    "slot": "head",
+    "stats": {
+      "armor": 1.0
+    }
+  },
+  {
+    "name": "leather headgear",
+    "baseValue": 500,
+    "icon": "Leather_Helmet",
+    "slot": "head",
+    "stats": {
+      "armor": 3.0
+    }
+  },
+  {
+    "name": "cheap iron helmet",
+    "baseValue": 1500,
+    "icon": "Iron_Helmet",
+    "slot": "head",
+    "stats": {
+      "armor": 5.0
+    }
+  },
+  {
+    "name": "iron helmet",
+    "baseValue": 2000,
+    "icon": "Iron_Helmet",
+    "slot": "head",
+    "stats": {
+      "armor": 8.0
+    },
+    "requirements": {
+      "strength": 5
+    }
+  },
+  {
+    "name": "steel helmet",
+    "baseValue": 5000,
+    "icon": "Iron_Helmet",
+    "slot": "head",
+    "stats": {
+      "armor": 10.0
+    },
+    "requirements": {
+      "strength": 8
+    }
+  },
+  {
+    "name": "barbarian king headgear",
+    "baseValue": 10000,
+    "icon": "Leather_Helmet",
+    "slot": "head",
+    "stats": {
+      "armor": 8.0,
+      "health": 50
+    },
+    "requirements": {
+      "strength": 12
+    }
+  },
+  {
+    "name": "knight's helm",
+    "baseValue": 15000,
+    "icon": "Iron_Helmet",
+    "slot": "head",
+    "stats": {
+      "armor": 12.0
+    },
+    "requirements": {
+      "strength": 15
+    }
+  },
+  {
+    "name": "crusader's helm",
+    "baseValue": 75000,
+    "icon": "Helm",
+    "slot": "head",
+    "stats": {
+      "armor": 15.0,
+      "health": 100,
+      "mana": 100
+    },
+    "requirements": {
+      "strength": 18,
+      "intelligence": 10
+    }
+  },
+  {
+    "name": "helm of fortune",
+    "baseValue": 225000,
+    "icon": "Helm",
+    "slot": "head",
+    "stats": {
+      "armor": 25.0
+    },
+    "requirements": {
+      "strength": 30
+    }
+  },
+  {
+    "name": "kingsman helm",
+    "baseValue": 550000,
+    "icon": "Helm",
+    "slot": "head",
+    "stats": {
+      "armor": 22.0,
+      "health": 250,
+      "mana": 100
+    },
+    "requirements": {
+      "strength": 25,
+      "intelligence": 10
+    }
+  }
+]
+

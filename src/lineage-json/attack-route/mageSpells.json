@@ -1,0 +1,794 @@
+[
+  {
+    "name": "fire bolt",
+    "element": "fire",
+    "proficiencyNeeded": "novice",
+    "targets": "single",
+    "type": "offense",
+    "manaCost": 10,
+    "damageTable": {
+      "fire": 15
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "fireMissile",
+      "style": "missile",
+      "position": "enemy",
+      "scale": 0.3,
+      "reachTargetAtFrame": 5
+    }
+  },
+  {
+    "name": "catch flame",
+    "element": "fire",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 20,
+    "damageTable": {
+      "fire": 25
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "fireSlash",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.5
+    }
+  },
+  {
+    "name": "scorch",
+    "element": "fire",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 50,
+    "damageTable": {
+      "fire": 25
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "flameDust",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.6
+    }
+  },
+  {
+    "name": "fireball",
+    "element": "fire",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 75,
+    "damageTable": {
+      "fire": 60
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "fireMissile",
+      "style": "missile",
+      "position": "enemy",
+      "scale": 0.7,
+      "reachTargetAtFrame": 5
+    }
+  },
+  {
+    "name": "fire wall",
+    "element": "fire",
+    "targets": "area",
+    "type": "defense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 100,
+    "maxTurnsActive": 3,
+    "buffNames": [
+      "projectile suppression"
+    ],
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "flameWall",
+      "style": "static",
+      "position": "field",
+      "scale": 0.8
+    }
+  },
+  {
+    "name": "rain fire",
+    "element": "fire",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "master",
+    "manaCost": 250,
+    "maxTurnsActive": 5,
+    "damageTable": {
+      "fire": 50
+    },
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "fireRain",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "dragons breath",
+    "element": "fire",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 600,
+    "damageTable": {
+      "fire": 275
+    },
+    "debuffNames": [
+      {
+        "name": "severe burn",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "dragonBreath",
+      "style": "static",
+      "position": "enemy",
+      "topOffset": 30
+    }
+  },
+  {
+    "name": "sunbeam",
+    "element": "fire",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 800,
+    "damageTable": {
+      "fire": 400
+    },
+    "debuffNames": [
+      {
+        "name": "severe burn",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "fireBeam",
+      "style": "span",
+      "position": "self",
+      "scale": 1.2
+    }
+  },
+  {
+    "name": "frost",
+    "element": "water",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 10,
+    "damageTable": {
+      "cold": 10
+    },
+    "debuffNames": [
+      {
+        "name": "chill",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "iceBlock",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.3
+    }
+  },
+  {
+    "name": "water whip",
+    "element": "water",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 20,
+    "damageTable": {
+      "physical": 30
+    },
+    "animation": {
+      "sprite": "ambiguousSparks",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.4
+    }
+  },
+  {
+    "name": "soothing waters",
+    "element": "water",
+    "targets": "single",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 50,
+    "selfDamageTable": {
+      "raw": -35
+    },
+    "animation": {
+      "sprite": "splash",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "cone of cold",
+    "element": "water",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 100,
+    "damageTable": {
+      "cold": 40
+    },
+    "debuffNames": [
+      {
+        "name": "chill",
+        "chance": 1.0
+      },
+      {
+        "name": "chill",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "coldSmoke",
+      "style": "span",
+      "position": "self"
+    }
+  },
+  {
+    "name": "steam blast",
+    "element": "water",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 125,
+    "damageTable": {
+      "fire": 60
+    },
+    "buffNames": null,
+    "debuffNames": [
+      {
+        "name": "burn",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "steam",
+      "style": "span",
+      "position": "enemy",
+      "scale": 0.5,
+      "leftOffset": 10
+    }
+  },
+  {
+    "name": "ice spike",
+    "element": "water",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 200,
+    "damageTable": {
+      "cold": 100
+    },
+    "buffNames": null,
+    "debuffNames": [
+      {
+        "name": "chill",
+        "chance": 0.75
+      },
+      {
+        "name": "chill",
+        "chance": 0.75
+      },
+      {
+        "name": "chill",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "iceSpike",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "healing rain",
+    "element": "water",
+    "proficiencyNeeded": "master",
+    "targets": "area",
+    "type": "defense",
+    "manaCost": 200,
+    "buffNames": [
+      "lasting heal"
+    ],
+    "debuffNames": null,
+    "animation": {
+      "sprite": "rainCall",
+      "style": "static",
+      "position": "self"
+    }
+  },
+  {
+    "name": "orb of cold",
+    "element": "water",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "master",
+    "manaCost": 300,
+    "maxTurnsActive": 5,
+    "damageTable": {
+      "cold": 50
+    },
+    "debuffNames": [
+      {
+        "name": "chill",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "iceOrb",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.8,
+      "repeat": 3
+    }
+  },
+  {
+    "name": "torrent",
+    "element": "water",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 600,
+    "damageTable": {
+      "physical": 400
+    },
+    "animation": {
+      "sprite": "torrent",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "spike field",
+    "element": "water",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 700,
+    "maxTurnsActive": 2,
+    "damageTable": {
+      "cold": 150
+    },
+    "debuffNames": [
+      {
+        "name": "chill",
+        "chance": 0.75
+      },
+      {
+        "name": "chill",
+        "chance": 0.75
+      },
+      {
+        "name": "bleed",
+        "chance": 0.75
+      },
+      {
+        "name": "bleed",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "massSpikes",
+      "style": "static",
+      "position": "enemy",
+      "retrigger": false,
+      "scale": 1.4
+    }
+  },
+  {
+    "name": "air burst",
+    "element": "air",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 15,
+    "damageTable": {
+      "physical": 18
+    },
+    "animation": {
+      "sprite": "puft",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.4
+    }
+  },
+  {
+    "name": "sparks",
+    "element": "air",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 25,
+    "damageTable": {
+      "lightning": 25
+    },
+    "debuffNames": [
+      {
+        "name": "shocked",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "sparks",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.4
+    }
+  },
+  {
+    "name": "lightning",
+    "element": "air",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 75,
+    "damageTable": {
+      "lightning": 50
+    },
+    "debuffNames": [
+      {
+        "name": "shocked",
+        "chance": 0.5
+      },
+      {
+        "name": "shocked",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "lightning",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "thunder clap",
+    "element": "air",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 75,
+    "damageTable": {
+      "lightning": 50
+    },
+    "debuffNames": [
+      {
+        "name": "shocked",
+        "chance": 0.75
+      },
+      {
+        "name": "stun",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "thunderClap",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.8
+    }
+  },
+  {
+    "name": "chain lightning",
+    "element": "air",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 105,
+    "damageTable": {
+      "lightning": 70
+    },
+    "debuffNames": [
+      {
+        "name": "shocked",
+        "chance": 0.75
+      },
+      {
+        "name": "stun",
+        "chance": 0.5
+      }
+    ],
+    "animation": {
+      "sprite": "lightningRay",
+      "style": "span",
+      "position": "self",
+      "repeat": 3
+    }
+  },
+  {
+    "name": "wind blades",
+    "element": "air",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "master",
+    "manaCost": 100,
+    "damageTable": {
+      "physical": 100
+    },
+    "debuffNames": [
+      {
+        "name": "bleed",
+        "chance": 0.75
+      },
+      {
+        "name": "bleed",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "windBlades",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.8
+    }
+  },
+  {
+    "name": "surrounding gale",
+    "element": "air",
+    "targets": "single",
+    "type": "defense",
+    "proficiencyNeeded": "master",
+    "manaCost": 125,
+    "buffNames": [
+      "hard to see",
+      "damaging to hit"
+    ],
+    "animation": {
+      "sprite": "groundSlash",
+      "style": "static",
+      "position": "self",
+      "repeat": 2
+    }
+  },
+  {
+    "name": "tornado",
+    "element": "air",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "maxTurnsActive": 3,
+    "manaCost": 500,
+    "damageTable": {
+      "physical": 100
+    },
+    "animation": {
+      "sprite": "tornado",
+      "style": "static",
+      "position": "enemy",
+      "scale": 1.4
+    }
+  },
+  {
+    "name": "suffocate",
+    "element": "air",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "maxTurnsActive": 5,
+    "manaCost": 1250,
+    "damageTable": {
+      "physical": 125
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.75
+      }
+    ],
+    "animation": {
+      "sprite": "suffocate",
+      "style": "static",
+      "position": "enemy",
+      "scale": 0.8
+    }
+  },
+  {
+    "name": "rock toss",
+    "element": "earth",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "novice",
+    "manaCost": 10,
+    "damageTable": {
+      "physical": 5,
+      "raw": 5
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.10
+      }
+    ],
+    "animation": {
+      "sprite": "rockDrop",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "stone hands",
+    "element": "earth",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "apprentice",
+    "manaCost": 20,
+    "buffNames": [
+      "stone hands"
+    ],
+    "debuffNames": null,
+    "animation": {
+      "glow": "#77484C20",
+      "position": "self"
+    }
+  },
+  {
+    "name": "stone salvo",
+    "element": "earth",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "adept",
+    "maxTurnsActive": 3,
+    "manaCost": 40,
+    "damageTable": {
+      "physical": 5,
+      "raw": 5
+    },
+    "debuffNames": [
+      {
+        "name": "stun",
+        "chance": 0.25
+      }
+    ],
+    "animation": {
+      "sprite": "rocksDropper",
+      "style": "static",
+      "position": "enemy"
+    }
+  },
+  {
+    "name": "rock armor",
+    "element": "earth",
+    "targets": "self",
+    "type": "defense",
+    "proficiencyNeeded": "adept",
+    "manaCost": 60,
+    "buffNames": [
+      "rock armor"
+    ],
+    "animation": {
+      "glow": "#77484C20",
+      "position": "self"
+    }
+  },
+  {
+    "name": "stalactite storm",
+    "element": "earth",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "expert",
+    "manaCost": 120,
+    "damageTable": {
+      "physical": 90,
+      "raw": 40
+    },
+    "animation": {
+      "sprite": "fallingSpikes",
+      "style": "static",
+      "position": "enemy",
+      "scale": 4
+    }
+  },
+  {
+    "name": "rock wall",
+    "element": "earth",
+    "targets": "area",
+    "type": "defense",
+    "proficiencyNeeded": "master",
+    "maxTurnsActive": 5,
+    "manaCost": 120,
+    "buffNames": [
+      "projectile negation"
+    ],
+    "animation": {
+      "sprite": "rockWall",
+      "style": "static",
+      "position": "field"
+    }
+  },
+  {
+    "name": "earthquake",
+    "element": "earth",
+    "targets": "area",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 650,
+    "damageTable": {
+      "physical": 120,
+      "raw": 75
+    },
+    "debuffNames": [
+      {
+        "name": "heavy stun",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "glow": "#77484895",
+      "position": "field",
+      "triggersScreenShake": {
+        "when": "start",
+        "duration": 1000
+      },
+      "duration": 1000
+    }
+  },
+  {
+    "name": "collider",
+    "element": "earth",
+    "targets": "single",
+    "type": "offense",
+    "proficiencyNeeded": "legend",
+    "manaCost": 1200,
+    "damageTable": {
+      "physical": 330,
+      "raw": 100
+    },
+    "debuffNames": [
+      {
+        "name": "heavy stun",
+        "chance": 1.0
+      }
+    ],
+    "animation": {
+      "sprite": "rockCollider",
+      "style": "static",
+      "position": "enemy",
+      "scale": 2
+    }
+  }
+]
+

@@ -1,0 +1,21 @@
+[
+  {
+    "name": "the deed to the whispering raven inn",
+    "icon": "Scroll",
+    "description": "<Font>Cursive</Font>**Holding this deed means The Whispering Raven Inn is yours, but you will need to repair the property before it can serve patrons**\n*The parchment is stained with dark splotches, its edges frayed and torn. On the back on the deed there are scribles The handwriting becomes increasingly erratic as it progresses.*\n\nTo those who would judge me,\n\nI, Alaric Shadowmere, once proprietor of the Whispering Raven Inn, pen this final testament. Let it serve as both confession and vindication for the deeds that have brought me to this wretched state.\n\nFor years, I welcomed weary travelers, offering respite from the horrors that roam our blighted lands. But with each passing season, I bore witness to the futility of it all. The weak perish, the strong exploit, and death claims us all in the end.\n\nIt was then that the whispers began. The ancient tomes hidden beneath the floorboards of my cellar spoke of power beyond mortal ken. They promised a way to conquer death itself, to build an army that would never tire, never falter.\n\nAnd so, I began my great work.\n\nEach patron who crossed my threshold became more than a guest – they became raw material for my grand design. Their flesh, their bones, their very essence – all repurposed in service of a greater cause.\n\nDo you not see the beauty in it? The drunkard who squandered his life now stands eternal guard. The abusive merchant now toils without rest or reward. I have given them purpose beyond their petty lives!\n\n<em>But the FOOLS outside do not understand!</em>\n\nThey call me <em>monster, madman, murderer.</em> They cannot comprehend the magnitude of my vision.\n\nAs I write this, I hear them coming. The villagers, the so-called heroes, all clamoring for my head. Let them come. My children – my beautiful, rotting children – will greet them.\n\nAnd should I fall, know this: Death is but a doorway. I have peered beyond its threshold, and I fear it no longer. In time, you too will understand the gift I offered this miserable world.\n\nMay He embrace us all.\n\n*The signature at the bottom is a smeared, illegible scrawl*",
+    "baseValue": -1
+  },
+  {
+    "name": "head of goblin shaman",
+    "icon": "Skull",
+    "description": "*Stick it on a spike to ward off other Goblin tribes, and confer safety to a trade route*\n\n",
+    "baseValue": -1
+  },
+  {
+    "name": "broken seal contract",
+    "icon": "Paper",
+    "description": "<Font>Cursive</Font>*A weathered piece of parchment sealed with black wax bearing a bleeding sun. The edges are singed as if exposed to intense heat.*\n\nBy acceptance of payment in gold, the undersigned hereby commits to the procurement and delivery of specimens matching the following criteria:\n\n- Aged 12 and over.\n\n- Weight of 7.5 stone or greater.\n\nHE requires these specimens intact and breathing. The method of acquisition is at your discretion, though discretion itself is paramount. Those who draw undue attention will find their own names added to HIS ledger.\n\nPayment will be rendered upon delivery to the Blood Eye Gate. Additional compensation will be provided for specimens of exceptional quality.\n\nFailure to deliver will result in the forfeiture of not only payment but also that which you hold most precious.\n\n*The signature appears to be written in a script that hurts the eyes to look upon directly*",
+    "baseValue": -1
+  }
+]
+

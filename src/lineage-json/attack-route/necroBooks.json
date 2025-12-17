@@ -1,0 +1,220 @@
+[
+  {
+    "name": "book of pull blood",
+    "type": "spell",
+    "teaches": "pull blood",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of orb burst (mana)",
+    "type": "spell",
+    "teaches": "orb burst(mana)",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of orb burst (health)",
+    "type": "spell",
+    "teaches": "orb burst(health)",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of vampiric touch",
+    "type": "spell",
+    "teaches": "vampiric touch",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of blood spear",
+    "type": "spell",
+    "teaches": "blood spear",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of blood lance",
+    "type": "spell",
+    "teaches": "blood lance",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of blood storm",
+    "type": "spell",
+    "teaches": "blood storm",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "forbidden blood techniques",
+    "type": "spell",
+    "teaches": "blood spike",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of the flying skull",
+    "type": "spell",
+    "teaches": "summon flying skull",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of skeleton raising",
+    "type": "spell",
+    "teaches": "raise skeleton",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of zombie raising",
+    "type": "spell",
+    "teaches": "raise zombie",
+    "icon": "Book",
+    "baseValue": 15000
+  },
+  {
+    "name": "book of luch summoning",
+    "type": "spell",
+    "teaches": "summon lich",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of wraith summoning",
+    "type": "spell",
+    "teaches": "summon wraith",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "forbidden summoning techniques vol. 1",
+    "type": "spell",
+    "teaches": "summon death knight",
+    "icon": "Book_3",
+    "baseValue": 500000
+  },
+  {
+    "name": "forbidden summoning techniques vol. 2",
+    "type": "spell",
+    "teaches": "mass raise dead",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of teeth",
+    "type": "spell",
+    "teaches": "teeth",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of bone shield",
+    "type": "spell",
+    "teaches": "bone shield",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of bone wall",
+    "type": "spell",
+    "teaches": "bone wall",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of bone spear",
+    "type": "spell",
+    "teaches": "bone spear",
+    "icon": "Book",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of bone armor",
+    "type": "spell",
+    "teaches": "bone armor",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of bone armor",
+    "type": "spell",
+    "teaches": "bone armor",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of bone prison",
+    "type": "spell",
+    "teaches": "bone prison",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "forbidden bone techniques",
+    "type": "spell",
+    "teaches": "bone blade",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  },
+  {
+    "name": "book of poison dart",
+    "type": "spell",
+    "teaches": "poison dart",
+    "icon": "Book",
+    "baseValue": 2500
+  },
+  {
+    "name": "book of plague cloud",
+    "type": "spell",
+    "teaches": "plague cloud",
+    "icon": "Book",
+    "baseValue": 5000
+  },
+  {
+    "name": "book of poison stream",
+    "type": "spell",
+    "teaches": "poison stream",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of disease ward",
+    "type": "spell",
+    "teaches": "disease ward",
+    "icon": "Book",
+    "baseValue": 20000
+  },
+  {
+    "name": "book of miasma",
+    "type": "spell",
+    "teaches": "miasma",
+    "icon": "Book_2",
+    "baseValue": 50000
+  },
+  {
+    "name": "book of plague bearer",
+    "type": "spell",
+    "teaches": "plague bearer",
+    "icon": "Book_2",
+    "baseValue": 150000
+  },
+  {
+    "name": "book of death cloud",
+    "type": "spell",
+    "teaches": "death cloud",
+    "icon": "Book_2",
+    "baseValue": 200000
+  },
+  {
+    "name": "forbidden pestilence techniques",
+    "type": "spell",
+    "teaches": "virulent explosion",
+    "icon": "Book_3",
+    "baseValue": 1000000
+  }
+]
+

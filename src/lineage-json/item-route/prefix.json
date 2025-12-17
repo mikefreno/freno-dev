@@ -1,0 +1,471 @@
+[
+  {
+    "name": {
+      "5": "healthy",
+      "4": "hearty",
+      "3": "hearty",
+      "2": "vital",
+      "1": "invigorating"
+    },
+    "modifier": {
+      "health": [
+        {
+          "5": {
+            "min": 10,
+            "max": 14
+          },
+          "4": {
+            "min": 15,
+            "max": 19
+          },
+          "3": {
+            "min": 20,
+            "max": 24
+          },
+          "2": {
+            "min": 25,
+            "max": 29
+          },
+          "1": {
+            "min": 30,
+            "max": 35
+          }
+        }
+      ]
+    },
+    "tiers": 5
+  },
+  {
+    "name": {
+      "5": "sturdy",
+      "4": "robust",
+      "3": "robust",
+      "2": "vigorous",
+      "1": "flourishing"
+    },
+    "modifier": {
+      "health": [
+        {
+          "5": {
+            "min": 8,
+            "max": 11
+          },
+          "4": {
+            "min": 12,
+            "max": 15
+          },
+          "3": {
+            "min": 16,
+            "max": 19
+          },
+          "2": {
+            "min": 20,
+            "max": 23
+          },
+          "1": {
+            "min": 24,
+            "max": 28
+          }
+        }
+      ],
+      "healthRegen": [
+        {
+          "5": {
+            "min": 1,
+            "max": 1
+          },
+          "4": {
+            "min": 1,
+            "max": 2
+          },
+          "3": {
+            "min": 2,
+            "max": 2
+          },
+          "2": {
+            "min": 2,
+            "max": 3
+          },
+          "1": {
+            "min": 3,
+            "max": 4
+          }
+        }
+      ]
+    },
+    "tiers": 5
+  },
+  {
+    "name": {
+      "4": "sage",
+      "3": "wise",
+      "2": "wise",
+      "1": "enlightened"
+    },
+    "modifier": {
+      "mana": [
+        {
+          "4": {
+            "min": 8,
+            "max": 11
+          },
+          "3": {
+            "min": 12,
+            "max": 15
+          },
+          "2": {
+            "min": 16,
+            "max": 19
+          },
+          "1": {
+            "min": 20,
+            "max": 25
+          }
+        }
+      ],
+      "intelligence": [
+        {
+          "4": {
+            "min": 1,
+            "max": 2
+          },
+          "3": {
+            "min": 2,
+            "max": 3
+          },
+          "2": {
+            "min": 3,
+            "max": 4
+          },
+          "1": {
+            "min": 4,
+            "max": 5
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "3": "balanced",
+      "2": "stable",
+      "1": "harmonious"
+    },
+    "modifier": {
+      "sanity": [
+        {
+          "3": {
+            "min": 10,
+            "max": 14
+          },
+          "2": {
+            "min": 15,
+            "max": 19
+          },
+          "1": {
+            "min": 20,
+            "max": 25
+          }
+        }
+      ]
+    },
+    "tiers": 3
+  },
+  {
+    "name": {
+      "4": "energetic",
+      "3": "vigorous",
+      "2": "vigorous",
+      "1": "revitalizing"
+    },
+    "modifier": {
+      "healthRegen": [
+        {
+          "4": {
+            "min": 2,
+            "max": 3
+          },
+          "3": {
+            "min": 3,
+            "max": 4
+          },
+          "2": {
+            "min": 4,
+            "max": 5
+          },
+          "1": {
+            "min": 5,
+            "max": 6
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "3": "focused",
+      "2": "concentrated",
+      "1": "meditative"
+    },
+    "modifier": {
+      "manaRegen": [
+        {
+          "3": {
+            "min": 2,
+            "max": 3
+          },
+          "2": {
+            "min": 3,
+            "max": 4
+          },
+          "1": {
+            "min": 4,
+            "max": 5
+          }
+        }
+      ]
+    },
+    "tiers": 3
+  },
+  {
+    "name": {
+      "3": "strong",
+      "2": "mighty",
+      "1": "herculean"
+    },
+    "modifier": {
+      "strength": [
+        {
+          "3": {
+            "min": 3,
+            "max": 4
+          },
+          "2": {
+            "min": 5,
+            "max": 6
+          },
+          "1": {
+            "min": 7,
+            "max": 8
+          }
+        }
+      ]
+    },
+    "tiers": 3
+  },
+  {
+    "name": {
+      "3": "nimble",
+      "2": "agile",
+      "1": "acrobatic"
+    },
+    "modifier": {
+      "dexterity": [
+        {
+          "3": {
+            "min": 3,
+            "max": 4
+          },
+          "2": {
+            "min": 5,
+            "max": 6
+          },
+          "1": {
+            "min": 7,
+            "max": 8
+          }
+        }
+      ]
+    },
+    "tiers": 3
+  },
+  {
+    "name": {
+      "4": "protective",
+      "3": "fortified",
+      "2": "fortified",
+      "1": "impenetrable"
+    },
+    "modifier": {
+      "armorAdded": [
+        {
+          "4": {
+            "min": 5,
+            "max": 7
+          },
+          "3": {
+            "min": 8,
+            "max": 10
+          },
+          "2": {
+            "min": 11,
+            "max": 13
+          },
+          "1": {
+            "min": 14,
+            "max": 16
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "4": "tough",
+      "3": "tempered",
+      "2": "tempered",
+      "1": "unyielding"
+    },
+    "modifier": {
+      "armorAdded": [
+        {
+          "4": {
+            "min": 3,
+            "max": 4
+          },
+          "3": {
+            "min": 5,
+            "max": 6
+          },
+          "2": {
+            "min": 7,
+            "max": 8
+          },
+          "1": {
+            "min": 9,
+            "max": 10
+          }
+        }
+      ],
+      "health": [
+        {
+          "4": {
+            "min": 4,
+            "max": 6
+          },
+          "3": {
+            "min": 7,
+            "max": 9
+          },
+          "2": {
+            "min": 10,
+            "max": 12
+          },
+          "1": {
+            "min": 13,
+            "max": 15
+          }
+        }
+      ]
+    },
+    "tiers": 4
+  },
+  {
+    "name": {
+      "3": "flameward",
+      "2": "flameproof",
+      "1": "infernoshield"
+    },
+    "modifier": {
+      "fireResistance": [
+        {
+          "3": {
+            "min": 0.08,
+            "max": 0.10
+          },
+          "2": {
+            "min": 0.11,
+            "max": 0.13
+          },
+          "1": {
+            "min": 0.14,
+            "max": 0.16
+          }
+        }
+      ]
+    },
+    "tiers": 3
+  },
+  {
+    "name": {
+      "3": "frostward",
+      "2": "frostproof",
+      "1": "glacialshield"
+    },
+    "modifier": {
+      "coldResistance": [
+        {
+          "3": {
+            "min": 0.08,
+            "max": 0.10
+          },
+          "2": {
+            "min": 0.11,
+            "max": 0.13
+          },
+          "1": {
+            "min": 0.14,
+            "max": 0.16
+          }
+        }
+      ]
+    },
+    "tiers": 3
+  },
+  {
+    "name": {
+      "3": "stormward",
+      "2": "stormproof",
+      "1": "thundershield"
+    },
+    "modifier": {
+      "lightningResistance": [
+        {
+          "3": {
+            "min": 0.8,
+            "max": 0.10
+          },
+          "2": {
+            "min": 0.11,
+            "max": 0.13
+          },
+          "1": {
+            "min": 0.14,
+            "max": 0.16
+          }
+        }
+      ]
+    },
+    "tiers": 3
+  },
+  {
+    "name": {
+      "3": "toxic",
+      "2": "antitoxin",
+      "1": "venomshield"
+    },
+    "modifier": {
+      "poisonResistance": [
+        {
+          "3": {
+            "min": 0.08,
+            "max": 0.10
+          },
+          "2": {
+            "min": 0.11,
+            "max": 0.13
+          },
+          "1": {
+            "min": 0.14,
+            "max": 0.16
+          }
+        }
+      ]
+    },
+    "tiers": 3
+  }
+]
+

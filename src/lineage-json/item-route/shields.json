@@ -1,0 +1,114 @@
+[
+  {
+    "name": "block of wood",
+    "baseValue": 100,
+    "icon": "Wooden_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 4.0,
+      "blockChance": 0.035
+    }
+  },
+  {
+    "name": "cheap buckler",
+    "baseValue": 500,
+    "icon": "Wooden_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 6.0,
+      "blockChance": 0.05
+    }
+  },
+  {
+    "name": "block of iron",
+    "baseValue": 1000,
+    "icon": "Iron_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 9.0,
+      "blockChance": 0.035
+    },
+    "requirements": {
+      "strength": 8
+    }
+  },
+  {
+    "name": "iron shield",
+    "baseValue": 7000,
+    "icon": "Iron_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 11.0,
+      "blockChance": 0.05
+    },
+    "requirements": {
+      "strength": 10
+    }
+  },
+  {
+    "name": "kite shield",
+    "baseValue": 14000,
+    "icon": "Iron_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 10.0,
+      "blockChance": 0.07
+    },
+    "requirements": {
+      "strength": 10
+    }
+  },
+  {
+    "name": "pavise",
+    "baseValue": 32000,
+    "icon": "Iron_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 14.0,
+      "blockChance": 0.10
+    },
+    "requirements": {
+      "strength": 15
+    }
+  },
+  {
+    "name": "great shield",
+    "baseValue": 80000,
+    "icon": "Iron_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 20.0,
+      "blockChance": 0.06
+    },
+    "requirements": {
+      "strength": 22
+    }
+  },
+  {
+    "name": "royal great shield",
+    "baseValue": 120000,
+    "icon": "Iron_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 30.0,
+      "blockChance": 0.07
+    },
+    "requirements": {
+      "strength": 28
+    }
+  },
+  {
+    "name": "shield of glory",
+    "baseValue": 350000,
+    "icon": "Iron_Shield",
+    "slot": "one-hand",
+    "stats": {
+      "armor": 40.0,
+      "blockChance": 0.07
+    },
+    "requirements": {
+      "strength": 35
+    }
+  }
+]
+

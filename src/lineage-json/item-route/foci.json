@@ -1,0 +1,192 @@
+[
+  {
+    "name": "cheap focus",
+    "icon": "Focus_1",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 25,
+      "magicDamage": 2
+    },
+    "requirements": {
+      "intelligence": 5
+    },
+    "baseValue": 500
+  },
+  {
+    "name": "basic focus",
+    "icon": "Focus_1",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 50,
+      "magicDamage": 5
+    },
+    "requirements": {
+      "intelligence": 10
+    },
+    "baseValue": 2500
+  },
+  {
+    "name": "cracked focus",
+    "icon": "Focus_1",
+    "slot": "off-hand",
+    "stats": {
+      "magicDamage": 15
+    },
+    "requirements": {
+      "intelligence": 15
+    },
+    "baseValue": 3000
+  },
+  {
+    "name": "buzzing focus",
+    "icon": "Focus_1",
+    "slot": "off-hand",
+    "stats": {
+      "magicDamage": 10,
+      "manaRegen": 1
+    },
+    "requirements": {
+      "intelligence": 15
+    },
+    "baseValue": 3500
+  },
+  {
+    "name": "apprentice's focus",
+    "icon": "Focus_2",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 75,
+      "magicDamage": 12,
+      "manaRegen": 1
+    },
+    "requirements": {
+      "intelligence": 18
+    },
+    "baseValue": 8000
+  },
+  {
+    "name": "crystalline focus",
+    "icon": "Focus_2",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 100,
+      "magicDamage": 15
+    },
+    "requirements": {
+      "intelligence": 20
+    },
+    "baseValue": 12000
+  },
+  {
+    "name": "resonating focus",
+    "icon": "Focus_2",
+    "slot": "off-hand",
+    "stats": {
+      "magicDamage": 18,
+      "manaRegen": 2
+    },
+    "requirements": {
+      "intelligence": 22
+    },
+    "baseValue": 15000
+  },
+  {
+    "name": "mage's focus",
+    "icon": "Focus_2",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 150,
+      "magicDamage": 20,
+      "manaRegen": 2
+    },
+    "requirements": {
+      "intelligence": 25
+    },
+    "baseValue": 25000
+  },
+  {
+    "name": "arcane focus",
+    "icon": "Focus_3",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 200,
+      "magicDamage": 25,
+      "manaRegen": 3
+    },
+    "requirements": {
+      "intelligence": 30
+    },
+    "baseValue": 45000
+  },
+  {
+    "name": "enchanted focus",
+    "icon": "Focus_3",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 250,
+      "magicDamage": 30,
+      "manaRegen": 3
+    },
+    "requirements": {
+      "intelligence": 35
+    },
+    "baseValue": 75000
+  },
+  {
+    "name": "sorcerer's focus",
+    "icon": "Focus_3",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 300,
+      "magicDamage": 35,
+      "manaRegen": 4
+    },
+    "requirements": {
+      "intelligence": 40
+    },
+    "baseValue": 120000
+  },
+  {
+    "name": "master's focus",
+    "icon": "Focus_3",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 400,
+      "magicDamage": 40,
+      "manaRegen": 5
+    },
+    "requirements": {
+      "intelligence": 45
+    },
+    "baseValue": 180000
+  },
+  {
+    "name": "archmagus focus",
+    "icon": "Focus_4",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 500,
+      "magicDamage": 45,
+      "manaRegen": 6
+    },
+    "requirements": {
+      "intelligence": 50
+    },
+    "baseValue": 250000
+  },
+  {
+    "name": "legendary focus",
+    "icon": "Focus_4",
+    "slot": "off-hand",
+    "stats": {
+      "mana": 600,
+      "magicDamage": 50,
+      "manaRegen": 7
+    },
+    "requirements": {
+      "intelligence": 55
+    },
+    "baseValue": 350000
+  }
+]
+
