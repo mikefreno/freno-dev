@@ -125,11 +125,11 @@ export function Typewriter(props: {
           if (typeof keepAlive === "number") {
             const keepAliveInterval = setInterval(() => {
               setKeepAliveCountdown((prev) => {
-                if (prev <= 1) {
+                if (prev <= 1000) {
                   clearInterval(keepAliveInterval);
                   return 0;
                 }
-                return prev - 1;
+                return prev - 1000;
               });
             }, 1000);
           }
