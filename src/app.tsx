@@ -1,6 +1,12 @@
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
-import { createEffect, ErrorBoundary, Suspense, onMount, onCleanup } from "solid-js";
+import {
+  createEffect,
+  ErrorBoundary,
+  Suspense,
+  onMount,
+  onCleanup
+} from "solid-js";
 import "./app.css";
 import { LeftBar, RightBar } from "./components/Bars";
 import { TerminalSplash } from "./components/TerminalSplash";
@@ -29,13 +35,13 @@ function AppLayout(props: { children: any }) {
   createEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768; // md breakpoint
-      
+
       // Show bars when switching to desktop
       if (!isMobile) {
         setLeftBarVisible(true);
         setRightBarVisible(true);
       }
-      
+
       const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
       setCenterWidth(newWidth);
     };
@@ -77,12 +83,34 @@ function AppLayout(props: { children: any }) {
     });
   });
 
+  // ESC key to close sidebars on mobile
+  onMount(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMobile = window.innerWidth < 768; // md breakpoint
+
+      if (e.key === "Escape" && isMobile) {
+        if (leftBarVisible()) {
+          setLeftBarVisible(false);
+        }
+        if (rightBarVisible()) {
+          setRightBarVisible(false);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    onCleanup(() => {
+      window.removeEventListener("keydown", handleKeyDown);
+    });
+  });
+
   // Swipe gestures to reveal bars
   onMount(() => {
     let touchStartX = 0;
     let touchStartY = 0;
-    const EDGE_THRESHOLD = 50; // pixels from edge to trigger
-    const SWIPE_THRESHOLD = 100; // minimum swipe distance
+    const EDGE_THRESHOLD = 100;
+    const SWIPE_THRESHOLD = 100;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
@@ -111,7 +139,10 @@ function AppLayout(props: { children: any }) {
             setLeftBarVisible(true);
           }
           // Swipe left from right edge - reveal right bar
-          else if (touchStartX > window.innerWidth - EDGE_THRESHOLD && deltaX < -SWIPE_THRESHOLD) {
+          else if (
+            touchStartX > window.innerWidth - EDGE_THRESHOLD &&
+            deltaX < -SWIPE_THRESHOLD
+          ) {
             setRightBarVisible(true);
           }
         }
@@ -129,16 +160,32 @@ function AppLayout(props: { children: any }) {
 
   return (
     <div class="flex max-w-screen flex-row">
-      {/* Backdrop overlay - visible on mobile when sidebar is open */}
-      <div
-        class="fixed inset-0 bg-black transition-opacity duration-500 ease-out md:hidden z-40"
+      {/* Hamburger menu button - only visible on non-touch devices under mobile breakpoint */}
+      <button
+        onClick={() => setLeftBarVisible(!leftBarVisible())}
+        class="hamburger-menu-btn fixed top-4 left-4 z-50 p-2 rounded-md bg-surface0 hover:bg-surface1 transition-colors shadow-md"
         classList={{
-          "opacity-50 pointer-events-auto": leftBarVisible(),
-          "opacity-0 pointer-events-none": !leftBarVisible()
+          "hidden": leftBarVisible()
         }}
-        onClick={() => setLeftBarVisible(false)}
-        aria-label="Close sidebar"
-      />
+        aria-label="Toggle navigation menu"
+        style={{
+          display: "none" // Hidden by default, shown via media query for non-touch devices
+        }}
+      >
+        <svg
+          class="w-6 h-6 text-text"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
       
       <LeftBar />
       <div

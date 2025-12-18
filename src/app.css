@@ -465,3 +465,10 @@ input[type="checkbox"]:checked::before {
   width: 100%;
   height: 100%;
 }
+
+/* Hamburger menu button - only show on non-touch devices under mobile breakpoint */
+@media (max-width: 767px) and (hover: hover) and (pointer: fine) {
+  .hamburger-menu-btn {
+    display: block !important;
+  }
+}
