@@ -15,6 +15,7 @@ const BarsContext = createContext<{
   setRightBarVisible: (visible: boolean) => void;
   toggleLeftBar: () => void;
   toggleRightBar: () => void;
+  barsInitialized: Accessor<boolean>;
 }>({
   leftBarSize: () => 0,
   setLeftBarSize: () => {},
@@ -27,7 +28,8 @@ const BarsContext = createContext<{
   rightBarVisible: () => true,
   setRightBarVisible: () => {},
   toggleLeftBar: () => {},
-  toggleRightBar: () => {}
+  toggleRightBar: () => {},
+  barsInitialized: () => false
 });
 
 export function useBars() {
@@ -41,6 +43,31 @@ export function BarsProvider(props: { children: any }) {
   const [centerWidth, setCenterWidth] = createSignal(0);
   const [leftBarVisible, _setLeftBarVisible] = createSignal(true);
   const [rightBarVisible, _setRightBarVisible] = createSignal(true);
+  const [barsInitialized, setBarsInitialized] = createSignal(false);
+
+  // Track when both bars have been sized at least once
+  let leftBarSized = false;
+  let rightBarSized = false;
+
+  const wrappedSetLeftBarSize = (size: number) => {
+    setLeftBarSize(size);
+    if (!leftBarSized && size > 0) {
+      leftBarSized = true;
+      if (rightBarSized) {
+        setBarsInitialized(true);
+      }
+    }
+  };
+
+  const wrappedSetRightBarSize = (size: number) => {
+    setRightBarSize(size);
+    if (!rightBarSized && size > 0) {
+      rightBarSized = true;
+      if (leftBarSized) {
+        setBarsInitialized(true);
+      }
+    }
+  };
 
   // Wrap visibility setters with haptic feedback
   const setLeftBarVisible = (visible: boolean) => {
@@ -60,9 +87,9 @@ export function BarsProvider(props: { children: any }) {
     <BarsContext.Provider
       value={{
         leftBarSize,
-        setLeftBarSize,
+        setLeftBarSize: wrappedSetLeftBarSize,
         rightBarSize,
-        setRightBarSize,
+        setRightBarSize: wrappedSetRightBarSize,
         centerWidth,
         setCenterWidth,
         leftBarVisible,
@@ -70,7 +97,8 @@ export function BarsProvider(props: { children: any }) {
         rightBarVisible,
         setRightBarVisible,
         toggleLeftBar,
-        toggleRightBar
+        toggleRightBar,
+        barsInitialized
       }}
     >
       {props.children}

@@ -20,7 +20,7 @@ export function TerminalSplash() {
   }
 
   return (
-    <div class="bg-base mx-auto flex min-h-full w-full flex-col items-center justify-center overflow-hidden">
+    <div class="bg-base flex min-h-screen w-full flex-col items-center justify-center overflow-hidden">
       <div class="text-text max-w-3xl p-8 font-mono text-4xl whitespace-pre-wrap">
         <div class="flex items-center justify-center">
           {spinnerChars[showing()]}

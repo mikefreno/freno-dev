@@ -5,7 +5,8 @@ import {
   ErrorBoundary,
   Suspense,
   onMount,
-  onCleanup
+  onCleanup,
+  Show
 } from "solid-js";
 import "./app.css";
 import { LeftBar, RightBar } from "./components/Bars";
@@ -25,7 +26,8 @@ function AppLayout(props: { children: any }) {
     toggleLeftBar,
     toggleRightBar,
     setLeftBarVisible,
-    setRightBarVisible
+    setRightBarVisible,
+    barsInitialized
   } = useBars();
 
   let lastScrollY = 0;
@@ -158,18 +160,28 @@ function AppLayout(props: { children: any }) {
   });
 
   return (
-    <div class="flex max-w-screen flex-row">
-      <LeftBar />
-      <div
-        style={{
-          width: `${centerWidth()}px`,
-          "margin-left": `${leftBarSize()}px`
-        }}
-      >
-        <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
+    <>
+      {/* Fullscreen loading splash until bars are initialized */}
+      <Show when={!barsInitialized()}>
+        <div class="bg-base fixed inset-0 z-50">
+          <TerminalSplash />
+        </div>
+      </Show>
+
+      <div class="flex max-w-screen flex-row">
+        <LeftBar />
+        <div
+          class="relative min-h-screen rounded-t-lg shadow-2xl"
+          style={{
+            width: `${centerWidth()}px`,
+            "margin-left": `${leftBarSize()}px`
+          }}
+        >
+          <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
+        </div>
+        <RightBar />
       </div>
-      <RightBar />
-    </div>
+    </>
   );
 }
 

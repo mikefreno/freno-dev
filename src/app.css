@@ -220,8 +220,7 @@ textarea.underlinedInput:focus {
   bottom: 0px;
   position: absolute;
   transition: width 0.3s ease-out;
-  /*TODO:*/
-  background: var(--color-surface2);
+  background: var(--color-blue);
 }
 
 .bar:before {

@@ -180,69 +180,79 @@ export function LeftBar() {
           <a href="/">Freno.dev</a>
         </h3>
       </Typewriter>
-      <Typewriter keepAlive={false} class="z-50 h-full">
-        <div class="text-text flex flex-col px-4 text-xl font-bold">
-          <ul class="gap-4">
-            {/* Recent blog posts */}
-            <li class="mt-2 mb-6">
-              <div class="flex flex-col gap-2">
-                <span class="text-lg font-semibold">Recent Posts</span>
-                <div class="flex flex-col gap-3">
-                  <Show when={recentPosts()} fallback={<TerminalSplash />}>
-                    <For each={recentPosts()}>
-                      {(post) => (
-                        <a
-                          href={`/blog/${post.title}`}
-                          class="hover:text-subtext0 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
-                        >
-                          <div class="flex flex-col">
-                            <span>{post.title.replace(/_/g, " ")}</span>
-
-                            <span class="text-subtext0 text-sm">
-                              {new Date(post.date).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric"
-                              })}
+      <div class="text-text flex flex-col px-4 text-xl font-bold">
+        <ul class="gap-4">
+          {/* Recent blog posts */}
+          <li class="mt-2 mb-6">
+            <div class="flex flex-col gap-2">
+              <span class="text-lg font-semibold">Recent Posts</span>
+              <div class="flex flex-col gap-3">
+                <Show when={recentPosts()} fallback={<TerminalSplash />}>
+                  <For each={recentPosts()}>
+                    {(post) => (
+                      <a
+                        href={`/blog/${post.title}`}
+                        class="hover:text-subtext0 block transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
+                      >
+                        <Typewriter class="flex flex-col" keepAlive={false}>
+                          <div class="relative overflow-hidden">
+                            <img
+                              src={post.banner_photo || "/blueprint.jpg"}
+                              alt="post-cover"
+                              class="float-right mb-1 ml-2 h-12 w-16 rounded object-cover"
+                            />
+                            <span
+                              class="inline wrap-break-word hyphens-auto"
+                              style="hyphens: auto;"
+                            >
+                              {post.title.replace(/_/g, " ")}
                             </span>
                           </div>
-                        </a>
-                      )}
-                    </For>
-                  </Show>
-                </div>
+
+                          <span class="text-subtext0 clear-both text-sm">
+                            {new Date(post.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric"
+                            })}
+                          </span>
+                        </Typewriter>
+                      </a>
+                    )}
+                  </For>
+                </Show>
               </div>
-            </li>
-          </ul>
-          <div class="absolute bottom-12">
-            <div class="flex flex-col gap-4">
-              <ul class="gap-4">
-                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="/">Home</a>
-                </li>
-                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="/blog">Blog</a>
-                </li>
-                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="#services">Services</a>
-                </li>
-              </ul>
-              {/* Right bar navigation merged for mobile */}
-              <ul class="border-overlay0 gap-4 border-t pt-4 md:hidden">
-                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="#home">Home</a>
-                </li>
-                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="#about">About</a>
-                </li>
-                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="#services">Services</a>
-                </li>
-              </ul>
             </div>
+          </li>
+        </ul>
+        <Typewriter keepAlive={false} class="absolute bottom-12">
+          <div class="flex flex-col gap-4">
+            <ul class="gap-4">
+              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <a href="/">Home</a>
+              </li>
+              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <a href="/blog">Blog</a>
+              </li>
+              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <a href="/contact">Contact</a>
+              </li>
+            </ul>
+            {/* Right bar navigation merged for mobile */}
+            <ul class="border-overlay0 gap-4 border-t pt-4 md:hidden">
+              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <a href="/">Home</a>
+              </li>
+              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <a href="#about">About</a>
+              </li>
+              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <a href="/contact">Contact</a>
+              </li>
+            </ul>
           </div>
-        </div>
-      </Typewriter>
+        </Typewriter>
+      </div>
     </nav>
   );
 }
@@ -302,13 +312,13 @@ export function RightBar() {
         <div class="text-text flex h-screen flex-col justify-between px-4 py-10 text-xl font-bold">
           <ul class="gap-4">
             <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-              <a href="#home">Home</a>
+              <a href="/">Home</a>
             </li>
             <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
               <a href="#about">About</a>
             </li>
             <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-              <a href="#services">Services</a>
+              <a href="/contact">Contact</a>
             </li>
           </ul>
         </div>

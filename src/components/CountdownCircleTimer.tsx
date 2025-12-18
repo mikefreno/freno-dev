@@ -1,4 +1,4 @@
-import { Component, createEffect, onCleanup } from "solid-js";
+import { Component, createSignal, onMount, onCleanup } from "solid-js";
 
 interface CountdownCircleTimerProps {
   duration: number;
@@ -6,23 +6,46 @@ interface CountdownCircleTimerProps {
   size: number;
   strokeWidth: number;
   colors: string;
-  children: () => any;
+  children: (time: number) => any;
+  onComplete?: () => void;
 }
 
 const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
   const radius = (props.size - props.strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  
+
+  const [remainingTime, setRemainingTime] = createSignal(
+    props.initialRemainingTime
+  );
+
   // Calculate progress (0 to 1)
-  const progress = () => props.initialRemainingTime / props.duration;
+  const progress = () => remainingTime() / props.duration;
   const strokeDashoffset = () => circumference * (1 - progress());
+
+  onMount(() => {
+    const interval = setInterval(() => {
+      setRemainingTime((prev) => {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
+          clearInterval(interval);
+          props.onComplete?.();
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
 
   return (
     <div
       style={{
         position: "relative",
         width: `${props.size}px`,
-        height: `${props.size}px`,
+        height: `${props.size}px`
       }}
     >
       <svg
@@ -47,11 +70,11 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
           fill="none"
           stroke={props.colors}
           stroke-width={props.strokeWidth}
-          stroke-dasharray={circumference}
-          stroke-dashoffset={strokeDashoffset()}
+          stroke-dasharray={`${circumference}`}
+          stroke-dashoffset={`${strokeDashoffset()}`}
           stroke-linecap="round"
           style={{
-            transition: "stroke-dashoffset 0.5s linear",
+            transition: "stroke-dashoffset 0.5s linear"
           }}
         />
       </svg>
@@ -61,10 +84,10 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
           position: "absolute",
           top: "50%",
           left: "50%",
-          transform: "translate(-50%, -50%)",
+          transform: "translate(-50%, -50%)"
         }}
       >
-        {props.children()}
+        {props.children(remainingTime())}
       </div>
     </div>
   );

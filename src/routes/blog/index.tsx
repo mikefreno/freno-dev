@@ -20,7 +20,7 @@ export default function BlogIndex() {
     <>
       <Title>Blog | Michael Freno</Title>
 
-      <div class="relative mx-auto min-h-screen rounded-t-lg pt-8 pb-24 shadow-2xl">
+      <div class="mx-auto pt-8 pb-24">
         <Suspense fallback={<TerminalSplash />}>
           <div class="flex flex-col justify-center gap-4 md:flex-row md:justify-around">
             <PostSortingSelect />

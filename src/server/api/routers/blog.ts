@@ -24,6 +24,7 @@ export const blogRouter = createTRPCRouter({
         p.published,
         p.category,
         p.author_id,
+        p.banner_photo,
         p.reads,
         COUNT(DISTINCT pl.user_id) as total_likes,
         COUNT(DISTINCT c.id) as total_comments
