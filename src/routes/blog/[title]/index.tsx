@@ -186,8 +186,12 @@ export default function PostPage() {
                           />
                         </div>
                         <div
-                          class="text-shadow absolute top-1/2 left-1/2 z-10 w-full -translate-x-1/2 -translate-y-1/2 px-4 text-center tracking-widest text-white brightness-150 select-text"
-                          style={{ "pointer-events": "none" }}
+                          class="text-shadow absolute top-1/3 z-10 my-auto px-4 text-center tracking-widest text-white brightness-150 select-text"
+                          style={{
+                            "pointer-events": "none",
+                            width: `${centerWidth()}px`,
+                            "margin-left": `${leftBarSize()}px`
+                          }}
                         >
                           <div class="text-3xl font-light tracking-widest">
                             {p().title.replaceAll("_", " ")}
