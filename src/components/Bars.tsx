@@ -2,6 +2,7 @@ import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
 import { onMount, createEffect, createSignal, Show, For } from "solid-js";
 import { api } from "~/lib/api";
+import { TerminalSplash } from "./TerminalSplash";
 
 export function LeftBar() {
   const { setLeftBarSize, leftBarVisible, setLeftBarVisible } = useBars();
@@ -136,7 +137,7 @@ export function LeftBar() {
   return (
     <nav
       ref={ref}
-      class="border-r-overlay2 fixed z-50 h-full w-fit max-w-[25%] border-r-2 transition-transform duration-500 ease-out"
+      class="border-r-overlay2 fixed z-50 h-full w-min border-r-2 transition-transform duration-500 ease-out md:max-w-[20%]"
       classList={{
         "-translate-x-full": !leftBarVisible(),
         "translate-x-0": leftBarVisible()
@@ -160,10 +161,7 @@ export function LeftBar() {
               <div class="flex flex-col gap-2">
                 <span class="text-lg font-semibold">Recent Posts</span>
                 <div class="flex flex-col gap-3">
-                  <Show
-                    when={recentPosts()}
-                    fallback={<div class="text-sm">Loading...</div>}
-                  >
+                  <Show when={recentPosts()} fallback={<TerminalSplash />}>
                     <For each={recentPosts()}>
                       {(post) => (
                         <a
@@ -172,6 +170,7 @@ export function LeftBar() {
                         >
                           <div class="flex flex-col">
                             <span>{post.title.replace(/_/g, " ")}</span>
+
                             <span class="text-subtext0 text-sm">
                               {new Date(post.date).toLocaleDateString("en-US", {
                                 month: "short",
@@ -258,7 +257,7 @@ export function RightBar() {
   return (
     <nav
       ref={ref}
-      class="border-l-overlay2 fixed right-0 z-50 hidden h-full min-h-screen w-fit max-w-[25%] border-l-2 transition-transform duration-500 ease-out md:block"
+      class="border-l-overlay2 fixed right-0 z-50 hidden h-full min-h-screen w-fit border-l-2 transition-transform duration-500 ease-out md:block md:max-w-[20%]"
       classList={{
         "translate-x-full": !rightBarVisible(),
         "translate-x-0": rightBarVisible()

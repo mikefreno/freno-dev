@@ -6,6 +6,7 @@ import { api } from "~/lib/api";
 import PostSortingSelect from "~/components/blog/PostSortingSelect";
 import TagSelector from "~/components/blog/TagSelector";
 import PostSorting from "~/components/blog/PostSorting";
+import { TerminalSplash } from "~/components/TerminalSplash";
 
 export default function BlogIndex() {
   const [searchParams] = useSearchParams();
@@ -20,13 +21,7 @@ export default function BlogIndex() {
       <Title>Blog | Michael Freno</Title>
 
       <div class="relative mx-auto min-h-screen rounded-t-lg pt-8 pb-24 shadow-2xl">
-        <Suspense
-          fallback={
-            <div class="mx-auto pt-48">
-              <div class="text-center">Loading...</div>
-            </div>
-          }
-        >
+        <Suspense fallback={<TerminalSplash />}>
           <div class="flex flex-col justify-center gap-4 md:flex-row md:justify-around">
             <PostSortingSelect />
 
@@ -47,13 +42,7 @@ export default function BlogIndex() {
           </div>
         </Suspense>
 
-        <Suspense
-          fallback={
-            <div class="mx-auto pt-48">
-              <div class="text-center">Loading posts...</div>
-            </div>
-          }
-        >
+        <Suspense fallback={<TerminalSplash />}>
           <Show
             when={data() && data()!.posts.length > 0}
             fallback={<div class="pt-12 text-center">No posts yet!</div>}

@@ -14,6 +14,7 @@ import CommentSectionWrapper from "~/components/blog/CommentSectionWrapper";
 import PostBodyClient from "~/components/blog/PostBodyClient";
 import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
 import { useBars } from "~/context/bars";
+import { TerminalSplash } from "~/components/TerminalSplash";
 
 // Server function to fetch post by title
 const getPostByTitle = query(async (title: string) => {
@@ -141,13 +142,7 @@ export default function PostPage() {
 
   return (
     <>
-      <Suspense
-        fallback={
-          <div class="w-full pt-[30vh] text-center">
-            <div class="text-xl">Loading post...</div>
-          </div>
-        }
-      >
+      <Suspense fallback={<TerminalSplash />}>
         <Show when={data()} fallback={null}>
           {(loadedData) => (
             <Show when={loadedData().post} fallback={<Navigate href="/404" />}>

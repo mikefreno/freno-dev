@@ -1,5 +1,4 @@
 import { JSX, onMount, createSignal, children } from "solid-js";
-import { useSplash } from "~/context/splash";
 
 export function Typewriter(props: {
   children: JSX.Element;
@@ -17,7 +16,6 @@ export function Typewriter(props: {
     typeof keepAlive === "number" ? keepAlive : -1
   );
   const resolved = children(() => props.children);
-  const { showSplash } = useSplash();
 
   onMount(() => {
     if (!containerRef || !cursorRef) return;
@@ -68,23 +66,6 @@ export function Typewriter(props: {
       // Set cursor height to match first character
       cursorRef.style.height = `${firstChar.offsetHeight}px`;
     }
-
-    // THEN: Wait for splash to be hidden before starting the animation
-    const checkSplashHidden = () => {
-      if (showSplash()) {
-        setTimeout(checkSplashHidden, 10);
-      } else {
-        // Start delay if specified
-        if (delay > 0) {
-          setTimeout(() => {
-            setIsDelaying(false);
-            startReveal();
-          }, delay);
-        } else {
-          startReveal();
-        }
-      }
-    };
 
     const startReveal = () => {
       setIsTyping(true); // Switch to typing cursor
@@ -139,7 +120,15 @@ export function Typewriter(props: {
       setTimeout(revealNextChar, 100);
     };
 
-    checkSplashHidden();
+    // Start delay if specified, otherwise start immediately
+    if (delay > 0) {
+      setTimeout(() => {
+        setIsDelaying(false);
+        startReveal();
+      }, delay);
+    } else {
+      startReveal();
+    }
   });
 
   const getCursorClass = () => {

@@ -10,7 +10,6 @@ import {
 import "./app.css";
 import { LeftBar, RightBar } from "./components/Bars";
 import { TerminalSplash } from "./components/TerminalSplash";
-import { SplashProvider } from "./context/splash";
 import { MetaProvider } from "@solidjs/meta";
 import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
 import { BarsProvider, useBars } from "./context/bars";
@@ -160,33 +159,6 @@ function AppLayout(props: { children: any }) {
 
   return (
     <div class="flex max-w-screen flex-row">
-      {/* Hamburger menu button - only visible on non-touch devices under mobile breakpoint */}
-      <button
-        onClick={() => setLeftBarVisible(!leftBarVisible())}
-        class="hamburger-menu-btn fixed top-4 left-4 z-50 p-2 rounded-md bg-surface0 hover:bg-surface1 transition-colors shadow-md"
-        classList={{
-          "hidden": leftBarVisible()
-        }}
-        aria-label="Toggle navigation menu"
-        style={{
-          display: "none" // Hidden by default, shown via media query for non-touch devices
-        }}
-      >
-        <svg
-          class="w-6 h-6 text-text"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
-      </button>
-      
       <LeftBar />
       <div
         style={{
@@ -194,7 +166,7 @@ function AppLayout(props: { children: any }) {
           "margin-left": `${leftBarSize()}px`
         }}
       >
-        <Suspense>{props.children}</Suspense>
+        <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
       </div>
       <RightBar />
     </div>
@@ -204,20 +176,17 @@ function AppLayout(props: { children: any }) {
 export default function App() {
   return (
     <MetaProvider>
-      <SplashProvider>
-        <ErrorBoundary
-          fallback={(error, reset) => (
-            <ErrorBoundaryFallback error={error} reset={reset} />
-          )}
-        >
-          <BarsProvider>
-            <TerminalSplash />
-            <Router root={(props) => <AppLayout>{props.children}</AppLayout>}>
-              <FileRoutes />
-            </Router>
-          </BarsProvider>
-        </ErrorBoundary>
-      </SplashProvider>
+      <ErrorBoundary
+        fallback={(error, reset) => (
+          <ErrorBoundaryFallback error={error} reset={reset} />
+        )}
+      >
+        <BarsProvider>
+          <Router root={(props) => <AppLayout>{props.children}</AppLayout>}>
+            <FileRoutes />
+          </Router>
+        </BarsProvider>
+      </ErrorBoundary>
     </MetaProvider>
   );
 }
