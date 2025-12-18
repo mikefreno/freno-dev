@@ -1,82 +1,11 @@
 import { Show, Suspense } from "solid-js";
-import { useSearchParams, A, query } from "@solidjs/router";
+import { useSearchParams, A } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
-import { ConnectionFactory, getPrivilegeLevel } from "~/server/utils";
+import { api } from "~/lib/api";
 import PostSortingSelect from "~/components/blog/PostSortingSelect";
 import TagSelector from "~/components/blog/TagSelector";
 import PostSorting from "~/components/blog/PostSorting";
-
-// Simple in-memory cache for blog posts to reduce DB load
-let cachedPosts: {
-  posts: any[];
-  tagMap: Record<string, number>;
-  privilegeLevel: string;
-} | null = null;
-let cacheTimestamp: number = 0;
-
-// Server function to fetch posts
-const getPosts = query(async () => {
-  "use server";
-
-  const event = getRequestEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
-
-  // Check if we have fresh cached data (cache duration: 30 seconds)
-  const now = Date.now();
-  if (cachedPosts && now - cacheTimestamp < 30000) {
-    return cachedPosts;
-  }
-
-  // Single optimized query using JOINs instead of subqueries and separate queries
-  let query = `
-    SELECT 
-      p.id,
-      p.title,
-      p.subtitle,
-      p.body,
-      p.banner_photo,
-      p.date,
-      p.published,
-      p.category,
-      p.author_id,
-      p.reads,
-      p.attachments,
-      COUNT(DISTINCT pl.user_id) as total_likes,
-      COUNT(DISTINCT c.id) as total_comments,
-      GROUP_CONCAT(t.value) as tags
-    FROM Post p
-    LEFT JOIN PostLike pl ON p.id = pl.post_id
-    LEFT JOIN Comment c ON p.id = c.post_id
-    LEFT JOIN Tag t ON p.id = t.post_id`;
-
-  if (privilegeLevel !== "admin") {
-    query += ` WHERE p.published = TRUE`;
-  }
-  query += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments ORDER BY p.date DESC;`;
-
-  const conn = ConnectionFactory();
-  const results = await conn.execute(query);
-  const posts = results.rows;
-
-  // Process tags into a map for the UI
-  let tagMap: Record<string, number> = {};
-  posts.forEach((post: any) => {
-    if (post.tags) {
-      const postTags = post.tags.split(",");
-      postTags.forEach((tag: string) => {
-        tagMap[tag] = (tagMap[tag] || 0) + 1;
-      });
-    }
-  });
-
-  // Cache the results
-  cachedPosts = { posts, tagMap, privilegeLevel };
-  cacheTimestamp = now;
-
-  return cachedPosts;
-}, "blog-posts");
 
 export default function BlogIndex() {
   const [searchParams] = useSearchParams();
@@ -84,7 +13,7 @@ export default function BlogIndex() {
   const sort = () => searchParams.sort || "newest";
   const filters = () => searchParams.filter || "";
 
-  const data = createAsync(() => getPosts());
+  const data = createAsync(() => api.blog.getPosts.query());
 
   return (
     <>
@@ -132,7 +61,6 @@ export default function BlogIndex() {
             <div class="mx-auto flex w-11/12 flex-col pt-8">
               <PostSorting
                 posts={data()!.posts}
-                tags={data()!.tags}
                 privilegeLevel={data()!.privilegeLevel}
                 filters={filters()}
                 sort={sort()}

@@ -1,15 +1,8 @@
 import { For, Show } from "solid-js";
 import Card, { Post } from "./Card";
 
-export interface Tag {
-  id: number;
-  value: string;
-  post_id: number;
-}
-
 export interface PostSortingProps {
   posts: Post[];
-  tags: Tag[];
   privilegeLevel: "anonymous" | "admin" | "user";
   filters?: string;
   sort?: string;
@@ -18,11 +11,23 @@ export interface PostSortingProps {
 export default function PostSorting(props: PostSortingProps) {
   const postsToFilter = () => {
     const filterSet = new Set<number>();
-    props.tags.forEach((tag) => {
-      if (props.filters?.split("|").includes(tag.value.slice(1))) {
-        filterSet.add(tag.post_id);
+
+    if (!props.filters) return filterSet;
+
+    const filterTags = props.filters.split("|");
+
+    props.posts.forEach((post) => {
+      if (post.tags) {
+        const postTags = post.tags.split(",");
+        const hasMatchingTag = postTags.some((tag) =>
+          filterTags.includes(tag.slice(1))
+        );
+        if (hasMatchingTag) {
+          filterSet.add(post.id);
+        }
       }
     });
+
     return filterSet;
   };
 

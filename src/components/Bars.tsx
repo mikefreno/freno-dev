@@ -1,6 +1,7 @@
 import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
-import { onMount, createEffect } from "solid-js";
+import { onMount, createEffect, createSignal, Show, For } from "solid-js";
+import { api } from "~/lib/api";
 
 export function LeftBar() {
   const { setLeftBarSize, leftBarVisible, setLeftBarVisible } = useBars();
@@ -9,7 +10,20 @@ export function LeftBar() {
   let touchStartX = 0;
   let touchStartY = 0;
 
-  onMount(() => {
+  const [recentPosts, setRecentPosts] = createSignal<any[] | undefined>(
+    undefined
+  );
+
+  onMount(async () => {
+    // Fetch recent posts only on client side to avoid hydration mismatch
+    try {
+      const posts = await api.blog.getRecentPosts.query();
+      setRecentPosts(posts as any[]);
+    } catch (error) {
+      console.error("Failed to fetch recent posts:", error);
+      setRecentPosts([]);
+    }
+
     if (ref) {
       const updateSize = () => {
         actualWidth = ref?.offsetWidth || 0;
@@ -36,7 +50,7 @@ export function LeftBar() {
       const handleTouchEnd = (e: TouchEvent) => {
         const isMobile = window.innerWidth < 768;
         if (!isMobile) return; // Only allow dismiss on mobile
-        
+
         const touchEndX = e.changedTouches[0].clientX;
         const touchEndY = e.changedTouches[0].clientY;
         const deltaX = touchEndX - touchStartX;
@@ -54,18 +68,20 @@ export function LeftBar() {
       // Focus trap for accessibility on mobile
       const handleKeyDown = (e: KeyboardEvent) => {
         const isMobile = window.innerWidth < 768;
-        
+
         if (!isMobile || !leftBarVisible()) return;
 
-        if (e.key === 'Tab') {
+        if (e.key === "Tab") {
           const focusableElements = ref?.querySelectorAll(
             'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           );
-          
+
           if (!focusableElements || focusableElements.length === 0) return;
 
           const firstElement = focusableElements[0] as HTMLElement;
-          const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+          const lastElement = focusableElements[
+            focusableElements.length - 1
+          ] as HTMLElement;
 
           if (e.shiftKey) {
             // Shift+Tab - going backwards
@@ -83,15 +99,15 @@ export function LeftBar() {
         }
       };
 
-      ref.addEventListener('touchstart', handleTouchStart, { passive: true });
-      ref.addEventListener('touchend', handleTouchEnd, { passive: true });
-      ref.addEventListener('keydown', handleKeyDown);
+      ref.addEventListener("touchstart", handleTouchStart, { passive: true });
+      ref.addEventListener("touchend", handleTouchEnd, { passive: true });
+      ref.addEventListener("keydown", handleKeyDown);
 
       return () => {
         resizeObserver.disconnect();
-        ref?.removeEventListener('touchstart', handleTouchStart);
-        ref?.removeEventListener('touchend', handleTouchEnd);
-        ref?.removeEventListener('keydown', handleKeyDown);
+        ref?.removeEventListener("touchstart", handleTouchStart);
+        ref?.removeEventListener("touchend", handleTouchEnd);
+        ref?.removeEventListener("keydown", handleKeyDown);
       };
     }
   });
@@ -104,12 +120,12 @@ export function LeftBar() {
   // Auto-focus first element when sidebar opens on mobile
   createEffect(() => {
     const isMobile = window.innerWidth < 768;
-    
+
     if (leftBarVisible() && isMobile && ref) {
       const firstFocusable = ref.querySelector(
-        'a[href], button:not([disabled]), input:not([disabled])'
+        "a[href], button:not([disabled]), input:not([disabled])"
       ) as HTMLElement;
-      
+
       if (firstFocusable) {
         // Small delay to ensure animation has started
         setTimeout(() => firstFocusable.focus(), 100);
@@ -120,13 +136,13 @@ export function LeftBar() {
   return (
     <nav
       ref={ref}
-      class="border-r-overlay2 fixed h-full min-h-screen w-fit max-w-[25%] border-r-2 transition-transform duration-500 ease-out z-50"
+      class="border-r-overlay2 fixed z-50 h-full w-fit max-w-[25%] border-r-2 transition-transform duration-500 ease-out"
       classList={{
         "-translate-x-full": !leftBarVisible(),
         "translate-x-0": leftBarVisible()
       }}
       style={{
-        "transition-timing-function": leftBarVisible() 
+        "transition-timing-function": leftBarVisible()
           ? "cubic-bezier(0.34, 1.56, 0.64, 1)" // Bounce out when revealing
           : "cubic-bezier(0.4, 0, 0.2, 1)" // Smooth when hiding
       }}
@@ -137,35 +153,67 @@ export function LeftBar() {
         </h3>
       </Typewriter>
       <Typewriter keepAlive={false} class="z-50 h-full">
-        <div class="text-text flex h-full flex-col justify-between px-4 text-xl font-bold">
+        <div class="text-text flex flex-col px-4 text-xl font-bold">
           <ul class="gap-4">
-            {/*TODO:Grab and render 5 most recent blog posts here */}
-            <li></li>
+            {/* Recent blog posts */}
+            <li class="mt-2 mb-6">
+              <div class="flex flex-col gap-2">
+                <span class="text-lg font-semibold">Recent Posts</span>
+                <div class="flex flex-col gap-3">
+                  <Show
+                    when={recentPosts()}
+                    fallback={<div class="text-sm">Loading...</div>}
+                  >
+                    <For each={recentPosts()}>
+                      {(post) => (
+                        <a
+                          href={`/blog/${post.title}`}
+                          class="hover:text-subtext0 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
+                        >
+                          <div class="flex flex-col">
+                            <span>{post.title.replace(/_/g, " ")}</span>
+                            <span class="text-subtext0 text-sm">
+                              {new Date(post.date).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric"
+                              })}
+                            </span>
+                          </div>
+                        </a>
+                      )}
+                    </For>
+                  </Show>
+                </div>
+              </div>
+            </li>
           </ul>
-          <div class="flex flex-col gap-4">
-            <ul class="gap-4">
-              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                <a href="/">Home</a>
-              </li>
-              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                <a href="/blog">Blog</a>
-              </li>
-              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                <a href="#services">Services</a>
-              </li>
-            </ul>
-            {/* Right bar navigation merged for mobile */}
-            <ul class="gap-4 md:hidden border-t border-overlay0 pt-4">
-              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                <a href="#home">Home</a>
-              </li>
-              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                <a href="#about">About</a>
-              </li>
-              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                <a href="#services">Services</a>
-              </li>
-            </ul>
+          <div class="absolute bottom-12">
+            <div class="flex flex-col gap-4">
+              <ul class="gap-4">
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <a href="/">Home</a>
+                </li>
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <a href="/blog">Blog</a>
+                </li>
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <a href="#services">Services</a>
+                </li>
+              </ul>
+              {/* Right bar navigation merged for mobile */}
+              <ul class="border-overlay0 gap-4 border-t pt-4 md:hidden">
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <a href="#home">Home</a>
+                </li>
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <a href="#about">About</a>
+                </li>
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <a href="#services">Services</a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </Typewriter>
@@ -210,13 +258,13 @@ export function RightBar() {
   return (
     <nav
       ref={ref}
-      class="border-l-overlay2 fixed right-0 h-full min-h-screen w-fit max-w-[25%] border-l-2 transition-transform duration-500 ease-out md:block hidden z-50"
+      class="border-l-overlay2 fixed right-0 z-50 hidden h-full min-h-screen w-fit max-w-[25%] border-l-2 transition-transform duration-500 ease-out md:block"
       classList={{
         "translate-x-full": !rightBarVisible(),
         "translate-x-0": rightBarVisible()
       }}
       style={{
-        "transition-timing-function": rightBarVisible() 
+        "transition-timing-function": rightBarVisible()
           ? "cubic-bezier(0.34, 1.56, 0.64, 1)" // Bounce out when revealing
           : "cubic-bezier(0.4, 0, 0.2, 1)" // Smooth when hiding
       }}
