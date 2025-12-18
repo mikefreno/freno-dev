@@ -242,7 +242,7 @@ const routerSections: RouterSection[] = [
   },
   {
     name: "Database - Posts",
-    description: "CRUD operations for blog/project posts",
+    description: "CRUD operations for blog posts",
     endpoints: [
       {
         name: "Get Post by ID",
@@ -258,14 +258,14 @@ const routerSections: RouterSection[] = [
         procedure: "getPostByTitle",
         method: "query",
         description: "Fetch post with comments, likes, and tags",
-        sampleInput: { category: "project", title: "My Project" }
+        sampleInput: { category: "blog", title: "My Blog Post" }
       },
       {
         name: "Create Post",
         router: "database",
         procedure: "createPost",
         method: "mutation",
-        description: "Create a new blog/project post",
+        description: "Create a new blog post",
         sampleInput: {
           category: "blog",
           title: "Test Post",

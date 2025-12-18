@@ -11,9 +11,7 @@ const sorting = [
   { val: "Most Comments" }
 ];
 
-export interface PostSortingSelectProps {
-  type: "blog" | "project";
-}
+export interface PostSortingSelectProps {}
 
 export default function PostSortingSelect(props: PostSortingSelectProps) {
   const [selected, setSelected] = createSignal(sorting[0]);
@@ -42,11 +40,7 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen())}
-        class={`${
-          props.type === "project"
-            ? "focus-visible:border-blue focus-visible:ring-offset-blue"
-            : "focus-visible:border-peach focus-visible:ring-offset-peach"
-        } bg-surface0 focus-visible:ring-opacity-75 relative w-full cursor-default rounded-lg py-2 pr-10 pl-3 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:text-sm`}
+        class="focus-visible:border-peach focus-visible:ring-offset-peach bg-surface0 focus-visible:ring-opacity-75 relative w-full cursor-default rounded-lg py-2 pr-10 pl-3 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:text-sm"
       >
         <span class="block truncate">{selected().val}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -68,9 +62,7 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
                 onClick={() => handleSelect(sort)}
                 class={`relative w-full cursor-default py-2 pr-4 pl-10 text-left select-none ${
                   selected().val === sort.val
-                    ? props.type === "project"
-                      ? "bg-blue text-base brightness-75"
-                      : "bg-peach text-base brightness-75"
+                    ? "bg-peach text-base brightness-75"
                     : "text-text hover:brightness-125"
                 }`}
               >
@@ -82,11 +74,7 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
                   {sort.val}
                 </span>
                 <Show when={selected().val === sort.val}>
-                  <span
-                    class={`${
-                      props.type === "project" ? "text-blue" : "text-peach"
-                    } absolute inset-y-0 left-0 flex items-center pl-3`}
-                  >
+                  <span class="text-peach absolute inset-y-0 left-0 flex items-center pl-3">
                     <Check
                       strokeWidth={1}
                       height={24}

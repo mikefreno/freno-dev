@@ -21,7 +21,6 @@ export interface Post {
 export interface CardProps {
   post: Post;
   privilegeLevel: "anonymous" | "admin" | "user";
-  linkTarget: "blog" | "project";
 }
 
 export default function Card(props: CardProps) {
@@ -36,7 +35,7 @@ export default function Card(props: CardProps) {
               </div>
             </Show>
             <DeletePostButton
-              type={props.linkTarget === "blog" ? "Blog" : "Project"}
+              type="Blog"
               postID={props.post.id}
             />
           </div>
@@ -46,9 +45,7 @@ export default function Card(props: CardProps) {
         src={
           props.post.banner_photo
             ? props.post.banner_photo
-            : props.linkTarget === "blog"
-            ? "/bitcoin.jpg"
-            : "/blueprint.jpg"
+            : "/bitcoin.jpg"
         }
         alt={props.post.title.replaceAll("_", " ") + " banner"}
         class="h-full w-full object-cover"
@@ -74,7 +71,6 @@ export default function Card(props: CardProps) {
             </div>
             <CardLinks
               postTitle={props.post.title}
-              linkTarget={props.linkTarget}
               privilegeLevel={props.privilegeLevel}
               postID={props.post.id}
             />

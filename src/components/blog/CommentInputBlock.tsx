@@ -23,9 +23,7 @@ export default function CommentInputBlock(props: CommentInputBlockProps) {
       <div class="flex w-full justify-center select-none">
         <div class="h-fit w-3/4 md:w-1/2">
           <form onSubmit={newCommentWrapper}>
-            <div
-              class={`textarea-group ${props.type === "blog" ? "blog" : ""}`}
-            >
+            <div class="textarea-group blog">
               <textarea
                 ref={bodyRef}
                 required
@@ -46,9 +44,7 @@ export default function CommentInputBlock(props: CommentInputBlockProps) {
                 class={`${
                   props.commentSubmitLoading
                     ? "bg-zinc-400"
-                    : props.type === "project"
-                      ? "border-blue-500 bg-blue-400 hover:bg-blue-500 dark:border-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-                      : "border-orange-500 bg-orange-400 hover:bg-orange-500"
+                    : "border-orange-500 bg-orange-400 hover:bg-orange-500"
                 } rounded border px-4 py-2 font-light text-white shadow-md transition-all duration-300 ease-in-out active:scale-90`}
               >
                 Submit
@@ -61,7 +57,7 @@ export default function CommentInputBlock(props: CommentInputBlockProps) {
   } else {
     return (
       <div class="flex w-full justify-center">
-        <div class={`textarea-group ${props.type === "blog" ? "blog" : ""}`}>
+        <div class="textarea-group blog">
           <textarea
             required
             disabled

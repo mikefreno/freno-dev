@@ -381,8 +381,31 @@ input[type="checkbox"]::before {
 input[type="checkbox"]:checked::before {
   transform: scale(1);
 }
+.shaker:hover {
+  animation: shaker 0.5s ease;
+}
 .tooltip {
   position: relative;
+}
+.tooltip .tooltip-text {
+  visibility: hidden;
+  min-width: fit-content;
+  background-color: var(--color-mantle);
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  top: 100%;
+  left: 50%;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
 }
 .rule-around {
   display: flex;

@@ -159,8 +159,7 @@ export default function CommentBlock(props: CommentBlockProps) {
 
   const isAnonymous = () => props.privilegeLevel === "anonymous";
 
-  const replyIconColor = () =>
-    location.pathname.split("/")[1] === "blog" ? "#fb923c" : "#60a5fa";
+  const replyIconColor = () => "#fb923c";
 
   return (
     <>
@@ -344,7 +343,6 @@ export default function CommentBlock(props: CommentBlockProps) {
                 isReply={true}
                 privilegeLevel={props.privilegeLevel}
                 parent_id={props.comment.id}
-                type={props.category}
                 post_id={props.projectID}
                 currentUserID={props.currentUserID}
                 socket={props.socket}
@@ -360,7 +358,6 @@ export default function CommentBlock(props: CommentBlockProps) {
               {(childComment) => (
                 <CommentBlock
                   comment={childComment}
-                  category={props.category}
                   projectID={props.projectID}
                   recursionCount={1}
                   allComments={props.allComments}

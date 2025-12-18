@@ -12,7 +12,6 @@ export interface SessionDependantLikeProps {
   currentUserID: string | undefined | null;
   privilegeLevel: "admin" | "user" | "anonymous";
   likes: PostLike[];
-  type: "blog" | "project";
   projectID: number;
 }
 
@@ -59,13 +58,11 @@ export default function SessionDependantLike(props: SessionDependantLikeProps) {
   
   const getLikeIconColor = () => {
     if (hasLiked()) {
-      return props.type === "project" ? "fill-blue-400" : "fill-orange-400";
+      return "fill-orange-400";
     }
     
     if (hovering()) {
-      return props.type === "project"
-        ? "fill-blue-400 dark:fill-blue-600"
-        : "fill-orange-400 dark:fill-orange-500";
+      return "fill-orange-400 dark:fill-orange-500";
     }
     
     return "fill-black dark:fill-white";
@@ -96,13 +93,7 @@ export default function SessionDependantLike(props: SessionDependantLikeProps) {
         onMouseOver={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
       >
-        <div
-          class={`${
-            props.type === "project"
-              ? "hover:text-blue-400"
-              : "hover:text-orange-400"
-          } tooltip flex flex-col text-black dark:text-white`}
-        >
+        <div class="hover:text-orange-400 tooltip flex flex-col text-black dark:text-white">
           <div class="mx-auto">
             <LikeIcon
               strokeWidth={1}
@@ -113,11 +104,7 @@ export default function SessionDependantLike(props: SessionDependantLikeProps) {
           </div>
           <div
             class={`${
-              hasLiked()
-                ? props.type === "project"
-                  ? "text-blue-400"
-                  : "text-orange-400"
-                : ""
+              hasLiked() ? "text-orange-400" : ""
             } mx-auto flex pl-2 transition-colors duration-200 ease-in`}
           >
             {likeCount()} {likeCount() === 1 ? "Like" : "Likes"}

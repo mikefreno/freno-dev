@@ -10,12 +10,6 @@ export async function GET(event: APIEvent) {
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.freno.me/projects</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.freno.me/blog</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>daily</changefreq>

@@ -3,12 +3,18 @@ import { useParams, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { cache } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
+import { getPrivilegeLevel, getUserID } from "~/server/utils";
 import { api } from "~/lib/api";
 import { ConnectionFactory } from "~/server/utils";
 
 // Server function to fetch post for editing
 const getPostForEdit = cache(async (id: string) => {
   "use server";
+
+  const event = getRequestEvent()!;
+  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
+  const userID = await getUserID(event.nativeEvent);
 
   const conn = ConnectionFactory();
   const query = `SELECT * FROM Post WHERE id = ?`;
@@ -26,16 +32,12 @@ const getPostForEdit = cache(async (id: string) => {
   const post = results.rows[0];
   const tags = tagRes.rows;
 
-  return { post, tags };
+  return { post, tags, privilegeLevel, userID };
 }, "post-for-edit");
 
 export default function EditPost() {
   const params = useParams();
   const navigate = useNavigate();
-
-  // TODO: Get actual privilege level from session/auth
-  const privilegeLevel = "anonymous";
-  const userID = null;
 
   const data = createAsync(() => getPostForEdit(params.id));
 
@@ -69,7 +71,7 @@ export default function EditPost() {
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
 
-    if (!userID) {
+    if (!data()?.userID) {
       setError("You must be logged in to edit posts");
       return;
     }
@@ -86,7 +88,7 @@ export default function EditPost() {
         banner_photo: bannerPhoto() || null,
         published: published(),
         tags: tags().length > 0 ? tags() : null,
-        author_id: userID
+        author_id: data()!.userID
       });
 
       // Redirect to the post
@@ -104,7 +106,7 @@ export default function EditPost() {
       <Title>Edit Post | Michael Freno</Title>
 
       <Show
-        when={privilegeLevel === "admin"}
+        when={data()?.privilegeLevel === "admin"}
         fallback={
           <div class="w-full pt-[30vh] text-center">
             <div class="text-2xl">Unauthorized</div>

@@ -1,18 +1,27 @@
 import { Show, createSignal } from "solid-js";
 import { useSearchParams, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
+import { cache, createAsync } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
+import { getPrivilegeLevel, getUserID } from "~/server/utils";
 import { api } from "~/lib/api";
+
+// Server function to get auth state
+const getAuthState = cache(async () => {
+  "use server";
+  
+  const event = getRequestEvent()!;
+  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
+  const userID = await getUserID(event.nativeEvent);
+  
+  return { privilegeLevel, userID };
+}, "auth-state");
 
 export default function CreatePost() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // TODO: Get actual privilege level from session/auth
-  const privilegeLevel = "anonymous";
-  const userID = null;
-
-  const category = () =>
-    searchParams.category === "project" ? "project" : "blog";
+  const authState = createAsync(() => getAuthState());
 
   const [title, setTitle] = createSignal("");
   const [subtitle, setSubtitle] = createSignal("");
@@ -26,7 +35,7 @@ export default function CreatePost() {
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
 
-    if (!userID) {
+    if (!authState()?.userID) {
       setError("You must be logged in to create a post");
       return;
     }
@@ -36,14 +45,14 @@ export default function CreatePost() {
 
     try {
       const result = await api.database.createPost.mutate({
-        category: category(),
+        category: "blog",
         title: title(),
         subtitle: subtitle() || null,
         body: body() || null,
         banner_photo: bannerPhoto() || null,
         published: published(),
         tags: tags().length > 0 ? tags() : null,
-        author_id: userID
+        author_id: authState()!.userID
       });
 
       if (result.data) {
@@ -60,13 +69,10 @@ export default function CreatePost() {
 
   return (
     <>
-      <Title>
-        Create {category() === "project" ? "Project" : "Blog Post"} | Michael
-        Freno
-      </Title>
+      <Title>Create Blog Post | Michael Freno</Title>
 
       <Show
-        when={privilegeLevel === "admin"}
+        when={authState()?.privilegeLevel === "admin"}
         fallback={
           <div class="w-full pt-[30vh] text-center">
             <div class="text-text text-2xl">Unauthorized</div>
@@ -79,7 +85,7 @@ export default function CreatePost() {
         <div class="bg-base min-h-screen px-4 py-12">
           <div class="mx-auto max-w-4xl">
             <h1 class="mb-8 text-center text-4xl font-bold">
-              Create {category() === "project" ? "Project" : "Blog Post"}
+              Create Blog Post
             </h1>
 
             <form onSubmit={handleSubmit} class="space-y-6">

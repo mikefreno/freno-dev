@@ -3,7 +3,6 @@ import { useNavigate, useLocation, useSearchParams } from "@solidjs/router";
 
 export interface TagSelectorProps {
   tagMap: Record<string, number>;
-  category: "blog" | "project";
 }
 
 export default function TagSelector(props: TagSelectorProps) {
@@ -72,11 +71,7 @@ export default function TagSelector(props: TagSelectorProps) {
         ref={buttonRef}
         type="button"
         onClick={toggleMenu}
-        class={`${
-          props.category === "project"
-            ? "border-blue bg-blue hover:brightness-125"
-            : "border-peach bg-peach hover:brightness-125"
-        } mt-2 rounded border px-4 py-2 text-base font-light shadow-md transition-all duration-300 ease-in-out active:scale-90 md:mt-0`}
+        class="border-blue bg-lavender mt-2 rounded border px-4 py-2 text-base font-light shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90 md:mt-0"
       >
         Filters
       </button>

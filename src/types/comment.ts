@@ -79,8 +79,6 @@ export interface BackupResponse {
 
 export type PrivilegeLevel = "admin" | "user" | "anonymous";
 
-export type PostType = "blog" | "project";
-
 export type SortingMode = "newest" | "oldest" | "highest_rated" | "hot";
 
 export type DeletionType = "user" | "admin" | "database";
@@ -96,7 +94,6 @@ export interface CommentSectionWrapperProps {
   allComments: Comment[];
   topLevelComments: Comment[];
   id: number;
-  type: PostType;
   reactionMap: Map<number, CommentReaction[]>;
   currentUserID: string;
   userCommentMap: Map<UserPublicData, number[]>;
@@ -104,7 +101,6 @@ export interface CommentSectionWrapperProps {
 
 export interface CommentSectionProps {
   privilegeLevel: PrivilegeLevel;
-  type: PostType;
   postID: number;
   allComments: Comment[];
   topLevelComments: Comment[];
@@ -127,7 +123,6 @@ export interface CommentSectionProps {
 
 export interface CommentBlockProps {
   comment: Comment;
-  category: PostType;
   projectID: number;
   recursionCount: number;
   allComments: Comment[] | undefined;
@@ -156,7 +151,6 @@ export interface CommentInputBlockProps {
   isReply: boolean;
   parent_id?: number;
   privilegeLevel: PrivilegeLevel;
-  type: PostType;
   post_id: number;
   socket: WebSocket | undefined;
   currentUserID: string;
@@ -167,7 +161,6 @@ export interface CommentInputBlockProps {
 export interface CommentSortingProps {
   topLevelComments: Comment[];
   privilegeLevel: PrivilegeLevel;
-  type: PostType;
   postID: number;
   allComments: Comment[];
   reactionMap: Map<number, CommentReaction[]>;

@@ -138,7 +138,7 @@ export const databaseRouter = createTRPCRouter({
 
   getPostById: publicProcedure
     .input(z.object({
-      category: z.enum(["blog", "project"]),
+      category: z.literal("blog"),
       id: z.number(),
     }))
     .query(async ({ input }) => {
@@ -174,7 +174,7 @@ export const databaseRouter = createTRPCRouter({
 
   getPostByTitle: publicProcedure
     .input(z.object({
-      category: z.enum(["blog", "project"]),
+      category: z.literal("blog"),
       title: z.string(),
     }))
     .query(async ({ input, ctx }) => {
@@ -216,7 +216,7 @@ export const databaseRouter = createTRPCRouter({
         });
 
         return {
-          project: postResults.rows[0],
+          post: postResults.rows[0],
           comments: commentResults.rows,
           likes: likeResults.rows,
           tagResults: tagResults.rows,
@@ -231,7 +231,7 @@ export const databaseRouter = createTRPCRouter({
 
   createPost: publicProcedure
     .input(z.object({
-      category: z.enum(["blog", "project"]),
+      category: z.literal("blog"),
       title: z.string(),
       subtitle: z.string().nullable(),
       body: z.string().nullable(),

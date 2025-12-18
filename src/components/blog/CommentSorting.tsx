@@ -57,7 +57,6 @@ export default function CommentSorting(props: CommentSortingProps) {
           >
             <CommentBlock
               comment={topLevelComment}
-              category={props.type}
               projectID={props.postID}
               recursionCount={1}
               allComments={props.allComments}

@@ -11,7 +11,6 @@ export interface PostSortingProps {
   posts: Post[];
   tags: Tag[];
   privilegeLevel: "anonymous" | "admin" | "user";
-  type: "blog" | "project";
   filters?: string;
   sort?: string;
 }
@@ -35,12 +34,12 @@ export default function PostSorting(props: PostSortingProps) {
 
   const sortedPosts = () => {
     const posts = filteredPosts();
-    
+
     switch (props.sort) {
       case "newest":
-        return [...posts].reverse();
-      case "oldest":
         return [...posts];
+      case "oldest":
+        return [...posts].reverse();
       case "most liked":
         return [...posts].sort((a, b) => b.total_likes - a.total_likes);
       case "most read":
@@ -56,7 +55,7 @@ export default function PostSorting(props: PostSortingProps) {
     <Show
       when={!(props.posts.length > 0 && filteredPosts().length === 0)}
       fallback={
-        <div class="pt-12 text-center text-2xl italic tracking-wide">
+        <div class="pt-12 text-center text-2xl tracking-wide italic">
           All posts filtered out!
         </div>
       }
@@ -64,11 +63,7 @@ export default function PostSorting(props: PostSortingProps) {
       <For each={sortedPosts()}>
         {(post) => (
           <div class="my-4">
-            <Card
-              post={post}
-              privilegeLevel={props.privilegeLevel}
-              linkTarget={props.type}
-            />
+            <Card post={post} privilegeLevel={props.privilegeLevel} />
           </div>
         )}
       </For>

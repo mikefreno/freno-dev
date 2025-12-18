@@ -13,6 +13,7 @@ import { HttpStatusCode } from "@solidjs/start";
 import SessionDependantLike from "~/components/blog/SessionDependantLike";
 import CommentIcon from "~/components/icons/CommentIcon";
 import CommentSectionWrapper from "~/components/blog/CommentSectionWrapper";
+import PostBodyClient from "~/components/blog/PostBodyClient";
 import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
 
 // Server function to fetch post by title
@@ -260,9 +261,6 @@ export default function PostPage() {
                             currentUserID={postData.userID}
                             privilegeLevel={postData.privilegeLevel}
                             likes={postData.likes as any[]}
-                            type={
-                              p().category === "project" ? "project" : "blog"
-                            }
                             projectID={p().id}
                           />
                         </div>
@@ -270,9 +268,10 @@ export default function PostPage() {
                     </div>
 
                     {/* Post body */}
-                    <div class="mx-auto max-w-4xl px-4 pt-32 md:pt-40">
-                      <div class="prose max-w-none" innerHTML={p().body} />
-                    </div>
+                    <PostBodyClient
+                      body={p().body}
+                      hasCodeBlock={hasCodeBlock(p().body)}
+                    />
 
                     <Show when={postData.privilegeLevel === "admin"}>
                       <div class="flex justify-center">
@@ -297,7 +296,6 @@ export default function PostPage() {
                           postData.topLevelComments as Comment[]
                         }
                         id={p().id}
-                        type="blog"
                         reactionMap={reactionMap}
                         currentUserID={postData.userID || ""}
                         userCommentMap={userCommentMap}

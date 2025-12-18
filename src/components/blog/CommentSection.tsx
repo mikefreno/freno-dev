@@ -5,7 +5,6 @@ import type {
   UserPublicData,
   ReactionType,
   ModificationType,
-  PostType,
   PrivilegeLevel,
   SortingMode
 } from "~/types/comment";
@@ -24,7 +23,6 @@ interface CommentSectionProps {
   privilegeLevel: PrivilegeLevel;
   allComments: Comment[];
   topLevelComments: Comment[];
-  type: PostType;
   postID: number;
   reactionMap: Map<number, CommentReaction[]>;
   currentUserID: string;
@@ -66,7 +64,6 @@ export default function CommentSection(props: CommentSectionProps) {
         <CommentInputBlock
           isReply={false}
           privilegeLevel={props.privilegeLevel}
-          type={props.type}
           post_id={props.postID}
           socket={undefined}
           currentUserID={props.currentUserID}
@@ -91,7 +88,6 @@ export default function CommentSection(props: CommentSectionProps) {
           <CommentSorting
             topLevelComments={props.topLevelComments}
             privilegeLevel={props.privilegeLevel}
-            type={props.type}
             postID={props.postID}
             allComments={props.allComments}
             reactionMap={props.reactionMap}

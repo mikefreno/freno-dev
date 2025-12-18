@@ -134,7 +134,7 @@ export default function CommentSectionWrapper(
       socket.send(
         JSON.stringify({
           action: "channelUpdate",
-          postType: props.type,
+          postType: "blog",
           postID: props.id,
           invoker_id: props.currentUserID
         })
@@ -150,7 +150,7 @@ export default function CommentSectionWrapper(
         JSON.stringify({
           action: "commentCreation",
           commentBody: commentBody,
-          postType: props.type,
+          postType: "blog",
           postID: props.id,
           parentCommentID: parentCommentID,
           invokerID: props.currentUserID
@@ -160,7 +160,7 @@ export default function CommentSectionWrapper(
       // Fallback to HTTP API if WebSocket unavailable
       const domain = import.meta.env.VITE_DOMAIN;
       const res = await fetch(
-        `${domain}/api/database/comments/create/${props.type}/${props.id}`,
+        `${domain}/api/database/comments/create/blog/${props.id}`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -242,7 +242,7 @@ export default function CommentSectionWrapper(
         JSON.stringify({
           action: "commentUpdate",
           commentBody: body,
-          postType: props.type,
+          postType: "blog",
           postID: props.id,
           commentID: comment_id,
           invokerID: props.currentUserID
@@ -297,7 +297,7 @@ export default function CommentSectionWrapper(
           deleteType: deletionType,
           commentID: commentID,
           invokerID: props.currentUserID,
-          postType: props.type,
+          postType: "blog",
           postID: props.id
         })
       );
@@ -397,7 +397,7 @@ export default function CommentSectionWrapper(
       socket.send(
         JSON.stringify({
           action: "commentReaction",
-          postType: props.type,
+          postType: "blog",
           postID: props.id,
           commentID: commentID,
           invokerID: props.currentUserID,
@@ -511,7 +511,6 @@ export default function CommentSectionWrapper(
         privilegeLevel={props.privilegeLevel}
         allComments={allComments()}
         topLevelComments={topLevelComments()}
-        type={props.type}
         postID={props.id}
         reactionMap={currentReactionMap()}
         currentUserID={props.currentUserID}
