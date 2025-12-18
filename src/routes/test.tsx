@@ -1,4 +1,5 @@
 import { createSignal, For, Show } from "solid-js";
+import { api } from "~/lib/api";
 
 type EndpointTest = {
   name: string;
@@ -105,7 +106,8 @@ const routerSections: RouterSection[] = [
           email: "test@example.com",
           token: "eyJhbGciOiJIUzI1NiJ9...",
           rememberMe: true
-        }
+        },
+        requiresAuth: false
       },
       {
         name: "Request Password Reset",
@@ -287,6 +289,14 @@ const routerSections: RouterSection[] = [
           published: true,
           author_id: "user_123"
         }
+      },
+      {
+        name: "Delete Post",
+        router: "database",
+        procedure: "deletePost",
+        method: "mutation",
+        description: "Delete a post and its associated data",
+        sampleInput: { id: 1 }
       }
     ]
   },
@@ -597,8 +607,7 @@ const routerSections: RouterSection[] = [
         procedure: "emailLogin",
         method: "mutation",
         description: "Login with email/password (requires verified email)",
-        sampleInput: { email: "test@example.com", password: "password123" },
-        requiresAuth: true
+        sampleInput: { email: "test@example.com", password: "password123" }
       },
       {
         name: "Email Verification",
@@ -873,34 +882,33 @@ export default function TestPage() {
         }
       }
 
-      let url = `/api/trpc/${endpoint.router}.${endpoint.procedure}`;
-      const options: RequestInit = {
-        method: endpoint.method === "query" ? "GET" : "POST",
-        headers: {}
-      };
+      // Navigate the router path (handles nested routers like "lineage.auth")
+      const routerParts = endpoint.router.split(".");
+      let currentRouter: any = api;
 
-      // For queries, input goes in URL parameter
-      if (endpoint.method === "query" && input !== undefined) {
-        const encodedInput = encodeURIComponent(JSON.stringify(input));
-        url += `?input=${encodedInput}`;
+      for (const part of routerParts) {
+        currentRouter = currentRouter[part];
+        if (!currentRouter) {
+          throw new Error(`Router path not found: ${endpoint.router}`);
+        }
       }
 
-      // For mutations, input goes in body
-      if (endpoint.method === "mutation" && input !== undefined) {
-        options.headers = { "Content-Type": "application/json" };
-        options.body = JSON.stringify(input);
+      const procedure = currentRouter[endpoint.procedure];
+      if (!procedure) {
+        throw new Error(
+          `Procedure not found: ${endpoint.router}.${endpoint.procedure}`
+        );
       }
 
-      const response = await fetch(url, options);
+      // Call the tRPC procedure with proper method
+      const data =
+        endpoint.method === "query"
+          ? await procedure.query(input)
+          : await procedure.mutate(input);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-      }
-
-      const data = await response.json();
       setResults({ ...results(), [key]: data });
     } catch (error: any) {
-      setErrors({ ...errors(), [key]: error.message });
+      setErrors({ ...errors(), [key]: error.message || String(error) });
     } finally {
       setLoading({ ...loading(), [key]: false });
     }

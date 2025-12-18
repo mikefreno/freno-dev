@@ -9,7 +9,16 @@ export interface ErrorBoundaryFallbackProps {
 export default function ErrorBoundaryFallback(
   props: ErrorBoundaryFallbackProps
 ) {
-  const navigate = useNavigate();
+  // Try to get navigate, but handle case where we're outside router context
+  let navigate: ((path: string) => void) | undefined;
+  try {
+    navigate = useNavigate();
+  } catch (e) {
+    // If we're outside router context, fallback to window.location
+    navigate = (path: string) => {
+      window.location.href = path;
+    };
+  }
   const [glitchText, setGlitchText] = createSignal("ERROR");
 
   createEffect(() => {

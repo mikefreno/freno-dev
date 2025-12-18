@@ -7,14 +7,11 @@ const SplashContext = createContext<{
   setShowSplash: (show: boolean) => void;
 }>({
   showSplash: () => true,
-  setShowSplash: () => {},
+  setShowSplash: () => {}
 });
 
 export function useSplash() {
   const context = useContext(SplashContext);
-  if (!context) {
-    throw new Error("useSplash must be used within a SplashProvider");
-  }
   return context;
 }
 

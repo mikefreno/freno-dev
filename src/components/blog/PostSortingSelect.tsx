@@ -8,7 +8,7 @@ const sorting = [
   { val: "Oldest" },
   { val: "Most Liked" },
   { val: "Most Read" },
-  { val: "Most Comments" },
+  { val: "Most Comments" }
 ];
 
 export interface PostSortingSelectProps {
@@ -44,9 +44,9 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
         onClick={() => setIsOpen(!isOpen())}
         class={`${
           props.type === "project"
-            ? "focus-visible:border-blue-600 focus-visible:ring-offset-blue-300"
-            : "focus-visible:border-orange-600 focus-visible:ring-offset-orange-300"
-        } relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 dark:bg-zinc-900 sm:text-sm`}
+            ? "focus-visible:border-blue focus-visible:ring-offset-blue"
+            : "focus-visible:border-peach focus-visible:ring-offset-peach"
+        } bg-surface0 focus-visible:ring-opacity-75 relative w-full cursor-default rounded-lg py-2 pr-10 pl-3 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:text-sm`}
       >
         <span class="block truncate">{selected().val}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -54,24 +54,24 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
             strokeWidth={1.5}
             height={24}
             width={24}
-            class="fill-zinc-900 dark:fill-white"
+            class="fill-text"
           />
         </span>
       </button>
 
       <Show when={isOpen()}>
-        <div class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-zinc-900 sm:text-sm">
+        <div class="ring-opacity-5 bg-surface0 ring-overlay0 absolute mt-1 max-h-60 w-full overflow-auto rounded-md py-1 text-base shadow-lg ring-1 focus:outline-none sm:text-sm">
           <For each={sorting}>
             {(sort) => (
               <button
                 type="button"
                 onClick={() => handleSelect(sort)}
-                class={`relative w-full cursor-default select-none py-2 pl-10 pr-4 text-left ${
+                class={`relative w-full cursor-default py-2 pr-4 pl-10 text-left select-none ${
                   selected().val === sort.val
                     ? props.type === "project"
-                      ? "bg-blue-100 text-blue-900"
-                      : "bg-orange-100 text-orange-900"
-                    : "text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      ? "bg-blue text-base brightness-75"
+                      : "bg-peach text-base brightness-75"
+                    : "text-text hover:brightness-125"
                 }`}
               >
                 <span
@@ -84,16 +84,14 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
                 <Show when={selected().val === sort.val}>
                   <span
                     class={`${
-                      props.type === "project"
-                        ? "text-blue-600"
-                        : "text-orange-600"
+                      props.type === "project" ? "text-blue" : "text-peach"
                     } absolute inset-y-0 left-0 flex items-center pl-3`}
                   >
                     <Check
                       strokeWidth={1}
                       height={24}
                       width={24}
-                      class="stroke-zinc-900 dark:stroke-white"
+                      class="stroke-text"
                     />
                   </span>
                 </Show>

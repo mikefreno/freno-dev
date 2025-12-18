@@ -14,7 +14,7 @@ export function Typewriter(props: {
   const [isTyping, setIsTyping] = createSignal(false);
   const [isDelaying, setIsDelaying] = createSignal(delay > 0);
   const [keepAliveCountdown, setKeepAliveCountdown] = createSignal(
-    typeof keepAlive === "number" ? keepAlive : -1,
+    typeof keepAlive === "number" ? keepAlive : -1
   );
   const resolved = children(() => props.children);
   const { showSplash } = useSplash();
@@ -33,7 +33,7 @@ export function Typewriter(props: {
           textNodes.push({
             node: node as Text,
             text: text,
-            startIndex: totalChars,
+            startIndex: totalChars
           });
           totalChars += text.length;
 
@@ -45,7 +45,7 @@ export function Typewriter(props: {
             charSpan.style.opacity = "0";
             charSpan.setAttribute(
               "data-char-index",
-              String(totalChars - text.length + i),
+              String(totalChars - text.length + i)
             );
             span.appendChild(charSpan);
           });
@@ -60,7 +60,7 @@ export function Typewriter(props: {
 
     // Position cursor at the first character location
     const firstChar = containerRef.querySelector(
-      '[data-char-index="0"]',
+      '[data-char-index="0"]'
     ) as HTMLElement;
     if (firstChar && cursorRef) {
       // Insert cursor before the first character
@@ -96,7 +96,7 @@ export function Typewriter(props: {
       const revealNextChar = () => {
         if (currentIndex < totalChars) {
           const charSpan = containerRef?.querySelector(
-            `[data-char-index="${currentIndex}"]`,
+            `[data-char-index="${currentIndex}"]`
           ) as HTMLElement;
 
           if (charSpan) {
@@ -106,7 +106,7 @@ export function Typewriter(props: {
             if (cursorRef) {
               charSpan.parentNode?.insertBefore(
                 cursorRef,
-                charSpan.nextSibling,
+                charSpan.nextSibling
               );
 
               // Match the height of the current character

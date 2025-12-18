@@ -21,36 +21,36 @@ export default function DownloadsPage() {
   };
 
   return (
-    <div class="pb-12 pt-[15vh] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 min-h-screen">
-      <div class="text-center text-3xl tracking-widest dark:text-white">
+    <div class="bg-base min-h-screen pt-[15vh] pb-12">
+      <div class="text-text text-center text-3xl tracking-widest">
         Downloads
       </div>
 
       <div class="pt-12">
-        <div class="text-center text-xl tracking-wide dark:text-white">
+        <div class="text-text text-center text-xl tracking-wide">
           Life and Lineage
           <br />
         </div>
 
         <div class="flex justify-evenly md:mx-[25vw]">
-          <div class="flex flex-col w-1/3">
+          <div class="flex w-1/3 flex-col">
             <div class="text-center text-lg">Android (apk only)</div>
             <button
               onClick={() => download("lineage")}
-              class="mt-2 rounded-md bg-blue-500 px-4 py-2 text-white shadow-lg transition-all duration-200 ease-out hover:opacity-90 active:scale-95 active:opacity-90"
+              class="bg-blue mt-2 rounded-md px-4 py-2 text-base shadow-lg transition-all duration-200 ease-out hover:brightness-125 active:scale-95"
             >
               Download APK
             </button>
-            <div class="text-center italic text-sm mt-2">
+            <div class="mt-2 text-center text-sm italic">
               Note the android version is not well tested, and has performance
               issues.
             </div>
             <div class="rule-around">Or</div>
 
-            <div class="italic mx-auto">(Coming soon)</div>
+            <div class="mx-auto italic">(Coming soon)</div>
             <button
               onClick={joinBetaPrompt}
-              class="transition-all mx-auto duration-200 ease-out active:scale-95"
+              class="mx-auto transition-all duration-200 ease-out active:scale-95"
             >
               <img
                 src="/google-play-badge.png"
@@ -85,12 +85,12 @@ export default function DownloadsPage() {
             <div class="text-center text-lg">Android</div>
             <button
               onClick={() => download("shapes-with-abigail")}
-              class="mt-2 rounded-md bg-blue-500 px-4 py-2 text-white shadow-lg transition-all duration-200 ease-out hover:opacity-90 active:scale-95 active:opacity-90"
+              class="bg-blue mt-2 rounded-md px-4 py-2 text-base shadow-lg transition-all duration-200 ease-out hover:brightness-125 active:scale-95"
             >
               Download APK
             </button>
             <div class="rule-around">Or</div>
-            <div class="italic mx-auto">(Coming soon)</div>
+            <div class="mx-auto italic">(Coming soon)</div>
             <button
               onClick={joinBetaPrompt}
               class="transition-all duration-200 ease-out active:scale-95"
@@ -116,7 +116,7 @@ export default function DownloadsPage() {
         </div>
 
         <div class="pt-12">
-          <div class="text-center text-xl tracking-wide dark:text-white">
+          <div class="text-text text-center text-xl tracking-wide">
             Cork
             <br />
             (macOS 13 Ventura or later)
@@ -125,7 +125,7 @@ export default function DownloadsPage() {
           <div class="flex justify-center">
             <button
               onClick={() => download("cork")}
-              class="my-2 rounded-md bg-blue-500 px-4 py-2 text-white shadow-lg transition-all duration-200 ease-out hover:opacity-90 active:scale-95 active:opacity-90"
+              class="bg-blue my-2 rounded-md px-4 py-2 text-base shadow-lg transition-all duration-200 ease-out hover:brightness-125 active:scale-95"
             >
               Download app
             </button>
@@ -135,15 +135,15 @@ export default function DownloadsPage() {
           </div>
         </div>
 
-        <ul class="icons flex justify-center pb-6 pt-24 gap-4">
+        <ul class="icons flex justify-center gap-4 pt-24 pb-6">
           <li>
             <A
               href="https://github.com/MikeFreno/"
               target="_blank"
               rel="noreferrer"
-              class="shaker rounded-full border border-zinc-800 dark:border-zinc-300 inline-block hover:scale-110 transition-transform"
+              class="shaker border-text inline-block rounded-full border transition-transform hover:scale-110"
             >
-              <span class="m-auto p-2 block">
+              <span class="m-auto block p-2">
                 <GitHub height={24} width={24} fill={undefined} />
               </span>
             </A>
@@ -153,9 +153,9 @@ export default function DownloadsPage() {
               href="https://www.linkedin.com/in/michael-freno-176001256/"
               target="_blank"
               rel="noreferrer"
-              class="shaker rounded-full border border-zinc-800 dark:border-zinc-300 inline-block hover:scale-110 transition-transform"
+              class="shaker border-text inline-block rounded-full border transition-transform hover:scale-110"
             >
-              <span class="m-auto rounded-md p-2 block">
+              <span class="m-auto block rounded-md p-2">
                 <LinkedIn height={24} width={24} fill={undefined} />
               </span>
             </A>

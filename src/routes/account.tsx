@@ -23,15 +23,20 @@ export default function AccountPage() {
 
   // Form loading states
   const [emailButtonLoading, setEmailButtonLoading] = createSignal(false);
-  const [displayNameButtonLoading, setDisplayNameButtonLoading] = createSignal(false);
+  const [displayNameButtonLoading, setDisplayNameButtonLoading] =
+    createSignal(false);
   const [passwordChangeLoading, setPasswordChangeLoading] = createSignal(false);
-  const [deleteAccountButtonLoading, setDeleteAccountButtonLoading] = createSignal(false);
-  const [profileImageSetLoading, setProfileImageSetLoading] = createSignal(false);
+  const [deleteAccountButtonLoading, setDeleteAccountButtonLoading] =
+    createSignal(false);
+  const [profileImageSetLoading, setProfileImageSetLoading] =
+    createSignal(false);
 
   // Password state
   const [passwordsMatch, setPasswordsMatch] = createSignal(false);
-  const [showPasswordLengthWarning, setShowPasswordLengthWarning] = createSignal(false);
-  const [passwordLengthSufficient, setPasswordLengthSufficient] = createSignal(false);
+  const [showPasswordLengthWarning, setShowPasswordLengthWarning] =
+    createSignal(false);
+  const [passwordLengthSufficient, setPasswordLengthSufficient] =
+    createSignal(false);
   const [passwordBlurred, setPasswordBlurred] = createSignal(false);
   const [passwordError, setPasswordError] = createSignal(false);
   const [passwordDeletionError, setPasswordDeletionError] = createSignal(false);
@@ -44,7 +49,8 @@ export default function AccountPage() {
   // Success messages
   const [showImageSuccess, setShowImageSuccess] = createSignal(false);
   const [showEmailSuccess, setShowEmailSuccess] = createSignal(false);
-  const [showDisplayNameSuccess, setShowDisplayNameSuccess] = createSignal(false);
+  const [showDisplayNameSuccess, setShowDisplayNameSuccess] =
+    createSignal(false);
   const [showPasswordSuccess, setShowPasswordSuccess] = createSignal(false);
 
   // Form refs
@@ -59,7 +65,7 @@ export default function AccountPage() {
   onMount(async () => {
     try {
       const response = await fetch("/api/trpc/user.getProfile", {
-        method: "GET",
+        method: "GET"
       });
 
       if (response.ok) {
@@ -99,7 +105,7 @@ export default function AccountPage() {
       const response = await fetch("/api/trpc/user.updateEmail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email })
       });
 
       const result = await response.json();
@@ -128,7 +134,7 @@ export default function AccountPage() {
       const response = await fetch("/api/trpc/user.updateDisplayName", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName }),
+        body: JSON.stringify({ displayName })
       });
 
       const result = await response.json();
@@ -176,7 +182,7 @@ export default function AccountPage() {
         const response = await fetch("/api/trpc/user.changePassword", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ oldPassword, newPassword }),
+          body: JSON.stringify({ oldPassword, newPassword })
         });
 
         const result = await response.json();
@@ -221,7 +227,7 @@ export default function AccountPage() {
         const response = await fetch("/api/trpc/user.setPassword", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: newPassword }),
+          body: JSON.stringify({ password: newPassword })
         });
 
         const result = await response.json();
@@ -262,7 +268,7 @@ export default function AccountPage() {
       const response = await fetch("/api/trpc/user.deleteAccount", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password })
       });
 
       const result = await response.json();
@@ -289,7 +295,7 @@ export default function AccountPage() {
       await fetch("/api/trpc/auth.resendEmailVerification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: currentUser.email }),
+        body: JSON.stringify({ email: currentUser.email })
       });
       alert("Verification email sent!");
     } catch (err) {
@@ -330,44 +336,54 @@ export default function AccountPage() {
   };
 
   const handlePasswordBlur = () => {
-    if (!passwordLengthSufficient() && newPasswordRef && newPasswordRef.value !== "") {
+    if (
+      !passwordLengthSufficient() &&
+      newPasswordRef &&
+      newPasswordRef.value !== ""
+    ) {
       setShowPasswordLengthWarning(true);
     }
     setPasswordBlurred(true);
   };
 
   return (
-    <div class="mx-8 min-h-screen md:mx-24 lg:mx-36 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div class="bg-base mx-8 min-h-screen md:mx-24 lg:mx-36">
       <div class="pt-24">
         <Show
           when={!loading() && user()}
           fallback={
-            <div class="w-full mt-[35vh] flex justify-center">
-              <div class="text-xl">Loading...</div>
+            <div class="mt-[35vh] flex w-full justify-center">
+              <div class="text-text text-xl">Loading...</div>
             </div>
           }
         >
           {(currentUser) => (
             <>
-              <div class="text-center text-3xl font-bold mb-8 text-slate-800 dark:text-slate-100">
+              <div class="text-text mb-8 text-center text-3xl font-bold">
                 Account Settings
               </div>
 
               {/* Email Section */}
-              <div class="mx-auto flex flex-col md:grid md:grid-cols-2 gap-6 max-w-4xl">
-                <div class="flex justify-center text-lg md:justify-normal items-center">
+              <div class="mx-auto flex max-w-4xl flex-col gap-6 md:grid md:grid-cols-2">
+                <div class="flex items-center justify-center text-lg md:justify-normal">
                   <div class="flex flex-col lg:flex-row">
-                    <div class="whitespace-nowrap pr-1 font-semibold">Current email:</div>
+                    <div class="pr-1 font-semibold whitespace-nowrap">
+                      Current email:
+                    </div>
                     {currentUser().email ? (
                       <span>{currentUser().email}</span>
                     ) : (
-                      <span class="font-light italic underline underline-offset-4">None Set</span>
+                      <span class="font-light italic underline underline-offset-4">
+                        None Set
+                      </span>
                     )}
                   </div>
-                  <Show when={currentUser().email && !currentUser().emailVerified}>
+                  <Show
+                    when={currentUser().email && !currentUser().emailVerified}
+                  >
                     <button
                       onClick={sendEmailVerification}
-                      class="ml-2 text-red-500 hover:text-red-600 text-sm underline"
+                      class="text-red ml-2 text-sm underline transition-all hover:brightness-125"
                     >
                       Verify Email
                     </button>
@@ -380,7 +396,11 @@ export default function AccountPage() {
                       ref={emailRef}
                       type="email"
                       required
-                      disabled={emailButtonLoading() || (currentUser().email !== null && !currentUser().emailVerified)}
+                      disabled={
+                        emailButtonLoading() ||
+                        (currentUser().email !== null &&
+                          !currentUser().emailVerified)
+                      }
                       placeholder=" "
                       class="underlinedInput bg-transparent"
                     />
@@ -390,29 +410,41 @@ export default function AccountPage() {
                   <div class="flex justify-end">
                     <button
                       type="submit"
-                      disabled={emailButtonLoading() || (currentUser().email !== null && !currentUser().emailVerified)}
+                      disabled={
+                        emailButtonLoading() ||
+                        (currentUser().email !== null &&
+                          !currentUser().emailVerified)
+                      }
                       class={`${
-                        emailButtonLoading() || (currentUser().email !== null && !currentUser().emailVerified)
-                          ? "bg-zinc-400 cursor-not-allowed"
-                          : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
-                      } mt-2 flex justify-center rounded px-4 py-2 text-white transition-all duration-300 ease-out`}
+                        emailButtonLoading() ||
+                        (currentUser().email !== null &&
+                          !currentUser().emailVerified)
+                          ? "bg-blue cursor-not-allowed brightness-50"
+                          : "bg-blue hover:brightness-125 active:scale-90"
+                      } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                     >
                       {emailButtonLoading() ? "Submitting..." : "Submit"}
                     </button>
                   </div>
                   <Show when={showEmailSuccess()}>
-                    <div class="text-green-500 text-sm text-center mt-2">Email updated!</div>
+                    <div class="text-green mt-2 text-center text-sm">
+                      Email updated!
+                    </div>
                   </Show>
                 </form>
 
                 {/* Display Name Section */}
-                <div class="flex justify-center text-lg md:justify-normal items-center">
+                <div class="flex items-center justify-center text-lg md:justify-normal">
                   <div class="flex flex-col lg:flex-row">
-                    <div class="whitespace-nowrap pr-1 font-semibold">Display Name:</div>
+                    <div class="pr-1 font-semibold whitespace-nowrap">
+                      Display Name:
+                    </div>
                     {currentUser().displayName ? (
                       <span>{currentUser().displayName}</span>
                     ) : (
-                      <span class="font-light italic underline underline-offset-4">None Set</span>
+                      <span class="font-light italic underline underline-offset-4">
+                        None Set
+                      </span>
                     )}
                   </div>
                 </div>
@@ -438,28 +470,35 @@ export default function AccountPage() {
                       disabled={displayNameButtonLoading()}
                       class={`${
                         displayNameButtonLoading()
-                          ? "bg-zinc-400 cursor-not-allowed"
-                          : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
-                      } mt-2 flex justify-center rounded px-4 py-2 text-white transition-all duration-300 ease-out`}
+                          ? "bg-blue cursor-not-allowed brightness-50"
+                          : "bg-blue hover:brightness-125 active:scale-90"
+                      } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                     >
                       {displayNameButtonLoading() ? "Submitting..." : "Submit"}
                     </button>
                   </div>
                   <Show when={showDisplayNameSuccess()}>
-                    <div class="text-green-500 text-sm text-center mt-2">Display name updated!</div>
+                    <div class="text-green mt-2 text-center text-sm">
+                      Display name updated!
+                    </div>
                   </Show>
                 </form>
               </div>
 
               {/* Password Change/Set Section */}
-              <form onSubmit={handlePasswordSubmit} class="mt-8 flex w-full justify-center">
-                <div class="flex flex-col justify-center max-w-md w-full">
-                  <div class="text-center text-xl font-semibold mb-4">
-                    {currentUser().hasPassword ? "Change Password" : "Set Password"}
+              <form
+                onSubmit={handlePasswordSubmit}
+                class="mt-8 flex w-full justify-center"
+              >
+                <div class="flex w-full max-w-md flex-col justify-center">
+                  <div class="mb-4 text-center text-xl font-semibold">
+                    {currentUser().hasPassword
+                      ? "Change Password"
+                      : "Set Password"}
                   </div>
 
                   <Show when={currentUser().hasPassword}>
-                    <div class="input-group mx-4 relative mb-6">
+                    <div class="input-group relative mx-4 mb-6">
                       <input
                         ref={oldPasswordRef}
                         type={showOldPasswordInput() ? "text" : "password"}
@@ -472,8 +511,10 @@ export default function AccountPage() {
                       <label class="underlinedInputLabel">Old Password</label>
                       <button
                         type="button"
-                        onClick={() => setShowOldPasswordInput(!showOldPasswordInput())}
-                        class="absolute right-0 top-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                        onClick={() =>
+                          setShowOldPasswordInput(!showOldPasswordInput())
+                        }
+                        class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
                       >
                         <Show when={showOldPasswordInput()} fallback={<Eye />}>
                           <EyeSlash />
@@ -482,7 +523,7 @@ export default function AccountPage() {
                     </div>
                   </Show>
 
-                  <div class="input-group mx-4 relative mb-2">
+                  <div class="input-group relative mx-4 mb-2">
                     <input
                       ref={newPasswordRef}
                       type={showPasswordInput() ? "text" : "password"}
@@ -498,7 +539,7 @@ export default function AccountPage() {
                     <button
                       type="button"
                       onClick={() => setShowPasswordInput(!showPasswordInput())}
-                      class="absolute right-0 top-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                      class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
                     >
                       <Show when={showPasswordInput()} fallback={<Eye />}>
                         <EyeSlash />
@@ -507,12 +548,12 @@ export default function AccountPage() {
                   </div>
 
                   <Show when={showPasswordLengthWarning()}>
-                    <div class="text-red-500 text-sm text-center mb-4">
+                    <div class="text-red mb-4 text-center text-sm">
                       Password too short! Min Length: 8
                     </div>
                   </Show>
 
-                  <div class="input-group mx-4 relative mb-2">
+                  <div class="input-group relative mx-4 mb-2">
                     <input
                       ref={newPasswordConfRef}
                       type={showPasswordConfInput() ? "text" : "password"}
@@ -523,11 +564,15 @@ export default function AccountPage() {
                       class="underlinedInput w-full bg-transparent pr-10"
                     />
                     <span class="bar"></span>
-                    <label class="underlinedInputLabel">Password Confirmation</label>
+                    <label class="underlinedInputLabel">
+                      Password Confirmation
+                    </label>
                     <button
                       type="button"
-                      onClick={() => setShowPasswordConfInput(!showPasswordConfInput())}
-                      class="absolute right-0 top-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                      onClick={() =>
+                        setShowPasswordConfInput(!showPasswordConfInput())
+                      }
+                      class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
                     >
                       <Show when={showPasswordConfInput()} fallback={<Eye />}>
                         <EyeSlash />
@@ -535,8 +580,15 @@ export default function AccountPage() {
                     </button>
                   </div>
 
-                  <Show when={!passwordsMatch() && passwordLengthSufficient() && newPasswordConfRef && newPasswordConfRef.value.length >= 6}>
-                    <div class="text-red-500 text-sm text-center mb-4">
+                  <Show
+                    when={
+                      !passwordsMatch() &&
+                      passwordLengthSufficient() &&
+                      newPasswordConfRef &&
+                      newPasswordConfRef.value.length >= 6
+                    }
+                  >
+                    <div class="text-red mb-4 text-center text-sm">
                       Passwords do not match!
                     </div>
                   </Show>
@@ -546,15 +598,15 @@ export default function AccountPage() {
                     disabled={passwordChangeLoading() || !passwordsMatch()}
                     class={`${
                       passwordChangeLoading() || !passwordsMatch()
-                        ? "bg-zinc-400 cursor-not-allowed"
-                        : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    } my-6 flex justify-center rounded px-4 py-2 text-white transition-all duration-300 ease-out`}
+                        ? "bg-blue cursor-not-allowed brightness-50"
+                        : "bg-blue hover:brightness-125 active:scale-90"
+                    } my-6 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                   >
                     {passwordChangeLoading() ? "Setting..." : "Set"}
                   </button>
 
                   <Show when={passwordError()}>
-                    <div class="text-red-500 text-sm text-center">
+                    <div class="text-red text-center text-sm">
                       {currentUser().hasPassword
                         ? "Password did not match record"
                         : "Error setting password"}
@@ -562,8 +614,9 @@ export default function AccountPage() {
                   </Show>
 
                   <Show when={showPasswordSuccess()}>
-                    <div class="text-green-500 text-sm text-center">
-                      Password {currentUser().hasPassword ? "changed" : "set"} successfully!
+                    <div class="text-green text-center text-sm">
+                      Password {currentUser().hasPassword ? "changed" : "set"}{" "}
+                      successfully!
                     </div>
                   </Show>
                 </div>
@@ -572,11 +625,14 @@ export default function AccountPage() {
               <hr class="mt-8 mb-8" />
 
               {/* Delete Account Section */}
-              <div class="py-8 max-w-2xl mx-auto">
-                <div class="w-full rounded-md bg-red-300 px-6 pb-4 pt-8 shadow-md dark:bg-red-950">
-                  <div class="pb-4 text-center text-xl font-semibold">Delete Account</div>
-                  <div class="text-center text-sm mb-4 text-red-700 dark:text-red-300">
-                    Warning: This will delete all account information and is irreversible
+              <div class="mx-auto max-w-2xl py-8">
+                <div class="bg-red w-full rounded-md px-6 pt-8 pb-4 shadow-md brightness-75">
+                  <div class="pb-4 text-center text-xl font-semibold">
+                    Delete Account
+                  </div>
+                  <div class="text-crust mb-4 text-center text-sm">
+                    Warning: This will delete all account information and is
+                    irreversible
                   </div>
 
                   <form onSubmit={deleteAccountTrigger}>
@@ -591,7 +647,9 @@ export default function AccountPage() {
                           class="underlinedInput bg-transparent"
                         />
                         <span class="bar"></span>
-                        <label class="underlinedInputLabel">Enter Password</label>
+                        <label class="underlinedInputLabel">
+                          Enter Password
+                        </label>
                       </div>
                     </div>
 
@@ -600,15 +658,17 @@ export default function AccountPage() {
                       disabled={deleteAccountButtonLoading()}
                       class={`${
                         deleteAccountButtonLoading()
-                          ? "bg-zinc-400 cursor-not-allowed"
-                          : "bg-red-500 hover:bg-red-600 active:scale-90 dark:bg-red-600 dark:hover:bg-red-700"
-                      } mx-auto mt-4 flex justify-center rounded px-4 py-2 text-white transition-all duration-300 ease-out`}
+                          ? "bg-red cursor-not-allowed brightness-50"
+                          : "bg-red hover:brightness-125 active:scale-90"
+                      } mx-auto mt-4 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                     >
-                      {deleteAccountButtonLoading() ? "Deleting..." : "Delete Account"}
+                      {deleteAccountButtonLoading()
+                        ? "Deleting..."
+                        : "Delete Account"}
                     </button>
 
                     <Show when={passwordDeletionError()}>
-                      <div class="text-red-500 text-sm text-center mt-2">
+                      <div class="text-red mt-2 text-center text-sm">
                         Password did not match record
                       </div>
                     </Show>
