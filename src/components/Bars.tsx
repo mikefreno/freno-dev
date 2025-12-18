@@ -1,7 +1,26 @@
 import { Typewriter } from "./Typewriter";
+import { useBars } from "~/context/bars";
+import { createEffect, onMount } from "solid-js";
 
-export function LeftBar(props: { ref: HTMLDivElement | undefined }) {
-  let ref = props.ref;
+export function LeftBar() {
+  const { setLeftBarSize } = useBars();
+  let ref: HTMLDivElement | undefined;
+
+  onMount(() => {
+    if (ref) {
+      const updateSize = () => {
+        setLeftBarSize(ref?.offsetWidth || 0);
+      };
+      
+      updateSize();
+      
+      const resizeObserver = new ResizeObserver(updateSize);
+      resizeObserver.observe(ref);
+      
+      return () => resizeObserver.disconnect();
+    }
+  });
+
   return (
     <nav
       ref={ref}
@@ -35,13 +54,29 @@ export function LeftBar(props: { ref: HTMLDivElement | undefined }) {
   );
 }
 
-export function RightBar(props: { ref: HTMLDivElement | undefined }) {
-  let ref = props.ref;
+export function RightBar() {
+  const { setRightBarSize } = useBars();
+  let ref: HTMLDivElement | undefined;
+
+  onMount(() => {
+    if (ref) {
+      const updateSize = () => {
+        setRightBarSize(ref?.offsetWidth || 0);
+      };
+      
+      updateSize();
+      
+      const resizeObserver = new ResizeObserver(updateSize);
+      resizeObserver.observe(ref);
+      
+      return () => resizeObserver.disconnect();
+    }
+  });
+
   return (
     <nav
       ref={ref}
-      class="border-l-overlay2 fixed right-0 h-full min-h-screen w-fit max-w-[25%] border-l-2"
-    >
+      class="border-l-overlay2 fixed right-0 h-full min-h-screen w-fit max-w-[25%] border-l-2">
       <Typewriter keepAlive={false} class="z-50">
         <h3 class="hover:text-subtext0 w-fit text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
           Right Navigation

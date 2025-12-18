@@ -1,27 +1,21 @@
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
-import { createEffect, createSignal, ErrorBoundary, Suspense } from "solid-js";
+import { createEffect, ErrorBoundary, Suspense } from "solid-js";
 import "./app.css";
 import { LeftBar, RightBar } from "./components/Bars";
 import { TerminalSplash } from "./components/TerminalSplash";
 import { SplashProvider } from "./context/splash";
 import { MetaProvider } from "@solidjs/meta";
 import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
+import { BarsProvider, useBars } from "./context/bars";
 
-export default function App() {
-  let leftBarRef: HTMLDivElement | undefined;
-  let rightBarRef: HTMLDivElement | undefined;
-  const [contentWidth, setContentWidth] = createSignal(0);
-  const [contentWidthOffset, setContentWidthOffset] = createSignal(0);
+function AppLayout(props: { children: any }) {
+  const { leftBarSize, rightBarSize, setCenterWidth, centerWidth } = useBars();
 
   createEffect(() => {
     const handleResize = () => {
-      if (leftBarRef && rightBarRef) {
-        setContentWidth(
-          window.innerWidth - leftBarRef.clientWidth - rightBarRef.clientWidth
-        );
-        setContentWidthOffset(leftBarRef.clientWidth);
-      }
+      const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
+      setCenterWidth(newWidth);
     };
 
     handleResize();
@@ -32,6 +26,23 @@ export default function App() {
   });
 
   return (
+    <div class="flex max-w-screen flex-row">
+      <LeftBar />
+      <div
+        style={{
+          width: `${centerWidth()}px`,
+          "margin-left": `${leftBarSize()}px`
+        }}
+      >
+        <Suspense>{props.children}</Suspense>
+      </div>
+      <RightBar />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
     <MetaProvider>
       <SplashProvider>
         <ErrorBoundary
@@ -39,27 +50,12 @@ export default function App() {
             <ErrorBoundaryFallback error={error} reset={reset} />
           )}
         >
-          <div>
+          <BarsProvider>
             <TerminalSplash />
-            <Router
-              root={(props) => (
-                <div class="flex max-w-screen flex-row">
-                  <LeftBar ref={leftBarRef} />
-                  <div
-                    style={{
-                      width: `${contentWidth()}px`,
-                      "margin-left": `${contentWidthOffset()}px`
-                    }}
-                  >
-                    <Suspense>{props.children}</Suspense>
-                  </div>
-                  <RightBar ref={rightBarRef} />
-                </div>
-              )}
-            >
+            <Router root={(props) => <AppLayout>{props.children}</AppLayout>}>
               <FileRoutes />
             </Router>
-          </div>
+          </BarsProvider>
         </ErrorBoundary>
       </SplashProvider>
     </MetaProvider>

@@ -1,5 +1,5 @@
 import { Show, onMount, onCleanup, createSignal } from "solid-js";
-import { useSplash } from "../context/splash";
+import { useSplash } from "~/context/splash";
 
 const spinnerChars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
@@ -43,11 +43,11 @@ export function TerminalSplash() {
   return (
     <Show when={shouldRender()}>
       <div
-        class="fixed inset-0 z-50 w-screen h-screen bg-base flex overflow-hidden flex-col items-center justify-center mx-auto transition-opacity duration-500"
+        class="bg-base fixed inset-0 z-50 mx-auto flex h-screen w-screen flex-col items-center justify-center overflow-hidden transition-opacity duration-500"
         style={{ opacity: opacity() }}
       >
-        <div class="font-mono text-text text-4xl whitespace-pre-wrap p-8 max-w-3xl">
-          <div class="flex justify-center items-center">
+        <div class="text-text max-w-3xl p-8 font-mono text-4xl whitespace-pre-wrap">
+          <div class="flex items-center justify-center">
             {spinnerChars[showing()]}
           </div>
         </div>
