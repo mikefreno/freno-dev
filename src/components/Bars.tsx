@@ -148,6 +148,33 @@ export function LeftBar() {
           : "cubic-bezier(0.4, 0, 0.2, 1)" // Smooth when hiding
       }}
     >
+      {/* Hamburger menu button - positioned at right edge of navbar */}
+      <button
+        onClick={() => setLeftBarVisible(!leftBarVisible())}
+        class="hamburger-menu-btn bg-surface0 hover:bg-surface1 absolute top-4 -right-14 rounded-md p-2 shadow-md transition-colors"
+        classList={{
+          hidden: leftBarVisible()
+        }}
+        aria-label="Toggle navigation menu"
+        style={{
+          display: "none" // Hidden by default, shown via media query for non-touch devices
+        }}
+      >
+        <svg
+          class="text-text h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+
       <Typewriter speed={10} keepAlive={10000} class="z-50 pr-8 pl-4">
         <h3 class="hover:text-subtext0 w-fit text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
           <a href="/">Freno.dev</a>
