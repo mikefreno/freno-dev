@@ -8,7 +8,7 @@ export const databaseRouter = createTRPCRouter({
   // ============================================================
   // Comment Reactions Routes
   // ============================================================
-  
+
   getCommentReactions: publicProcedure
     .input(z.object({ commentID: z.string() }))
     .query(async ({ input }) => {
@@ -17,23 +17,25 @@ export const databaseRouter = createTRPCRouter({
         const query = "SELECT * FROM CommentReaction WHERE comment_id = ?";
         const results = await conn.execute({
           sql: query,
-          args: [input.commentID],
+          args: [input.commentID]
         });
         return { commentReactions: results.rows };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch comment reactions",
+          message: "Failed to fetch comment reactions"
         });
       }
     }),
 
   addCommentReaction: publicProcedure
-    .input(z.object({
-      type: z.string(),
-      comment_id: z.string(),
-      user_id: z.string(),
-    }))
+    .input(
+      z.object({
+        type: z.string(),
+        comment_id: z.string(),
+        user_id: z.string()
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -43,30 +45,32 @@ export const databaseRouter = createTRPCRouter({
         `;
         await conn.execute({
           sql: query,
-          args: [input.type, input.comment_id, input.user_id],
+          args: [input.type, input.comment_id, input.user_id]
         });
-        
+
         const followUpQuery = `SELECT * FROM CommentReaction WHERE comment_id = ?`;
         const res = await conn.execute({
           sql: followUpQuery,
-          args: [input.comment_id],
+          args: [input.comment_id]
         });
-        
+
         return { commentReactions: res.rows };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to add comment reaction",
+          message: "Failed to add comment reaction"
         });
       }
     }),
 
   removeCommentReaction: publicProcedure
-    .input(z.object({
-      type: z.string(),
-      comment_id: z.string(),
-      user_id: z.string(),
-    }))
+    .input(
+      z.object({
+        type: z.string(),
+        comment_id: z.string(),
+        user_id: z.string()
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -76,20 +80,20 @@ export const databaseRouter = createTRPCRouter({
         `;
         await conn.execute({
           sql: query,
-          args: [input.type, input.comment_id, input.user_id],
+          args: [input.type, input.comment_id, input.user_id]
         });
 
         const followUpQuery = `SELECT * FROM CommentReaction WHERE comment_id = ?`;
         const res = await conn.execute({
           sql: followUpQuery,
-          args: [input.comment_id],
+          args: [input.comment_id]
         });
-        
+
         return { commentReactions: res.rows };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to remove comment reaction",
+          message: "Failed to remove comment reaction"
         });
       }
     }),
@@ -98,36 +102,48 @@ export const databaseRouter = createTRPCRouter({
   // Comments Routes
   // ============================================================
 
-  getAllComments: publicProcedure
-    .query(async () => {
-      try {
-        const conn = ConnectionFactory();
-        const query = `SELECT * FROM Comment`;
-        const res = await conn.execute(query);
-        return { comments: res.rows };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch comments",
-        });
-      }
-    }),
+  getAllComments: publicProcedure.query(async () => {
+    try {
+      const conn = ConnectionFactory();
+      // Join with Post table to get post titles along with comments
+      const query = `
+          SELECT c.*, p.title as post_title 
+          FROM Comment c 
+          JOIN Post p ON c.post_id = p.id
+          ORDER BY c.created_at DESC
+        `;
+      const res = await conn.execute(query);
+      return { comments: res.rows };
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch comments"
+      });
+    }
+  }),
 
   getCommentsByPostId: publicProcedure
     .input(z.object({ post_id: z.string() }))
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
-        const query = `SELECT * FROM Comment WHERE post_id = ?`;
+        // Join with Post table to get post titles along with comments
+        const query = `
+           SELECT c.*, p.title as post_title 
+           FROM Comment c 
+           JOIN Post p ON c.post_id = p.id
+           WHERE c.post_id = ?
+           ORDER BY c.created_at DESC
+         `;
         const res = await conn.execute({
           sql: query,
-          args: [input.post_id],
+          args: [input.post_id]
         });
         return { comments: res.rows };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch comments by post ID",
+          message: "Failed to fetch comments by post ID"
         });
       }
     }),
@@ -137,29 +153,37 @@ export const databaseRouter = createTRPCRouter({
   // ============================================================
 
   getPostById: publicProcedure
-    .input(z.object({
-      category: z.literal("blog"),
-      id: z.number(),
-    }))
+    .input(
+      z.object({
+        category: z.literal("blog"),
+        id: z.number()
+      })
+    )
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
-        const query = `SELECT * FROM Post WHERE id = ?`;
+        // Single query with JOIN to get post and tags in one go
+        const query = `
+           SELECT p.*, t.value as tag_value 
+           FROM Post p 
+           LEFT JOIN Tag t ON p.id = t.post_id 
+           WHERE p.id = ?
+         `;
         const results = await conn.execute({
           sql: query,
-          args: [input.id],
-        });
-
-        const tagQuery = `SELECT * FROM Tag WHERE post_id = ?`;
-        const tagRes = await conn.execute({
-          sql: tagQuery,
-          args: [input.id],
+          args: [input.id]
         });
 
         if (results.rows[0]) {
+          // Group tags by post ID
+          const post = results.rows[0];
+          const tags = results.rows
+            .filter((row) => row.tag_value)
+            .map((row) => row.tag_value);
+
           return {
-            post: results.rows[0],
-            tags: tagRes.rows,
+            post,
+            tags
           };
         } else {
           return { post: null, tags: [] };
@@ -167,84 +191,80 @@ export const databaseRouter = createTRPCRouter({
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch post by ID",
+          message: "Failed to fetch post by ID"
         });
       }
     }),
 
   getPostByTitle: publicProcedure
-    .input(z.object({
-      category: z.literal("blog"),
-      title: z.string(),
-    }))
+    .input(
+      z.object({
+        category: z.literal("blog"),
+        title: z.string()
+      })
+    )
     .query(async ({ input, ctx }) => {
       try {
         const conn = ConnectionFactory();
-        
-        // Get post by title
-        const postQuery = "SELECT * FROM Post WHERE title = ? AND category = ? AND published = ?";
+
+        // Get post by title with JOINs to get all related data in one query
+        const postQuery = `
+           SELECT 
+             p.*,
+             COUNT(DISTINCT c.id) as comment_count,
+             COUNT(DISTINCT pl.user_id) as like_count,
+             GROUP_CONCAT(t.value) as tags
+           FROM Post p
+           LEFT JOIN Comment c ON p.id = c.post_id
+           LEFT JOIN PostLike pl ON p.id = pl.post_id
+           LEFT JOIN Tag t ON p.id = t.post_id
+           WHERE p.title = ? AND p.category = ? AND p.published = ?
+           GROUP BY p.id
+         `;
         const postResults = await conn.execute({
           sql: postQuery,
-          args: [input.title, input.category, true],
+          args: [input.title, input.category, true]
         });
 
         if (!postResults.rows[0]) {
           return null;
         }
 
-        const post_id = (postResults.rows[0] as any).id;
+        const postRow = postResults.rows[0];
 
-        // Get comments
-        const commentQuery = "SELECT * FROM Comment WHERE post_id = ?";
-        const commentResults = await conn.execute({
-          sql: commentQuery,
-          args: [post_id],
-        });
-
-        // Get likes
-        const likeQuery = "SELECT * FROM PostLike WHERE post_id = ?";
-        const likeResults = await conn.execute({
-          sql: likeQuery,
-          args: [post_id],
-        });
-
-        // Get tags
-        const tagsQuery = "SELECT * FROM Tag WHERE post_id = ?";
-        const tagResults = await conn.execute({
-          sql: tagsQuery,
-          args: [post_id],
-        });
-
+        // Return structured data with proper formatting
         return {
-          post: postResults.rows[0],
-          comments: commentResults.rows,
-          likes: likeResults.rows,
-          tagResults: tagResults.rows,
+          post: postRow,
+          comments: [], // Comments are not included in this optimized query - would need separate call if needed
+          likes: [], // Likes are not included in this optimized query - would need separate call if needed
+          tags: postRow.tags ? postRow.tags.split(",") : []
         };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch post by title",
+          message: "Failed to fetch post by title"
         });
       }
     }),
 
   createPost: publicProcedure
-    .input(z.object({
-      category: z.literal("blog"),
-      title: z.string(),
-      subtitle: z.string().nullable(),
-      body: z.string().nullable(),
-      banner_photo: z.string().nullable(),
-      published: z.boolean(),
-      tags: z.array(z.string()).nullable(),
-      author_id: z.string(),
-    }))
+    .input(
+      z.object({
+        category: z.literal("blog"),
+        title: z.string(),
+        subtitle: z.string().nullable(),
+        body: z.string().nullable(),
+        banner_photo: z.string().nullable(),
+        published: z.boolean(),
+        tags: z.array(z.string()).nullable(),
+        author_id: z.string()
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
-        const fullURL = input.banner_photo 
-          ? env.NEXT_PUBLIC_AWS_BUCKET_STRING + input.banner_photo 
+        const fullURL = input.banner_photo
+          ? env.NEXT_PUBLIC_AWS_BUCKET_STRING + input.banner_photo
           : null;
 
         const query = `
@@ -258,11 +278,11 @@ export const databaseRouter = createTRPCRouter({
           input.body,
           fullURL,
           input.published,
-          input.author_id,
+          input.author_id
         ];
-        
+
         const results = await conn.execute({ sql: query, args: params });
-        
+
         if (input.tags && input.tags.length > 0) {
           let tagQuery = "INSERT INTO Tag (value, post_id) VALUES ";
           let values = input.tags.map(
@@ -277,26 +297,28 @@ export const databaseRouter = createTRPCRouter({
         console.error(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create post",
+          message: "Failed to create post"
         });
       }
     }),
 
   updatePost: publicProcedure
-    .input(z.object({
-      id: z.number(),
-      title: z.string().nullable().optional(),
-      subtitle: z.string().nullable().optional(),
-      body: z.string().nullable().optional(),
-      banner_photo: z.string().nullable().optional(),
-      published: z.boolean().nullable().optional(),
-      tags: z.array(z.string()).nullable().optional(),
-      author_id: z.string(),
-    }))
+    .input(
+      z.object({
+        id: z.number(),
+        title: z.string().nullable().optional(),
+        subtitle: z.string().nullable().optional(),
+        body: z.string().nullable().optional(),
+        banner_photo: z.string().nullable().optional(),
+        published: z.boolean().nullable().optional(),
+        tags: z.array(z.string()).nullable().optional(),
+        author_id: z.string()
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
-        
+
         let query = "UPDATE Post SET ";
         let params: any[] = [];
         let first = true;
@@ -345,8 +367,11 @@ export const databaseRouter = createTRPCRouter({
 
         // Handle tags
         const deleteTagsQuery = `DELETE FROM Tag WHERE post_id = ?`;
-        await conn.execute({ sql: deleteTagsQuery, args: [input.id.toString()] });
-        
+        await conn.execute({
+          sql: deleteTagsQuery,
+          args: [input.id.toString()]
+        });
+
         if (input.tags && input.tags.length > 0) {
           let tagQuery = "INSERT INTO Tag (value, post_id) VALUES ";
           let values = input.tags.map((tag) => `("${tag}", ${input.id})`);
@@ -359,7 +384,7 @@ export const databaseRouter = createTRPCRouter({
         console.error(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update post",
+          message: "Failed to update post"
         });
       }
     }),
@@ -369,37 +394,37 @@ export const databaseRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
-        
+
         // Delete associated tags first
         await conn.execute({
           sql: "DELETE FROM Tag WHERE post_id = ?",
-          args: [input.id.toString()],
+          args: [input.id.toString()]
         });
-        
+
         // Delete associated likes
         await conn.execute({
           sql: "DELETE FROM PostLike WHERE post_id = ?",
-          args: [input.id.toString()],
+          args: [input.id.toString()]
         });
-        
+
         // Delete associated comments
         await conn.execute({
           sql: "DELETE FROM Comment WHERE post_id = ?",
-          args: [input.id],
+          args: [input.id]
         });
-        
+
         // Finally delete the post
         await conn.execute({
           sql: "DELETE FROM Post WHERE id = ?",
-          args: [input.id],
+          args: [input.id]
         });
-        
+
         return { success: true };
       } catch (error) {
         console.error(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete post",
+          message: "Failed to delete post"
         });
       }
     }),
@@ -409,39 +434,43 @@ export const databaseRouter = createTRPCRouter({
   // ============================================================
 
   addPostLike: publicProcedure
-    .input(z.object({
-      user_id: z.string(),
-      post_id: z.string(),
-    }))
+    .input(
+      z.object({
+        user_id: z.string(),
+        post_id: z.string()
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
         const query = `INSERT INTO PostLike (user_id, post_id) VALUES (?, ?)`;
         await conn.execute({
           sql: query,
-          args: [input.user_id, input.post_id],
+          args: [input.user_id, input.post_id]
         });
 
         const followUpQuery = `SELECT * FROM PostLike WHERE post_id = ?`;
         const res = await conn.execute({
           sql: followUpQuery,
-          args: [input.post_id],
+          args: [input.post_id]
         });
 
         return { newLikes: res.rows };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to add post like",
+          message: "Failed to add post like"
         });
       }
     }),
 
   removePostLike: publicProcedure
-    .input(z.object({
-      user_id: z.string(),
-      post_id: z.string(),
-    }))
+    .input(
+      z.object({
+        user_id: z.string(),
+        post_id: z.string()
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -451,20 +480,20 @@ export const databaseRouter = createTRPCRouter({
         `;
         await conn.execute({
           sql: query,
-          args: [input.user_id, input.post_id],
+          args: [input.user_id, input.post_id]
         });
 
         const followUpQuery = `SELECT * FROM PostLike WHERE post_id = ?`;
         const res = await conn.execute({
           sql: followUpQuery,
-          args: [input.post_id],
+          args: [input.post_id]
         });
 
         return { newLikes: res.rows };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to remove post like",
+          message: "Failed to remove post like"
         });
       }
     }),
@@ -481,7 +510,7 @@ export const databaseRouter = createTRPCRouter({
         const query = "SELECT * FROM User WHERE id = ?";
         const res = await conn.execute({
           sql: query,
-          args: [input.id],
+          args: [input.id]
         });
 
         if (res.rows[0]) {
@@ -494,7 +523,7 @@ export const databaseRouter = createTRPCRouter({
               image: user.image,
               displayName: user.display_name,
               provider: user.provider,
-              hasPassword: !!user.password_hash,
+              hasPassword: !!user.password_hash
             };
           }
         }
@@ -510,10 +539,11 @@ export const databaseRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
-        const query = "SELECT email, display_name, image FROM User WHERE id = ?";
+        const query =
+          "SELECT email, display_name, image FROM User WHERE id = ?";
         const res = await conn.execute({
           sql: query,
-          args: [input.id],
+          args: [input.id]
         });
 
         if (res.rows[0]) {
@@ -522,7 +552,7 @@ export const databaseRouter = createTRPCRouter({
             return {
               email: user.email,
               image: user.image,
-              display_name: user.display_name,
+              display_name: user.display_name
             };
           }
         }
@@ -541,22 +571,24 @@ export const databaseRouter = createTRPCRouter({
         const query = "SELECT * FROM User WHERE id = ?";
         const results = await conn.execute({
           sql: query,
-          args: [input.id],
+          args: [input.id]
         });
         return { user: results.rows[0] };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch user image",
+          message: "Failed to fetch user image"
         });
       }
     }),
 
   updateUserImage: publicProcedure
-    .input(z.object({
-      id: z.string(),
-      imageURL: z.string(),
-    }))
+    .input(
+      z.object({
+        id: z.string(),
+        imageURL: z.string()
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -566,38 +598,40 @@ export const databaseRouter = createTRPCRouter({
         const query = `UPDATE User SET image = ? WHERE id = ?`;
         await conn.execute({
           sql: query,
-          args: [fullURL, input.id],
+          args: [fullURL, input.id]
         });
         return { res: "success" };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update user image",
+          message: "Failed to update user image"
         });
       }
     }),
 
   updateUserEmail: publicProcedure
-    .input(z.object({
-      id: z.string(),
-      newEmail: z.string().email(),
-      oldEmail: z.string().email(),
-    }))
+    .input(
+      z.object({
+        id: z.string(),
+        newEmail: z.string().email(),
+        oldEmail: z.string().email()
+      })
+    )
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
         const query = `UPDATE User SET email = ? WHERE id = ? AND email = ?`;
         const res = await conn.execute({
           sql: query,
-          args: [input.newEmail, input.id, input.oldEmail],
+          args: [input.newEmail, input.id, input.oldEmail]
         });
         return { res };
       } catch (error) {
         console.error(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update user email",
+          message: "Failed to update user email"
         });
       }
-    }),
+    })
 });

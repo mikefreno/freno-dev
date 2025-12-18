@@ -11,7 +11,7 @@ export const LINEAGE_JWT_EXPIRY = "14d";
 
 // Helper function to get privilege level from H3Event (for use outside tRPC)
 export async function getPrivilegeLevel(
-  event: H3Event,
+  event: H3Event
 ): Promise<"anonymous" | "admin" | "user"> {
   try {
     const userIDToken = getCookie(event, "userIDToken");
@@ -28,7 +28,7 @@ export async function getPrivilegeLevel(
         console.log("Failed to authenticate token.");
         setCookie(event, "userIDToken", "", {
           maxAge: 0,
-          expires: new Date("2016-10-05"),
+          expires: new Date("2016-10-05")
         });
       }
     }
@@ -55,7 +55,7 @@ export async function getUserID(event: H3Event): Promise<string | null> {
         console.log("Failed to authenticate token.");
         setCookie(event, "userIDToken", "", {
           maxAge: 0,
-          expires: new Date("2016-10-05"),
+          expires: new Date("2016-10-05")
         });
       }
     }
@@ -65,38 +65,43 @@ export async function getUserID(event: H3Event): Promise<string | null> {
   return null;
 }
 
-// Turso
-export function ConnectionFactory() {
-  const config = {
-    url: env.TURSO_DB_URL,
-    authToken: env.TURSO_DB_TOKEN,
-  };
+// Turso - Connection Pooling Implementation
+let mainDBConnection: ReturnType<typeof createClient> | null = null;
+let lineageDBConnection: ReturnType<typeof createClient> | null = null;
 
-  const conn = createClient(config);
-  return conn;
+export function ConnectionFactory() {
+  if (!mainDBConnection) {
+    const config = {
+      url: env.TURSO_DB_URL,
+      authToken: env.TURSO_DB_TOKEN
+    };
+    mainDBConnection = createClient(config);
+  }
+  return mainDBConnection;
 }
 
 export function LineageConnectionFactory() {
-  const config = {
-    url: env.TURSO_LINEAGE_URL,
-    authToken: env.TURSO_LINEAGE_TOKEN,
-  };
-
-  const conn = createClient(config);
-  return conn;
+  if (!lineageDBConnection) {
+    const config = {
+      url: env.TURSO_LINEAGE_URL,
+      authToken: env.TURSO_LINEAGE_TOKEN
+    };
+    lineageDBConnection = createClient(config);
+  }
+  return lineageDBConnection;
 }
 
 export async function LineageDBInit() {
   const turso = createAPIClient({
     org: "mikefreno",
-    token: env.TURSO_DB_API_TOKEN,
+    token: env.TURSO_DB_API_TOKEN
   });
 
   const db_name = uuid();
   const db = await turso.databases.create(db_name, { group: "default" });
 
   const token = await turso.databases.createToken(db_name, {
-    authorization: "full-access",
+    authorization: "full-access"
   });
 
   const conn = PerUserDBConnectionFactory(db.name, token.jwt);
@@ -121,7 +126,7 @@ export async function LineageDBInit() {
 export function PerUserDBConnectionFactory(dbName: string, token: string) {
   const config = {
     url: `libsql://${dbName}-mikefreno.turso.io`,
-    authToken: token,
+    authToken: token
   };
   const conn = createClient(config);
   return conn;
@@ -130,7 +135,7 @@ export function PerUserDBConnectionFactory(dbName: string, token: string) {
 export async function dumpAndSendDB({
   dbName,
   dbToken,
-  sendTarget,
+  sendTarget
 }: {
   dbName: string;
   dbToken: string;
@@ -142,8 +147,8 @@ export async function dumpAndSendDB({
   const res = await fetch(`https://${dbName}-mikefreno.turso.io/dump`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${dbToken}`,
-    },
+      Authorization: `Bearer ${dbToken}`
+    }
   });
   if (!res.ok) {
     console.error(res);
@@ -158,12 +163,12 @@ export async function dumpAndSendDB({
   const emailPayload = {
     sender: {
       name: "no_reply@freno.me",
-      email: "no_reply@freno.me",
+      email: "no_reply@freno.me"
     },
     to: [
       {
-        email: sendTarget,
-      },
+        email: sendTarget
+      }
     ],
     subject: "Your Lineage Database Dump",
     htmlContent:
@@ -171,18 +176,18 @@ export async function dumpAndSendDB({
     attachment: [
       {
         content: base64Content,
-        name: "database_dump.txt",
-      },
-    ],
+        name: "database_dump.txt"
+      }
+    ]
   };
   const sendRes = await fetch(apiUrl, {
     method: "POST",
     headers: {
       accept: "application/json",
       "api-key": apiKey,
-      "content-type": "application/json",
+      "content-type": "application/json"
     },
-    body: JSON.stringify(emailPayload),
+    body: JSON.stringify(emailPayload)
   });
 
   if (!sendRes.ok) {
@@ -194,7 +199,7 @@ export async function dumpAndSendDB({
 
 export async function validateLineageRequest({
   auth_token,
-  userRow,
+  userRow
 }: {
   auth_token: string;
   userRow: Row;
@@ -225,7 +230,7 @@ export async function validateLineageRequest({
     const client = new OAuth2Client(CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: auth_token,
-      audience: CLIENT_ID,
+      audience: CLIENT_ID
     });
     if (ticket.getPayload()?.email !== email) {
       return false;
@@ -267,17 +272,18 @@ export async function sendEmailVerification(userEmail: string): Promise<{
     .setExpirationTime("15m")
     .sign(secret);
 
-  const domain = env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN || "https://freno.me";
+  const domain =
+    env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN || "https://freno.me";
 
   const emailPayload = {
     sender: {
       name: "MikeFreno",
-      email: "lifeandlineage_no_reply@freno.me",
+      email: "lifeandlineage_no_reply@freno.me"
     },
     to: [
       {
-        email: userEmail,
-      },
+        email: userEmail
+      }
     ],
     htmlContent: `<html>
 <head>
@@ -314,7 +320,7 @@ export async function sendEmailVerification(userEmail: string): Promise<{
 </body>
 </html>
 `,
-    subject: `Life and Lineage email verification`,
+    subject: `Life and Lineage email verification`
   };
 
   try {
@@ -323,16 +329,16 @@ export async function sendEmailVerification(userEmail: string): Promise<{
       headers: {
         accept: "application/json",
         "api-key": apiKey,
-        "content-type": "application/json",
+        "content-type": "application/json"
       },
-      body: JSON.stringify(emailPayload),
+      body: JSON.stringify(emailPayload)
     });
 
     if (!res.ok) {
       return { success: false, message: "Failed to send email" };
     }
 
-    const json = await res.json() as { messageId?: string };
+    const json = (await res.json()) as { messageId?: string };
     if (json.messageId) {
       return { success: true, messageId: json.messageId };
     }

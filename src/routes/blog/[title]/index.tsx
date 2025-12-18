@@ -1,15 +1,13 @@
 import { Show, Suspense, For } from "solid-js";
-import { useParams, A, Navigate } from "@solidjs/router";
+import { useParams, A, Navigate, query } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
-import { cache } from "@solidjs/router";
 import {
   ConnectionFactory,
   getUserID,
   getPrivilegeLevel
 } from "~/server/utils";
 import { getRequestEvent } from "solid-js/web";
-import { HttpStatusCode } from "@solidjs/start";
 import SessionDependantLike from "~/components/blog/SessionDependantLike";
 import CommentIcon from "~/components/icons/CommentIcon";
 import CommentSectionWrapper from "~/components/blog/CommentSectionWrapper";
@@ -18,7 +16,7 @@ import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
 import { useBars } from "~/context/bars";
 
 // Server function to fetch post by title
-const getPostByTitle = cache(async (title: string) => {
+const getPostByTitle = query(async (title: string) => {
   "use server";
 
   const event = getRequestEvent()!;

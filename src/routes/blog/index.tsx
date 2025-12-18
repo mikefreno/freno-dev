@@ -1,66 +1,81 @@
-import { createSignal, Show, Suspense } from "solid-js";
-import { useSearchParams, A } from "@solidjs/router";
+import { Show, Suspense } from "solid-js";
+import { useSearchParams, A, query } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
-import { cache } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { ConnectionFactory, getPrivilegeLevel } from "~/server/utils";
 import PostSortingSelect from "~/components/blog/PostSortingSelect";
 import TagSelector from "~/components/blog/TagSelector";
 import PostSorting from "~/components/blog/PostSorting";
 
+// Simple in-memory cache for blog posts to reduce DB load
+let cachedPosts: {
+  posts: any[];
+  tagMap: Record<string, number>;
+  privilegeLevel: string;
+} | null = null;
+let cacheTimestamp: number = 0;
+
 // Server function to fetch posts
-const getPosts = cache(async () => {
+const getPosts = query(async () => {
   "use server";
 
   const event = getRequestEvent()!;
   const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
 
+  // Check if we have fresh cached data (cache duration: 30 seconds)
+  const now = Date.now();
+  if (cachedPosts && now - cacheTimestamp < 30000) {
+    return cachedPosts;
+  }
+
+  // Single optimized query using JOINs instead of subqueries and separate queries
   let query = `
-    SELECT
-        Post.id,
-        Post.title,
-        Post.subtitle,
-        Post.body,
-        Post.banner_photo,
-        Post.date,
-        Post.published,
-        Post.category,
-        Post.author_id,
-        Post.reads,
-        Post.attachments,
-    (SELECT COUNT(*) FROM PostLike WHERE Post.id = PostLike.post_id) AS total_likes,
-    (SELECT COUNT(*) FROM Comment WHERE Post.id = Comment.post_id) AS total_comments
-    FROM
-        Post
-    LEFT JOIN
-        PostLike ON Post.id = PostLike.post_id
-    LEFT JOIN
-        Comment ON Post.id = Comment.post_id`;
+    SELECT 
+      p.id,
+      p.title,
+      p.subtitle,
+      p.body,
+      p.banner_photo,
+      p.date,
+      p.published,
+      p.category,
+      p.author_id,
+      p.reads,
+      p.attachments,
+      COUNT(DISTINCT pl.user_id) as total_likes,
+      COUNT(DISTINCT c.id) as total_comments,
+      GROUP_CONCAT(t.value) as tags
+    FROM Post p
+    LEFT JOIN PostLike pl ON p.id = pl.post_id
+    LEFT JOIN Comment c ON p.id = c.post_id
+    LEFT JOIN Tag t ON p.id = t.post_id`;
 
   if (privilegeLevel !== "admin") {
-    query += ` WHERE Post.published = TRUE`;
+    query += ` WHERE p.published = TRUE`;
   }
-  query += ` GROUP BY Post.id, Post.title, Post.subtitle, Post.body, Post.banner_photo, Post.date, Post.published, Post.category, Post.author_id, Post.reads, Post.attachments ORDER BY Post.date DESC;`;
+  query += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments ORDER BY p.date DESC;`;
 
   const conn = ConnectionFactory();
   const results = await conn.execute(query);
   const posts = results.rows;
 
-  const postIds = posts.map((post: any) => post.id);
-  const tagQuery =
-    postIds.length > 0
-      ? `SELECT * FROM Tag WHERE post_id IN (${postIds.join(", ")})`
-      : "SELECT * FROM Tag WHERE 1=0";
-  const tagResults = await conn.execute(tagQuery);
-  const tags = tagResults.rows;
-
+  // Process tags into a map for the UI
   let tagMap: Record<string, number> = {};
-  tags.forEach((tag: any) => {
-    tagMap[tag.value] = (tagMap[tag.value] || 0) + 1;
+  posts.forEach((post: any) => {
+    if (post.tags) {
+      const postTags = post.tags.split(",");
+      postTags.forEach((tag: string) => {
+        tagMap[tag] = (tagMap[tag] || 0) + 1;
+      });
+    }
   });
 
-  return { posts, tags, tagMap, privilegeLevel };
+  // Cache the results
+  cachedPosts = { posts, tagMap, privilegeLevel };
+  cacheTimestamp = now;
+
+  return cachedPosts;
 }, "blog-posts");
 
 export default function BlogIndex() {

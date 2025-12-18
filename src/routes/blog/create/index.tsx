@@ -1,19 +1,18 @@
 import { Show, createSignal } from "solid-js";
-import { useSearchParams, useNavigate } from "@solidjs/router";
+import { useSearchParams, useNavigate, query } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import { cache, createAsync } from "@solidjs/router";
+import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getPrivilegeLevel, getUserID } from "~/server/utils";
 import { api } from "~/lib/api";
 
-// Server function to get auth state
-const getAuthState = cache(async () => {
+const getAuthState = query(async () => {
   "use server";
-  
+
   const event = getRequestEvent()!;
   const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
   const userID = await getUserID(event.nativeEvent);
-  
+
   return { privilegeLevel, userID };
 }, "auth-state");
 
@@ -130,7 +129,7 @@ export default function CreatePost() {
                   rows={15}
                   value={body()}
                   onInput={(e) => setBody(e.currentTarget.value)}
-                  class="w-full rounded-md border border-surface2 bg-surface0 px-4 py-2 font-mono text-sm"
+                  class="border-surface2 bg-surface0 w-full rounded-md border px-4 py-2 font-mono text-sm"
                   placeholder="Enter post content (HTML)"
                 />
               </div>

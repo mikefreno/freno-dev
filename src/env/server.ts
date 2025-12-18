@@ -34,7 +34,7 @@ const serverEnvSchema = z.object({
   NEXT_PUBLIC_AWS_BUCKET_STRING: z.string().min(1).optional(),
   NEXT_PUBLIC_GITHUB_CLIENT_ID: z.string().min(1).optional(),
   NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-  NEXT_PUBLIC_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1).optional(),
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1).optional()
 });
 
 const clientEnvSchema = z.object({
@@ -44,13 +44,13 @@ const clientEnvSchema = z.object({
   VITE_GOOGLE_CLIENT_ID: z.string().min(1),
   VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1),
   VITE_GITHUB_CLIENT_ID: z.string().min(1),
-  VITE_WEBSOCKET: z.string().min(1),
+  VITE_WEBSOCKET: z.string().min(1)
 });
 
 // Combined environment schema
 export const envSchema = z.object({
   server: serverEnvSchema,
-  client: clientEnvSchema,
+  client: clientEnvSchema
 });
 
 // Type inference
@@ -61,7 +61,7 @@ export type ClientEnv = z.infer<typeof clientEnvSchema>;
 class EnvironmentError extends Error {
   constructor(
     message: string,
-    public errors?: z.ZodFormattedError<any>,
+    public errors?: z.ZodFormattedError<any>
   ) {
     super(message);
     this.name = "EnvironmentError";
@@ -70,7 +70,7 @@ class EnvironmentError extends Error {
 
 // Validation function for server-side with detailed error messages
 export const validateServerEnv = (
-  envVars: Record<string, string | undefined>,
+  envVars: Record<string, string | undefined>
 ): ServerEnv => {
   try {
     return serverEnvSchema.parse(envVars);
@@ -83,7 +83,7 @@ export const validateServerEnv = (
             key !== "_errors" &&
             typeof value === "object" &&
             value._errors?.length > 0 &&
-            value._errors[0] === "Required",
+            value._errors[0] === "Required"
         )
         .map(([key, _]) => key);
 
@@ -93,18 +93,18 @@ export const validateServerEnv = (
             key !== "_errors" &&
             typeof value === "object" &&
             value._errors?.length > 0 &&
-            value._errors[0] !== "Required",
+            value._errors[0] !== "Required"
         )
         .map(([key, value]) => ({
           key,
-          error: value._errors[0],
+          error: value._errors[0]
         }));
 
       let errorMessage = "Environment validation failed:\n";
 
       if (missingVars.length > 0) {
         errorMessage += `Missing required variables: ${missingVars.join(
-          ", ",
+          ", "
         )}\n`;
       }
 
@@ -119,14 +119,14 @@ export const validateServerEnv = (
     }
     throw new EnvironmentError(
       "Environment validation failed with unknown error",
-      undefined,
+      undefined
     );
   }
 };
 
 // Validation function for client-side (runtime) with detailed error messages
 export const validateClientEnv = (
-  envVars: Record<string, string | undefined>,
+  envVars: Record<string, string | undefined>
 ): ClientEnv => {
   try {
     return clientEnvSchema.parse(envVars);
@@ -139,7 +139,7 @@ export const validateClientEnv = (
             key !== "_errors" &&
             typeof value === "object" &&
             value._errors?.length > 0 &&
-            value._errors[0] === "Required",
+            value._errors[0] === "Required"
         )
         .map(([key, _]) => key);
 
@@ -149,18 +149,18 @@ export const validateClientEnv = (
             key !== "_errors" &&
             typeof value === "object" &&
             value._errors?.length > 0 &&
-            value._errors[0] !== "Required",
+            value._errors[0] !== "Required"
         )
         .map(([key, value]) => ({
           key,
-          error: value._errors[0],
+          error: value._errors[0]
         }));
 
       let errorMessage = "Client environment validation failed:\n";
 
       if (missingVars.length > 0) {
         errorMessage += `Missing required variables: ${missingVars.join(
-          ", ",
+          ", "
         )}\n`;
       }
 
@@ -175,7 +175,7 @@ export const validateClientEnv = (
     }
     throw new EnvironmentError(
       "Client environment validation failed with unknown error",
-      undefined,
+      undefined
     );
   }
 };
@@ -194,7 +194,7 @@ export const env = (() => {
       if (error.errors) {
         console.error(
           "Detailed errors:",
-          JSON.stringify(error.errors, null, 2),
+          JSON.stringify(error.errors, null, 2)
         );
       }
       throw new Error(`Environment validation failed: ${error.message}`);
@@ -252,7 +252,7 @@ export const getMissingEnvVars = (): {
     "TURSO_LINEAGE_URL",
     "TURSO_LINEAGE_TOKEN",
     "TURSO_DB_API_TOKEN",
-    "LINEAGE_OFFLINE_SERIALIZATION_SECRET",
+    "LINEAGE_OFFLINE_SERIALIZATION_SECRET"
   ];
 
   const requiredClientVars = [
@@ -261,13 +261,13 @@ export const getMissingEnvVars = (): {
     "VITE_GOOGLE_CLIENT_ID",
     "VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE",
     "VITE_GITHUB_CLIENT_ID",
-    "VITE_WEBSOCKET",
+    "VITE_WEBSOCKET"
   ];
 
   return {
     server: requiredServerVars.filter((varName) => isMissingEnvVar(varName)),
     client: requiredClientVars.filter((varName) =>
-      isMissingClientEnvVar(varName),
-    ),
+      isMissingClientEnvVar(varName)
+    )
   };
 };

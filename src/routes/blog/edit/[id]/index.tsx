@@ -1,15 +1,14 @@
 import { Show, createSignal, createEffect } from "solid-js";
-import { useParams, useNavigate } from "@solidjs/router";
+import { useParams, useNavigate, query } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
-import { cache } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getPrivilegeLevel, getUserID } from "~/server/utils";
 import { api } from "~/lib/api";
 import { ConnectionFactory } from "~/server/utils";
 
 // Server function to fetch post for editing
-const getPostForEdit = cache(async (id: string) => {
+const getPostForEdit = query(async (id: string) => {
   "use server";
 
   const event = getRequestEvent()!;
@@ -140,7 +139,7 @@ export default function EditPost() {
                     required
                     value={title()}
                     onInput={(e) => setTitle(e.currentTarget.value)}
-                    class="w-full rounded-md border border-surface2 bg-surface0 px-4 py-2"
+                    class="border-surface2 bg-surface0 w-full rounded-md border px-4 py-2"
                     placeholder="Enter post title"
                   />
                 </div>
@@ -155,7 +154,7 @@ export default function EditPost() {
                     type="text"
                     value={subtitle()}
                     onInput={(e) => setSubtitle(e.currentTarget.value)}
-                    class="w-full rounded-md border border-surface2 bg-surface0 px-4 py-2"
+                    class="border-surface2 bg-surface0 w-full rounded-md border px-4 py-2"
                     placeholder="Enter post subtitle"
                   />
                 </div>
@@ -170,7 +169,7 @@ export default function EditPost() {
                     rows={15}
                     value={body()}
                     onInput={(e) => setBody(e.currentTarget.value)}
-                    class="w-full rounded-md border border-surface2 bg-surface0 px-4 py-2 font-mono text-sm"
+                    class="border-surface2 bg-surface0 w-full rounded-md border px-4 py-2 font-mono text-sm"
                     placeholder="Enter post content (HTML)"
                   />
                 </div>
@@ -185,7 +184,7 @@ export default function EditPost() {
                     type="text"
                     value={bannerPhoto()}
                     onInput={(e) => setBannerPhoto(e.currentTarget.value)}
-                    class="w-full rounded-md border border-surface2 bg-surface0 px-4 py-2"
+                    class="border-surface2 bg-surface0 w-full rounded-md border px-4 py-2"
                     placeholder="Enter banner photo URL"
                   />
                 </div>
@@ -207,7 +206,7 @@ export default function EditPost() {
                           .filter(Boolean)
                       )
                     }
-                    class="w-full rounded-md border border-surface2 bg-surface0 px-4 py-2"
+                    class="border-surface2 bg-surface0 w-full rounded-md border px-4 py-2"
                     placeholder="tag1, tag2, tag3"
                   />
                 </div>
