@@ -159,6 +159,9 @@ export function RightBarContent() {
           contributions={githubActivity()}
           title="GitHub Activity"
         />
+        <div>
+          <a href="https://git.freno.me">Self-hosted Git!</a>
+        </div>
         <RecentCommits
           commits={giteaCommits()}
           title="Recent Gitea Commits"

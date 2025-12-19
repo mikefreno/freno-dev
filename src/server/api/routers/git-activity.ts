@@ -34,7 +34,7 @@ export const gitActivityRouter = createTRPCRouter({
         );
 
         if (!response.ok) {
-          throw new Error(`GitHub API error: ${response.statusText}`);
+          throw new Error(`GitHub commits API error: ${response.statusText}`);
         }
 
         const events = await response.json();
@@ -69,9 +69,9 @@ export const gitActivityRouter = createTRPCRouter({
     .input(z.object({ limit: z.number().default(3) }))
     .query(async ({ input }) => {
       try {
-        // First, get user's repos
+        // First, get user's repositories
         const reposResponse = await fetch(
-          `${env.GITEA_URL}/api/v1/user/repos`,
+          `${env.GITEA_URL}/api/v1/users/Mike/repos?limit=100`,
           {
             headers: {
               Authorization: `token ${env.GITEA_TOKEN}`,
@@ -81,19 +81,19 @@ export const gitActivityRouter = createTRPCRouter({
         );
 
         if (!reposResponse.ok) {
-          throw new Error(`Gitea API error: ${reposResponse.statusText}`);
+          throw new Error(`Gitea repos API error: ${reposResponse.statusText}`);
         }
 
         const repos = await reposResponse.json();
-        const commits: GitCommit[] = [];
+        const allCommits: GitCommit[] = [];
 
-        // Get commits from each repo
+        // Fetch recent commits from each repo
         for (const repo of repos) {
-          if (commits.length >= input.limit) break;
+          if (allCommits.length >= input.limit * 3) break; // Get extra to sort later
 
           try {
             const commitsResponse = await fetch(
-              `${env.GITEA_URL}/api/v1/repos/${repo.owner.login}/${repo.name}/commits?limit=${input.limit}`,
+              `${env.GITEA_URL}/api/v1/repos/Mike/${repo.name}/commits?limit=5`,
               {
                 headers: {
                   Authorization: `token ${env.GITEA_TOKEN}`,
@@ -103,17 +103,26 @@ export const gitActivityRouter = createTRPCRouter({
             );
 
             if (commitsResponse.ok) {
-              const repoCommits = await commitsResponse.json();
-              for (const commit of repoCommits) {
-                if (commits.length >= input.limit) break;
-                commits.push({
-                  sha: commit.sha.substring(0, 7),
-                  message: commit.commit.message.split("\n")[0],
-                  author: commit.commit.author.name,
-                  date: commit.commit.author.date,
-                  repo: `${repo.owner.login}/${repo.name}`,
-                  url: `${env.GITEA_URL}/${repo.owner.login}/${repo.name}/commit/${commit.sha}`
-                });
+              const commits = await commitsResponse.json();
+              for (const commit of commits) {
+                if (
+                  (commit.commit?.author?.email &&
+                    commit.commit.author.email.includes("michael@freno.me")) ||
+                  commit.commit.author.email.includes(
+                    "michaelt.freno@gmail.com"
+                  ) // Filter for your commits
+                ) {
+                  allCommits.push({
+                    sha: commit.sha?.substring(0, 7) || "unknown",
+                    message:
+                      commit.commit?.message?.split("\n")[0] || "No message",
+                    author: commit.commit?.author?.name || repo.owner.login,
+                    date:
+                      commit.commit?.author?.date || new Date().toISOString(),
+                    repo: repo.full_name,
+                    url: `${env.GITEA_URL}/${repo.full_name}/commit/${commit.sha}`
+                  });
+                }
               }
             }
           } catch (error) {
@@ -121,12 +130,12 @@ export const gitActivityRouter = createTRPCRouter({
           }
         }
 
-        // Sort by date and return top N
-        return commits
-          .sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-          )
-          .slice(0, input.limit);
+        // Sort by date and return the most recent
+        allCommits.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        return allCommits.slice(0, input.limit);
       } catch (error) {
         console.error("Error fetching Gitea commits:", error);
         return [];
@@ -136,37 +145,61 @@ export const gitActivityRouter = createTRPCRouter({
   // Get GitHub contribution activity (for heatmap)
   getGitHubActivity: publicProcedure.query(async () => {
     try {
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-      const response = await fetch(
-        `https://api.github.com/users/MikeFreno/events?per_page=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
-            Accept: "application/vnd.github.v3+json"
+      // Use GitHub GraphQL API for contribution data
+      const query = `
+        query($userName: String!) {
+          user(login: $userName) {
+            contributionsCollection {
+              contributionCalendar {
+                weeks {
+                  contributionDays {
+                    date
+                    contributionCount
+                  }
+                }
+              }
+            }
           }
         }
-      );
+      `;
+
+      const response = await fetch("https://api.github.com/graphql", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          query,
+          variables: { userName: "MikeFreno" }
+        })
+      });
 
       if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.statusText}`);
+        throw new Error(`GitHub GraphQL API error: ${response.statusText}`);
       }
 
-      const events = await response.json();
+      const data = await response.json();
 
-      // Count contributions by day
-      const contributionsByDay = new Map<string, number>();
-
-      for (const event of events) {
-        const date = new Date(event.created_at).toISOString().split("T")[0];
-        contributionsByDay.set(date, (contributionsByDay.get(date) || 0) + 1);
+      if (data.errors) {
+        console.error("GitHub GraphQL errors:", data.errors);
+        throw new Error("GraphQL query failed");
       }
 
-      // Convert to array format
-      const contributions: ContributionDay[] = Array.from(
-        contributionsByDay.entries()
-      ).map(([date, count]) => ({ date, count }));
+      // Extract contribution days from the response
+      const contributions: ContributionDay[] = [];
+      const weeks =
+        data.data?.user?.contributionsCollection?.contributionCalendar?.weeks ||
+        [];
+
+      for (const week of weeks) {
+        for (const day of week.contributionDays) {
+          contributions.push({
+            date: day.date,
+            count: day.contributionCount
+          });
+        }
+      }
 
       return contributions;
     } catch (error) {
@@ -178,22 +211,28 @@ export const gitActivityRouter = createTRPCRouter({
   // Get Gitea contribution activity (for heatmap)
   getGiteaActivity: publicProcedure.query(async () => {
     try {
-      // Get all user repos
-      const reposResponse = await fetch(`${env.GITEA_URL}/api/v1/user/repos`, {
-        headers: {
-          Authorization: `token ${env.GITEA_TOKEN}`,
-          Accept: "application/json"
+      // Get user's repositories
+      const reposResponse = await fetch(
+        `${env.GITEA_URL}/api/v1/user/repos?limit=100`,
+        {
+          headers: {
+            Authorization: `token ${env.GITEA_TOKEN}`,
+            Accept: "application/json"
+          }
         }
-      });
+      );
 
       if (!reposResponse.ok) {
-        throw new Error(`Gitea API error: ${reposResponse.statusText}`);
+        throw new Error(`Gitea repos API error: ${reposResponse.statusText}`);
       }
 
       const repos = await reposResponse.json();
       const contributionsByDay = new Map<string, number>();
 
-      // Fetch commits from all repos
+      // Get commits from each repo (last 3 months to avoid too many API calls)
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
       for (const repo of repos) {
         try {
           const commitsResponse = await fetch(
