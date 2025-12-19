@@ -19,7 +19,7 @@ export async function getPrivilegeLevel(
           return payload.id === env.ADMIN_ID ? "admin" : "user";
         }
       } catch (err) {
-        console.log("Failed to authenticate token.");
+        // Silently clear invalid token (401s are expected for non-authenticated users)
         setCookie(event, "userIDToken", "", {
           maxAge: 0,
           expires: new Date("2016-10-05")
@@ -45,7 +45,7 @@ export async function getUserID(event: H3Event): Promise<string | null> {
           return payload.id;
         }
       } catch (err) {
-        console.log("Failed to authenticate token.");
+        // Silently clear invalid token (401s are expected for non-authenticated users)
         setCookie(event, "userIDToken", "", {
           maxAge: 0,
           expires: new Date("2016-10-05")

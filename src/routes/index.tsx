@@ -11,7 +11,7 @@ export default function Home() {
         content="Michael Freno - Software Engineer based in Brooklyn, NY. Passionate about dev tooling, game development, and open source software."
       />
 
-      <main class="flex h-full flex-col gap-8 p-4 text-xl">
+      <main class="flex h-full flex-col gap-8 p-4 pt-16 text-xl">
         <div class="flex-1">
           <Typewriter speed={30} keepAlive={2000}>
             <div class="text-4xl">Hey!</div>
@@ -45,44 +45,7 @@ export default function Home() {
           </Typewriter>
           <div class="pt-8 text-center">
             <div class="pb-4">Some of my recent projects:</div>
-            <div class="flex flex-col items-center gap-6 2xl:flex-row 2xl:items-start 2xl:justify-center">
-              {/* Life and Lineage */}
-              <div class="border-surface0 flex w-full max-w-2xl flex-col gap-2 rounded-md border-2 p-4 text-center">
-                <div>My mobile game:</div>
-                <a
-                  class="text-blue hover-underline-animation"
-                  href="https://apps.apple.com/us/app/life-and-lineage/id6737252442"
-                >
-                  Life and Lineage
-                </a>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
-                    <img
-                      src="/lineage-home.png"
-                      alt="Life and Lineage Home"
-                      class="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
-                    <video
-                      src="/lineage-preview.mp4"
-                      class="h-full w-full object-cover"
-                      autoplay
-                      loop
-                      muted
-                      playsinline
-                    />
-                  </div>
-                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
-                    <img
-                      src="/lineage-shops.png"
-                      alt="Life and Lineage Shops"
-                      class="h-full w-full object-cover"
-                    />
-                  </div>
-                </div>
-              </div>
-
+            <div class="flex flex-col items-center gap-2 2xl:flex-row 2xl:items-start 2xl:justify-center">
               {/* FlexLöve */}
               <div class="border-surface0 flex w-full max-w-md flex-col gap-2 rounded-md border-2 p-4 text-center">
                 <div>My LÖVE UI library</div>
@@ -121,6 +84,43 @@ export default function Home() {
                       loop
                       muted
                       playsinline
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Life and Lineage */}
+              <div class="border-surface0 flex w-full max-w-3/4 flex-col gap-2 rounded-md border-2 p-4 text-center">
+                <div>My mobile game:</div>
+                <a
+                  class="text-blue hover-underline-animation"
+                  href="https://apps.apple.com/us/app/life-and-lineage/id6737252442"
+                >
+                  Life and Lineage
+                </a>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
+                    <img
+                      src="/lineage-home.png"
+                      alt="Life and Lineage Home"
+                      class="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
+                    <video
+                      src="/lineage-preview.mp4"
+                      class="h-full w-full object-cover"
+                      autoplay
+                      loop
+                      muted
+                      playsinline
+                    />
+                  </div>
+                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
+                    <img
+                      src="/lineage-shops.png"
+                      alt="Life and Lineage Shops"
+                      class="h-full w-full object-cover"
                     />
                   </div>
                 </div>

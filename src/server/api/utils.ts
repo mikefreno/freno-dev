@@ -20,17 +20,16 @@ async function createContextInner(event: APIEvent): Promise<Context> {
     try {
       const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
       const { payload } = await jwtVerify(userIDToken, secret);
-      
+
       if (payload.id && typeof payload.id === "string") {
         userId = payload.id;
         privilegeLevel = payload.id === env.ADMIN_ID ? "admin" : "user";
       }
     } catch (err) {
-      console.log("Failed to authenticate token:", err);
-      // Clear invalid token
+      // Silently clear invalid token (401s are expected for non-authenticated users)
       setCookie(event.nativeEvent, "userIDToken", "", {
         maxAge: 0,
-        expires: new Date("2016-10-05"),
+        expires: new Date("2016-10-05")
       });
     }
   }
@@ -38,7 +37,7 @@ async function createContextInner(event: APIEvent): Promise<Context> {
   return {
     event,
     userId,
-    privilegeLevel,
+    privilegeLevel
   };
 }
 
@@ -59,24 +58,24 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      userId: ctx.userId, // userId is non-null here
-    },
+      userId: ctx.userId // userId is non-null here
+    }
   });
 });
 
 // Middleware to enforce admin access
 const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
   if (ctx.privilegeLevel !== "admin") {
-    throw new TRPCError({ 
-      code: "FORBIDDEN", 
-      message: "Admin access required" 
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Admin access required"
     });
   }
   return next({
     ctx: {
       ...ctx,
-      userId: ctx.userId!, // userId is non-null for admins
-    },
+      userId: ctx.userId! // userId is non-null for admins
+    }
   });
 });
 

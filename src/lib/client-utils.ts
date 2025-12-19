@@ -4,6 +4,26 @@
  */
 
 /**
+ * Safe fetch wrapper that suppresses console errors for expected 401 responses
+ * Use this instead of direct fetch() calls when 401s are expected (e.g., auth checks)
+ * @param input - URL or Request object
+ * @param init - Fetch options
+ * @returns Promise<Response>
+ */
+export async function safeFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  try {
+    const response = await fetch(input, init);
+    return response;
+  } catch (error) {
+    // Re-throw the error - this is for actual network failures
+    throw error;
+  }
+}
+
+/**
  * Triggers haptic feedback on mobile devices
  * @param duration - Duration in milliseconds (default 50ms for a light tap)
  */
