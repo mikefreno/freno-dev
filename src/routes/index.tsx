@@ -2,12 +2,33 @@ import { Typewriter } from "~/components/Typewriter";
 
 export default function Home() {
   return (
-    <Typewriter speed={100} keepAlive={2000}>
-      <main class="text-subtext0 mx-auto p-4 text-center">
-        {/* fill in a ipsum lorem */}
-        ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-        ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem
-      </main>
-    </Typewriter>
+    <main class="p-4 text-xl">
+      <Typewriter speed={30} keepAlive={2000}>
+        <div class="text-4xl">Hey!</div>
+      </Typewriter>
+
+      <Typewriter speed={80} keepAlive={2000}>
+        <div>
+          My name is <span class="text-green">Mike Freno</span>, I'm a{" "}
+          <span class="text-blue">Software Engineer</span> based in{" "}
+          <span class="text-yellow">Brooklyn, NY</span>
+        </div>
+      </Typewriter>
+      <Typewriter speed={100}>
+        I'm a passionate dev tooling and game developer, recently been working
+        in the world of Love2D and you can see some of my work here: <a></a>
+        I'm a huge lover of open source software, and
+      </Typewriter>
+      <Typewriter speed={50} keepAlive={false}>
+        <div>My Collection of By-the-ways:</div>
+      </Typewriter>
+      <Typewriter speed={50} keepAlive={false}>
+        <ul class="list-disc pl-8">
+          <li>I use Neovim</li>
+          <li>I use Arch Linux</li>
+          <li>I use Rust</li>
+        </ul>
+      </Typewriter>
+    </main>
   );
 }

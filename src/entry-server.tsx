@@ -3,8 +3,7 @@ import { createHandler, StartServer } from "@solidjs/start/server";
 import { validateServerEnv } from "./env/server";
 
 try {
-  const validatedEnv = validateServerEnv(process.env);
-  console.log("Environment validation successful");
+  validateServerEnv(process.env);
 } catch (error) {
   console.error("Environment validation failed:", error);
 }

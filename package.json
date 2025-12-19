@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
+    "dev-flush": "vinxi dev --env-file=.env",
     "build": "vinxi build",
     "start": "vinxi start"
   },

@@ -7,7 +7,8 @@ import {
   createResource,
   Show,
   For,
-  Suspense
+  Suspense,
+  createMemo
 } from "solid-js";
 import { api } from "~/lib/api";
 import { TerminalSplash } from "./TerminalSplash";
@@ -56,7 +57,7 @@ export function RightBarContent() {
   });
 
   return (
-    <div class="text-text flex h-full flex-col gap-6 overflow-y-auto pb-6">
+    <div class="text-text flex h-full w-min flex-col gap-6 overflow-y-auto pb-6">
       <Typewriter keepAlive={false} class="z-50 px-4 pt-4">
         <ul class="flex flex-col gap-4">
           <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
@@ -112,7 +113,7 @@ export function RightBarContent() {
 
       {/* Git Activity Section */}
       <Suspense fallback={<TerminalSplash />}>
-        <div class="border-overlay0 flex flex-col gap-6 border-t px-4 pt-6">
+        <div class="border-overlay0 flex min-w-0 flex-col gap-6 border-t px-4 pt-6">
           <RecentCommits
             commits={githubCommits()}
             title="Recent GitHub Commits"
@@ -122,9 +123,6 @@ export function RightBarContent() {
             contributions={githubActivity()}
             title="GitHub Activity"
           />
-          <div>
-            <a href="https://git.freno.me">Self-hosted Git!</a>
-          </div>
           <RecentCommits
             commits={giteaCommits()}
             title="Recent Gitea Commits"
@@ -152,7 +150,17 @@ export function LeftBar() {
     undefined
   );
 
+  const [userInfo, setUserInfo] = createSignal<{
+    email: string | null;
+    isAuthenticated: boolean;
+  } | null>(null);
+
+  const [isMounted, setIsMounted] = createSignal(false);
+
   onMount(async () => {
+    // Mark as mounted to avoid hydration mismatch
+    setIsMounted(true);
+
     // Fetch recent posts only on client side to avoid hydration mismatch
     try {
       const posts = await api.blog.getRecentPosts.query();
@@ -160,6 +168,30 @@ export function LeftBar() {
     } catch (error) {
       console.error("Failed to fetch recent posts:", error);
       setRecentPosts([]);
+    }
+
+    // Fetch user info client-side only to avoid hydration mismatch
+    try {
+      const response = await fetch("/api/trpc/user.getProfile", {
+        method: "GET"
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.result?.data) {
+          setUserInfo({
+            email: result.result.data.email,
+            isAuthenticated: true
+          });
+        } else {
+          setUserInfo({ email: null, isAuthenticated: false });
+        }
+      } else {
+        setUserInfo({ email: null, isAuthenticated: false });
+      }
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+      setUserInfo({ email: null, isAuthenticated: false });
     }
 
     if (ref) {
@@ -323,7 +355,7 @@ export function LeftBar() {
         <div class="text-text flex flex-1 flex-col px-4 pb-4 text-xl font-bold">
           <div class="flex flex-col py-8">
             <span class="text-lg font-semibold">Recent Posts</span>
-            <div class="flex flex-col gap-3 pt-4">
+            <div class="flex max-h-[50dvh] flex-col gap-3 pt-4">
               <Show when={recentPosts()} fallback={<TerminalSplash />}>
                 <For each={recentPosts()}>
                   {(post) => (
@@ -369,7 +401,20 @@ export function LeftBar() {
                   <a href="/blog">Blog</a>
                 </li>
                 <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="/login">Login</a>
+                  <Show
+                    when={isMounted() && userInfo()?.isAuthenticated}
+                    fallback={<a href="/login">Login</a>}
+                  >
+                    <a href="/account">
+                      Account
+                      <Show when={userInfo()?.email}>
+                        <span class="text-subtext0 text-sm font-normal">
+                          {" "}
+                          ({userInfo()!.email})
+                        </span>
+                      </Show>
+                    </a>
+                  </Show>
                 </li>
               </ul>
             </Typewriter>

@@ -1,5 +1,12 @@
 import { createSignal, createEffect, onCleanup, Show } from "solid-js";
-import { A, useNavigate, useSearchParams } from "@solidjs/router";
+import {
+  A,
+  useNavigate,
+  useSearchParams,
+  cache,
+  redirect
+} from "@solidjs/router";
+import { getEvent } from "vinxi/http";
 import GoogleLogo from "~/components/icons/GoogleLogo";
 import GitHub from "~/components/icons/GitHub";
 import Eye from "~/components/icons/Eye";
@@ -7,6 +14,23 @@ import EyeSlash from "~/components/icons/EyeSlash";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { isValidEmail, validatePassword } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
+import { checkAuthStatus } from "~/server/utils";
+
+const checkAuth = cache(async () => {
+  "use server";
+  const event = getEvent()!;
+  const { isAuthenticated } = await checkAuthStatus(event);
+
+  if (isAuthenticated) {
+    throw redirect("/account");
+  }
+
+  return { isAuthenticated };
+}, "loginAuthCheck");
+
+export const route = {
+  load: () => checkAuth()
+};
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -64,7 +88,7 @@ export default function LoginPage() {
     if (timer) {
       timerInterval = setInterval(
         () => calcRemainder(timer),
-        1000,
+        1000
       ) as unknown as number;
       onCleanup(() => {
         if (timerInterval) {
@@ -84,7 +108,7 @@ export default function LoginPage() {
         server_error: "Server error - please try again later",
         missing_params: "Invalid login link - missing parameters",
         link_expired: "Login link has expired - please request a new one",
-        access_denied: "Access denied - you cancelled the login",
+        access_denied: "Access denied - you cancelled the login"
       };
       setError(errorMessages[errorParam] || "An error occurred during login");
     }
@@ -138,8 +162,8 @@ export default function LoginPage() {
           body: JSON.stringify({
             email,
             password,
-            passwordConfirmation: passwordConf,
-          }),
+            passwordConfirmation: passwordConf
+          })
         });
 
         const result = await response.json();
@@ -175,7 +199,7 @@ export default function LoginPage() {
         const response = await fetch("/api/trpc/auth.emailPasswordLogin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, rememberMe }),
+          body: JSON.stringify({ email, password, rememberMe })
         });
 
         const result = await response.json();
@@ -209,7 +233,7 @@ export default function LoginPage() {
         const response = await fetch("/api/trpc/auth.requestEmailLinkLogin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, rememberMe }),
+          body: JSON.stringify({ email, rememberMe })
         });
 
         const result = await response.json();
@@ -223,7 +247,7 @@ export default function LoginPage() {
             }
             timerInterval = setInterval(
               () => calcRemainder(timer),
-              1000,
+              1000
             ) as unknown as number;
           }
         } else {
@@ -310,7 +334,7 @@ export default function LoginPage() {
       {/* Main content */}
       <div class="pt-24 md:pt-48">
         {/* Error message */}
-        <div class="absolute -mt-12 text-center text-3xl italic text-red-400">
+        <div class="absolute -mt-12 text-center text-3xl text-red-400 italic">
           <Show when={error() === "passwordMismatch"}>
             Passwords did not match!
           </Show>
@@ -333,7 +357,7 @@ export default function LoginPage() {
                   setRegister(false);
                   setUsePassword(false);
                 }}
-                class="pl-1 text-blue underline hover:brightness-125"
+                class="text-blue pl-1 underline hover:brightness-125"
               >
                 Click here to Login
               </button>
@@ -347,7 +371,7 @@ export default function LoginPage() {
                 setRegister(true);
                 setUsePassword(false);
               }}
-              class="pl-1 text-blue underline hover:brightness-125"
+              class="text-blue pl-1 underline hover:brightness-125"
             >
               Click here to Register
             </button>
@@ -393,7 +417,7 @@ export default function LoginPage() {
                   setShowPasswordInput(!showPasswordInput());
                   passwordRef?.focus();
                 }}
-                class="absolute ml-60 mt-14"
+                class="absolute mt-14 ml-60"
                 type="button"
               >
                 <Show
@@ -418,7 +442,7 @@ export default function LoginPage() {
             </div>
             <div
               class={`${
-                showPasswordLengthWarning() ? "" : "select-none opacity-0"
+                showPasswordLengthWarning() ? "" : "opacity-0 select-none"
               } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
             >
               Password too short! Min Length: 8
@@ -446,7 +470,7 @@ export default function LoginPage() {
                   setShowPasswordConfInput(!showPasswordConfInput());
                   passwordConfRef?.focus();
                 }}
-                class="absolute ml-60 mt-14"
+                class="absolute mt-14 ml-60"
                 type="button"
               >
                 <Show
@@ -476,7 +500,7 @@ export default function LoginPage() {
                 passwordConfRef &&
                 passwordConfRef.value.length >= 6
                   ? ""
-                  : "select-none opacity-0"
+                  : "opacity-0 select-none"
               } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
             >
               Passwords do not match!
@@ -495,8 +519,8 @@ export default function LoginPage() {
               showPasswordError()
                 ? "text-red-500"
                 : showPasswordSuccess()
-                ? "text-green-500"
-                : "select-none opacity-0"
+                  ? "text-green-500"
+                  : "opacity-0 select-none"
             } flex min-h-[16px] justify-center italic transition-opacity duration-300 ease-in-out`}
           >
             <Show when={showPasswordError()}>
@@ -519,13 +543,13 @@ export default function LoginPage() {
                     loading()
                       ? "bg-zinc-400"
                       : "bg-blue hover:brightness-125 active:scale-90"
-                  } flex w-36 justify-center rounded py-3 text-white  transition-all duration-300 ease-out`}
+                  } flex w-36 justify-center rounded py-3 text-white transition-all duration-300 ease-out`}
                 >
                   {register()
                     ? "Sign Up"
                     : usePassword()
-                    ? "Sign In"
-                    : "Get Link"}
+                      ? "Sign In"
+                      : "Get Link"}
                 </button>
               }
             >
@@ -579,7 +603,7 @@ export default function LoginPage() {
         <div
           class={`${
             emailSent() ? "" : "user-select opacity-0"
-          } flex min-h-4 justify-center text-center italic text-green transition-opacity duration-300 ease-in-out`}
+          } text-green flex min-h-4 justify-center text-center italic transition-opacity duration-300 ease-in-out`}
         >
           <Show when={emailSent()}>Email Sent!</Show>
         </div>

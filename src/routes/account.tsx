@@ -1,8 +1,10 @@
 import { createSignal, createEffect, Show, onMount } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate, cache, redirect } from "@solidjs/router";
+import { getEvent } from "vinxi/http";
 import Eye from "~/components/icons/Eye";
 import EyeSlash from "~/components/icons/EyeSlash";
 import { validatePassword, isValidEmail } from "~/lib/validation";
+import { checkAuthStatus } from "~/server/utils";
 
 type UserProfile = {
   id: string;
@@ -12,6 +14,22 @@ type UserProfile = {
   image: string | null;
   provider: string;
   hasPassword: boolean;
+};
+
+const checkAuth = cache(async () => {
+  "use server";
+  const event = getEvent()!;
+  const { isAuthenticated } = await checkAuthStatus(event);
+
+  if (!isAuthenticated) {
+    throw redirect("/login");
+  }
+
+  return { isAuthenticated };
+}, "accountAuthCheck");
+
+export const route = {
+  load: () => checkAuth()
 };
 
 export default function AccountPage() {
@@ -72,16 +90,10 @@ export default function AccountPage() {
         const result = await response.json();
         if (result.result?.data) {
           setUser(result.result.data);
-        } else {
-          // Not logged in, redirect to login
-          navigate("/login");
         }
-      } else {
-        navigate("/login");
       }
     } catch (err) {
       console.error("Failed to fetch user profile:", err);
-      navigate("/login");
     } finally {
       setLoading(false);
     }

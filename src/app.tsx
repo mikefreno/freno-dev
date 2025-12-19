@@ -161,14 +161,19 @@ function AppLayout(props: { children: any }) {
 
   return (
     <>
-      {/* Fullscreen loading splash until bars are initialized */}
       <Show when={!barsInitialized()}>
-        <div class="bg-base fixed inset-0 z-50">
+        <div class="bg-base fixed inset-0 z-100">
           <TerminalSplash />
         </div>
       </Show>
 
-      <div class="flex max-w-screen flex-row">
+      <div
+        class="flex max-w-screen flex-row"
+        style={{
+          opacity: barsInitialized() ? "1" : "0",
+          transition: "opacity 0.3s ease-in-out"
+        }}
+      >
         <LeftBar />
         <div
           class="relative min-h-screen rounded-t-lg shadow-2xl"
@@ -177,7 +182,9 @@ function AppLayout(props: { children: any }) {
             "margin-left": `${leftBarSize()}px`
           }}
         >
-          <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
+          <Show when={barsInitialized()} fallback={<TerminalSplash />}>
+            <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
+          </Show>
         </div>
         <RightBar />
       </div>

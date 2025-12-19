@@ -1,4 +1,5 @@
 import { Component, For, Show } from "solid-js";
+import { Typewriter } from "./Typewriter";
 
 interface Commit {
   sha: string;
@@ -54,26 +55,30 @@ export const RecentCommits: Component<{
                 href={commit.url}
                 target="_blank"
                 rel="noreferrer"
-                class="hover:bg-surface0 group rounded-md p-2 transition-all duration-200 ease-in-out hover:scale-[1.02]"
+                class="hover:bg-surface0 group block rounded-md p-2 transition-all duration-200 ease-in-out hover:scale-[1.02]"
               >
-                <div class="flex flex-col gap-1">
-                  <div class="flex items-start justify-between gap-2">
-                    <span class="text-text line-clamp-2 flex-1 text-xs leading-tight font-medium">
+                <Typewriter
+                  speed={100}
+                  keepAlive={false}
+                  class="flex min-w-0 flex-col gap-1"
+                >
+                  <div class="flex min-w-0 items-start justify-between gap-2">
+                    <span class="text-text line-clamp-2 min-w-0 flex-1 text-xs leading-tight font-medium break-words">
                       {commit.message}
                     </span>
-                    <span class="text-subtext1 shrink-0 text-[10px]">
-                      {formatDate(commit.date)}
-                    </span>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <span class="bg-surface1 rounded px-1.5 py-0.5 font-mono text-[10px]">
+                  <span class="text-subtext1 shrink-0 text-[10px]">
+                    {formatDate(commit.date)}
+                  </span>
+                  <div class="flex min-w-0 items-center gap-2 overflow-hidden">
+                    <span class="bg-surface1 shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px]">
                       {commit.sha}
                     </span>
-                    <span class="text-subtext0 truncate text-[10px]">
+                    <span class="text-subtext0 min-w-0 truncate text-[10px]">
                       {commit.repo}
                     </span>
                   </div>
-                </div>
+                </Typewriter>
               </a>
             )}
           </For>
