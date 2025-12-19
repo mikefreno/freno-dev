@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Check if we're running in a server context
+const isServer = typeof process !== "undefined" && process.env !== undefined;
+
 const serverEnvSchema = z.object({
   // Server-side environment variables
   NODE_ENV: z.enum(["development", "test", "production"]),
@@ -181,36 +184,62 @@ export const validateClientEnv = (
 let _cachedEnv: ServerEnv | null = null;
 let _validationAttempted = false;
 
+const validateEnvLazy = (): ServerEnv => {
+  if (!_validationAttempted) {
+    _validationAttempted = true;
+
+    // If not on server, return empty object (will throw on access)
+    if (!isServer) {
+      console.warn("⚠️ Server environment accessed in browser context");
+      _cachedEnv = {} as ServerEnv;
+      return _cachedEnv;
+    }
+
+    try {
+      // Validate server environment variables using process.env
+      _cachedEnv = validateServerEnv(process.env);
+      console.log("✅ Environment validation successful");
+    } catch (error) {
+      if (error instanceof EnvironmentError) {
+        console.error("❌ Environment validation failed:", error.message);
+        if (error.errors) {
+          console.error(
+            "Detailed errors:",
+            JSON.stringify(error.errors, null, 2)
+          );
+        }
+        throw new Error(`Environment validation failed: ${error.message}`);
+      }
+      console.error("❌ Unexpected environment validation error:", error);
+      throw error;
+    }
+  }
+
+  if (!_cachedEnv) {
+    throw new Error("Environment validation failed");
+  }
+
+  return _cachedEnv;
+};
+
 export const env = new Proxy({} as ServerEnv, {
   get(_target, prop: string) {
-    // Only validate once
-    if (!_validationAttempted) {
-      _validationAttempted = true;
-      try {
-        // Validate server environment variables using process.env
-        _cachedEnv = validateServerEnv(process.env);
-        console.log("✅ Environment validation successful");
-      } catch (error) {
-        if (error instanceof EnvironmentError) {
-          console.error("❌ Environment validation failed:", error.message);
-          if (error.errors) {
-            console.error(
-              "Detailed errors:",
-              JSON.stringify(error.errors, null, 2)
-            );
-          }
-          throw new Error(`Environment validation failed: ${error.message}`);
-        }
-        console.error("❌ Unexpected environment validation error:", error);
-        throw new Error("Unexpected environment validation error occurred");
-      }
+    if (!isServer) {
+      throw new Error(
+        `Cannot access server environment variable "${prop}" in browser context. This is a development error - server-only code is being bundled into the client.`
+      );
     }
-
-    if (!_cachedEnv) {
-      throw new Error("Environment validation has not been performed yet");
+    const validatedEnv = validateEnvLazy();
+    return validatedEnv[prop as keyof ServerEnv];
+  },
+  has(_target, prop: string) {
+    if (!isServer) return false;
+    try {
+      const validatedEnv = validateEnvLazy();
+      return prop in validatedEnv;
+    } catch {
+      return false;
     }
-
-    return _cachedEnv[prop as keyof ServerEnv];
   }
 });
 
