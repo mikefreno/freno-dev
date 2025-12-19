@@ -24,7 +24,13 @@ const serverEnvSchema = z.object({
   LINEAGE_OFFLINE_SERIALIZATION_SECRET: z.string().min(1),
   GITEA_URL: z.string().min(1),
   GITEA_TOKEN: z.string().min(1),
-  GITHUB_API_TOKEN: z.string().min(1)
+  GITHUB_API_TOKEN: z.string().min(1),
+  VITE_DOMAIN: z.string().min(1),
+  VITE_AWS_BUCKET_STRING: z.string().min(1),
+  VITE_GOOGLE_CLIENT_ID: z.string().min(1),
+  VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1),
+  VITE_GITHUB_CLIENT_ID: z.string().min(1),
+  VITE_WEBSOCKET: z.string().min(1)
 });
 
 // Type inference
@@ -128,7 +134,13 @@ export const getMissingEnvVars = (): string[] => {
     "LINEAGE_OFFLINE_SERIALIZATION_SECRET",
     "GITEA_URL",
     "GITEA_TOKEN",
-    "GITHUB_API_TOKEN"
+    "GITHUB_API_TOKEN",
+    "VITE_DOMAIN",
+    "VITE_AWS_BUCKET_STRING",
+    "VITE_GOOGLE_CLIENT_ID",
+    "VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE",
+    "VITE_GITHUB_CLIENT_ID",
+    "VITE_WEBSOCKET"
   ];
 
   return requiredServerVars.filter((varName) => isMissingEnvVar(varName));

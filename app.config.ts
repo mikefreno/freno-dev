@@ -14,13 +14,19 @@ export default defineConfig({
             }
             // Split other large vendor libraries
             if (id.includes("node_modules")) {
-              if (id.includes("@solidjs") || id.includes("solid-js")) {
+              // Keep all solid-related packages together to avoid circular deps
+              if (
+                id.includes("@solidjs") ||
+                id.includes("solid-js") ||
+                id.includes("seroval")
+              ) {
                 return "solid";
               }
               if (id.includes("@trpc")) {
                 return "trpc";
               }
-              return "vendor";
+              // Don't create a generic vendor chunk - let Vite handle it
+              // to avoid circular dependencies with solid
             }
           }
         }
