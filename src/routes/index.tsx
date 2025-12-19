@@ -12,7 +12,7 @@ export default function Home() {
           <div>
             My name is <span class="text-green">Mike Freno</span>, I'm a{" "}
             <span class="text-blue">Software Engineer</span> based in{" "}
-            <span class="text-yellow">Brooklyn, NY</span>
+            <span class="text-yellow">Brooklyn, NY.</span>
           </div>
         </Typewriter>
         <Typewriter speed={100} keepAlive={2000}>
@@ -24,6 +24,7 @@ export default function Home() {
           >
             LÖVE
           </a>{" "}
+          (an open source game engine for Lua).
         </Typewriter>
         <Typewriter speed={100} keepAlive={2000}>
           You can see some of my work{" "}
@@ -31,7 +32,7 @@ export default function Home() {
             href="https://github.com/mikefreno"
             class="text-blue hover-underline-animation"
           >
-            here (github)
+            here (github).
           </a>
         </Typewriter>
         <div class="pt-8 text-center">
@@ -117,6 +118,19 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+        <div class="max-w-3/4 pt-8 md:max-w-1/2">
+          And if you love the color schemes of this site (which of course you
+          do), you can see{" "}
+          <a
+            href="https://github.com/mikefreno/dots/blob/master/mac/nvim/lua/colors.lua"
+            class="text-blue hover-underline-animation"
+          >
+            here
+          </a>{" "}
+          - and also see the rest of my various dot files idk. There's a macos
+          and arch linux rice in there if you're into that kinda thing and a
+          home server setup too. Which I will write about soon™.
         </div>
       </div>
 
