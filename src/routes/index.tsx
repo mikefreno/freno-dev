@@ -37,10 +37,14 @@ export default function Home() {
       </div>
       <div class="flex flex-col items-end gap-4">
         <Typewriter speed={50} keepAlive={false}>
-          <div>My Collection of By-the-ways:</div>
+          <div>
+            My Collection of
+            <br />
+            By-the-ways:
+          </div>
         </Typewriter>
         <Typewriter speed={50} keepAlive={false}>
-          <ul class="list-disc pr-8">
+          <ul class="list-disc">
             <li>I use Neovim</li>
             <li>I use Arch Linux</li>
             <li>I use Rust</li>
