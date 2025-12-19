@@ -8,11 +8,25 @@ import GitHub from "./icons/GitHub";
 import LinkedIn from "./icons/LinkedIn";
 import MoonIcon from "./icons/MoonIcon";
 import SunIcon from "./icons/SunIcon";
+import { RecentCommits } from "./RecentCommits";
+import { ActivityHeatmap } from "./ActivityHeatmap";
 
 export function RightBarContent() {
   const [isDark, setIsDark] = createSignal(false);
+  const [githubCommits, setGithubCommits] = createSignal<any[] | undefined>(
+    undefined
+  );
+  const [giteaCommits, setGiteaCommits] = createSignal<any[] | undefined>(
+    undefined
+  );
+  const [githubActivity, setGithubActivity] = createSignal<any[] | undefined>(
+    undefined
+  );
+  const [giteaActivity, setGiteaActivity] = createSignal<any[] | undefined>(
+    undefined
+  );
 
-  onMount(() => {
+  onMount(async () => {
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -25,6 +39,44 @@ export function RightBarContent() {
       setIsDark(false);
       document.documentElement.classList.add("light");
       document.documentElement.classList.remove("dark");
+    }
+
+    // Fetch GitHub activity
+    try {
+      const commits = await api.gitActivity.getGitHubCommits.query({
+        limit: 3
+      });
+      setGithubCommits(commits as any[]);
+    } catch (error) {
+      console.error("Failed to fetch GitHub commits:", error);
+      setGithubCommits([]);
+    }
+
+    try {
+      const activity = await api.gitActivity.getGitHubActivity.query();
+      setGithubActivity(activity as any[]);
+    } catch (error) {
+      console.error("Failed to fetch GitHub activity:", error);
+      setGithubActivity([]);
+    }
+
+    // Fetch Gitea activity
+    try {
+      const commits = await api.gitActivity.getGiteaCommits.query({
+        limit: 3
+      });
+      setGiteaCommits(commits as any[]);
+    } catch (error) {
+      console.error("Failed to fetch Gitea commits:", error);
+      setGiteaCommits([]);
+    }
+
+    try {
+      const activity = await api.gitActivity.getGiteaActivity.query();
+      setGiteaActivity(activity as any[]);
+    } catch (error) {
+      console.error("Failed to fetch Gitea activity:", error);
+      setGiteaActivity([]);
     }
   });
 
@@ -42,8 +94,8 @@ export function RightBarContent() {
   };
 
   return (
-    <div class="text-text flex h-full flex-col justify-between">
-      <Typewriter keepAlive={false} class="z-50 px-4">
+    <div class="text-text flex h-full flex-col gap-6 overflow-y-auto pb-6">
+      <Typewriter keepAlive={false} class="z-50 px-4 pt-4">
         <ul class="flex flex-col gap-4">
           <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
             <a href="/contact">Contact Me</a>
@@ -95,8 +147,31 @@ export function RightBarContent() {
           </li>
         </ul>
       </Typewriter>
+
+      {/* Git Activity Section */}
+      <div class="border-overlay0 flex flex-col gap-6 border-t px-4 pt-6">
+        <RecentCommits
+          commits={githubCommits()}
+          title="Recent GitHub Commits"
+          loading={githubCommits() === undefined}
+        />
+        <ActivityHeatmap
+          contributions={githubActivity()}
+          title="GitHub Activity"
+        />
+        <RecentCommits
+          commits={giteaCommits()}
+          title="Recent Gitea Commits"
+          loading={giteaCommits() === undefined}
+        />
+        <ActivityHeatmap
+          contributions={giteaActivity()}
+          title="Gitea Activity"
+        />
+      </div>
+
       {/* Dark Mode Toggle */}
-      <div class="border-overlay0 border-t p-4">
+      <div class="border-overlay0 mt-auto border-t px-4 pt-6">
         <button
           onClick={toggleDarkMode}
           class="hover:bg-surface0 flex w-full items-center gap-3 rounded-lg p-3 transition-all duration-200 ease-in-out hover:scale-105"

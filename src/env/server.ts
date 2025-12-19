@@ -22,19 +22,16 @@ const serverEnvSchema = z.object({
   TURSO_LINEAGE_TOKEN: z.string().min(1),
   TURSO_DB_API_TOKEN: z.string().min(1),
   LINEAGE_OFFLINE_SERIALIZATION_SECRET: z.string().min(1),
+  GITEA_URL: z.string().min(1),
+  GITEA_TOKEN: z.string().min(1),
+  GITHUB_API_TOKEN: z.string().min(1),
   // Client-side variables accessible on server
   VITE_DOMAIN: z.string().min(1).optional(),
   VITE_AWS_BUCKET_STRING: z.string().min(1).optional(),
   VITE_GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1).optional(),
   VITE_GITHUB_CLIENT_ID: z.string().min(1).optional(),
-  VITE_WEBSOCKET: z.string().min(1).optional(),
-  // Aliases for backward compatibility
-  NEXT_PUBLIC_DOMAIN: z.string().min(1).optional(),
-  NEXT_PUBLIC_AWS_BUCKET_STRING: z.string().min(1).optional(),
-  NEXT_PUBLIC_GITHUB_CLIENT_ID: z.string().min(1).optional(),
-  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-  NEXT_PUBLIC_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1).optional()
+  VITE_WEBSOCKET: z.string().min(1).optional()
 });
 
 const clientEnvSchema = z.object({
@@ -252,7 +249,10 @@ export const getMissingEnvVars = (): {
     "TURSO_LINEAGE_URL",
     "TURSO_LINEAGE_TOKEN",
     "TURSO_DB_API_TOKEN",
-    "LINEAGE_OFFLINE_SERIALIZATION_SECRET"
+    "LINEAGE_OFFLINE_SERIALIZATION_SECRET",
+    "GITEA_URL",
+    "GITEA_TOKEN",
+    "GITHUB_API_TOKEN"
   ];
 
   const requiredClientVars = [

@@ -5,6 +5,7 @@ import { lineageRouter } from "./routers/lineage";
 import { miscRouter } from "./routers/misc";
 import { userRouter } from "./routers/user";
 import { blogRouter } from "./routers/blog";
+import { gitActivityRouter } from "./routers/git-activity";
 import { createTRPCRouter } from "./utils";
 
 export const appRouter = createTRPCRouter({
@@ -14,7 +15,8 @@ export const appRouter = createTRPCRouter({
   lineage: lineageRouter,
   misc: miscRouter,
   user: userRouter,
-  blog: blogRouter
+  blog: blogRouter,
+  gitActivity: gitActivityRouter
 });
 
 export type AppRouter = typeof appRouter;
