@@ -164,24 +164,24 @@ export default function PostPage() {
                       {p().title.replaceAll("_", " ")} | Michael Freno
                     </Title>
 
-                    <div class="relative overflow-x-hidden select-none">
+                    <div class="relative overflow-x-hidden">
                       {/* Fixed banner image background */}
                       <div class="fixed top-0 left-0 z-0 h-80 w-full sm:h-96 md:h-[50vh]">
                         <div class="absolute inset-0 h-full w-full overflow-hidden brightness-75">
                           <img
                             src={p().banner_photo || "/blueprint.jpg"}
                             alt="post-cover"
-                            class="h-full object-cover"
+                            class="h-full object-cover select-none"
                             style={{
                               width: `${centerWidth()}px`,
-                              "margin-left": `${leftBarSize()}px`
+                              "margin-left": `${leftBarSize()}px`,
+                              "pointer-events": "none"
                             }}
                           />
                         </div>
                         <div
                           class="text-shadow text-text absolute top-1/3 z-10 my-auto px-4 text-center tracking-widest brightness-150 select-text"
                           style={{
-                            "pointer-events": "none",
                             width: `${centerWidth()}px`,
                             "margin-left": `${leftBarSize()}px`
                           }}
