@@ -128,6 +128,36 @@
   }
 }
 
+/* Manual dark mode via .dark class */
+.dark {
+  --color-rosewater: #efc9c2;
+  --color-flamingo: #ebb2b2;
+  --color-pink: #f2a7de;
+  --color-mauve: #b889f4;
+  --color-red: #ea7183;
+  --color-maroon: #ea838c;
+  --color-peach: #f39967;
+  --color-yellow: #eaca89;
+  --color-green: #96d382;
+  --color-teal: #78cec1;
+  --color-sky: #91d7e3;
+  --color-sapphire: #68bae0;
+  --color-blue: #739df2;
+  --color-lavender: #a0a8f6;
+  --color-text: #b5c1f1;
+  --color-subtext1: #a6b0d8;
+  --color-subtext0: #959ec2;
+  --color-overlay2: #848cad;
+  --color-overlay1: #717997;
+  --color-overlay0: #63677f;
+  --color-surface2: #505469;
+  --color-surface1: #3e4255;
+  --color-surface0: #2c2f40;
+  --color-base: #1e1e2e;
+  --color-mantle: #141620;
+  --color-crust: #0e0f16;
+}
+
 :root {
   font-family: "Source Code Pro", monospace;
 }
@@ -470,4 +500,21 @@ input[type="checkbox"]:checked::before {
   .hamburger-menu-btn {
     display: block !important;
   }
+}
+@keyframes shaker {
+  0% {
+    transform: rotate(0deg);
+  }
+  33% {
+    transform: rotate(15deg);
+  }
+  66% {
+    transform: rotate(-15deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+.shaker:hover {
+  animation: shaker 0.5s ease;
 }

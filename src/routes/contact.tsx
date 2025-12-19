@@ -102,7 +102,7 @@ export default function ContactPage() {
 
   const LineageQuestionsDropDown = () => {
     return (
-      <div class="mx-auto px-4 py-12 md:w-3/4 md:flex-row lg:w-1/2">
+      <div class="w-full py-12">
         <RevealDropDown title={"Questions about Life and Lineage?"}>
           <div>
             Feel free to use the form{" "}
@@ -198,7 +198,7 @@ export default function ContactPage() {
       <Meta name="description" content="Contact Me" />
 
       <div class="flex min-h-screen w-full justify-center">
-        <div class="pt-[20vh]">
+        <div class="w-full max-w-4xl px-4 pt-[20vh]">
           <div class="text-center text-3xl tracking-widest dark:text-white">
             Contact
           </div>
@@ -210,13 +210,13 @@ export default function ContactPage() {
           <Show when={viewer() === "lineage"}>
             <LineageQuestionsDropDown />
           </Show>
-          <form onSubmit={sendEmailTrigger} class="min-w-[85vw] px-4">
+          <form onSubmit={sendEmailTrigger} class="w-full">
             <div
               class={`flex w-full flex-col justify-evenly pt-6 ${
                 viewer() !== "lineage" ? "md:mt-24" : ""
               }`}
             >
-              <div class="mx-auto w-full justify-evenly md:flex md:w-3/4 md:flex-row lg:w-1/2">
+              <div class="mx-auto w-full justify-evenly md:flex md:flex-row">
                 <div class="input-group md:mx-4">
                   <input
                     type="text"
@@ -242,7 +242,7 @@ export default function ContactPage() {
                   <label class="underlinedInputLabel">Email</label>
                 </div>
               </div>
-              <div class="mx-auto w-full pt-6 md:w-3/4 md:pt-12 lg:w-1/2">
+              <div class="mx-auto w-full pt-6 md:pt-12">
                 <div class="textarea-group">
                   <textarea
                     required
@@ -255,7 +255,7 @@ export default function ContactPage() {
                   <label class="underlinedInputLabel">Message</label>
                 </div>
               </div>
-              <div class="mx-auto flex w-full justify-end pt-4 md:w-3/4 lg:w-1/2">
+              <div class="mx-auto flex w-full justify-end pt-4">
                 <Show
                   when={countDown() > 0}
                   fallback={

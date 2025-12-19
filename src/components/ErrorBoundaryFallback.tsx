@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { createEffect, createSignal, For } from "solid-js";
+import { createSignal, For, onMount, onCleanup } from "solid-js";
 
 export interface ErrorBoundaryFallbackProps {
   error: Error;
@@ -21,9 +21,11 @@ export default function ErrorBoundaryFallback(
   }
   const [glitchText, setGlitchText] = createSignal("ERROR");
 
-  createEffect(() => {
-    console.error(props.error);
+  // Log error immediately (safe for SSR)
+  console.error(props.error);
 
+  // Client-only glitch animation
+  onMount(() => {
     const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
     const originalText = "ERROR";
 
@@ -44,7 +46,7 @@ export default function ErrorBoundaryFallback(
       }
     }, 400);
 
-    return () => clearInterval(glitchInterval);
+    onCleanup(() => clearInterval(glitchInterval));
   });
 
   const createParticles = () => {

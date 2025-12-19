@@ -4,6 +4,10 @@ import { onMount, createEffect, createSignal, Show, For } from "solid-js";
 import { api } from "~/lib/api";
 import { TerminalSplash } from "./TerminalSplash";
 import { insertSoftHyphens } from "~/lib/client-utils";
+import GitHub from "./icons/GitHub";
+import LinkedIn from "./icons/LinkedIn";
+import MoonIcon from "./icons/MoonIcon";
+import SunIcon from "./icons/SunIcon";
 
 export function LeftBar() {
   const { setLeftBarSize, leftBarVisible, setLeftBarVisible } = useBars();
@@ -138,7 +142,7 @@ export function LeftBar() {
   return (
     <nav
       ref={ref}
-      class="border-r-overlay2 fixed z-50 h-full w-min border-r-2 transition-transform duration-500 ease-out md:max-w-[20%]"
+      class="border-r-overlay2 bg-base fixed z-50 h-full w-min border-r-2 transition-transform duration-500 ease-out md:max-w-[20%]"
       classList={{
         "-translate-x-full": !leftBarVisible(),
         "translate-x-0": leftBarVisible()
@@ -182,47 +186,42 @@ export function LeftBar() {
         </h3>
       </Typewriter>
       <div class="text-text flex flex-col px-4 text-xl font-bold">
-        <ul class="gap-4">
-          {/* Recent blog posts */}
-          <li class="mt-2 mb-6">
-            <div class="flex flex-col gap-2">
-              <span class="text-lg font-semibold">Recent Posts</span>
-              <div class="flex flex-col gap-3">
-                <Show when={recentPosts()} fallback={<TerminalSplash />}>
-                  <For each={recentPosts()}>
-                    {(post) => (
-                      <a
-                        href={`/blog/${post.title}`}
-                        class="hover:text-subtext0 block transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
-                      >
-                        <Typewriter class="flex flex-col" keepAlive={false}>
-                          <div class="relative overflow-hidden">
-                            <img
-                              src={post.banner_photo || "/blueprint.jpg"}
-                              alt="post-cover"
-                              class="float-right mb-1 ml-2 h-12 w-16 rounded object-cover"
-                            />
-                            <span class="inline wrap-break-word hyphens-auto">
-                              {insertSoftHyphens(post.title.replace(/_/g, " "))}
-                            </span>
-                          </div>
+        <div class="flex flex-col py-8">
+          <span class="text-lg font-semibold">Recent Posts</span>
+          <div class="flex flex-col gap-3 pt-4">
+            <Show when={recentPosts()} fallback={<TerminalSplash />}>
+              <For each={recentPosts()}>
+                {(post) => (
+                  <a
+                    href={`/blog/${post.title}`}
+                    class="hover:text-subtext0 block transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
+                  >
+                    <Typewriter class="flex flex-col" keepAlive={false}>
+                      <div class="relative overflow-hidden">
+                        <img
+                          src={post.banner_photo || "/blueprint.jpg"}
+                          alt="post-cover"
+                          class="float-right mb-1 ml-2 h-12 w-16 rounded object-cover"
+                        />
+                        <span class="inline wrap-break-word hyphens-auto">
+                          {insertSoftHyphens(post.title.replace(/_/g, " "))}
+                        </span>
+                      </div>
 
-                          <span class="text-subtext0 clear-both text-sm">
-                            {new Date(post.date).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric"
-                            })}
-                          </span>
-                        </Typewriter>
-                      </a>
-                    )}
-                  </For>
-                </Show>
-              </div>
-            </div>
-          </li>
-        </ul>
+                      <span class="text-subtext0 clear-both text-sm">
+                        {new Date(post.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric"
+                        })}
+                      </span>
+                    </Typewriter>
+                  </a>
+                )}
+              </For>
+            </Show>
+          </div>
+        </div>
         <Typewriter keepAlive={false} class="absolute bottom-12">
           <div class="flex flex-col gap-4">
             <ul class="gap-4">
@@ -260,7 +259,20 @@ export function RightBar() {
   let ref: HTMLDivElement | undefined;
   let actualWidth = 0;
 
+  const [isDark, setIsDark] = createSignal(false);
+
   onMount(() => {
+    // Initialize dark mode based on system preference
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+      setIsDark(true);
+      document.documentElement.classList.add("dark");
+    }
+
     if (ref) {
       const updateSize = () => {
         actualWidth = ref?.offsetWidth || 0;
@@ -289,10 +301,21 @@ export function RightBar() {
     setRightBarSize(rightBarVisible() ? actualWidth : 0);
   });
 
+  const toggleDarkMode = () => {
+    setIsDark(!isDark());
+    if (!isDark()) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
+
   return (
     <nav
       ref={ref}
-      class="border-l-overlay2 fixed right-0 z-50 hidden h-full min-h-screen w-fit border-l-2 transition-transform duration-500 ease-out md:block md:max-w-[20%]"
+      class="border-l-overlay2 bg-base fixed right-0 z-50 hidden h-full min-h-screen w-fit border-l-2 transition-transform duration-500 ease-out md:block md:max-w-[20%]"
       classList={{
         "translate-x-full": !rightBarVisible(),
         "translate-x-0": rightBarVisible()
@@ -303,22 +326,79 @@ export function RightBar() {
           : "cubic-bezier(0.4, 0, 0.2, 1)" // Smooth when hiding
       }}
     >
-      <Typewriter keepAlive={false} class="z-50">
-        <h3 class="hover:text-subtext0 w-fit text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
-          Right Navigation
-        </h3>
-        <div class="text-text flex h-screen flex-col justify-between px-4 py-10 text-xl font-bold">
-          <ul class="gap-4">
-            <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-              <a href="/">Home</a>
-            </li>
-            <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-              <a href="#about">About</a>
-            </li>
-            <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-              <a href="/contact">Contact</a>
-            </li>
-          </ul>
+      <Typewriter keepAlive={false} class="z-50 px-4 pt-4">
+        <div class="text-text flex h-screen flex-col justify-between py-6">
+          <div class="flex flex-col gap-6">
+            <h3 class="text-subtext0 rule-around text-lg font-semibold">
+              Connect
+            </h3>
+            <ul class="flex flex-col gap-4">
+              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <a href="/contact">Contact</a>
+              </li>
+              <li>
+                <a
+                  href="https://github.com/MikeFreno/"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="hover:text-subtext0 flex items-center gap-3 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105"
+                >
+                  <span class="shaker rounded-full p-2">
+                    <GitHub height={24} width={24} fill={undefined} />
+                  </span>
+                  <span>GitHub</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.linkedin.com/in/michael-freno-176001256/"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="hover:text-subtext0 flex items-center gap-3 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105"
+                >
+                  <span class="shaker rounded-full p-2">
+                    <LinkedIn height={24} width={24} fill={undefined} />
+                  </span>
+                  <span>LinkedIn</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/resume"
+                  class="hover:text-subtext0 flex items-center gap-3 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105"
+                >
+                  <span class="shaker rounded-full p-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      height={24}
+                      width={24}
+                      viewBox="0 0 384 512"
+                      class="fill-text"
+                    >
+                      <path d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM112 256H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64H272c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16z" />
+                    </svg>
+                  </span>
+                  <span>Resume</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Dark Mode Toggle */}
+          <div class="border-overlay0 border-t pt-6">
+            <button
+              onClick={toggleDarkMode}
+              class="hover:bg-surface0 flex w-full items-center gap-3 rounded-lg p-3 transition-all duration-200 ease-in-out hover:scale-105"
+              aria-label="Toggle dark mode"
+            >
+              <Show when={isDark()} fallback={<MoonIcon size={24} />}>
+                <SunIcon size={24} fill="var(--color-text)" />
+              </Show>
+              <span class="text-text font-semibold">
+                {isDark() ? "Light Mode" : "Dark Mode"}
+              </span>
+            </button>
+          </div>
         </div>
       </Typewriter>
     </nav>
