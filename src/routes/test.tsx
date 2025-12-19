@@ -1,5 +1,6 @@
 import { createSignal, For, Show } from "solid-js";
 import { query, createAsync } from "@solidjs/router";
+import { Title, Meta } from "@solidjs/meta";
 import { getRequestEvent } from "solid-js/web";
 import { api } from "~/lib/api";
 
@@ -932,297 +933,318 @@ export default function TestPage() {
   };
 
   return (
-    <Show
-      when={authState()?.privilegeLevel === "admin"}
-      fallback={
-        <div class="w-full pt-[30vh] text-center">
-          <div class="text-text text-2xl">Unauthorized</div>
-          <div class="text-subtext0 mt-4">
-            You must be an admin to access this page.
+    <>
+      <Title>API Testing | Michael Freno</Title>
+      <Meta
+        name="description"
+        content="tRPC API testing dashboard for developers to test endpoints and verify functionality."
+      />
+      <Show
+        when={authState()?.privilegeLevel === "admin"}
+        fallback={
+          <div class="w-full pt-[30vh] text-center">
+            <div class="text-text text-2xl">Unauthorized</div>
+            <div class="text-subtext0 mt-4">
+              You must be an admin to access this page.
+            </div>
           </div>
-        </div>
-      }
-    >
-      <main class="min-h-screen p-8">
-        <div class="mx-auto max-w-6xl">
-          <div class="bg-surface0 mb-6 rounded-lg p-6 shadow-lg">
-            <h1 class="mb-2 text-3xl font-bold">tRPC API Testing Dashboard</h1>
-            <p class="text-text mb-4">
-              Complete API coverage: Example, Auth, Database, User, Misc, and
-              Lineage routers
-            </p>
-
-            <div class="border-lavender bg-mauve rounded border p-4">
-              <p class="text-base text-sm">
-                <strong>Quick Start:</strong> Expand any section below to test
-                endpoints. Public endpoints work immediately. Auth-required
-                endpoints need valid tokens.
+        }
+      >
+        <main class="min-h-screen p-8">
+          <div class="mx-auto max-w-6xl">
+            <div class="bg-surface0 mb-6 rounded-lg p-6 shadow-lg">
+              <h1 class="mb-2 text-3xl font-bold">
+                tRPC API Testing Dashboard
+              </h1>
+              <p class="text-text mb-4">
+                Complete API coverage: Example, Auth, Database, User, Misc, and
+                Lineage routers
               </p>
+
+              <div class="border-lavender bg-mauve rounded border p-4">
+                <p class="text-base text-sm">
+                  <strong>Quick Start:</strong> Expand any section below to test
+                  endpoints. Public endpoints work immediately. Auth-required
+                  endpoints need valid tokens.
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div class="space-y-4">
-            <For each={routerSections}>
-              {(section) => {
-                const isExpanded = () => expandedSections().has(section.name);
+            <div class="space-y-4">
+              <For each={routerSections}>
+                {(section) => {
+                  const isExpanded = () => expandedSections().has(section.name);
 
-                return (
-                  <div class="bg-surface0 rounded-lg shadow">
-                    {/* Section Header */}
-                    <button
-                      onClick={() => toggleSection(section.name)}
-                      class="flex w-full items-center justify-between px-6 py-4 transition"
-                    >
-                      <div class="text-left">
-                        <h2 class="text-xl font-bold">{section.name}</h2>
-                        <p class="text-subtext0 text-sm">
-                          {section.description}
-                        </p>
-                        <p class="text-subtext1 mt-1 text-xs">
-                          {section.endpoints.length} endpoint
-                          {section.endpoints.length !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                      <div class="text-subtext1 text-2xl">
-                        {isExpanded() ? "−" : "+"}
-                      </div>
-                    </button>
+                  return (
+                    <div class="bg-surface0 rounded-lg shadow">
+                      {/* Section Header */}
+                      <button
+                        onClick={() => toggleSection(section.name)}
+                        class="flex w-full items-center justify-between px-6 py-4 transition"
+                      >
+                        <div class="text-left">
+                          <h2 class="text-xl font-bold">{section.name}</h2>
+                          <p class="text-subtext0 text-sm">
+                            {section.description}
+                          </p>
+                          <p class="text-subtext1 mt-1 text-xs">
+                            {section.endpoints.length} endpoint
+                            {section.endpoints.length !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+                        <div class="text-subtext1 text-2xl">
+                          {isExpanded() ? "−" : "+"}
+                        </div>
+                      </button>
 
-                    {/* Section Content */}
-                    <Show when={isExpanded()}>
-                      <div class="border-base space-y-4 border-t p-6">
-                        <For each={section.endpoints}>
-                          {(endpoint) => {
-                            const key = `${endpoint.router}.${endpoint.procedure}`;
-                            const hasInput = endpoint.sampleInput !== undefined;
-                            const displayInput = () => {
-                              if (inputEdits()[key]) {
-                                return inputEdits()[key];
-                              }
-                              // Handle primitive values (string, number, boolean)
-                              if (typeof endpoint.sampleInput === "string") {
-                                return `"${endpoint.sampleInput}"`;
-                              }
-                              if (
-                                typeof endpoint.sampleInput === "number" ||
-                                typeof endpoint.sampleInput === "boolean"
-                              ) {
-                                return String(endpoint.sampleInput);
-                              }
-                              // Handle objects and arrays
-                              return JSON.stringify(
-                                endpoint.sampleInput,
-                                null,
-                                2
-                              );
-                            };
+                      {/* Section Content */}
+                      <Show when={isExpanded()}>
+                        <div class="border-base space-y-4 border-t p-6">
+                          <For each={section.endpoints}>
+                            {(endpoint) => {
+                              const key = `${endpoint.router}.${endpoint.procedure}`;
+                              const hasInput =
+                                endpoint.sampleInput !== undefined;
+                              const displayInput = () => {
+                                if (inputEdits()[key]) {
+                                  return inputEdits()[key];
+                                }
+                                // Handle primitive values (string, number, boolean)
+                                if (typeof endpoint.sampleInput === "string") {
+                                  return `"${endpoint.sampleInput}"`;
+                                }
+                                if (
+                                  typeof endpoint.sampleInput === "number" ||
+                                  typeof endpoint.sampleInput === "boolean"
+                                ) {
+                                  return String(endpoint.sampleInput);
+                                }
+                                // Handle objects and arrays
+                                return JSON.stringify(
+                                  endpoint.sampleInput,
+                                  null,
+                                  2
+                                );
+                              };
 
-                            return (
-                              <div class="bg-surface2 border-surface1 rounded-lg border p-4">
-                                {/* Endpoint Header */}
-                                <div class="mb-3 flex items-start justify-between">
-                                  <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                      <h3 class="text-subtext0 text-lg font-semibold">
-                                        {endpoint.name}
-                                      </h3>
-                                      <Show when={endpoint.requiresAuth}>
-                                        <span class="bg-surface1 text-yellow rounded px-2 py-1 text-xs">
-                                          🔒 Auth Required
+                              return (
+                                <div class="bg-surface2 border-surface1 rounded-lg border p-4">
+                                  {/* Endpoint Header */}
+                                  <div class="mb-3 flex items-start justify-between">
+                                    <div class="flex-1">
+                                      <div class="flex items-center gap-2">
+                                        <h3 class="text-subtext0 text-lg font-semibold">
+                                          {endpoint.name}
+                                        </h3>
+                                        <Show when={endpoint.requiresAuth}>
+                                          <span class="bg-surface1 text-yellow rounded px-2 py-1 text-xs">
+                                            🔒 Auth Required
+                                          </span>
+                                        </Show>
+                                        <Show when={endpoint.requiresAdmin}>
+                                          <span class="bg-maroon rounded px-2 py-1 text-base text-xs">
+                                            👑 Admin Only
+                                          </span>
+                                        </Show>
+                                      </div>
+                                      <p class="mt-1 text-sm text-gray-600">
+                                        {endpoint.description}
+                                      </p>
+                                      <div class="mt-2 flex gap-2">
+                                        <code class="bg-surface0 rounded px-2 py-1 text-xs">
+                                          {key}
+                                        </code>
+                                        <span class="bg-blue text-text rounded px-2 py-1 text-xs">
+                                          {endpoint.method === "query"
+                                            ? "GET"
+                                            : "POST"}
                                         </span>
-                                      </Show>
-                                      <Show when={endpoint.requiresAdmin}>
-                                        <span class="bg-maroon rounded px-2 py-1 text-base text-xs">
-                                          👑 Admin Only
-                                        </span>
-                                      </Show>
+                                      </div>
                                     </div>
-                                    <p class="mt-1 text-sm text-gray-600">
-                                      {endpoint.description}
-                                    </p>
-                                    <div class="mt-2 flex gap-2">
-                                      <code class="bg-surface0 rounded px-2 py-1 text-xs">
-                                        {key}
-                                      </code>
-                                      <span class="bg-blue text-text rounded px-2 py-1 text-xs">
-                                        {endpoint.method === "query"
-                                          ? "GET"
-                                          : "POST"}
-                                      </span>
-                                    </div>
+                                    <button
+                                      onClick={() => testEndpoint(endpoint)}
+                                      disabled={loading()[key]}
+                                      class="bg-green ml-4 rounded px-4 py-2 text-base font-semibold whitespace-nowrap transition hover:brightness-125 disabled:brightness-50"
+                                    >
+                                      {loading()[key] ? "Testing..." : "Test"}
+                                    </button>
                                   </div>
-                                  <button
-                                    onClick={() => testEndpoint(endpoint)}
-                                    disabled={loading()[key]}
-                                    class="bg-green ml-4 rounded px-4 py-2 text-base font-semibold whitespace-nowrap transition hover:brightness-125 disabled:brightness-50"
-                                  >
-                                    {loading()[key] ? "Testing..." : "Test"}
-                                  </button>
+
+                                  {/* Input Editor */}
+                                  <Show when={hasInput}>
+                                    <div class="mb-3">
+                                      <label class="text-text mb-1 block text-xs font-semibold">
+                                        Request Body (edit JSON):
+                                      </label>
+                                      <textarea
+                                        value={displayInput()}
+                                        onInput={(e) =>
+                                          updateInput(
+                                            key,
+                                            e.currentTarget.value
+                                          )
+                                        }
+                                        class="border-lavender bg-crust min-h-[100px] w-full rounded border p-2 font-mono text-xs"
+                                        spellcheck={false}
+                                      />
+                                    </div>
+                                  </Show>
+
+                                  {/* Error Display */}
+                                  <Show when={errors()[key]}>
+                                    <div class="mb-3 rounded border border-red-200 bg-red-50 p-3">
+                                      <p class="text-sm font-semibold text-red-800">
+                                        Error:
+                                      </p>
+                                      <p class="font-mono text-sm text-red-600">
+                                        {errors()[key]}
+                                      </p>
+                                    </div>
+                                  </Show>
+
+                                  {/* Results Display */}
+                                  <Show when={results()[key]}>
+                                    <div class="rounded bg-gray-900 p-3">
+                                      <p class="mb-2 text-xs font-semibold text-green-400">
+                                        ✓ Response:
+                                      </p>
+                                      <pre class="max-h-60 overflow-auto text-xs text-green-400">
+                                        {JSON.stringify(
+                                          results()[key],
+                                          null,
+                                          2
+                                        )}
+                                      </pre>
+                                    </div>
+                                  </Show>
                                 </div>
+                              );
+                            }}
+                          </For>
+                        </div>
+                      </Show>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
 
-                                {/* Input Editor */}
-                                <Show when={hasInput}>
-                                  <div class="mb-3">
-                                    <label class="text-text mb-1 block text-xs font-semibold">
-                                      Request Body (edit JSON):
-                                    </label>
-                                    <textarea
-                                      value={displayInput()}
-                                      onInput={(e) =>
-                                        updateInput(key, e.currentTarget.value)
-                                      }
-                                      class="border-lavender bg-crust min-h-[100px] w-full rounded border p-2 font-mono text-xs"
-                                      spellcheck={false}
-                                    />
-                                  </div>
-                                </Show>
+            {/* Footer Instructions */}
+            <div class="bg-overlay2 mt-6 rounded-lg p-6 shadow-lg">
+              <h2 class="text-crust mb-4 text-2xl font-bold">Testing Guide</h2>
 
-                                {/* Error Display */}
-                                <Show when={errors()[key]}>
-                                  <div class="mb-3 rounded border border-red-200 bg-red-50 p-3">
-                                    <p class="text-sm font-semibold text-red-800">
-                                      Error:
-                                    </p>
-                                    <p class="font-mono text-sm text-red-600">
-                                      {errors()[key]}
-                                    </p>
-                                  </div>
-                                </Show>
+              <div class="space-y-4 text-base">
+                <div>
+                  <h3 class="mb-2 text-lg font-semibold">
+                    🟢 No Auth Required
+                  </h3>
+                  <ul class="ml-6 list-disc space-y-1 text-sm">
+                    <li>
+                      <strong>Example Router</strong> - Hello endpoint
+                    </li>
+                    <li>
+                      <strong>Lineage JSON Service</strong> - All 6 endpoints
+                      work immediately
+                    </li>
+                    <li>
+                      <strong>Database</strong> - All endpoints (comments,
+                      posts, users, reactions, likes)
+                    </li>
+                    <li>
+                      <strong>Misc</strong> - Downloads, S3 operations, password
+                      utilities
+                    </li>
+                    <li>
+                      <strong>Lineage Misc</strong> - Offline Secret, Get
+                      Opponents
+                    </li>
+                    <li>
+                      <strong>Lineage PvP</strong> - Get Opponents
+                    </li>
+                  </ul>
+                </div>
 
-                                {/* Results Display */}
-                                <Show when={results()[key]}>
-                                  <div class="rounded bg-gray-900 p-3">
-                                    <p class="mb-2 text-xs font-semibold text-green-400">
-                                      ✓ Response:
-                                    </p>
-                                    <pre class="max-h-60 overflow-auto text-xs text-green-400">
-                                      {JSON.stringify(results()[key], null, 2)}
-                                    </pre>
-                                  </div>
-                                </Show>
-                              </div>
-                            );
-                          }}
-                        </For>
-                      </div>
-                    </Show>
-                  </div>
-                );
-              }}
-            </For>
-          </div>
+                <div>
+                  <h3 class="mb-2 text-lg font-semibold">🟡 Auth Required</h3>
+                  <p class="mb-2 text-sm">
+                    These need valid JWT tokens from login/registration:
+                  </p>
+                  <ul class="ml-6 list-disc space-y-1 text-sm">
+                    <li>
+                      <strong>Example Router</strong> - Get Profile
+                    </li>
+                    <li>
+                      <strong>User Router</strong> - All endpoints (profile
+                      updates, password, account deletion)
+                    </li>
+                    <li>
+                      <strong>Lineage Auth</strong> - Email Login, Refresh Token
+                    </li>
+                    <li>
+                      <strong>Lineage Database</strong> - Get Credentials,
+                      Deletion endpoints
+                    </li>
+                  </ul>
+                </div>
 
-          {/* Footer Instructions */}
-          <div class="bg-overlay2 mt-6 rounded-lg p-6 shadow-lg">
-            <h2 class="text-crust mb-4 text-2xl font-bold">Testing Guide</h2>
+                <div>
+                  <h3 class="mb-2 text-lg font-semibold">🔴 Admin Required</h3>
+                  <p class="mb-2 text-sm">
+                    Maintenance endpoints require admin privileges (userIDToken
+                    cookie with ADMIN_ID).
+                  </p>
+                  <ul class="ml-6 list-disc space-y-1 text-sm">
+                    <li>
+                      <strong>Example Router</strong> - Admin Dashboard
+                    </li>
+                    <li>
+                      <strong>Lineage Maintenance</strong> - Find Loose
+                      Databases, Cleanup Expired
+                    </li>
+                  </ul>
+                </div>
 
-            <div class="space-y-4 text-base">
-              <div>
-                <h3 class="mb-2 text-lg font-semibold">🟢 No Auth Required</h3>
-                <ul class="ml-6 list-disc space-y-1 text-sm">
-                  <li>
-                    <strong>Example Router</strong> - Hello endpoint
-                  </li>
-                  <li>
-                    <strong>Lineage JSON Service</strong> - All 6 endpoints work
-                    immediately
-                  </li>
-                  <li>
-                    <strong>Database</strong> - All endpoints (comments, posts,
-                    users, reactions, likes)
-                  </li>
-                  <li>
-                    <strong>Misc</strong> - Downloads, S3 operations, password
-                    utilities
-                  </li>
-                  <li>
-                    <strong>Lineage Misc</strong> - Offline Secret, Get
-                    Opponents
-                  </li>
-                  <li>
-                    <strong>Lineage PvP</strong> - Get Opponents
-                  </li>
-                </ul>
-              </div>
+                <div>
+                  <h3 class="mb-2 text-lg font-semibold">
+                    📝 Typical Workflows
+                  </h3>
+                  <ol class="ml-6 list-decimal space-y-2 text-sm">
+                    <li>
+                      <strong>Test public endpoints:</strong> Start with Example
+                      Hello, Lineage JSON Service, or Database queries
+                    </li>
+                    <li>
+                      <strong>OAuth flow:</strong> Use Auth router callbacks
+                      with OAuth codes from GitHub/Google
+                    </li>
+                    <li>
+                      <strong>Email auth flow:</strong> Register → verify email
+                      → login → use JWT
+                    </li>
+                    <li>
+                      <strong>Blog/Project management:</strong> Create posts →
+                      add comments/likes → upload images via S3
+                    </li>
+                    <li>
+                      <strong>Lineage game data:</strong> Fetch JSON data →
+                      register character → find PvP opponents
+                    </li>
+                  </ol>
+                </div>
 
-              <div>
-                <h3 class="mb-2 text-lg font-semibold">🟡 Auth Required</h3>
-                <p class="mb-2 text-sm">
-                  These need valid JWT tokens from login/registration:
-                </p>
-                <ul class="ml-6 list-disc space-y-1 text-sm">
-                  <li>
-                    <strong>Example Router</strong> - Get Profile
-                  </li>
-                  <li>
-                    <strong>User Router</strong> - All endpoints (profile
-                    updates, password, account deletion)
-                  </li>
-                  <li>
-                    <strong>Lineage Auth</strong> - Email Login, Refresh Token
-                  </li>
-                  <li>
-                    <strong>Lineage Database</strong> - Get Credentials,
-                    Deletion endpoints
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 class="mb-2 text-lg font-semibold">🔴 Admin Required</h3>
-                <p class="mb-2 text-sm">
-                  Maintenance endpoints require admin privileges (userIDToken
-                  cookie with ADMIN_ID).
-                </p>
-                <ul class="ml-6 list-disc space-y-1 text-sm">
-                  <li>
-                    <strong>Example Router</strong> - Admin Dashboard
-                  </li>
-                  <li>
-                    <strong>Lineage Maintenance</strong> - Find Loose Databases,
-                    Cleanup Expired
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 class="mb-2 text-lg font-semibold">📝 Typical Workflows</h3>
-                <ol class="ml-6 list-decimal space-y-2 text-sm">
-                  <li>
-                    <strong>Test public endpoints:</strong> Start with Example
-                    Hello, Lineage JSON Service, or Database queries
-                  </li>
-                  <li>
-                    <strong>OAuth flow:</strong> Use Auth router callbacks with
-                    OAuth codes from GitHub/Google
-                  </li>
-                  <li>
-                    <strong>Email auth flow:</strong> Register → verify email →
-                    login → use JWT
-                  </li>
-                  <li>
-                    <strong>Blog/Project management:</strong> Create posts → add
-                    comments/likes → upload images via S3
-                  </li>
-                  <li>
-                    <strong>Lineage game data:</strong> Fetch JSON data →
-                    register character → find PvP opponents
-                  </li>
-                </ol>
-              </div>
-
-              <div class="border-rosewater bg-rosewater mt-4 rounded border p-4">
-                <p class="text-crust text-sm">
-                  <strong>Note:</strong> Some endpoints require specific setup
-                  (e.g., OAuth codes, existing database records, valid S3 keys).
-                  Check the sample input to understand what data each endpoint
-                  expects.
-                </p>
+                <div class="border-rosewater bg-rosewater mt-4 rounded border p-4">
+                  <p class="text-crust text-sm">
+                    <strong>Note:</strong> Some endpoints require specific setup
+                    (e.g., OAuth codes, existing database records, valid S3
+                    keys). Check the sample input to understand what data each
+                    endpoint expects.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
-    </Show>
+        </main>
+      </Show>
+    </>
   );
 }

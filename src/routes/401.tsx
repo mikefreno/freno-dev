@@ -1,4 +1,4 @@
-import { Title } from "@solidjs/meta";
+import { Title, Meta } from "@solidjs/meta";
 import { HttpStatusCode } from "@solidjs/start";
 import { useNavigate } from "@solidjs/router";
 import { createEffect, createSignal, For } from "solid-js";
@@ -47,7 +47,11 @@ export default function Page_401() {
 
   return (
     <>
-      <Title>401 - Unauthorized</Title>
+      <Title>401 Unauthorized | Michael Freno</Title>
+      <Meta
+        name="description"
+        content="401 - Unauthorized access. Please log in to access this page."
+      />
       <HttpStatusCode code={401} />
       <div class="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-slate-900 via-amber-950/20 to-slate-900 dark:from-black dark:via-amber-950/30 dark:to-black">
         {/* Animated particle background */}

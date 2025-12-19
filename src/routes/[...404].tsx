@@ -1,4 +1,4 @@
-import { Title } from "@solidjs/meta";
+import { Title, Meta } from "@solidjs/meta";
 import { HttpStatusCode } from "@solidjs/start";
 import { useNavigate } from "@solidjs/router";
 import { createEffect, createSignal, For } from "solid-js";
@@ -43,7 +43,11 @@ export default function NotFound() {
 
   return (
     <>
-      <Title>404 - Not Found</Title>
+      <Title>404 Not Found | Michael Freno</Title>
+      <Meta
+        name="description"
+        content="404 - Page not found. The page you're looking for doesn't exist."
+      />
       <HttpStatusCode code={404} />
       <div class="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-black dark:via-slate-900 dark:to-black">
         {/* Animated particle background */}

@@ -1,6 +1,6 @@
 import { Show, createSignal, createEffect, onCleanup } from "solid-js";
 import { useParams, useNavigate, query } from "@solidjs/router";
-import { Title } from "@solidjs/meta";
+import { Title, Meta } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { api } from "~/lib/api";
@@ -241,6 +241,10 @@ export default function EditPost() {
   return (
     <>
       <Title>Edit Post | Michael Freno</Title>
+      <Meta
+        name="description"
+        content="Edit your blog post with rich text editing, image management, and tag updates."
+      />
 
       <Show
         when={data()?.privilegeLevel === "admin"}

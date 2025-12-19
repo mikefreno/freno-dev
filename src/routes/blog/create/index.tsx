@@ -1,6 +1,6 @@
 import { Show, createSignal, createEffect, onCleanup } from "solid-js";
 import { useNavigate, query } from "@solidjs/router";
-import { Title } from "@solidjs/meta";
+import { Title, Meta } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { api } from "~/lib/api";
@@ -195,6 +195,10 @@ export default function CreatePost() {
   return (
     <>
       <Title>Create Blog Post | Michael Freno</Title>
+      <Meta
+        name="description"
+        content="Create a new blog post with rich text editing, image uploads, and tag management."
+      />
 
       <Show
         when={authState()?.privilegeLevel === "admin"}

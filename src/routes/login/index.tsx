@@ -6,6 +6,7 @@ import {
   cache,
   redirect
 } from "@solidjs/router";
+import { Title, Meta } from "@solidjs/meta";
 import { getEvent } from "vinxi/http";
 import GoogleLogo from "~/components/icons/GoogleLogo";
 import GitHub from "~/components/icons/GitHub";
@@ -320,324 +321,331 @@ export default function LoginPage() {
   };
 
   return (
-    <div class="flex h-dvh flex-row justify-evenly">
-      {/* Logo section - hidden on mobile */}
-      {/* <div class="hidden md:flex">
-        <div class="vertical-rule-around z-0 flex justify-center">
-          <picture class="-mr-8">
-            <source srcset="/WhiteLogo.png" media="(prefers-color-scheme: dark)" />
-            <img src="/BlackLogo.png" alt="logo" width={64} height={64} />
-          </picture>
-        </div>
-      </div> */}
+    <>
+      <Title>Login | Michael Freno</Title>
+      <Meta
+        name="description"
+        content="Sign in to your account or register for a new account to access personalized features and manage your profile."
+      />
+      <div class="flex h-dvh flex-row justify-evenly">
+        {/* Logo section - hidden on mobile */}
+        {/* <div class="hidden md:flex">
+          <div class="vertical-rule-around z-0 flex justify-center">
+            <picture class="-mr-8">
+              <source srcset="/WhiteLogo.png" media="(prefers-color-scheme: dark)" />
+              <img src="/BlackLogo.png" alt="logo" width={64} height={64} />
+            </picture>
+          </div>
+        </div> */}
 
-      {/* Main content */}
-      <div class="pt-24 md:pt-48">
-        {/* Error message */}
-        <div class="absolute -mt-12 text-center text-3xl text-red-400 italic">
-          <Show when={error() === "passwordMismatch"}>
-            Passwords did not match!
-          </Show>
-          <Show when={error() === "duplicate"}>Email Already Exists!</Show>
-        </div>
+        {/* Main content */}
+        <div class="pt-24 md:pt-48">
+          {/* Error message */}
+          <div class="absolute -mt-12 text-center text-3xl text-red-400 italic">
+            <Show when={error() === "passwordMismatch"}>
+              Passwords did not match!
+            </Show>
+            <Show when={error() === "duplicate"}>Email Already Exists!</Show>
+          </div>
 
-        {/* Title */}
-        <div class="py-2 pl-6 text-2xl md:pl-0">
-          {register() ? "Register" : "Login"}
-        </div>
+          {/* Title */}
+          <div class="py-2 pl-6 text-2xl md:pl-0">
+            {register() ? "Register" : "Login"}
+          </div>
 
-        {/* Toggle Register/Login */}
-        <Show
-          when={!register()}
-          fallback={
+          {/* Toggle Register/Login */}
+          <Show
+            when={!register()}
+            fallback={
+              <div class="py-4 text-center md:min-w-[475px]">
+                Already have an account?
+                <button
+                  onClick={() => {
+                    setRegister(false);
+                    setUsePassword(false);
+                  }}
+                  class="text-blue pl-1 underline hover:brightness-125"
+                >
+                  Click here to Login
+                </button>
+              </div>
+            }
+          >
             <div class="py-4 text-center md:min-w-[475px]">
-              Already have an account?
+              Don't have an account yet?
               <button
                 onClick={() => {
-                  setRegister(false);
+                  setRegister(true);
                   setUsePassword(false);
                 }}
                 class="text-blue pl-1 underline hover:brightness-125"
               >
-                Click here to Login
+                Click here to Register
               </button>
-            </div>
-          }
-        >
-          <div class="py-4 text-center md:min-w-[475px]">
-            Don't have an account yet?
-            <button
-              onClick={() => {
-                setRegister(true);
-                setUsePassword(false);
-              }}
-              class="text-blue pl-1 underline hover:brightness-125"
-            >
-              Click here to Register
-            </button>
-          </div>
-        </Show>
-
-        {/* Form */}
-        <form onSubmit={formHandler} class="flex flex-col px-2 py-4">
-          {/* Email input */}
-          <div class="flex justify-center">
-            <div class="input-group mx-4">
-              <input
-                type="text"
-                required
-                ref={emailRef}
-                placeholder=" "
-                class="underlinedInput bg-transparent"
-              />
-              <span class="bar"></span>
-              <label class="underlinedInputLabel">Email</label>
-            </div>
-          </div>
-
-          {/* Password input - shown for login with password or registration */}
-          <Show when={usePassword() || register()}>
-            <div class="-mt-4 flex justify-center">
-              <div class="input-group mx-4 flex">
-                <input
-                  type={showPasswordInput() ? "text" : "password"}
-                  required
-                  minLength={8}
-                  ref={passwordRef}
-                  onInput={register() ? handleNewPasswordChange : undefined}
-                  onBlur={register() ? handlePasswordBlur : undefined}
-                  placeholder=" "
-                  class="underlinedInput bg-transparent"
-                />
-                <span class="bar"></span>
-                <label class="underlinedInputLabel">Password</label>
-              </div>
-              <button
-                onClick={() => {
-                  setShowPasswordInput(!showPasswordInput());
-                  passwordRef?.focus();
-                }}
-                class="absolute mt-14 ml-60"
-                type="button"
-              >
-                <Show
-                  when={showPasswordInput()}
-                  fallback={
-                    <EyeSlash
-                      height={24}
-                      width={24}
-                      strokeWidth={1}
-                      class="stroke-zinc-900 dark:stroke-white"
-                    />
-                  }
-                >
-                  <Eye
-                    height={24}
-                    width={24}
-                    strokeWidth={1}
-                    class="stroke-zinc-900 dark:stroke-white"
-                  />
-                </Show>
-              </button>
-            </div>
-            <div
-              class={`${
-                showPasswordLengthWarning() ? "" : "opacity-0 select-none"
-              } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
-            >
-              Password too short! Min Length: 8
             </div>
           </Show>
 
-          {/* Password confirmation - shown only for registration */}
-          <Show when={register()}>
-            <div class="-mt-4 flex justify-center">
+          {/* Form */}
+          <form onSubmit={formHandler} class="flex flex-col px-2 py-4">
+            {/* Email input */}
+            <div class="flex justify-center">
               <div class="input-group mx-4">
                 <input
-                  type={showPasswordConfInput() ? "text" : "password"}
+                  type="text"
                   required
-                  minLength={8}
-                  ref={passwordConfRef}
-                  onInput={handlePasswordConfChange}
+                  ref={emailRef}
                   placeholder=" "
                   class="underlinedInput bg-transparent"
                 />
                 <span class="bar"></span>
-                <label class="underlinedInputLabel">Confirm Password</label>
+                <label class="underlinedInputLabel">Email</label>
               </div>
-              <button
-                onClick={() => {
-                  setShowPasswordConfInput(!showPasswordConfInput());
-                  passwordConfRef?.focus();
-                }}
-                class="absolute mt-14 ml-60"
-                type="button"
-              >
-                <Show
-                  when={showPasswordConfInput()}
-                  fallback={
-                    <EyeSlash
+            </div>
+
+            {/* Password input - shown for login with password or registration */}
+            <Show when={usePassword() || register()}>
+              <div class="-mt-4 flex justify-center">
+                <div class="input-group mx-4 flex">
+                  <input
+                    type={showPasswordInput() ? "text" : "password"}
+                    required
+                    minLength={8}
+                    ref={passwordRef}
+                    onInput={register() ? handleNewPasswordChange : undefined}
+                    onBlur={register() ? handlePasswordBlur : undefined}
+                    placeholder=" "
+                    class="underlinedInput bg-transparent"
+                  />
+                  <span class="bar"></span>
+                  <label class="underlinedInputLabel">Password</label>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowPasswordInput(!showPasswordInput());
+                    passwordRef?.focus();
+                  }}
+                  class="absolute mt-14 ml-60"
+                  type="button"
+                >
+                  <Show
+                    when={showPasswordInput()}
+                    fallback={
+                      <EyeSlash
+                        height={24}
+                        width={24}
+                        strokeWidth={1}
+                        class="stroke-zinc-900 dark:stroke-white"
+                      />
+                    }
+                  >
+                    <Eye
                       height={24}
                       width={24}
                       strokeWidth={1}
                       class="stroke-zinc-900 dark:stroke-white"
                     />
-                  }
-                >
-                  <Eye
-                    height={24}
-                    width={24}
-                    strokeWidth={1}
-                    class="stroke-zinc-900 dark:stroke-white"
+                  </Show>
+                </button>
+              </div>
+              <div
+                class={`${
+                  showPasswordLengthWarning() ? "" : "opacity-0 select-none"
+                } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
+              >
+                Password too short! Min Length: 8
+              </div>
+            </Show>
+
+            {/* Password confirmation - shown only for registration */}
+            <Show when={register()}>
+              <div class="-mt-4 flex justify-center">
+                <div class="input-group mx-4">
+                  <input
+                    type={showPasswordConfInput() ? "text" : "password"}
+                    required
+                    minLength={8}
+                    ref={passwordConfRef}
+                    onInput={handlePasswordConfChange}
+                    placeholder=" "
+                    class="underlinedInput bg-transparent"
                   />
-                </Show>
-              </button>
+                  <span class="bar"></span>
+                  <label class="underlinedInputLabel">Confirm Password</label>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowPasswordConfInput(!showPasswordConfInput());
+                    passwordConfRef?.focus();
+                  }}
+                  class="absolute mt-14 ml-60"
+                  type="button"
+                >
+                  <Show
+                    when={showPasswordConfInput()}
+                    fallback={
+                      <EyeSlash
+                        height={24}
+                        width={24}
+                        strokeWidth={1}
+                        class="stroke-zinc-900 dark:stroke-white"
+                      />
+                    }
+                  >
+                    <Eye
+                      height={24}
+                      width={24}
+                      strokeWidth={1}
+                      class="stroke-zinc-900 dark:stroke-white"
+                    />
+                  </Show>
+                </button>
+              </div>
+              <div
+                class={`${
+                  !passwordsMatch() &&
+                  passwordLengthSufficient() &&
+                  passwordConfRef &&
+                  passwordConfRef.value.length >= 6
+                    ? ""
+                    : "opacity-0 select-none"
+                } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
+              >
+                Passwords do not match!
+              </div>
+            </Show>
+
+            {/* Remember Me checkbox */}
+            <div class="mx-auto flex pt-4">
+              <input type="checkbox" class="my-auto" ref={rememberMeRef} />
+              <div class="my-auto px-2 text-sm font-normal">Remember Me</div>
             </div>
+
+            {/* Error/Success messages */}
             <div
               class={`${
-                !passwordsMatch() &&
-                passwordLengthSufficient() &&
-                passwordConfRef &&
-                passwordConfRef.value.length >= 6
-                  ? ""
-                  : "opacity-0 select-none"
-              } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
+                showPasswordError()
+                  ? "text-red-500"
+                  : showPasswordSuccess()
+                    ? "text-green-500"
+                    : "opacity-0 select-none"
+              } flex min-h-[16px] justify-center italic transition-opacity duration-300 ease-in-out`}
             >
-              Passwords do not match!
+              <Show when={showPasswordError()}>
+                Credentials did not match any record
+              </Show>
+              <Show when={showPasswordSuccess()}>
+                Login Success! Redirecting...
+              </Show>
+            </div>
+
+            {/* Submit button or countdown timer */}
+            <div class="flex justify-center py-4">
+              <Show
+                when={!register() && !usePassword() && countDown() > 0}
+                fallback={
+                  <button
+                    type="submit"
+                    disabled={loading()}
+                    class={`${
+                      loading()
+                        ? "bg-zinc-400"
+                        : "bg-blue hover:brightness-125 active:scale-90"
+                    } flex w-36 justify-center rounded py-3 text-white transition-all duration-300 ease-out`}
+                  >
+                    {register()
+                      ? "Sign Up"
+                      : usePassword()
+                        ? "Sign In"
+                        : "Get Link"}
+                  </button>
+                }
+              >
+                <CountdownCircleTimer
+                  duration={120}
+                  initialRemainingTime={countDown()}
+                  size={48}
+                  strokeWidth={6}
+                  colors="#60a5fa"
+                >
+                  {renderTime}
+                </CountdownCircleTimer>
+              </Show>
+
+              {/* Toggle password/email link */}
+              <Show when={!register() && !usePassword()}>
+                <button
+                  type="button"
+                  onClick={() => setUsePassword(true)}
+                  class="hover-underline-animation my-auto ml-2 px-2 text-sm"
+                >
+                  Use Password
+                </button>
+              </Show>
+              <Show when={usePassword()}>
+                <button
+                  type="button"
+                  onClick={() => setUsePassword(false)}
+                  class="hover-underline-animation my-auto ml-2 px-2 text-sm"
+                >
+                  Use Email Link
+                </button>
+              </Show>
+            </div>
+          </form>
+
+          {/* Password reset link */}
+          <Show when={usePassword()}>
+            <div class="pb-4 text-center text-sm">
+              Trouble Logging In?{" "}
+              <A
+                class="text-blue underline underline-offset-4 hover:brightness-125"
+                href="/login/request-password-reset"
+              >
+                Reset Password
+              </A>
             </div>
           </Show>
 
-          {/* Remember Me checkbox */}
-          <div class="mx-auto flex pt-4">
-            <input type="checkbox" class="my-auto" ref={rememberMeRef} />
-            <div class="my-auto px-2 text-sm font-normal">Remember Me</div>
-          </div>
-
-          {/* Error/Success messages */}
+          {/* Email sent confirmation */}
           <div
             class={`${
-              showPasswordError()
-                ? "text-red-500"
-                : showPasswordSuccess()
-                  ? "text-green-500"
-                  : "opacity-0 select-none"
-            } flex min-h-[16px] justify-center italic transition-opacity duration-300 ease-in-out`}
+              emailSent() ? "" : "user-select opacity-0"
+            } text-green flex min-h-4 justify-center text-center italic transition-opacity duration-300 ease-in-out`}
           >
-            <Show when={showPasswordError()}>
-              Credentials did not match any record
-            </Show>
-            <Show when={showPasswordSuccess()}>
-              Login Success! Redirecting...
-            </Show>
+            <Show when={emailSent()}>Email Sent!</Show>
           </div>
 
-          {/* Submit button or countdown timer */}
-          <div class="flex justify-center py-4">
-            <Show
-              when={!register() && !usePassword() && countDown() > 0}
-              fallback={
-                <button
-                  type="submit"
-                  disabled={loading()}
-                  class={`${
-                    loading()
-                      ? "bg-zinc-400"
-                      : "bg-blue hover:brightness-125 active:scale-90"
-                  } flex w-36 justify-center rounded py-3 text-white transition-all duration-300 ease-out`}
-                >
-                  {register()
-                    ? "Sign Up"
-                    : usePassword()
-                      ? "Sign In"
-                      : "Get Link"}
-                </button>
-              }
-            >
-              <CountdownCircleTimer
-                duration={120}
-                initialRemainingTime={countDown()}
-                size={48}
-                strokeWidth={6}
-                colors="#60a5fa"
+          {/* Or divider */}
+          <div class="rule-around text-center">Or</div>
+
+          {/* OAuth buttons */}
+          <div class="my-2 flex justify-center">
+            <div class="mx-auto mb-4 flex flex-col">
+              {/* Google OAuth */}
+              <A
+                href={`https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${domain}/api/auth/callback/google&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email`}
+                class="my-4 flex w-80 flex-row justify-between rounded border border-zinc-800 bg-white px-4 py-2 text-black shadow-md transition-all duration-300 ease-out hover:bg-zinc-100 active:scale-95 dark:border dark:border-zinc-50 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
               >
-                {renderTime}
-              </CountdownCircleTimer>
-            </Show>
+                {register() ? "Register " : "Sign in "} with Google
+                <span class="my-auto">
+                  <GoogleLogo height={24} width={24} />
+                </span>
+              </A>
 
-            {/* Toggle password/email link */}
-            <Show when={!register() && !usePassword()}>
-              <button
-                type="button"
-                onClick={() => setUsePassword(true)}
-                class="hover-underline-animation my-auto ml-2 px-2 text-sm"
+              {/* GitHub OAuth */}
+              <A
+                href={`https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${domain}/api/auth/callback/github&scope=user`}
+                class="my-4 flex w-80 flex-row justify-between rounded bg-zinc-600 px-4 py-2 text-white shadow-md transition-all duration-300 ease-out hover:bg-zinc-700 active:scale-95"
               >
-                Use Password
-              </button>
-            </Show>
-            <Show when={usePassword()}>
-              <button
-                type="button"
-                onClick={() => setUsePassword(false)}
-                class="hover-underline-animation my-auto ml-2 px-2 text-sm"
-              >
-                Use Email Link
-              </button>
-            </Show>
-          </div>
-        </form>
-
-        {/* Password reset link */}
-        <Show when={usePassword()}>
-          <div class="pb-4 text-center text-sm">
-            Trouble Logging In?{" "}
-            <A
-              class="text-blue underline underline-offset-4 hover:brightness-125"
-              href="/login/request-password-reset"
-            >
-              Reset Password
-            </A>
-          </div>
-        </Show>
-
-        {/* Email sent confirmation */}
-        <div
-          class={`${
-            emailSent() ? "" : "user-select opacity-0"
-          } text-green flex min-h-4 justify-center text-center italic transition-opacity duration-300 ease-in-out`}
-        >
-          <Show when={emailSent()}>Email Sent!</Show>
-        </div>
-
-        {/* Or divider */}
-        <div class="rule-around text-center">Or</div>
-
-        {/* OAuth buttons */}
-        <div class="my-2 flex justify-center">
-          <div class="mx-auto mb-4 flex flex-col">
-            {/* Google OAuth */}
-            <A
-              href={`https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${domain}/api/auth/callback/google&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email`}
-              class="my-4 flex w-80 flex-row justify-between rounded border border-zinc-800 bg-white px-4 py-2 text-black shadow-md transition-all duration-300 ease-out hover:bg-zinc-100 active:scale-95 dark:border dark:border-zinc-50 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
-            >
-              {register() ? "Register " : "Sign in "} with Google
-              <span class="my-auto">
-                <GoogleLogo height={24} width={24} />
-              </span>
-            </A>
-
-            {/* GitHub OAuth */}
-            <A
-              href={`https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${domain}/api/auth/callback/github&scope=user`}
-              class="my-4 flex w-80 flex-row justify-between rounded bg-zinc-600 px-4 py-2 text-white shadow-md transition-all duration-300 ease-out hover:bg-zinc-700 active:scale-95"
-            >
-              {register() ? "Register " : "Sign in "} with Github
-              <span class="my-auto">
-                <GitHub height={24} width={24} fill="white" />
-              </span>
-            </A>
+                {register() ? "Register " : "Sign in "} with Github
+                <span class="my-auto">
+                  <GitHub height={24} width={24} fill="white" />
+                </span>
+              </A>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import { createSignal, createEffect, onCleanup, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
+import { Title, Meta } from "@solidjs/meta";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { isValidEmail } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
@@ -37,7 +38,10 @@ export default function RequestPasswordResetPage() {
   createEffect(() => {
     const timer = getClientCookie("passwordResetRequested");
     if (timer) {
-      timerInterval = setInterval(() => calcRemainder(timer), 1000) as unknown as number;
+      timerInterval = setInterval(
+        () => calcRemainder(timer),
+        1000
+      ) as unknown as number;
       onCleanup(() => {
         if (timerInterval) {
           clearInterval(timerInterval);
@@ -71,7 +75,7 @@ export default function RequestPasswordResetPage() {
       const response = await fetch("/api/trpc/auth.requestPasswordReset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email })
       });
 
       const result = await response.json();
@@ -115,90 +119,97 @@ export default function RequestPasswordResetPage() {
   };
 
   return (
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div class="pt-24 text-center text-xl font-semibold text-slate-800 dark:text-slate-100">
-        Password Reset Request
-      </div>
-
-      <form
-        onSubmit={(e) => requestPasswordResetTrigger(e)}
-        class="mt-4 flex w-full justify-center"
-      >
-        <div class="flex flex-col justify-center">
-          {/* Email Input */}
-          <div class="input-group mx-4">
-            <input
-              ref={emailRef}
-              name="email"
-              type="text"
-              required
-              disabled={loading()}
-              placeholder=" "
-              class="underlinedInput w-full bg-transparent"
-            />
-            <span class="bar"></span>
-            <label class="underlinedInputLabel">Enter Email</label>
-          </div>
-
-          {/* Countdown Timer or Submit Button */}
-          <Show
-            when={countDown() > 0}
-            fallback={
-              <button
-                type="submit"
-                disabled={loading()}
-                class={`${
-                  loading()
-                    ? "bg-zinc-400"
-                    : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
-                } flex justify-center rounded transition-all duration-300 ease-out my-6 px-4 py-2 text-white font-medium`}
-              >
-                {loading() ? "Sending..." : "Request Password Reset"}
-              </button>
-            }
-          >
-            <div class="mx-auto pt-4">
-              <CountdownCircleTimer
-                isPlaying={true}
-                duration={300}
-                initialRemainingTime={countDown()}
-                size={48}
-                strokeWidth={6}
-                colors="#60a5fa"
-                onComplete={() => false}
-              >
-                {renderTime}
-              </CountdownCircleTimer>
-            </div>
-          </Show>
+    <>
+      <Title>Request Password Reset | Michael Freno</Title>
+      <Meta
+        name="description"
+        content="Request a password reset link to regain access to your account. Enter your email to receive reset instructions."
+      />
+      <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div class="pt-24 text-center text-xl font-semibold text-slate-800 dark:text-slate-100">
+          Password Reset Request
         </div>
-      </form>
 
-      {/* Success Message */}
-      <div
-        class={`${
-          showSuccessMessage() ? "" : "select-none opacity-0"
-        } text-green-500 italic transition-opacity flex justify-center duration-300 ease-in-out`}
-      >
-        If email exists, you will receive an email shortly!
-      </div>
-
-      {/* Error Message */}
-      <Show when={error()}>
-        <div class="flex justify-center mt-4">
-          <div class="text-red-500 text-sm italic">{error()}</div>
-        </div>
-      </Show>
-
-      {/* Back to Login Link */}
-      <div class="flex justify-center mt-6">
-        <A
-          href="/login"
-          class="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-4 transition-colors"
+        <form
+          onSubmit={(e) => requestPasswordResetTrigger(e)}
+          class="mt-4 flex w-full justify-center"
         >
-          Back to Login
-        </A>
+          <div class="flex flex-col justify-center">
+            {/* Email Input */}
+            <div class="input-group mx-4">
+              <input
+                ref={emailRef}
+                name="email"
+                type="text"
+                required
+                disabled={loading()}
+                placeholder=" "
+                class="underlinedInput w-full bg-transparent"
+              />
+              <span class="bar"></span>
+              <label class="underlinedInputLabel">Enter Email</label>
+            </div>
+
+            {/* Countdown Timer or Submit Button */}
+            <Show
+              when={countDown() > 0}
+              fallback={
+                <button
+                  type="submit"
+                  disabled={loading()}
+                  class={`${
+                    loading()
+                      ? "bg-zinc-400"
+                      : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
+                  } my-6 flex justify-center rounded px-4 py-2 font-medium text-white transition-all duration-300 ease-out`}
+                >
+                  {loading() ? "Sending..." : "Request Password Reset"}
+                </button>
+              }
+            >
+              <div class="mx-auto pt-4">
+                <CountdownCircleTimer
+                  isPlaying={true}
+                  duration={300}
+                  initialRemainingTime={countDown()}
+                  size={48}
+                  strokeWidth={6}
+                  colors="#60a5fa"
+                  onComplete={() => false}
+                >
+                  {renderTime}
+                </CountdownCircleTimer>
+              </div>
+            </Show>
+          </div>
+        </form>
+
+        {/* Success Message */}
+        <div
+          class={`${
+            showSuccessMessage() ? "" : "opacity-0 select-none"
+          } flex justify-center text-green-500 italic transition-opacity duration-300 ease-in-out`}
+        >
+          If email exists, you will receive an email shortly!
+        </div>
+
+        {/* Error Message */}
+        <Show when={error()}>
+          <div class="mt-4 flex justify-center">
+            <div class="text-sm text-red-500 italic">{error()}</div>
+          </div>
+        </Show>
+
+        {/* Back to Login Link */}
+        <div class="mt-6 flex justify-center">
+          <A
+            href="/login"
+            class="text-blue-500 underline underline-offset-4 transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Back to Login
+          </A>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

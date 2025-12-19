@@ -1,4 +1,5 @@
 import { createSignal, createEffect, Show, onMount } from "solid-js";
+import { Title, Meta } from "@solidjs/meta";
 import { useNavigate, cache, redirect } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
 import Eye from "~/components/icons/Eye";
@@ -453,389 +454,407 @@ export default function AccountPage() {
   };
 
   return (
-    <div class="bg-base mx-8 min-h-screen md:mx-24 lg:mx-36">
-      <div class="pt-24">
-        <Show
-          when={!loading() && user()}
-          fallback={
-            <div class="mt-[35vh] flex w-full justify-center">
-              <div class="text-text text-xl">Loading...</div>
-            </div>
-          }
-        >
-          {(currentUser) => (
-            <>
-              <div class="text-text mb-8 text-center text-3xl font-bold">
-                Account Settings
-              </div>
+    <>
+      <Title>Account | Michael Freno</Title>
+      <Meta
+        name="description"
+        content="Manage your account settings, update profile information, and configure preferences."
+      />
 
-              {/* Profile Image Section */}
-              <div class="mx-auto mb-8 flex max-w-md justify-center">
-                <div class="flex flex-col py-4">
-                  <div class="mb-2 text-center text-lg font-semibold">
-                    Profile Image
-                  </div>
-                  <div class="flex items-start">
-                    <Dropzone
-                      onDrop={handleImageDrop}
-                      acceptedFiles="image/jpg, image/jpeg, image/png"
-                      fileHolder={profileImageHolder()}
-                      preSet={preSetHolder() || currentUser().image || null}
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      class="z-20 -ml-6 h-fit rounded-full transition-all hover:brightness-125"
-                    >
-                      <XCircle
-                        height={36}
-                        width={36}
-                        stroke="currentColor"
-                        strokeWidth={1}
+      <div class="bg-base mx-8 min-h-screen md:mx-24 lg:mx-36">
+        <div class="pt-24">
+          <Show
+            when={!loading() && user()}
+            fallback={
+              <div class="mt-[35vh] flex w-full justify-center">
+                <div class="text-text text-xl">Loading...</div>
+              </div>
+            }
+          >
+            {(currentUser) => (
+              <>
+                <div class="text-text mb-8 text-center text-3xl font-bold">
+                  Account Settings
+                </div>
+
+                {/* Profile Image Section */}
+                <div class="mx-auto mb-8 flex max-w-md justify-center">
+                  <div class="flex flex-col py-4">
+                    <div class="mb-2 text-center text-lg font-semibold">
+                      Profile Image
+                    </div>
+                    <div class="flex items-start">
+                      <Dropzone
+                        onDrop={handleImageDrop}
+                        acceptedFiles="image/jpg, image/jpeg, image/png"
+                        fileHolder={profileImageHolder()}
+                        preSet={preSetHolder() || currentUser().image || null}
                       />
-                    </button>
-                  </div>
-                  <form onSubmit={setUserImage}>
-                    <button
-                      type="submit"
-                      disabled={
-                        profileImageSetLoading() || !profileImageStateChange()
-                      }
-                      class={`${
-                        profileImageSetLoading() || !profileImageStateChange()
-                          ? "bg-blue cursor-not-allowed brightness-75"
-                          : "bg-blue hover:brightness-125 active:scale-90"
-                      } mt-2 flex w-full justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
-                    >
-                      {profileImageSetLoading() ? "Uploading..." : "Set Image"}
-                    </button>
-                  </form>
-                  <Show when={showImageSuccess()}>
-                    <div class="text-green mt-2 text-center text-sm">
-                      Profile image updated!
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        class="z-20 -ml-6 h-fit rounded-full transition-all hover:brightness-125"
+                      >
+                        <XCircle
+                          height={36}
+                          width={36}
+                          stroke="currentColor"
+                          strokeWidth={1}
+                        />
+                      </button>
                     </div>
-                  </Show>
-                </div>
-              </div>
-
-              <hr class="mx-auto mb-8 max-w-4xl" />
-
-              {/* Email Section */}
-              <div class="mx-auto flex max-w-4xl flex-col gap-6 md:grid md:grid-cols-2">
-                <div class="flex items-center justify-center text-lg md:justify-normal">
-                  <div class="flex flex-col lg:flex-row">
-                    <div class="pr-1 font-semibold whitespace-nowrap">
-                      Current email:
-                    </div>
-                    {currentUser().email ? (
-                      <span>{currentUser().email}</span>
-                    ) : (
-                      <span class="font-light italic underline underline-offset-4">
-                        None Set
-                      </span>
-                    )}
-                  </div>
-                  <Show
-                    when={currentUser().email && !currentUser().emailVerified}
-                  >
-                    <button
-                      onClick={sendEmailVerification}
-                      class="text-red ml-2 text-sm underline transition-all hover:brightness-125"
-                    >
-                      Verify Email
-                    </button>
-                  </Show>
-                </div>
-
-                <form onSubmit={setEmailTrigger} class="mx-auto">
-                  <div class="input-group mx-4">
-                    <input
-                      ref={emailRef}
-                      type="email"
-                      required
-                      disabled={
-                        emailButtonLoading() ||
-                        (currentUser().email !== null &&
-                          !currentUser().emailVerified)
-                      }
-                      placeholder=" "
-                      class="underlinedInput bg-transparent"
-                    />
-                    <span class="bar"></span>
-                    <label class="underlinedInputLabel">Set New Email</label>
-                  </div>
-                  <div class="flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={
-                        emailButtonLoading() ||
-                        (currentUser().email !== null &&
-                          !currentUser().emailVerified)
-                      }
-                      class={`${
-                        emailButtonLoading() ||
-                        (currentUser().email !== null &&
-                          !currentUser().emailVerified)
-                          ? "bg-blue cursor-not-allowed brightness-75"
-                          : "bg-blue hover:brightness-125 active:scale-90"
-                      } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
-                    >
-                      {emailButtonLoading() ? "Submitting..." : "Submit"}
-                    </button>
-                  </div>
-                  <Show when={showEmailSuccess()}>
-                    <div class="text-green mt-2 text-center text-sm">
-                      Email updated!
-                    </div>
-                  </Show>
-                </form>
-
-                {/* Display Name Section */}
-                <div class="flex items-center justify-center text-lg md:justify-normal">
-                  <div class="flex flex-col lg:flex-row">
-                    <div class="pr-1 font-semibold whitespace-nowrap">
-                      Display Name:
-                    </div>
-                    {currentUser().displayName ? (
-                      <span>{currentUser().displayName}</span>
-                    ) : (
-                      <span class="font-light italic underline underline-offset-4">
-                        None Set
-                      </span>
-                    )}
+                    <form onSubmit={setUserImage}>
+                      <button
+                        type="submit"
+                        disabled={
+                          profileImageSetLoading() || !profileImageStateChange()
+                        }
+                        class={`${
+                          profileImageSetLoading() || !profileImageStateChange()
+                            ? "bg-blue cursor-not-allowed brightness-75"
+                            : "bg-blue hover:brightness-125 active:scale-90"
+                        } mt-2 flex w-full justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                      >
+                        {profileImageSetLoading()
+                          ? "Uploading..."
+                          : "Set Image"}
+                      </button>
+                    </form>
+                    <Show when={showImageSuccess()}>
+                      <div class="text-green mt-2 text-center text-sm">
+                        Profile image updated!
+                      </div>
+                    </Show>
                   </div>
                 </div>
 
-                <form onSubmit={setDisplayNameTrigger} class="mx-auto">
-                  <div class="input-group mx-4">
-                    <input
-                      ref={displayNameRef}
-                      type="text"
-                      required
-                      disabled={displayNameButtonLoading()}
-                      placeholder=" "
-                      class="underlinedInput bg-transparent"
-                    />
-                    <span class="bar"></span>
-                    <label class="underlinedInputLabel">
-                      Set {currentUser().displayName ? "New " : ""}Display Name
-                    </label>
-                  </div>
-                  <div class="flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={displayNameButtonLoading()}
-                      class={`${
-                        displayNameButtonLoading()
-                          ? "bg-blue cursor-not-allowed brightness-75"
-                          : "bg-blue hover:brightness-125 active:scale-90"
-                      } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
-                    >
-                      {displayNameButtonLoading() ? "Submitting..." : "Submit"}
-                    </button>
-                  </div>
-                  <Show when={showDisplayNameSuccess()}>
-                    <div class="text-green mt-2 text-center text-sm">
-                      Display name updated!
+                <hr class="mx-auto mb-8 max-w-4xl" />
+
+                {/* Email Section */}
+                <div class="mx-auto flex max-w-4xl flex-col gap-6 md:grid md:grid-cols-2">
+                  <div class="flex items-center justify-center text-lg md:justify-normal">
+                    <div class="flex flex-col lg:flex-row">
+                      <div class="pr-1 font-semibold whitespace-nowrap">
+                        Current email:
+                      </div>
+                      {currentUser().email ? (
+                        <span>{currentUser().email}</span>
+                      ) : (
+                        <span class="font-light italic underline underline-offset-4">
+                          None Set
+                        </span>
+                      )}
                     </div>
-                  </Show>
-                </form>
-              </div>
-
-              {/* Password Change/Set Section */}
-              <form
-                onSubmit={handlePasswordSubmit}
-                class="mt-8 flex w-full justify-center"
-              >
-                <div class="flex w-full max-w-md flex-col justify-center">
-                  <div class="mb-4 text-center text-xl font-semibold">
-                    {currentUser().hasPassword
-                      ? "Change Password"
-                      : "Set Password"}
+                    <Show
+                      when={currentUser().email && !currentUser().emailVerified}
+                    >
+                      <button
+                        onClick={sendEmailVerification}
+                        class="text-red ml-2 text-sm underline transition-all hover:brightness-125"
+                      >
+                        Verify Email
+                      </button>
+                    </Show>
                   </div>
 
-                  <Show when={currentUser().hasPassword}>
-                    <div class="input-group relative mx-4 mb-6">
+                  <form onSubmit={setEmailTrigger} class="mx-auto">
+                    <div class="input-group mx-4">
                       <input
-                        ref={oldPasswordRef}
-                        type={showOldPasswordInput() ? "text" : "password"}
+                        ref={emailRef}
+                        type="email"
                         required
+                        disabled={
+                          emailButtonLoading() ||
+                          (currentUser().email !== null &&
+                            !currentUser().emailVerified)
+                        }
+                        placeholder=" "
+                        class="underlinedInput bg-transparent"
+                      />
+                      <span class="bar"></span>
+                      <label class="underlinedInputLabel">Set New Email</label>
+                    </div>
+                    <div class="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={
+                          emailButtonLoading() ||
+                          (currentUser().email !== null &&
+                            !currentUser().emailVerified)
+                        }
+                        class={`${
+                          emailButtonLoading() ||
+                          (currentUser().email !== null &&
+                            !currentUser().emailVerified)
+                            ? "bg-blue cursor-not-allowed brightness-75"
+                            : "bg-blue hover:brightness-125 active:scale-90"
+                        } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                      >
+                        {emailButtonLoading() ? "Submitting..." : "Submit"}
+                      </button>
+                    </div>
+                    <Show when={showEmailSuccess()}>
+                      <div class="text-green mt-2 text-center text-sm">
+                        Email updated!
+                      </div>
+                    </Show>
+                  </form>
+
+                  {/* Display Name Section */}
+                  <div class="flex items-center justify-center text-lg md:justify-normal">
+                    <div class="flex flex-col lg:flex-row">
+                      <div class="pr-1 font-semibold whitespace-nowrap">
+                        Display Name:
+                      </div>
+                      {currentUser().displayName ? (
+                        <span>{currentUser().displayName}</span>
+                      ) : (
+                        <span class="font-light italic underline underline-offset-4">
+                          None Set
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <form onSubmit={setDisplayNameTrigger} class="mx-auto">
+                    <div class="input-group mx-4">
+                      <input
+                        ref={displayNameRef}
+                        type="text"
+                        required
+                        disabled={displayNameButtonLoading()}
+                        placeholder=" "
+                        class="underlinedInput bg-transparent"
+                      />
+                      <span class="bar"></span>
+                      <label class="underlinedInputLabel">
+                        Set {currentUser().displayName ? "New " : ""}Display
+                        Name
+                      </label>
+                    </div>
+                    <div class="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={displayNameButtonLoading()}
+                        class={`${
+                          displayNameButtonLoading()
+                            ? "bg-blue cursor-not-allowed brightness-75"
+                            : "bg-blue hover:brightness-125 active:scale-90"
+                        } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                      >
+                        {displayNameButtonLoading()
+                          ? "Submitting..."
+                          : "Submit"}
+                      </button>
+                    </div>
+                    <Show when={showDisplayNameSuccess()}>
+                      <div class="text-green mt-2 text-center text-sm">
+                        Display name updated!
+                      </div>
+                    </Show>
+                  </form>
+                </div>
+
+                {/* Password Change/Set Section */}
+                <form
+                  onSubmit={handlePasswordSubmit}
+                  class="mt-8 flex w-full justify-center"
+                >
+                  <div class="flex w-full max-w-md flex-col justify-center">
+                    <div class="mb-4 text-center text-xl font-semibold">
+                      {currentUser().hasPassword
+                        ? "Change Password"
+                        : "Set Password"}
+                    </div>
+
+                    <Show when={currentUser().hasPassword}>
+                      <div class="input-group relative mx-4 mb-6">
+                        <input
+                          ref={oldPasswordRef}
+                          type={showOldPasswordInput() ? "text" : "password"}
+                          required
+                          disabled={passwordChangeLoading()}
+                          placeholder=" "
+                          class="underlinedInput w-full bg-transparent pr-10"
+                        />
+                        <span class="bar"></span>
+                        <label class="underlinedInputLabel">Old Password</label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowOldPasswordInput(!showOldPasswordInput())
+                          }
+                          class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
+                        >
+                          <Show
+                            when={showOldPasswordInput()}
+                            fallback={<Eye />}
+                          >
+                            <EyeSlash />
+                          </Show>
+                        </button>
+                      </div>
+                    </Show>
+
+                    <div class="input-group relative mx-4 mb-2">
+                      <input
+                        ref={newPasswordRef}
+                        type={showPasswordInput() ? "text" : "password"}
+                        required
+                        onInput={handleNewPasswordChange}
+                        onBlur={handlePasswordBlur}
                         disabled={passwordChangeLoading()}
                         placeholder=" "
                         class="underlinedInput w-full bg-transparent pr-10"
                       />
                       <span class="bar"></span>
-                      <label class="underlinedInputLabel">Old Password</label>
+                      <label class="underlinedInputLabel">New Password</label>
                       <button
                         type="button"
                         onClick={() =>
-                          setShowOldPasswordInput(!showOldPasswordInput())
+                          setShowPasswordInput(!showPasswordInput())
                         }
                         class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
                       >
-                        <Show when={showOldPasswordInput()} fallback={<Eye />}>
+                        <Show when={showPasswordInput()} fallback={<Eye />}>
                           <EyeSlash />
                         </Show>
                       </button>
                     </div>
-                  </Show>
 
-                  <div class="input-group relative mx-4 mb-2">
-                    <input
-                      ref={newPasswordRef}
-                      type={showPasswordInput() ? "text" : "password"}
-                      required
-                      onInput={handleNewPasswordChange}
-                      onBlur={handlePasswordBlur}
-                      disabled={passwordChangeLoading()}
-                      placeholder=" "
-                      class="underlinedInput w-full bg-transparent pr-10"
-                    />
-                    <span class="bar"></span>
-                    <label class="underlinedInputLabel">New Password</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowPasswordInput(!showPasswordInput())}
-                      class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
-                    >
-                      <Show when={showPasswordInput()} fallback={<Eye />}>
-                        <EyeSlash />
-                      </Show>
-                    </button>
-                  </div>
-
-                  <Show when={showPasswordLengthWarning()}>
-                    <div class="text-red mb-4 text-center text-sm">
-                      Password too short! Min Length: 8
-                    </div>
-                  </Show>
-
-                  <div class="input-group relative mx-4 mb-2">
-                    <input
-                      ref={newPasswordConfRef}
-                      type={showPasswordConfInput() ? "text" : "password"}
-                      required
-                      onInput={handlePasswordConfChange}
-                      disabled={passwordChangeLoading()}
-                      placeholder=" "
-                      class="underlinedInput w-full bg-transparent pr-10"
-                    />
-                    <span class="bar"></span>
-                    <label class="underlinedInputLabel">
-                      Password Confirmation
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowPasswordConfInput(!showPasswordConfInput())
-                      }
-                      class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
-                    >
-                      <Show when={showPasswordConfInput()} fallback={<Eye />}>
-                        <EyeSlash />
-                      </Show>
-                    </button>
-                  </div>
-
-                  <Show
-                    when={
-                      !passwordsMatch() &&
-                      passwordLengthSufficient() &&
-                      newPasswordConfRef &&
-                      newPasswordConfRef.value.length >= 6
-                    }
-                  >
-                    <div class="text-red mb-4 text-center text-sm">
-                      Passwords do not match!
-                    </div>
-                  </Show>
-
-                  <button
-                    type="submit"
-                    disabled={passwordChangeLoading() || !passwordsMatch()}
-                    class={`${
-                      passwordChangeLoading() || !passwordsMatch()
-                        ? "bg-blue cursor-not-allowed brightness-75"
-                        : "bg-blue hover:brightness-125 active:scale-90"
-                    } my-6 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
-                  >
-                    {passwordChangeLoading() ? "Setting..." : "Set"}
-                  </button>
-
-                  <Show when={passwordError()}>
-                    <div class="text-red text-center text-sm">
-                      {currentUser().hasPassword
-                        ? "Password did not match record"
-                        : "Error setting password"}
-                    </div>
-                  </Show>
-
-                  <Show when={showPasswordSuccess()}>
-                    <div class="text-green text-center text-sm">
-                      Password {currentUser().hasPassword ? "changed" : "set"}{" "}
-                      successfully!
-                    </div>
-                  </Show>
-                </div>
-              </form>
-
-              <hr class="mt-8 mb-8" />
-
-              {/* Delete Account Section */}
-              <div class="mx-auto max-w-2xl py-8">
-                <div class="bg-red w-full rounded-md px-6 pt-8 pb-4 shadow-md brightness-75">
-                  <div class="pb-4 text-center text-xl font-semibold">
-                    Delete Account
-                  </div>
-                  <div class="text-crust mb-4 text-center text-sm">
-                    Warning: This will delete all account information and is
-                    irreversible
-                  </div>
-
-                  <form onSubmit={deleteAccountTrigger}>
-                    <div class="flex w-full justify-center">
-                      <div class="input-group delete mx-4">
-                        <input
-                          ref={deleteAccountPasswordRef}
-                          type="password"
-                          required
-                          disabled={deleteAccountButtonLoading()}
-                          placeholder=" "
-                          class="underlinedInput bg-transparent"
-                        />
-                        <span class="bar"></span>
-                        <label class="underlinedInputLabel">
-                          Enter Password
-                        </label>
+                    <Show when={showPasswordLengthWarning()}>
+                      <div class="text-red mb-4 text-center text-sm">
+                        Password too short! Min Length: 8
                       </div>
+                    </Show>
+
+                    <div class="input-group relative mx-4 mb-2">
+                      <input
+                        ref={newPasswordConfRef}
+                        type={showPasswordConfInput() ? "text" : "password"}
+                        required
+                        onInput={handlePasswordConfChange}
+                        disabled={passwordChangeLoading()}
+                        placeholder=" "
+                        class="underlinedInput w-full bg-transparent pr-10"
+                      />
+                      <span class="bar"></span>
+                      <label class="underlinedInputLabel">
+                        Password Confirmation
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowPasswordConfInput(!showPasswordConfInput())
+                        }
+                        class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
+                      >
+                        <Show when={showPasswordConfInput()} fallback={<Eye />}>
+                          <EyeSlash />
+                        </Show>
+                      </button>
                     </div>
+
+                    <Show
+                      when={
+                        !passwordsMatch() &&
+                        passwordLengthSufficient() &&
+                        newPasswordConfRef &&
+                        newPasswordConfRef.value.length >= 6
+                      }
+                    >
+                      <div class="text-red mb-4 text-center text-sm">
+                        Passwords do not match!
+                      </div>
+                    </Show>
 
                     <button
                       type="submit"
-                      disabled={deleteAccountButtonLoading()}
+                      disabled={passwordChangeLoading() || !passwordsMatch()}
                       class={`${
-                        deleteAccountButtonLoading()
-                          ? "bg-red cursor-not-allowed brightness-75"
-                          : "bg-red hover:brightness-125 active:scale-90"
-                      } mx-auto mt-4 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                        passwordChangeLoading() || !passwordsMatch()
+                          ? "bg-blue cursor-not-allowed brightness-75"
+                          : "bg-blue hover:brightness-125 active:scale-90"
+                      } my-6 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                     >
-                      {deleteAccountButtonLoading()
-                        ? "Deleting..."
-                        : "Delete Account"}
+                      {passwordChangeLoading() ? "Setting..." : "Set"}
                     </button>
 
-                    <Show when={passwordDeletionError()}>
-                      <div class="text-red mt-2 text-center text-sm">
-                        Password did not match record
+                    <Show when={passwordError()}>
+                      <div class="text-red text-center text-sm">
+                        {currentUser().hasPassword
+                          ? "Password did not match record"
+                          : "Error setting password"}
                       </div>
                     </Show>
-                  </form>
+
+                    <Show when={showPasswordSuccess()}>
+                      <div class="text-green text-center text-sm">
+                        Password {currentUser().hasPassword ? "changed" : "set"}{" "}
+                        successfully!
+                      </div>
+                    </Show>
+                  </div>
+                </form>
+
+                <hr class="mt-8 mb-8" />
+
+                {/* Delete Account Section */}
+                <div class="mx-auto max-w-2xl py-8">
+                  <div class="bg-red w-full rounded-md px-6 pt-8 pb-4 shadow-md brightness-75">
+                    <div class="pb-4 text-center text-xl font-semibold">
+                      Delete Account
+                    </div>
+                    <div class="text-crust mb-4 text-center text-sm">
+                      Warning: This will delete all account information and is
+                      irreversible
+                    </div>
+
+                    <form onSubmit={deleteAccountTrigger}>
+                      <div class="flex w-full justify-center">
+                        <div class="input-group delete mx-4">
+                          <input
+                            ref={deleteAccountPasswordRef}
+                            type="password"
+                            required
+                            disabled={deleteAccountButtonLoading()}
+                            placeholder=" "
+                            class="underlinedInput bg-transparent"
+                          />
+                          <span class="bar"></span>
+                          <label class="underlinedInputLabel">
+                            Enter Password
+                          </label>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={deleteAccountButtonLoading()}
+                        class={`${
+                          deleteAccountButtonLoading()
+                            ? "bg-red cursor-not-allowed brightness-75"
+                            : "bg-red hover:brightness-125 active:scale-90"
+                        } mx-auto mt-4 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                      >
+                        {deleteAccountButtonLoading()
+                          ? "Deleting..."
+                          : "Delete Account"}
+                      </button>
+
+                      <Show when={passwordDeletionError()}>
+                        <div class="text-red mt-2 text-center text-sm">
+                          Password did not match record
+                        </div>
+                      </Show>
+                    </form>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </Show>
+              </>
+            )}
+          </Show>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
