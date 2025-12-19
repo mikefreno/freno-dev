@@ -34,7 +34,6 @@ export default function Resume() {
       />
 
       <main class="flex h-screen w-full flex-col">
-        <Title>Resume - Freno.dev</Title>
         <div class="flex h-full w-full items-center justify-center">
           <iframe
             ref={iframeRef}
