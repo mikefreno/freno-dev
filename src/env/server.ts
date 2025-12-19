@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-// Check if we're running in a server context
-const isServer = typeof process !== "undefined" && process.env !== undefined;
-
 const serverEnvSchema = z.object({
   // Server-side environment variables
   NODE_ENV: z.enum(["development", "test", "production"]),
@@ -27,46 +24,11 @@ const serverEnvSchema = z.object({
   LINEAGE_OFFLINE_SERIALIZATION_SECRET: z.string().min(1),
   GITEA_URL: z.string().min(1),
   GITEA_TOKEN: z.string().min(1),
-  GITHUB_API_TOKEN: z.string().min(1),
-  // Client-side variables accessible on server
-  VITE_DOMAIN: z.string().min(1).optional(),
-  VITE_AWS_BUCKET_STRING: z.string().min(1).optional(),
-  VITE_GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-  VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1).optional(),
-  VITE_GITHUB_CLIENT_ID: z.string().min(1).optional(),
-  VITE_WEBSOCKET: z.string().min(1).optional()
-});
-
-const clientEnvSchema = z.object({
-  // Client-side environment variables (using VITE_ prefix for SolidStart)
-  VITE_DOMAIN: z.string().min(1),
-  VITE_AWS_BUCKET_STRING: z.string().min(1),
-  VITE_GOOGLE_CLIENT_ID: z.string().min(1),
-  VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1),
-  VITE_GITHUB_CLIENT_ID: z.string().min(1),
-  VITE_WEBSOCKET: z.string().min(1)
-});
-
-// Combined environment schema
-export const envSchema = z.object({
-  server: serverEnvSchema,
-  client: clientEnvSchema
+  GITHUB_API_TOKEN: z.string().min(1)
 });
 
 // Type inference
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
-export type ClientEnv = z.infer<typeof clientEnvSchema>;
-
-// Custom error class for better error handling
-class EnvironmentError extends Error {
-  constructor(
-    message: string,
-    public errors?: z.ZodFormattedError<any>
-  ) {
-    super(message);
-    this.name = "EnvironmentError";
-  }
-}
 
 // Validation function for server-side with detailed error messages
 export const validateServerEnv = (
@@ -103,9 +65,7 @@ export const validateServerEnv = (
       let errorMessage = "Environment validation failed:\n";
 
       if (missingVars.length > 0) {
-        errorMessage += `Missing required variables: ${missingVars.join(
-          ", "
-        )}\n`;
+        errorMessage += `Missing required variables: ${missingVars.join(", ")}\n`;
       }
 
       if (invalidVars.length > 0) {
@@ -115,162 +75,36 @@ export const validateServerEnv = (
         });
       }
 
-      throw new EnvironmentError(errorMessage, formattedErrors);
+      console.error(errorMessage);
+      throw new Error(errorMessage);
     }
-    throw new EnvironmentError(
-      "Environment validation failed with unknown error",
-      undefined
-    );
+    console.error("Environment validation failed with unknown error:", error);
+    throw new Error("Environment validation failed with unknown error");
   }
 };
 
-// Validation function for client-side (runtime) with detailed error messages
-export const validateClientEnv = (
-  envVars: Record<string, string | undefined>
-): ClientEnv => {
+// Validate and export environment variables directly
+// This happens once at module load time on the server
+const validateAndExportEnv = (): ServerEnv => {
   try {
-    return clientEnvSchema.parse(envVars);
+    const validated = validateServerEnv(process.env);
+    console.log("✅ Environment validation successful");
+    return validated;
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      const formattedErrors = error.format();
-      const missingVars = Object.entries(formattedErrors)
-        .filter(
-          ([key, value]) =>
-            key !== "_errors" &&
-            typeof value === "object" &&
-            value._errors?.length > 0 &&
-            value._errors[0] === "Required"
-        )
-        .map(([key, _]) => key);
-
-      const invalidVars = Object.entries(formattedErrors)
-        .filter(
-          ([key, value]) =>
-            key !== "_errors" &&
-            typeof value === "object" &&
-            value._errors?.length > 0 &&
-            value._errors[0] !== "Required"
-        )
-        .map(([key, value]) => ({
-          key,
-          error: value._errors[0]
-        }));
-
-      let errorMessage = "Client environment validation failed:\n";
-
-      if (missingVars.length > 0) {
-        errorMessage += `Missing required variables: ${missingVars.join(
-          ", "
-        )}\n`;
-      }
-
-      if (invalidVars.length > 0) {
-        errorMessage += "Invalid values:\n";
-        invalidVars.forEach(({ key, error }) => {
-          errorMessage += `  ${key}: ${error}\n`;
-        });
-      }
-
-      throw new EnvironmentError(errorMessage, formattedErrors);
-    }
-    throw new EnvironmentError(
-      "Client environment validation failed with unknown error",
-      undefined
-    );
+    console.error("❌ Environment validation failed:", error);
+    throw error;
   }
 };
 
-// Lazy environment validation - only validates when accessed
-let _cachedEnv: ServerEnv | null = null;
-let _validationAttempted = false;
-
-const validateEnvLazy = (): ServerEnv => {
-  if (!_validationAttempted) {
-    _validationAttempted = true;
-
-    // If not on server, return empty object (will throw on access)
-    if (!isServer) {
-      console.warn("⚠️ Server environment accessed in browser context");
-      _cachedEnv = {} as ServerEnv;
-      return _cachedEnv;
-    }
-
-    try {
-      // Validate server environment variables using process.env
-      _cachedEnv = validateServerEnv(process.env);
-      console.log("✅ Environment validation successful");
-    } catch (error) {
-      if (error instanceof EnvironmentError) {
-        console.error("❌ Environment validation failed:", error.message);
-        if (error.errors) {
-          console.error(
-            "Detailed errors:",
-            JSON.stringify(error.errors, null, 2)
-          );
-        }
-        throw new Error(`Environment validation failed: ${error.message}`);
-      }
-      console.error("❌ Unexpected environment validation error:", error);
-      throw error;
-    }
-  }
-
-  if (!_cachedEnv) {
-    throw new Error("Environment validation failed");
-  }
-
-  return _cachedEnv;
-};
-
-export const env = new Proxy({} as ServerEnv, {
-  get(_target, prop: string) {
-    if (!isServer) {
-      throw new Error(
-        `Cannot access server environment variable "${prop}" in browser context. This is a development error - server-only code is being bundled into the client.`
-      );
-    }
-    const validatedEnv = validateEnvLazy();
-    return validatedEnv[prop as keyof ServerEnv];
-  },
-  has(_target, prop: string) {
-    if (!isServer) return false;
-    try {
-      const validatedEnv = validateEnvLazy();
-      return prop in validatedEnv;
-    } catch {
-      return false;
-    }
-  }
-});
-
-// For client-side validation (useful in components)
-export const getClientEnvValidation = () => {
-  try {
-    return validateClientEnv(import.meta.env);
-  } catch (error) {
-    if (error instanceof EnvironmentError) {
-      console.error("❌ Client environment validation failed:", error.message);
-      throw new Error(`Client environment validation failed: ${error.message}`);
-    }
-    throw new Error("Client environment validation failed with unknown error");
-  }
-};
+export const env = validateAndExportEnv();
 
 // Helper function to check if a variable is missing
 export const isMissingEnvVar = (varName: string): boolean => {
   return !process.env[varName] || process.env[varName]?.trim() === "";
 };
 
-// Helper function to check if a client variable is missing
-export const isMissingClientEnvVar = (varName: string): boolean => {
-  return !import.meta.env[varName] || import.meta.env[varName]?.trim() === "";
-};
-
-// Helper function to get all missing environment variables
-export const getMissingEnvVars = (): {
-  server: string[];
-  client: string[];
-} => {
+// Helper function to get all missing server environment variables
+export const getMissingEnvVars = (): string[] => {
   const requiredServerVars = [
     "NODE_ENV",
     "ADMIN_EMAIL",
@@ -297,19 +131,5 @@ export const getMissingEnvVars = (): {
     "GITHUB_API_TOKEN"
   ];
 
-  const requiredClientVars = [
-    "VITE_DOMAIN",
-    "VITE_AWS_BUCKET_STRING",
-    "VITE_GOOGLE_CLIENT_ID",
-    "VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE",
-    "VITE_GITHUB_CLIENT_ID",
-    "VITE_WEBSOCKET"
-  ];
-
-  return {
-    server: requiredServerVars.filter((varName) => isMissingEnvVar(varName)),
-    client: requiredClientVars.filter((varName) =>
-      isMissingClientEnvVar(varName)
-    )
-  };
+  return requiredServerVars.filter((varName) => isMissingEnvVar(varName));
 };
