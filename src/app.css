@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap");
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
@@ -68,10 +67,6 @@
   --color-base: #fbf1c7;
   --color-mantle: #f3eac1;
   --color-crust: #e7deb7;
-
-  --font-mono:
-    "Source Code Pro", ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
-    Consolas, "DejaVu Sans Mono", monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -130,10 +125,6 @@
     --color-base: #1e1e2e;
     --color-mantle: #141620;
     --color-crust: #0e0f16;
-
-    --font-mono:
-      "Source Code Pro", ui-monospace, "Cascadia Code", "Source Code Pro",
-      Menlo, Consolas, "DejaVu Sans Mono", monospace;
   }
 }
 
