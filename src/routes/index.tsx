@@ -46,7 +46,7 @@ export default function Home() {
             <div class="pb-4">Some of my recent projects:</div>
             <div class="flex flex-col items-center gap-2 2xl:flex-row 2xl:items-start 2xl:justify-center">
               {/* FlexLöve */}
-              <div class="border-surface0 flex w-full max-w-md flex-col gap-2 rounded-md border-2 p-4 text-center">
+              <div class="border-surface0 flex w-full max-w-md flex-col rounded-md border-2 p-4 text-center">
                 <div>My LÖVE UI library</div>
                 <a
                   href="https://github.com/mikefreno/flexlove"
@@ -89,7 +89,7 @@ export default function Home() {
               </div>
 
               {/* Life and Lineage */}
-              <div class="border-surface0 flex w-full max-w-3/4 flex-col gap-2 rounded-md border-2 p-4 text-center">
+              <div class="border-surface0 flex w-full max-w-3/4 flex-col gap-2 rounded-md border-2 p-4 text-center 2xl:mr-4">
                 <div>My mobile game:</div>
                 <a
                   class="text-blue hover-underline-animation mx-auto w-fit"
