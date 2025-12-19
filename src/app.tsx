@@ -159,32 +159,8 @@ function AppLayout(props: { children: any }) {
 
   return (
     <>
-      <Show when={!barsInitialized()}>
-        <div class="bg-base fixed inset-0 z-100">
-          <TerminalSplash />
-        </div>
-      </Show>
-
-      <div
-        class="flex max-w-screen flex-row"
-        style={{
-          opacity: barsInitialized() ? "1" : "0",
-          transition: "opacity 0.3s ease-in-out"
-        }}
-      >
-        <LeftBar />
-        <div
-          class="relative min-h-screen rounded-t-lg shadow-2xl"
-          style={{
-            width: `${centerWidth()}px`,
-            "margin-left": `${leftBarSize()}px`
-          }}
-        >
-          <Show when={barsInitialized()} fallback={<TerminalSplash />}>
-            <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
-          </Show>
-        </div>
-        <RightBar />
+      <div class="flex max-w-screen flex-row">
+        <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
       </div>
     </>
   );
