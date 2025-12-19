@@ -12,9 +12,7 @@ export function Typewriter(props: {
   let cursorRef: HTMLDivElement | undefined;
   const [isTyping, setIsTyping] = createSignal(false);
   const [isDelaying, setIsDelaying] = createSignal(delay > 0);
-  const [keepAliveCountdown, setKeepAliveCountdown] = createSignal(
-    typeof keepAlive === "number" ? keepAlive : -1
-  );
+  const [shouldHide, setShouldHide] = createSignal(false);
   const resolved = children(() => props.children);
 
   onMount(() => {
@@ -67,6 +65,12 @@ export function Typewriter(props: {
       cursorRef.style.height = `${firstChar.offsetHeight}px`;
     }
 
+    // Listen for animation end to hide cursor
+    const handleAnimationEnd = () => {
+      setShouldHide(true);
+      cursorRef?.removeEventListener("animationend", handleAnimationEnd);
+    };
+
     const startReveal = () => {
       setIsTyping(true); // Switch to typing cursor
 
@@ -102,17 +106,17 @@ export function Typewriter(props: {
           // Typing finished, switch to block cursor
           setIsTyping(false);
 
-          // Start keepAlive countdown if it's a number
+          // Start keepAlive timer if it's a number
           if (typeof keepAlive === "number") {
-            const keepAliveInterval = setInterval(() => {
-              setKeepAliveCountdown((prev) => {
-                if (prev <= 1000) {
-                  clearInterval(keepAliveInterval);
-                  return 0;
-                }
-                return prev - 1000;
-              });
-            }, 1000);
+            // Attach animation end listener
+            cursorRef?.addEventListener("animationend", handleAnimationEnd);
+
+            // Trigger the animation with finite iteration count
+            const durationSeconds = keepAlive / 1000;
+            const iterations = Math.ceil(durationSeconds);
+            if (cursorRef) {
+              cursorRef.style.animation = `blink 1s ${iterations}`;
+            }
           }
         }
       };
@@ -132,22 +136,16 @@ export function Typewriter(props: {
   });
 
   const getCursorClass = () => {
-    if (isDelaying()) return "cursor-block"; // Blinking block during delay
-    if (isTyping()) return "cursor-typing"; // Thin line while typing
-
-    // After typing is done
-    if (typeof keepAlive === "number") {
-      return keepAliveCountdown() > 0 ? "cursor-block" : "hidden";
-    }
+    if (isDelaying()) return "cursor-block";
+    if (isTyping()) return "cursor-typing";
+    if (shouldHide()) return "hidden";
     return keepAlive ? "cursor-block" : "hidden";
   };
 
   return (
     <div ref={containerRef} class={props.class}>
       {resolved()}
-      <span ref={cursorRef} class={getCursorClass()}>
-        {" "}
-      </span>
+      <span ref={cursorRef} class={getCursorClass()}></span>
     </div>
   );
 }

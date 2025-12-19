@@ -1,10 +1,11 @@
-import { Show, createSignal, onCleanup } from "solid-js";
+import { Show, createSignal, createEffect, onCleanup } from "solid-js";
 import { useNavigate, query } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getPrivilegeLevel, getUserID } from "~/server/utils";
 import { api } from "~/lib/api";
+import { debounce } from "~/lib/client-utils";
 import Dropzone from "~/components/blog/Dropzone";
 import TextEditor from "~/components/blog/TextEditor";
 import TagMaker from "~/components/blog/TagMaker";
@@ -41,8 +42,6 @@ export default function CreatePost() {
   const [error, setError] = createSignal("");
   const [showAutoSaveMessage, setShowAutoSaveMessage] = createSignal(false);
   const [hasSaved, setHasSaved] = createSignal(false);
-
-  let autosaveInterval: number | undefined;
 
   const autoSave = async () => {
     const titleVal = title();
@@ -90,18 +89,26 @@ export default function CreatePost() {
     }, 5000);
   };
 
-  // Set up autosave interval (2 minutes)
-  autosaveInterval = setInterval(
-    () => {
-      autoSave();
-    },
-    2 * 60 * 1000
-  ) as unknown as number;
+  // Debounced auto-save (1 second after last change)
+  const debouncedAutoSave = debounce(autoSave, 1000);
+
+  // Track changes to trigger auto-save
+  createEffect(() => {
+    // Track all relevant fields
+    const titleVal = title();
+    const subtitleVal = subtitle();
+    const bodyVal = body();
+    const tagsVal = tags();
+    const publishedVal = published();
+
+    // Only trigger auto-save if we have at least title and body
+    if (titleVal && bodyVal) {
+      debouncedAutoSave();
+    }
+  });
 
   onCleanup(() => {
-    if (autosaveInterval) {
-      clearInterval(autosaveInterval);
-    }
+    debouncedAutoSave.cancel();
   });
 
   const handleBannerImageDrop = (acceptedFiles: File[]) => {

@@ -5,6 +5,7 @@ import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getPrivilegeLevel, getUserID } from "~/server/utils";
 import { api } from "~/lib/api";
+import { debounce } from "~/lib/client-utils";
 import { ConnectionFactory } from "~/server/utils";
 import Dropzone from "~/components/blog/Dropzone";
 import TextEditor from "~/components/blog/TextEditor";
@@ -60,8 +61,7 @@ export default function EditPost() {
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal("");
   const [showAutoSaveMessage, setShowAutoSaveMessage] = createSignal(false);
-
-  let autosaveInterval: number | undefined;
+  const [isInitialLoad, setIsInitialLoad] = createSignal(true);
 
   // Populate form when data loads
   createEffect(() => {
@@ -78,6 +78,9 @@ export default function EditPost() {
         const tagValues = (postData.tags as any[]).map((t) => t.value);
         setTags(tagValues);
       }
+
+      // Mark initial load as complete after data is loaded
+      setIsInitialLoad(false);
     }
   });
 
@@ -127,18 +130,26 @@ export default function EditPost() {
     }, 5000);
   };
 
-  // Set up autosave interval (2 minutes)
-  autosaveInterval = setInterval(
-    () => {
-      autoSave();
-    },
-    2 * 60 * 1000
-  ) as unknown as number;
+  // Debounced auto-save (1 second after last change)
+  const debouncedAutoSave = debounce(autoSave, 1000);
+
+  // Track changes to trigger auto-save (but not on initial load)
+  createEffect(() => {
+    // Track all relevant fields
+    const titleVal = title();
+    const subtitleVal = subtitle();
+    const bodyVal = body();
+    const tagsVal = tags();
+    const publishedVal = published();
+
+    // Only trigger auto-save if not initial load and we have title
+    if (!isInitialLoad() && titleVal) {
+      debouncedAutoSave();
+    }
+  });
 
   onCleanup(() => {
-    if (autosaveInterval) {
-      clearInterval(autosaveInterval);
-    }
+    debouncedAutoSave.cancel();
   });
 
   const handleBannerImageDrop = (acceptedFiles: File[]) => {

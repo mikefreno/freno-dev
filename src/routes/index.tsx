@@ -40,7 +40,7 @@ export default function Home() {
           <div>My Collection of By-the-ways:</div>
         </Typewriter>
         <Typewriter speed={50} keepAlive={false}>
-          <ul class="list-disc pl-8">
+          <ul class="list-disc pr-8">
             <li>I use Neovim</li>
             <li>I use Arch Linux</li>
             <li>I use Rust</li>

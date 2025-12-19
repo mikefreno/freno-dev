@@ -80,3 +80,34 @@ export function insertSoftHyphens(
     })
     .join(" ");
 }
+
+/**
+ * Creates a debounced function that delays execution until after specified delay
+ * @param fn - The function to debounce
+ * @param delay - Delay in milliseconds
+ * @returns Debounced function with cancel method
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  delay: number
+): T & { cancel: () => void } {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const debounced = function (this: any, ...args: Parameters<T>) {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  } as T & { cancel: () => void };
+
+  debounced.cancel = () => {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+      timeoutId = undefined;
+    }
+  };
+
+  return debounced;
+}
