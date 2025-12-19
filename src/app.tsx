@@ -174,7 +174,7 @@ function AppLayout(props: { children: any }) {
       >
         <LeftBar />
         <div
-          class="relative min-h-screen rounded-t-lg shadow-2xl"
+          class="bg-base relative min-h-screen rounded-t-lg shadow-2xl"
           style={{
             width: `${centerWidth()}px`,
             "margin-left": `${leftBarSize()}px`
