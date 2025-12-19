@@ -23,8 +23,9 @@ export const gitActivityRouter = createTRPCRouter({
     .input(z.object({ limit: z.number().default(3) }))
     .query(async ({ input }) => {
       try {
-        const response = await fetch(
-          `https://api.github.com/users/MikeFreno/events`,
+        // Get user's repositories sorted by most recently pushed
+        const reposResponse = await fetch(
+          `https://api.github.com/users/MikeFreno/repos?sort=pushed&per_page=10`,
           {
             headers: {
               Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
@@ -33,31 +34,68 @@ export const gitActivityRouter = createTRPCRouter({
           }
         );
 
-        if (!response.ok) {
-          throw new Error(`GitHub commits API error: ${response.statusText}`);
+        if (!reposResponse.ok) {
+          throw new Error(
+            `GitHub repos API error: ${reposResponse.statusText}`
+          );
         }
 
-        const events = await response.json();
+        const repos = await reposResponse.json();
+        const allCommits: GitCommit[] = [];
 
-        // Filter for push events and extract commits
-        const commits: GitCommit[] = [];
-        for (const event of events) {
-          if (event.type === "PushEvent" && commits.length < input.limit) {
-            for (const commit of event.payload.commits || []) {
-              if (commits.length >= input.limit) break;
-              commits.push({
-                sha: commit.sha.substring(0, 7),
-                message: commit.message.split("\n")[0], // First line only
-                author: event.actor.login,
-                date: event.created_at,
-                repo: event.repo.name,
-                url: `https://github.com/${event.repo.name}/commit/${commit.sha}`
-              });
+        // Fetch recent commits from each repo
+        for (const repo of repos) {
+          if (allCommits.length >= input.limit * 3) break; // Get extra to sort later
+
+          try {
+            const commitsResponse = await fetch(
+              `https://api.github.com/repos/${repo.full_name}/commits?per_page=5`,
+              {
+                headers: {
+                  Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
+                  Accept: "application/vnd.github.v3+json"
+                }
+              }
+            );
+
+            if (commitsResponse.ok) {
+              const commits = await commitsResponse.json();
+              for (const commit of commits) {
+                // Filter for commits by the authenticated user
+                if (
+                  commit.author?.login === "MikeFreno" ||
+                  commit.commit?.author?.email?.includes("mike")
+                ) {
+                  allCommits.push({
+                    sha: commit.sha?.substring(0, 7) || "unknown",
+                    message:
+                      commit.commit?.message?.split("\n")[0] || "No message",
+                    author:
+                      commit.commit?.author?.name ||
+                      commit.author?.login ||
+                      "Unknown",
+                    date:
+                      commit.commit?.author?.date || new Date().toISOString(),
+                    repo: repo.full_name,
+                    url: `https://github.com/${repo.full_name}/commit/${commit.sha}`
+                  });
+                }
+              }
             }
+          } catch (error) {
+            console.error(
+              `Error fetching commits for ${repo.full_name}:`,
+              error
+            );
           }
         }
 
-        return commits;
+        // Sort by date and return the most recent
+        allCommits.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        return allCommits.slice(0, input.limit);
       } catch (error) {
         console.error("Error fetching GitHub commits:", error);
         return [];
