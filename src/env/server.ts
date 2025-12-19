@@ -177,29 +177,42 @@ export const validateClientEnv = (
   }
 };
 
-// Environment validation for server startup with better error reporting
-export const env = (() => {
-  try {
-    // Validate server environment variables using process.env
-    const validatedServerEnv = validateServerEnv(process.env);
+// Lazy environment validation - only validates when accessed
+let _cachedEnv: ServerEnv | null = null;
+let _validationAttempted = false;
 
-    console.log("✅ Environment validation successful");
-    return validatedServerEnv;
-  } catch (error) {
-    if (error instanceof EnvironmentError) {
-      console.error("❌ Environment validation failed:", error.message);
-      if (error.errors) {
-        console.error(
-          "Detailed errors:",
-          JSON.stringify(error.errors, null, 2)
-        );
+export const env = new Proxy({} as ServerEnv, {
+  get(_target, prop: string) {
+    // Only validate once
+    if (!_validationAttempted) {
+      _validationAttempted = true;
+      try {
+        // Validate server environment variables using process.env
+        _cachedEnv = validateServerEnv(process.env);
+        console.log("✅ Environment validation successful");
+      } catch (error) {
+        if (error instanceof EnvironmentError) {
+          console.error("❌ Environment validation failed:", error.message);
+          if (error.errors) {
+            console.error(
+              "Detailed errors:",
+              JSON.stringify(error.errors, null, 2)
+            );
+          }
+          throw new Error(`Environment validation failed: ${error.message}`);
+        }
+        console.error("❌ Unexpected environment validation error:", error);
+        throw new Error("Unexpected environment validation error occurred");
       }
-      throw new Error(`Environment validation failed: ${error.message}`);
     }
-    console.error("❌ Unexpected environment validation error:", error);
-    throw new Error("Unexpected environment validation error occurred");
+
+    if (!_cachedEnv) {
+      throw new Error("Environment validation has not been performed yet");
+    }
+
+    return _cachedEnv[prop as keyof ServerEnv];
   }
-})();
+});
 
 // For client-side validation (useful in components)
 export const getClientEnvValidation = () => {

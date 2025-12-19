@@ -6,18 +6,18 @@ const spinnerChars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "�
 export function TerminalSplash() {
   const [showing, setShowing] = createSignal(0);
 
-  // Only run animation on client
-  if (!isServer) {
-    onMount(() => {
-      const interval = setInterval(() => {
-        setShowing((prev) => (prev + 1) % spinnerChars.length);
-      }, 50);
+  onMount(() => {
+    // Only run animation on client
+    if (isServer) return;
 
-      onCleanup(() => {
-        clearInterval(interval);
-      });
+    const interval = setInterval(() => {
+      setShowing((prev) => (prev + 1) % spinnerChars.length);
+    }, 50);
+
+    onCleanup(() => {
+      clearInterval(interval);
     });
-  }
+  });
 
   return (
     <div class="bg-base flex min-h-screen w-full flex-col items-center justify-center overflow-hidden">

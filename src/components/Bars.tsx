@@ -1,14 +1,6 @@
 import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
-import {
-  onMount,
-  createEffect,
-  createSignal,
-  createResource,
-  Show,
-  For,
-  Suspense
-} from "solid-js";
+import { onMount, createEffect, createSignal, Show, For } from "solid-js";
 import { api } from "~/lib/api";
 import { TerminalSplash } from "./TerminalSplash";
 import { insertSoftHyphens } from "~/lib/client-utils";
@@ -18,40 +10,47 @@ import { RecentCommits } from "./RecentCommits";
 import { ActivityHeatmap } from "./ActivityHeatmap";
 import { DarkModeToggle } from "./DarkModeToggle";
 
+interface GitCommit {
+  sha: string;
+  message: string;
+  author: string;
+  date: string;
+  repo: string;
+  url: string;
+}
+
+interface ContributionDay {
+  date: string;
+  count: number;
+}
+
 export function RightBarContent() {
-  const [githubCommits] = createResource(async () => {
-    try {
-      return await api.gitActivity.getGitHubCommits.query({ limit: 3 });
-    } catch (error) {
-      console.error("Failed to fetch GitHub commits:", error);
-      return [];
-    }
-  });
+  const [githubCommits, setGithubCommits] = createSignal<GitCommit[]>([]);
+  const [giteaCommits, setGiteaCommits] = createSignal<GitCommit[]>([]);
+  const [githubActivity, setGithubActivity] = createSignal<ContributionDay[]>(
+    []
+  );
+  const [giteaActivity, setGiteaActivity] = createSignal<ContributionDay[]>([]);
+  const [loading, setLoading] = createSignal(true);
 
-  const [giteaCommits] = createResource(async () => {
+  onMount(async () => {
+    // Fetch all data client-side only to avoid hydration mismatch
     try {
-      return await api.gitActivity.getGiteaCommits.query({ limit: 3 });
-    } catch (error) {
-      console.error("Failed to fetch Gitea commits:", error);
-      return [];
-    }
-  });
+      const [ghCommits, gtCommits, ghActivity, gtActivity] = await Promise.all([
+        api.gitActivity.getGitHubCommits.query({ limit: 3 }).catch(() => []),
+        api.gitActivity.getGiteaCommits.query({ limit: 3 }).catch(() => []),
+        api.gitActivity.getGitHubActivity.query().catch(() => []),
+        api.gitActivity.getGiteaActivity.query().catch(() => [])
+      ]);
 
-  const [githubActivity] = createResource(async () => {
-    try {
-      return await api.gitActivity.getGitHubActivity.query();
+      setGithubCommits(ghCommits);
+      setGiteaCommits(gtCommits);
+      setGithubActivity(ghActivity);
+      setGiteaActivity(gtActivity);
     } catch (error) {
-      console.error("Failed to fetch GitHub activity:", error);
-      return [];
-    }
-  });
-
-  const [giteaActivity] = createResource(async () => {
-    try {
-      return await api.gitActivity.getGiteaActivity.query();
-    } catch (error) {
-      console.error("Failed to fetch Gitea activity:", error);
-      return [];
+      console.error("Failed to fetch git activity:", error);
+    } finally {
+      setLoading(false);
     }
   });
 
@@ -111,29 +110,27 @@ export function RightBarContent() {
       </Typewriter>
 
       {/* Git Activity Section */}
-      <Suspense fallback={<TerminalSplash />}>
-        <hr class="border-overlay0" />
-        <div class="flex min-w-0 flex-col gap-6 px-4 pt-6">
-          <RecentCommits
-            commits={githubCommits()}
-            title="Recent GitHub Commits"
-            loading={githubCommits.loading}
-          />
-          <ActivityHeatmap
-            contributions={githubActivity()}
-            title="GitHub Activity"
-          />
-          <RecentCommits
-            commits={giteaCommits()}
-            title="Recent Gitea Commits"
-            loading={giteaCommits.loading}
-          />
-          <ActivityHeatmap
-            contributions={giteaActivity()}
-            title="Gitea Activity"
-          />
-        </div>
-      </Suspense>
+      <hr class="border-overlay0" />
+      <div class="flex min-w-0 flex-col gap-6 px-4 pt-6">
+        <RecentCommits
+          commits={githubCommits()}
+          title="Recent GitHub Commits"
+          loading={loading()}
+        />
+        <ActivityHeatmap
+          contributions={githubActivity()}
+          title="GitHub Activity"
+        />
+        <RecentCommits
+          commits={giteaCommits()}
+          title="Recent Gitea Commits"
+          loading={loading()}
+        />
+        <ActivityHeatmap
+          contributions={giteaActivity()}
+          title="Gitea Activity"
+        />
+      </div>
     </div>
   );
 }
