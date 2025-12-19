@@ -3,6 +3,7 @@ import { useBars } from "~/context/bars";
 import { onMount, createEffect, createSignal, Show, For } from "solid-js";
 import { api } from "~/lib/api";
 import { TerminalSplash } from "./TerminalSplash";
+import { insertSoftHyphens } from "~/lib/client-utils";
 
 export function LeftBar() {
   const { setLeftBarSize, leftBarVisible, setLeftBarVisible } = useBars();
@@ -201,11 +202,8 @@ export function LeftBar() {
                               alt="post-cover"
                               class="float-right mb-1 ml-2 h-12 w-16 rounded object-cover"
                             />
-                            <span
-                              class="inline wrap-break-word hyphens-auto"
-                              style="hyphens: auto;"
-                            >
-                              {post.title.replace(/_/g, " ")}
+                            <span class="inline wrap-break-word hyphens-auto">
+                              {insertSoftHyphens(post.title.replace(/_/g, " "))}
                             </span>
                           </div>
 
