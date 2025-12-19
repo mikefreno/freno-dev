@@ -189,7 +189,20 @@
 
 :root {
   font-family: "Source Code Pro", monospace;
+  transition-property: all;
+  transition-timing-function: var(
+    --tw-ease,
+    var(--default-transition-timing-function) /* cubic-bezier(0.4, 0, 0.2, 1) */
+  );
+  transition-duration: var(
+    --tw-duration,
+    var(--default-transition-duration) /* 150ms */
+  );
+  transition-duration: 500ms;
+  syntax: "*";
+  inherits: false;
 }
+
 ::selection {
   background-color: var(--color-text);
   color: var(--color-crust);

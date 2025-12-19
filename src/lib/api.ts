@@ -5,8 +5,7 @@ const getBaseUrl = () => {
   // Browser: use relative URL
   if (typeof window !== "undefined") return "";
 
-  //const domain = import.meta.env.VITE_DOMAIN;
-  const domain = "https://freno.dev"; // try to hardcode it for now
+  const domain = import.meta.env.VITE_DOMAIN;
   if (domain) return domain;
 
   return `http://localhost:${process.env.PORT ?? 3000}`;
