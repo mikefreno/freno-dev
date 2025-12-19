@@ -1,97 +1,59 @@
 import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
-import { onMount, createEffect, createSignal, Show, For } from "solid-js";
+import {
+  onMount,
+  createEffect,
+  createSignal,
+  createResource,
+  Show,
+  For,
+  Suspense
+} from "solid-js";
 import { api } from "~/lib/api";
 import { TerminalSplash } from "./TerminalSplash";
 import { insertSoftHyphens } from "~/lib/client-utils";
 import GitHub from "./icons/GitHub";
 import LinkedIn from "./icons/LinkedIn";
-import MoonIcon from "./icons/MoonIcon";
-import SunIcon from "./icons/SunIcon";
 import { RecentCommits } from "./RecentCommits";
 import { ActivityHeatmap } from "./ActivityHeatmap";
+import { DarkModeToggle } from "./DarkModeToggle";
 
 export function RightBarContent() {
-  const [isDark, setIsDark] = createSignal(false);
-  const [githubCommits, setGithubCommits] = createSignal<any[] | undefined>(
-    undefined
-  );
-  const [giteaCommits, setGiteaCommits] = createSignal<any[] | undefined>(
-    undefined
-  );
-  const [githubActivity, setGithubActivity] = createSignal<any[] | undefined>(
-    undefined
-  );
-  const [giteaActivity, setGiteaActivity] = createSignal<any[] | undefined>(
-    undefined
-  );
-
-  onMount(async () => {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-
-    if (prefersDark) {
-      setIsDark(true);
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    } else {
-      setIsDark(false);
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    }
-
-    // Fetch GitHub activity
+  const [githubCommits] = createResource(async () => {
     try {
-      const commits = await api.gitActivity.getGitHubCommits.query({
-        limit: 3
-      });
-      setGithubCommits(commits as any[]);
+      return await api.gitActivity.getGitHubCommits.query({ limit: 3 });
     } catch (error) {
       console.error("Failed to fetch GitHub commits:", error);
-      setGithubCommits([]);
-    }
-
-    try {
-      const activity = await api.gitActivity.getGitHubActivity.query();
-      setGithubActivity(activity as any[]);
-    } catch (error) {
-      console.error("Failed to fetch GitHub activity:", error);
-      setGithubActivity([]);
-    }
-
-    // Fetch Gitea activity
-    try {
-      const commits = await api.gitActivity.getGiteaCommits.query({
-        limit: 3
-      });
-      setGiteaCommits(commits as any[]);
-    } catch (error) {
-      console.error("Failed to fetch Gitea commits:", error);
-      setGiteaCommits([]);
-    }
-
-    try {
-      const activity = await api.gitActivity.getGiteaActivity.query();
-      setGiteaActivity(activity as any[]);
-    } catch (error) {
-      console.error("Failed to fetch Gitea activity:", error);
-      setGiteaActivity([]);
+      return [];
     }
   });
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDark();
-    setIsDark(newDarkMode);
-
-    if (newDarkMode) {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    } else {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
+  const [giteaCommits] = createResource(async () => {
+    try {
+      return await api.gitActivity.getGiteaCommits.query({ limit: 3 });
+    } catch (error) {
+      console.error("Failed to fetch Gitea commits:", error);
+      return [];
     }
-  };
+  });
+
+  const [githubActivity] = createResource(async () => {
+    try {
+      return await api.gitActivity.getGitHubActivity.query();
+    } catch (error) {
+      console.error("Failed to fetch GitHub activity:", error);
+      return [];
+    }
+  });
+
+  const [giteaActivity] = createResource(async () => {
+    try {
+      return await api.gitActivity.getGiteaActivity.query();
+    } catch (error) {
+      console.error("Failed to fetch Gitea activity:", error);
+      return [];
+    }
+  });
 
   return (
     <div class="text-text flex h-full flex-col gap-6 overflow-y-auto pb-6">
@@ -149,53 +111,31 @@ export function RightBarContent() {
       </Typewriter>
 
       {/* Git Activity Section */}
-      <div class="border-overlay0 flex flex-col gap-6 border-t px-4 pt-6">
-        <RecentCommits
-          commits={githubCommits()}
-          title="Recent GitHub Commits"
-          loading={githubCommits() === undefined}
-        />
-        <ActivityHeatmap
-          contributions={githubActivity()}
-          title="GitHub Activity"
-        />
-        <div>
-          <a href="https://git.freno.me">Self-hosted Git!</a>
+      <Suspense fallback={<TerminalSplash />}>
+        <div class="border-overlay0 flex flex-col gap-6 border-t px-4 pt-6">
+          <RecentCommits
+            commits={githubCommits()}
+            title="Recent GitHub Commits"
+            loading={githubCommits.loading}
+          />
+          <ActivityHeatmap
+            contributions={githubActivity()}
+            title="GitHub Activity"
+          />
+          <div>
+            <a href="https://git.freno.me">Self-hosted Git!</a>
+          </div>
+          <RecentCommits
+            commits={giteaCommits()}
+            title="Recent Gitea Commits"
+            loading={giteaCommits.loading}
+          />
+          <ActivityHeatmap
+            contributions={giteaActivity()}
+            title="Gitea Activity"
+          />
         </div>
-        <RecentCommits
-          commits={giteaCommits()}
-          title="Recent Gitea Commits"
-          loading={giteaCommits() === undefined}
-        />
-        <ActivityHeatmap
-          contributions={giteaActivity()}
-          title="Gitea Activity"
-        />
-      </div>
-
-      {/* Dark Mode Toggle */}
-      <div class="border-overlay0 mt-auto border-t px-4 pt-6">
-        <button
-          onClick={toggleDarkMode}
-          class="hover:bg-surface0 flex w-full items-center gap-3 rounded-lg p-3 transition-all duration-200 ease-in-out hover:scale-105"
-          aria-label="Toggle dark mode"
-        >
-          <Show
-            when={isDark()}
-            fallback={<SunIcon size={24} fill="var(--color-text)" />}
-          >
-            <MoonIcon size={24} fill="var(--color-text)" />
-          </Show>
-          <span class="font-semibold">
-            <Show
-              when={isDark()}
-              fallback={<Typewriter keepAlive={false}>Light Mode</Typewriter>}
-            >
-              <Typewriter keepAlive={false}>Dark Mode</Typewriter>
-            </Show>
-          </span>
-        </button>
-      </div>
+      </Suspense>
     </div>
   );
 }
@@ -433,6 +373,11 @@ export function LeftBar() {
                 </li>
               </ul>
             </Typewriter>
+
+            {/* Dark Mode Toggle */}
+            <div class="border-overlay0 border-t pt-6">
+              <DarkModeToggle />
+            </div>
 
             {/* RightBar content on mobile */}
             <div class="border-overlay0 border-t pt-8 md:hidden">
