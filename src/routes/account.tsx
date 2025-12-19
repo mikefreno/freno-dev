@@ -3,6 +3,9 @@ import { useNavigate, cache, redirect } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
 import Eye from "~/components/icons/Eye";
 import EyeSlash from "~/components/icons/EyeSlash";
+import XCircle from "~/components/icons/XCircle";
+import Dropzone from "~/components/blog/Dropzone";
+import AddImageToS3 from "~/lib/s3upload";
 import { validatePassword, isValidEmail } from "~/lib/validation";
 import { checkAuthStatus } from "~/server/utils";
 
@@ -71,6 +74,17 @@ export default function AccountPage() {
     createSignal(false);
   const [showPasswordSuccess, setShowPasswordSuccess] = createSignal(false);
 
+  // Profile image state
+  const [profileImage, setProfileImage] = createSignal<Blob | undefined>(
+    undefined
+  );
+  const [profileImageHolder, setProfileImageHolder] = createSignal<
+    string | null
+  >(null);
+  const [profileImageStateChange, setProfileImageStateChange] =
+    createSignal(false);
+  const [preSetHolder, setPreSetHolder] = createSignal<string | null>(null);
+
   // Form refs
   let oldPasswordRef: HTMLInputElement | undefined;
   let newPasswordRef: HTMLInputElement | undefined;
@@ -90,6 +104,10 @@ export default function AccountPage() {
         const result = await response.json();
         if (result.result?.data) {
           setUser(result.result.data);
+          // Set preset holder if user has existing image
+          if (result.result.data.image) {
+            setPreSetHolder(result.result.data.image);
+          }
         }
       }
     } catch (err) {
@@ -98,6 +116,82 @@ export default function AccountPage() {
       setLoading(false);
     }
   });
+
+  // Profile image handlers
+  const handleImageDrop = (acceptedFiles: File[]) => {
+    acceptedFiles.forEach((file: File) => {
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const str = reader.result as string;
+        setProfileImageHolder(str);
+        setProfileImageStateChange(true);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = () => {
+    setProfileImage(undefined);
+    setProfileImageHolder(null);
+    if (preSetHolder()) {
+      setProfileImageStateChange(true);
+      setPreSetHolder(null);
+    } else {
+      setProfileImageStateChange(false);
+    }
+  };
+
+  const setUserImage = async (e: Event) => {
+    e.preventDefault();
+    setProfileImageSetLoading(true);
+    setShowImageSuccess(false);
+
+    const currentUser = user();
+    if (!currentUser) {
+      setProfileImageSetLoading(false);
+      return;
+    }
+
+    try {
+      let imageUrl = "";
+
+      // Upload new image if one was selected
+      if (profileImage()) {
+        const imageKey = await AddImageToS3(
+          profileImage()!,
+          currentUser.id,
+          "user"
+        );
+        imageUrl = imageKey || "";
+      }
+
+      // Update user profile image
+      const response = await fetch("/api/trpc/user.updateProfileImage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.result?.data) {
+        setUser(result.result.data);
+        setShowImageSuccess(true);
+        setProfileImageStateChange(false);
+        setTimeout(() => setShowImageSuccess(false), 3000);
+
+        // Update preSetHolder with new image
+        setPreSetHolder(imageUrl || null);
+      } else {
+        alert("Error updating profile image!");
+      }
+    } catch (err) {
+      console.error("Profile image update error:", err);
+      alert("Error updating profile image! Check console.");
+    } finally {
+      setProfileImageSetLoading(false);
+    }
+  };
 
   // Email update handler
   const setEmailTrigger = async (e: Event) => {
@@ -375,6 +469,57 @@ export default function AccountPage() {
                 Account Settings
               </div>
 
+              {/* Profile Image Section */}
+              <div class="mx-auto mb-8 flex max-w-md justify-center">
+                <div class="flex flex-col py-4">
+                  <div class="mb-2 text-center text-lg font-semibold">
+                    Profile Image
+                  </div>
+                  <div class="flex items-start">
+                    <Dropzone
+                      onDrop={handleImageDrop}
+                      acceptedFiles="image/jpg, image/jpeg, image/png"
+                      fileHolder={profileImageHolder()}
+                      preSet={preSetHolder() || currentUser().image || null}
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      class="z-20 -ml-6 h-fit rounded-full transition-all hover:brightness-125"
+                    >
+                      <XCircle
+                        height={36}
+                        width={36}
+                        stroke="currentColor"
+                        strokeWidth={1}
+                      />
+                    </button>
+                  </div>
+                  <form onSubmit={setUserImage}>
+                    <button
+                      type="submit"
+                      disabled={
+                        profileImageSetLoading() || !profileImageStateChange()
+                      }
+                      class={`${
+                        profileImageSetLoading() || !profileImageStateChange()
+                          ? "bg-blue cursor-not-allowed brightness-75"
+                          : "bg-blue hover:brightness-125 active:scale-90"
+                      } mt-2 flex w-full justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                    >
+                      {profileImageSetLoading() ? "Uploading..." : "Set Image"}
+                    </button>
+                  </form>
+                  <Show when={showImageSuccess()}>
+                    <div class="text-green mt-2 text-center text-sm">
+                      Profile image updated!
+                    </div>
+                  </Show>
+                </div>
+              </div>
+
+              <hr class="mx-auto mb-8 max-w-4xl" />
+
               {/* Email Section */}
               <div class="mx-auto flex max-w-4xl flex-col gap-6 md:grid md:grid-cols-2">
                 <div class="flex items-center justify-center text-lg md:justify-normal">
@@ -431,7 +576,7 @@ export default function AccountPage() {
                         emailButtonLoading() ||
                         (currentUser().email !== null &&
                           !currentUser().emailVerified)
-                          ? "bg-blue cursor-not-allowed brightness-50"
+                          ? "bg-blue cursor-not-allowed brightness-75"
                           : "bg-blue hover:brightness-125 active:scale-90"
                       } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                     >
@@ -482,7 +627,7 @@ export default function AccountPage() {
                       disabled={displayNameButtonLoading()}
                       class={`${
                         displayNameButtonLoading()
-                          ? "bg-blue cursor-not-allowed brightness-50"
+                          ? "bg-blue cursor-not-allowed brightness-75"
                           : "bg-blue hover:brightness-125 active:scale-90"
                       } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                     >
@@ -610,7 +755,7 @@ export default function AccountPage() {
                     disabled={passwordChangeLoading() || !passwordsMatch()}
                     class={`${
                       passwordChangeLoading() || !passwordsMatch()
-                        ? "bg-blue cursor-not-allowed brightness-50"
+                        ? "bg-blue cursor-not-allowed brightness-75"
                         : "bg-blue hover:brightness-125 active:scale-90"
                     } my-6 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                   >
@@ -670,7 +815,7 @@ export default function AccountPage() {
                       disabled={deleteAccountButtonLoading()}
                       class={`${
                         deleteAccountButtonLoading()
-                          ? "bg-red cursor-not-allowed brightness-50"
+                          ? "bg-red cursor-not-allowed brightness-75"
                           : "bg-red hover:brightness-125 active:scale-90"
                       } mx-auto mt-4 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
                     >

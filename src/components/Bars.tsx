@@ -7,8 +7,7 @@ import {
   createResource,
   Show,
   For,
-  Suspense,
-  createMemo
+  Suspense
 } from "solid-js";
 import { api } from "~/lib/api";
 import { TerminalSplash } from "./TerminalSplash";
@@ -57,8 +56,8 @@ export function RightBarContent() {
   });
 
   return (
-    <div class="text-text flex h-full w-min flex-col gap-6 overflow-y-auto pb-6">
-      <Typewriter keepAlive={false} class="z-50 px-4 pt-4">
+    <div class="text-text flex h-full flex-col gap-6 overflow-y-auto pb-6 md:w-min">
+      <Typewriter keepAlive={false} class="z-50 px-4 md:pt-4">
         <ul class="flex flex-col gap-4">
           <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
             <a href="/contact">Contact Me</a>
@@ -113,7 +112,8 @@ export function RightBarContent() {
 
       {/* Git Activity Section */}
       <Suspense fallback={<TerminalSplash />}>
-        <div class="border-overlay0 flex min-w-0 flex-col gap-6 border-t px-4 pt-6">
+        <hr class="border-overlay0" />
+        <div class="flex min-w-0 flex-col gap-6 px-4 pt-6">
           <RecentCommits
             commits={githubCommits()}
             title="Recent GitHub Commits"
@@ -405,7 +405,7 @@ export function LeftBar() {
           {/* Navigation Links */}
           <div class="mt-auto">
             <Typewriter keepAlive={false}>
-              <ul class="flex flex-row gap-4 py-6 md:flex-col">
+              <ul class="flex flex-col gap-4 py-6">
                 <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
                   <a href="/">Home</a>
                 </li>
@@ -442,13 +442,12 @@ export function LeftBar() {
               </ul>
             </Typewriter>
 
-            {/* Dark Mode Toggle */}
-            <div class="border-overlay0 border-t pt-6">
+            <hr class="border-overlay0 -mx-4 my-auto" />
+            <div class="my-auto">
               <DarkModeToggle />
             </div>
 
-            {/* RightBar content on mobile */}
-            <div class="border-overlay0 border-t pt-8 md:hidden">
+            <div class="border-overlay0 -mx-4 border-t pt-8 md:hidden">
               <RightBarContent />
             </div>
           </div>

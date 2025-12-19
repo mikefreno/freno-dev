@@ -469,10 +469,10 @@ export default function TextEditor(props: TextEditorProps) {
                 onClick={() =>
                   instance().chain().focus().setHorizontalRule().run()
                 }
-                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                class="bg-surface0 hover:bg-surface1 rounded px-3 py-1 text-xs"
                 title="Horizontal Rule"
               >
-                ─ HR
+                ━━ HR
               </button>
             </div>
           </>
@@ -481,7 +481,7 @@ export default function TextEditor(props: TextEditorProps) {
 
       <div
         ref={editorRef}
-        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto min-h-[400px] min-w-full focus:outline-none"
+        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl [&_hr]:border-surface2 mx-auto min-h-[400px] min-w-full focus:outline-none [&_hr]:my-8 [&_hr]:border-t-2"
       />
     </div>
   );

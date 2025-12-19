@@ -2,7 +2,12 @@ import { createTRPCRouter, publicProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { env } from "~/env/server";
-import { ConnectionFactory, getUserID, hashPassword, checkPassword } from "~/server/utils";
+import {
+  ConnectionFactory,
+  getUserID,
+  hashPassword,
+  checkPassword
+} from "~/server/utils";
 import { setCookie } from "vinxi/http";
 import type { User } from "~/types/user";
 import { toUserProfile } from "~/types/user";
@@ -15,20 +20,20 @@ export const userRouter = createTRPCRouter({
     if (!userId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "Not authenticated",
+        message: "Not authenticated"
       });
     }
 
     const conn = ConnectionFactory();
     const res = await conn.execute({
       sql: "SELECT * FROM User WHERE id = ?",
-      args: [userId],
+      args: [userId]
     });
 
     if (res.rows.length === 0) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: "User not found",
+        message: "User not found"
       });
     }
 
@@ -45,7 +50,7 @@ export const userRouter = createTRPCRouter({
       if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Not authenticated",
+          message: "Not authenticated"
         });
       }
 
@@ -54,20 +59,20 @@ export const userRouter = createTRPCRouter({
 
       await conn.execute({
         sql: "UPDATE User SET email = ?, email_verified = ? WHERE id = ?",
-        args: [email, 0, userId],
+        args: [email, 0, userId]
       });
 
       // Fetch updated user
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
-        args: [userId],
+        args: [userId]
       });
 
       const user = res.rows[0] as unknown as User;
 
       // Set email cookie for verification flow
       setCookie(ctx.event.nativeEvent, "emailToken", email, {
-        path: "/",
+        path: "/"
       });
 
       return toUserProfile(user);
@@ -82,7 +87,7 @@ export const userRouter = createTRPCRouter({
       if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Not authenticated",
+          message: "Not authenticated"
         });
       }
 
@@ -91,13 +96,13 @@ export const userRouter = createTRPCRouter({
 
       await conn.execute({
         sql: "UPDATE User SET display_name = ? WHERE id = ?",
-        args: [displayName, userId],
+        args: [displayName, userId]
       });
 
       // Fetch updated user
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
-        args: [userId],
+        args: [userId]
       });
 
       const user = res.rows[0] as unknown as User;
@@ -106,14 +111,14 @@ export const userRouter = createTRPCRouter({
 
   // Update profile image
   updateProfileImage: publicProcedure
-    .input(z.object({ imageUrl: z.string().url() }))
+    .input(z.object({ imageUrl: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
 
       if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Not authenticated",
+          message: "Not authenticated"
         });
       }
 
@@ -122,13 +127,13 @@ export const userRouter = createTRPCRouter({
 
       await conn.execute({
         sql: "UPDATE User SET image = ? WHERE id = ?",
-        args: [imageUrl, userId],
+        args: [imageUrl, userId]
       });
 
       // Fetch updated user
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
-        args: [userId],
+        args: [userId]
       });
 
       const user = res.rows[0] as unknown as User;
@@ -141,8 +146,8 @@ export const userRouter = createTRPCRouter({
       z.object({
         oldPassword: z.string(),
         newPassword: z.string().min(8),
-        newPasswordConfirmation: z.string().min(8),
-      }),
+        newPasswordConfirmation: z.string().min(8)
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
@@ -150,7 +155,7 @@ export const userRouter = createTRPCRouter({
       if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Not authenticated",
+          message: "Not authenticated"
         });
       }
 
@@ -159,20 +164,20 @@ export const userRouter = createTRPCRouter({
       if (newPassword !== newPasswordConfirmation) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Password Mismatch",
+          message: "Password Mismatch"
         });
       }
 
       const conn = ConnectionFactory();
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
-        args: [userId],
+        args: [userId]
       });
 
       if (res.rows.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found",
+          message: "User not found"
         });
       }
 
@@ -181,16 +186,19 @@ export const userRouter = createTRPCRouter({
       if (!user.password_hash) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "No password set",
+          message: "No password set"
         });
       }
 
-      const passwordMatch = await checkPassword(oldPassword, user.password_hash);
+      const passwordMatch = await checkPassword(
+        oldPassword,
+        user.password_hash
+      );
 
       if (!passwordMatch) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Password did not match record",
+          message: "Password did not match record"
         });
       }
 
@@ -198,17 +206,17 @@ export const userRouter = createTRPCRouter({
       const newPasswordHash = await hashPassword(newPassword);
       await conn.execute({
         sql: "UPDATE User SET password_hash = ? WHERE id = ?",
-        args: [newPasswordHash, userId],
+        args: [newPasswordHash, userId]
       });
 
       // Clear session cookies (force re-login)
       setCookie(ctx.event.nativeEvent, "emailToken", "", {
         maxAge: 0,
-        path: "/",
+        path: "/"
       });
       setCookie(ctx.event.nativeEvent, "userIDToken", "", {
         maxAge: 0,
-        path: "/",
+        path: "/"
       });
 
       return { success: true, message: "success" };
@@ -219,8 +227,8 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         newPassword: z.string().min(8),
-        newPasswordConfirmation: z.string().min(8),
-      }),
+        newPasswordConfirmation: z.string().min(8)
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
@@ -228,7 +236,7 @@ export const userRouter = createTRPCRouter({
       if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Not authenticated",
+          message: "Not authenticated"
         });
       }
 
@@ -237,20 +245,20 @@ export const userRouter = createTRPCRouter({
       if (newPassword !== newPasswordConfirmation) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Password Mismatch",
+          message: "Password Mismatch"
         });
       }
 
       const conn = ConnectionFactory();
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
-        args: [userId],
+        args: [userId]
       });
 
       if (res.rows.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found",
+          message: "User not found"
         });
       }
 
@@ -259,7 +267,7 @@ export const userRouter = createTRPCRouter({
       if (user.password_hash) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Password exists",
+          message: "Password exists"
         });
       }
 
@@ -267,17 +275,17 @@ export const userRouter = createTRPCRouter({
       const passwordHash = await hashPassword(newPassword);
       await conn.execute({
         sql: "UPDATE User SET password_hash = ? WHERE id = ?",
-        args: [passwordHash, userId],
+        args: [passwordHash, userId]
       });
 
       // Clear session cookies (force re-login)
       setCookie(ctx.event.nativeEvent, "emailToken", "", {
         maxAge: 0,
-        path: "/",
+        path: "/"
       });
       setCookie(ctx.event.nativeEvent, "userIDToken", "", {
         maxAge: 0,
-        path: "/",
+        path: "/"
       });
 
       return { success: true, message: "success" };
@@ -292,7 +300,7 @@ export const userRouter = createTRPCRouter({
       if (!userId) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Not authenticated",
+          message: "Not authenticated"
         });
       }
 
@@ -301,13 +309,13 @@ export const userRouter = createTRPCRouter({
 
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
-        args: [userId],
+        args: [userId]
       });
 
       if (res.rows.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found",
+          message: "User not found"
         });
       }
 
@@ -316,7 +324,7 @@ export const userRouter = createTRPCRouter({
       if (!user.password_hash) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Password required",
+          message: "Password required"
         });
       }
 
@@ -325,7 +333,7 @@ export const userRouter = createTRPCRouter({
       if (!passwordMatch) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Password Did Not Match",
+          message: "Password Did Not Match"
         });
       }
 
@@ -339,19 +347,19 @@ export const userRouter = createTRPCRouter({
           provider = ?, 
           image = ? 
           WHERE id = ?`,
-        args: [null, 0, null, "user deleted", null, null, userId],
+        args: [null, 0, null, "user deleted", null, null, userId]
       });
 
       // Clear session cookies
       setCookie(ctx.event.nativeEvent, "emailToken", "", {
         maxAge: 0,
-        path: "/",
+        path: "/"
       });
       setCookie(ctx.event.nativeEvent, "userIDToken", "", {
         maxAge: 0,
-        path: "/",
+        path: "/"
       });
 
       return { success: true, message: "deleted" };
-    }),
+    })
 });

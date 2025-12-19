@@ -105,15 +105,14 @@ export default function ContactPage() {
       <div class="w-full py-12">
         <RevealDropDown title={"Questions about Life and Lineage?"}>
           <div>
-            Feel free to use the form{" "}
-            {viewer() === "lineage" ? "below" : "above"}, I will respond as
-            quickly as possible, however, you may find an answer to your
-            question in the following.
+            Feel free to use the form below, I will respond as quickly as
+            possible, however, you may find an answer to your question in the
+            following.
           </div>
           <ol>
             <div class="py-2">
               <div class="pb-2 text-lg">
-                <span class="-ml-4 pr-2">1.</span> Personal Information
+                <span class="-ml-2 pr-2">1.</span> Personal Information
               </div>
               <div class="pl-4">
                 <div class="pb-2">
@@ -130,7 +129,7 @@ export default function ContactPage() {
             </div>
             <div class="py-2">
               <div class="pb-2 text-lg">
-                <span class="-ml-4 pr-2">2.</span> Remote Backups
+                <span class="-ml-2 pr-2">2.</span> Remote Backups
               </div>
               <div class="pl-4">
                 <em>Life and Lineage</em> uses a per-user database approach for
@@ -146,7 +145,7 @@ export default function ContactPage() {
             </div>
             <div class="py-2">
               <div class="pb-2 text-lg">
-                <span class="-ml-4 pr-2">3.</span> Cross Device Play
+                <span class="-ml-2 pr-2">3.</span> Cross Device Play
               </div>
               <div class="pl-4">
                 You can use the above mentioned remote-backups to save progress
@@ -155,7 +154,7 @@ export default function ContactPage() {
             </div>
             <div class="py-2">
               <div class="pb-2 text-lg">
-                <span class="-ml-4 pr-2">4.</span> Online Requirements
+                <span class="-ml-2 pr-2">4.</span> Online Requirements
               </div>
               <div class="pl-4">
                 Currently, the only time you need to be online is for remote
@@ -166,7 +165,7 @@ export default function ContactPage() {
             </div>
             <div class="py-2">
               <div class="pb-2 text-lg">
-                <span class="-ml-4 pr-2">5.</span> Microtransactions
+                <span class="-ml-2 pr-2">5.</span> Microtransactions
               </div>
               <div class="pl-4">
                 Microtransactions are not required to play or complete the game,
@@ -205,9 +204,7 @@ export default function ContactPage() {
               (for this website or any of my apps...)
             </div>
           </Show>
-          <Show when={viewer() === "lineage"}>
-            <LineageQuestionsDropDown />
-          </Show>
+          <LineageQuestionsDropDown />
           <form onSubmit={sendEmailTrigger} class="w-full">
             <div
               class={`flex w-full flex-col justify-evenly pt-6 ${
@@ -286,9 +283,6 @@ export default function ContactPage() {
               </div>
             </div>
           </form>
-          <Show when={viewer() !== "lineage"}>
-            <LineageQuestionsDropDown />
-          </Show>
           <div
             class={`${
               emailSent()
