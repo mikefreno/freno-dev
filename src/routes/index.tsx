@@ -24,7 +24,7 @@ export default function Home() {
             </div>
           </Typewriter>
           <Typewriter speed={100} keepAlive={2000}>
-            I'm a passionate dev tooling, game, and open source software
+            I'm a passionate developer tooling, game, and open source software
             developer. Recently been working in the world of{" "}
             <a
               href="https://www.love2d.org"
