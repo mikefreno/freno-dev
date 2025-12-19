@@ -23,8 +23,6 @@ function AppLayout(props: { children: any }) {
     centerWidth,
     leftBarVisible,
     rightBarVisible,
-    toggleLeftBar,
-    toggleRightBar,
     setLeftBarVisible,
     setRightBarVisible,
     barsInitialized

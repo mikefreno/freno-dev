@@ -1,5 +1,6 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { ConnectionFactory } from "~/server/utils";
+import { withCache } from "~/server/cache";
 
 // Simple in-memory cache for blog posts to reduce DB load
 let cachedPosts: {
@@ -11,11 +12,12 @@ let cacheTimestamp: number = 0;
 
 export const blogRouter = createTRPCRouter({
   getRecentPosts: publicProcedure.query(async () => {
-    // Get database connection
-    const conn = ConnectionFactory();
+    return withCache("recent-posts", 10 * 60 * 1000, async () => {
+      // Get database connection
+      const conn = ConnectionFactory();
 
-    // Query for the 3 most recent published posts
-    const query = `
+      // Query for the 3 most recent published posts
+      const query = `
       SELECT 
         p.id,
         p.title,
@@ -37,8 +39,9 @@ export const blogRouter = createTRPCRouter({
       LIMIT 3;
     `;
 
-    const results = await conn.execute(query);
-    return results.rows;
+      const results = await conn.execute(query);
+      return results.rows;
+    });
   }),
 
   getPosts: publicProcedure.query(async ({ ctx }) => {

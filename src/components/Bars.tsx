@@ -156,6 +156,18 @@ export function LeftBar() {
   } | null>(null);
 
   const [isMounted, setIsMounted] = createSignal(false);
+  const [signOutLoading, setSignOutLoading] = createSignal(false);
+
+  const handleSignOut = async () => {
+    setSignOutLoading(true);
+    try {
+      await api.auth.signOut.mutate();
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Sign out failed:", error);
+      setSignOutLoading(false);
+    }
+  };
 
   onMount(async () => {
     // Mark as mounted to avoid hydration mismatch
@@ -416,6 +428,17 @@ export function LeftBar() {
                     </a>
                   </Show>
                 </li>
+                <Show when={isMounted() && userInfo()?.isAuthenticated}>
+                  <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                    <button
+                      onClick={handleSignOut}
+                      disabled={signOutLoading()}
+                      class="text-left disabled:opacity-50"
+                    >
+                      {signOutLoading() ? "Signing Out..." : "Sign Out"}
+                    </button>
+                  </li>
+                </Show>
               </ul>
             </Typewriter>
 

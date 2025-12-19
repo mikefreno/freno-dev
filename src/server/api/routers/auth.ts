@@ -9,7 +9,10 @@ import { setCookie, getCookie } from "vinxi/http";
 import type { User } from "~/types/user";
 
 // Helper to create JWT token
-async function createJWT(userId: string, expiresIn: string = "14d"): Promise<string> {
+async function createJWT(
+  userId: string,
+  expiresIn: string = "14d"
+): Promise<string> {
   const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
   const token = await new SignJWT({ id: userId })
     .setProtectedHeader({ alg: "HS256" })
@@ -26,11 +29,11 @@ async function sendEmail(to: string, subject: string, htmlContent: string) {
   const sendinblueData = {
     sender: {
       name: "freno.me",
-      email: "no_reply@freno.me",
+      email: "no_reply@freno.me"
     },
     to: [{ email: to }],
     htmlContent,
-    subject,
+    subject
   };
 
   const response = await fetch(apiUrl, {
@@ -38,9 +41,9 @@ async function sendEmail(to: string, subject: string, htmlContent: string) {
     headers: {
       accept: "application/json",
       "api-key": apiKey,
-      "content-type": "application/json",
+      "content-type": "application/json"
     },
-    body: JSON.stringify(sendinblueData),
+    body: JSON.stringify(sendinblueData)
   });
 
   if (!response.ok) {
@@ -65,22 +68,22 @@ export const authRouter = createTRPCRouter({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Accept: "application/json",
+              Accept: "application/json"
             },
             body: JSON.stringify({
-              client_id: env.VITE_GITHUB_CLIENT_ID || env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
+              client_id: env.VITE_GITHUB_CLIENT_ID,
               client_secret: env.GITHUB_CLIENT_SECRET,
-              code,
-            }),
-          },
+              code
+            })
+          }
         );
         const { access_token } = await tokenResponse.json();
 
         // Fetch user info from GitHub
         const userResponse = await fetch("https://api.github.com/user", {
           headers: {
-            Authorization: `token ${access_token}`,
-          },
+            Authorization: `token ${access_token}`
+          }
         });
 
         const user = await userResponse.json();
@@ -117,18 +120,18 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax",
+          sameSite: "lax"
         });
 
         return {
           success: true,
-          redirectTo: "/account",
+          redirectTo: "/account"
         };
       } catch (error) {
         console.error("GitHub authentication failed:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "GitHub authentication failed",
+          message: "GitHub authentication failed"
         });
       }
     }),
@@ -141,19 +144,22 @@ export const authRouter = createTRPCRouter({
 
       try {
         // Exchange code for access token
-        const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            code: code,
-            client_id: env.VITE_GOOGLE_CLIENT_ID || env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-            client_secret: env.GOOGLE_CLIENT_SECRET,
-            redirect_uri: `${env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN}/api/auth/callback/google`,
-            grant_type: "authorization_code",
-          }),
-        });
+        const tokenResponse = await fetch(
+          "https://oauth2.googleapis.com/token",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+              code: code,
+              client_id: env.VITE_GOOGLE_CLIENT_ID || "",
+              client_secret: env.GOOGLE_CLIENT_SECRET,
+              redirect_uri: `${env.VITE_DOMAIN || "https://freno.me"}/api/auth/callback/google`,
+              grant_type: "authorization_code"
+            })
+          }
+        );
 
         const { access_token } = await tokenResponse.json();
 
@@ -162,9 +168,9 @@ export const authRouter = createTRPCRouter({
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
             headers: {
-              Authorization: `Bearer ${access_token}`,
-            },
-          },
+              Authorization: `Bearer ${access_token}`
+            }
+          }
         );
 
         const userData = await userResponse.json();
@@ -196,11 +202,11 @@ export const authRouter = createTRPCRouter({
             email_verified,
             name,
             "google",
-            image,
+            image
           ];
           await conn.execute({
             sql: insertQuery,
-            args: insertParams,
+            args: insertParams
           });
         }
 
@@ -213,18 +219,18 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax",
+          sameSite: "lax"
         });
 
         return {
           success: true,
-          redirectTo: "/account",
+          redirectTo: "/account"
         };
       } catch (error) {
         console.error("Google authentication failed:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Google authentication failed",
+          message: "Google authentication failed"
         });
       }
     }),
@@ -235,8 +241,8 @@ export const authRouter = createTRPCRouter({
       z.object({
         email: z.string().email(),
         token: z.string(),
-        rememberMe: z.boolean().optional(),
-      }),
+        rememberMe: z.boolean().optional()
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const { email, token, rememberMe } = input;
@@ -250,7 +256,7 @@ export const authRouter = createTRPCRouter({
         if (payload.email !== email) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "Email mismatch",
+            message: "Email mismatch"
           });
         }
 
@@ -262,7 +268,7 @@ export const authRouter = createTRPCRouter({
         if (!res.rows[0]) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "User not found",
+            message: "User not found"
           });
         }
 
@@ -276,7 +282,7 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax",
+          sameSite: "lax"
         };
 
         if (rememberMe) {
@@ -284,11 +290,16 @@ export const authRouter = createTRPCRouter({
         }
         // If rememberMe is false, cookie will be session-only (no maxAge)
 
-        setCookie(ctx.event.nativeEvent, "userIDToken", userToken, cookieOptions);
+        setCookie(
+          ctx.event.nativeEvent,
+          "userIDToken",
+          userToken,
+          cookieOptions
+        );
 
         return {
           success: true,
-          redirectTo: "/account",
+          redirectTo: "/account"
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -297,7 +308,7 @@ export const authRouter = createTRPCRouter({
         console.error("Email login failed:", error);
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Authentication failed",
+          message: "Authentication failed"
         });
       }
     }),
@@ -307,8 +318,8 @@ export const authRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
-        token: z.string(),
-      }),
+        token: z.string()
+      })
     )
     .mutation(async ({ input }) => {
       const { email, token } = input;
@@ -322,7 +333,7 @@ export const authRouter = createTRPCRouter({
         if (payload.email !== email) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "Email mismatch",
+            message: "Email mismatch"
           });
         }
 
@@ -333,7 +344,7 @@ export const authRouter = createTRPCRouter({
 
         return {
           success: true,
-          message: "Email verification success, you may close this window",
+          message: "Email verification success, you may close this window"
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -342,7 +353,7 @@ export const authRouter = createTRPCRouter({
         console.error("Email verification failed:", error);
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid token",
+          message: "Invalid token"
         });
       }
     }),
@@ -353,8 +364,8 @@ export const authRouter = createTRPCRouter({
       z.object({
         email: z.string().email(),
         password: z.string().min(8),
-        passwordConfirmation: z.string().min(8),
-      }),
+        passwordConfirmation: z.string().min(8)
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const { email, password, passwordConfirmation } = input;
@@ -362,7 +373,7 @@ export const authRouter = createTRPCRouter({
       if (password !== passwordConfirmation) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "passwordMismatch",
+          message: "passwordMismatch"
         });
       }
 
@@ -373,7 +384,7 @@ export const authRouter = createTRPCRouter({
       try {
         await conn.execute({
           sql: "INSERT INTO User (id, email, password_hash, provider) VALUES (?, ?, ?, ?)",
-          args: [userId, email, passwordHash, "email"],
+          args: [userId, email, passwordHash, "email"]
         });
 
         // Create JWT token
@@ -385,7 +396,7 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax",
+          sameSite: "lax"
         });
 
         return { success: true, message: "success" };
@@ -393,7 +404,7 @@ export const authRouter = createTRPCRouter({
         console.error("Registration error:", e);
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "duplicate",
+          message: "duplicate"
         });
       }
     }),
@@ -404,8 +415,8 @@ export const authRouter = createTRPCRouter({
       z.object({
         email: z.string().email(),
         password: z.string(),
-        rememberMe: z.boolean().optional(),
-      }),
+        rememberMe: z.boolean().optional()
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const { email, password, rememberMe } = input;
@@ -413,13 +424,13 @@ export const authRouter = createTRPCRouter({
       const conn = ConnectionFactory();
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE email = ? AND provider = ?",
-        args: [email, "email"],
+        args: [email, "email"]
       });
 
       if (res.rows.length === 0) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "no-match",
+          message: "no-match"
         });
       }
 
@@ -428,7 +439,7 @@ export const authRouter = createTRPCRouter({
       if (!user.password_hash) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "no-match",
+          message: "no-match"
         });
       }
 
@@ -437,7 +448,7 @@ export const authRouter = createTRPCRouter({
       if (!passwordMatch) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "no-match",
+          message: "no-match"
         });
       }
 
@@ -450,7 +461,7 @@ export const authRouter = createTRPCRouter({
         path: "/",
         httpOnly: true,
         secure: env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: "lax"
       };
 
       if (rememberMe) {
@@ -467,21 +478,24 @@ export const authRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
-        rememberMe: z.boolean().optional(),
-      }),
+        rememberMe: z.boolean().optional()
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const { email, rememberMe } = input;
 
       // Check rate limiting
-      const requested = getCookie(ctx.event.nativeEvent, "emailLoginLinkRequested");
+      const requested = getCookie(
+        ctx.event.nativeEvent,
+        "emailLoginLinkRequested"
+      );
       if (requested) {
         const expires = new Date(requested);
         const remaining = expires.getTime() - Date.now();
         if (remaining > 0) {
           throw new TRPCError({
             code: "TOO_MANY_REQUESTS",
-            message: "countdown not expired",
+            message: "countdown not expired"
           });
         }
       }
@@ -489,25 +503,28 @@ export const authRouter = createTRPCRouter({
       const conn = ConnectionFactory();
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE email = ?",
-        args: [email],
+        args: [email]
       });
 
       if (res.rows.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found",
+          message: "User not found"
         });
       }
 
       // Create JWT token for email link (15min expiry)
       const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-      const token = await new SignJWT({ email, rememberMe: rememberMe ?? false })
+      const token = await new SignJWT({
+        email,
+        rememberMe: rememberMe ?? false
+      })
         .setProtectedHeader({ alg: "HS256" })
         .setExpirationTime("15m")
         .sign(secret);
 
       // Send email
-      const domain = env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN;
+      const domain = env.VITE_DOMAIN || "https://freno.me";
       const htmlContent = `<html>
 <head>
     <style>
@@ -550,10 +567,15 @@ export const authRouter = createTRPCRouter({
 
       // Set rate limit cookie (2 minutes)
       const exp = new Date(Date.now() + 2 * 60 * 1000);
-      setCookie(ctx.event.nativeEvent, "emailLoginLinkRequested", exp.toUTCString(), {
-        maxAge: 2 * 60,
-        path: "/",
-      });
+      setCookie(
+        ctx.event.nativeEvent,
+        "emailLoginLinkRequested",
+        exp.toUTCString(),
+        {
+          maxAge: 2 * 60,
+          path: "/"
+        }
+      );
 
       return { success: true, message: "email sent" };
     }),
@@ -565,14 +587,17 @@ export const authRouter = createTRPCRouter({
       const { email } = input;
 
       // Check rate limiting
-      const requested = getCookie(ctx.event.nativeEvent, "passwordResetRequested");
+      const requested = getCookie(
+        ctx.event.nativeEvent,
+        "passwordResetRequested"
+      );
       if (requested) {
         const expires = new Date(requested);
         const remaining = expires.getTime() - Date.now();
         if (remaining > 0) {
           throw new TRPCError({
             code: "TOO_MANY_REQUESTS",
-            message: "countdown not expired",
+            message: "countdown not expired"
           });
         }
       }
@@ -580,7 +605,7 @@ export const authRouter = createTRPCRouter({
       const conn = ConnectionFactory();
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE email = ?",
-        args: [email],
+        args: [email]
       });
 
       if (res.rows.length === 0) {
@@ -598,7 +623,7 @@ export const authRouter = createTRPCRouter({
         .sign(secret);
 
       // Send email
-      const domain = env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN;
+      const domain = env.VITE_DOMAIN || "https://freno.me";
       const htmlContent = `<html>
 <head>
     <style>
@@ -641,10 +666,15 @@ export const authRouter = createTRPCRouter({
 
       // Set rate limit cookie (5 minutes)
       const exp = new Date(Date.now() + 5 * 60 * 1000);
-      setCookie(ctx.event.nativeEvent, "passwordResetRequested", exp.toUTCString(), {
-        maxAge: 5 * 60,
-        path: "/",
-      });
+      setCookie(
+        ctx.event.nativeEvent,
+        "passwordResetRequested",
+        exp.toUTCString(),
+        {
+          maxAge: 5 * 60,
+          path: "/"
+        }
+      );
 
       return { success: true, message: "email sent" };
     }),
@@ -655,8 +685,8 @@ export const authRouter = createTRPCRouter({
       z.object({
         token: z.string(),
         newPassword: z.string().min(8),
-        newPasswordConfirmation: z.string().min(8),
-      }),
+        newPasswordConfirmation: z.string().min(8)
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const { token, newPassword, newPasswordConfirmation } = input;
@@ -664,7 +694,7 @@ export const authRouter = createTRPCRouter({
       if (newPassword !== newPasswordConfirmation) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Password Mismatch",
+          message: "Password Mismatch"
         });
       }
 
@@ -676,7 +706,7 @@ export const authRouter = createTRPCRouter({
         if (!payload.id || typeof payload.id !== "string") {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "bad token",
+            message: "bad token"
           });
         }
 
@@ -685,17 +715,17 @@ export const authRouter = createTRPCRouter({
 
         await conn.execute({
           sql: "UPDATE User SET password_hash = ? WHERE id = ?",
-          args: [passwordHash, payload.id],
+          args: [passwordHash, payload.id]
         });
 
         // Clear any session cookies
         setCookie(ctx.event.nativeEvent, "emailToken", "", {
           maxAge: 0,
-          path: "/",
+          path: "/"
         });
         setCookie(ctx.event.nativeEvent, "userIDToken", "", {
           maxAge: 0,
-          path: "/",
+          path: "/"
         });
 
         return { success: true, message: "success" };
@@ -706,7 +736,7 @@ export const authRouter = createTRPCRouter({
         console.error("Password reset error:", error);
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "token expired",
+          message: "token expired"
         });
       }
     }),
@@ -718,16 +748,19 @@ export const authRouter = createTRPCRouter({
       const { email } = input;
 
       // Check rate limiting
-      const requested = getCookie(ctx.event.nativeEvent, "emailVerificationRequested");
+      const requested = getCookie(
+        ctx.event.nativeEvent,
+        "emailVerificationRequested"
+      );
       if (requested) {
         const time = parseInt(requested);
         const currentTime = Date.now();
         const difference = (currentTime - time) / (1000 * 60);
-        
+
         if (difference < 15) {
           throw new TRPCError({
             code: "TOO_MANY_REQUESTS",
-            message: "Please wait before requesting another verification email",
+            message: "Please wait before requesting another verification email"
           });
         }
       }
@@ -735,13 +768,13 @@ export const authRouter = createTRPCRouter({
       const conn = ConnectionFactory();
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE email = ?",
-        args: [email],
+        args: [email]
       });
 
       if (res.rows.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found",
+          message: "User not found"
         });
       }
 
@@ -753,7 +786,7 @@ export const authRouter = createTRPCRouter({
         .sign(secret);
 
       // Send email
-      const domain = env.VITE_DOMAIN || env.NEXT_PUBLIC_DOMAIN;
+      const domain = env.VITE_DOMAIN || "https://freno.me";
       const htmlContent = `<html>
 <head>
     <style>
@@ -792,10 +825,15 @@ export const authRouter = createTRPCRouter({
       await sendEmail(email, "freno.me email verification", htmlContent);
 
       // Set rate limit cookie
-      setCookie(ctx.event.nativeEvent, "emailVerificationRequested", Date.now().toString(), {
-        maxAge: 15 * 60,
-        path: "/",
-      });
+      setCookie(
+        ctx.event.nativeEvent,
+        "emailVerificationRequested",
+        Date.now().toString(),
+        {
+          maxAge: 15 * 60,
+          path: "/"
+        }
+      );
 
       return { success: true, message: "Verification email sent" };
     }),
@@ -804,13 +842,14 @@ export const authRouter = createTRPCRouter({
   signOut: publicProcedure.mutation(async ({ ctx }) => {
     setCookie(ctx.event.nativeEvent, "userIDToken", "", {
       maxAge: 0,
-      path: "/",
+      path: "/"
     });
     setCookie(ctx.event.nativeEvent, "emailToken", "", {
       maxAge: 0,
-      path: "/",
+      path: "/"
     });
 
     return { success: true };
-  }),
+  })
 });
+

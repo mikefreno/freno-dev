@@ -264,7 +264,7 @@ export const databaseRouter = createTRPCRouter({
       try {
         const conn = ConnectionFactory();
         const fullURL = input.banner_photo
-          ? env.NEXT_PUBLIC_AWS_BUCKET_STRING + input.banner_photo
+          ? env.VITE_AWS_BUCKET_STRING + input.banner_photo
           : null;
 
         const query = `
@@ -346,7 +346,7 @@ export const databaseRouter = createTRPCRouter({
           if (input.banner_photo === "_DELETE_IMAGE_") {
             params.push(null);
           } else {
-            params.push(env.NEXT_PUBLIC_AWS_BUCKET_STRING + input.banner_photo);
+            params.push(env.VITE_AWS_BUCKET_STRING + input.banner_photo);
           }
           first = false;
         }
@@ -593,7 +593,7 @@ export const databaseRouter = createTRPCRouter({
       try {
         const conn = ConnectionFactory();
         const fullURL = input.imageURL
-          ? env.NEXT_PUBLIC_AWS_BUCKET_STRING + input.imageURL
+          ? env.VITE_AWS_BUCKET_STRING + input.imageURL
           : null;
         const query = `UPDATE User SET image = ? WHERE id = ?`;
         await conn.execute({

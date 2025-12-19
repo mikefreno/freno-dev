@@ -1,14 +1,14 @@
-import { createTRPCRouter, publicProcedure } from "../../utils";
 import { z } from "zod";
 import {
   LineageConnectionFactory,
   validateLineageRequest,
-  dumpAndSendDB,
+  dumpAndSendDB
 } from "~/server/utils";
 import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
 import { OAuth2Client } from "google-auth-library";
 import { jwtVerify } from "jose";
+import { createTRPCRouter, publicProcedure } from "~/server/api/utils";
 
 export const lineageDatabaseRouter = createTRPCRouter({
   credentials: publicProcedure
@@ -16,7 +16,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
       z.object({
         email: z.string().email(),
         provider: z.enum(["email", "google", "apple"]),
-        authToken: z.string(),
+        authToken: z.string()
       })
     )
     .mutation(async ({ input }) => {
@@ -32,17 +32,17 @@ export const lineageDatabaseRouter = createTRPCRouter({
             valid_request = true;
           }
         } else if (provider === "google") {
-          const CLIENT_ID = env.VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE || env.NEXT_PUBLIC_GOOGLE_CLIENT_ID_MAGIC_DELVE;
+          const CLIENT_ID = env.VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE;
           if (!CLIENT_ID) {
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
-              message: "Google client ID not configured",
+              message: "Google client ID not configured"
             });
           }
           const client = new OAuth2Client(CLIENT_ID);
           const ticket = await client.verifyIdToken({
             idToken: authToken,
-            audience: CLIENT_ID,
+            audience: CLIENT_ID
           });
           if (ticket.getPayload()?.email === email) {
             valid_request = true;
@@ -67,25 +67,25 @@ export const lineageDatabaseRouter = createTRPCRouter({
             return {
               success: true,
               db_name: user.database_name as string,
-              db_token: user.database_token as string,
+              db_token: user.database_token as string
             };
           }
 
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "No user found",
+            message: "No user found"
           });
         } else {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "Invalid credentials",
+            message: "Invalid credentials"
           });
         }
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Authentication failed",
+          message: "Authentication failed"
         });
       }
     }),
@@ -98,35 +98,42 @@ export const lineageDatabaseRouter = createTRPCRouter({
         db_token: z.string(),
         authToken: z.string(),
         skip_cron: z.boolean().optional(),
-        send_dump_target: z.string().email().optional(),
+        send_dump_target: z.string().email().optional()
       })
     )
     .mutation(async ({ input }) => {
-      const { email, db_name, db_token, authToken, skip_cron, send_dump_target } = input;
+      const {
+        email,
+        db_name,
+        db_token,
+        authToken,
+        skip_cron,
+        send_dump_target
+      } = input;
 
       const conn = LineageConnectionFactory();
       const res = await conn.execute({
         sql: `SELECT * FROM User WHERE email = ?`,
-        args: [email],
+        args: [email]
       });
       const userRow = res.rows[0];
 
       if (!userRow) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found",
+          message: "User not found"
         });
       }
 
       const valid = await validateLineageRequest({
         auth_token: authToken,
-        userRow,
+        userRow
       });
 
       if (!valid) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid Verification",
+          message: "Invalid Verification"
         });
       }
 
@@ -135,7 +142,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
       if (database_token !== db_token || database_name !== db_name) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Incorrect Verification",
+          message: "Incorrect Verification"
         });
       }
 
@@ -144,7 +151,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
           const dumpRes = await dumpAndSendDB({
             dbName: db_name,
             dbToken: db_token,
-            sendTarget: send_dump_target,
+            sendTarget: send_dump_target
           });
 
           if (dumpRes.success) {
@@ -153,31 +160,31 @@ export const lineageDatabaseRouter = createTRPCRouter({
               {
                 method: "DELETE",
                 headers: {
-                  Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`,
-                },
+                  Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+                }
               }
             );
 
             if (deleteRes.ok) {
               await conn.execute({
                 sql: `DELETE FROM User WHERE email = ?`,
-                args: [email],
+                args: [email]
               });
               return {
                 ok: true,
                 status: 200,
-                message: `Account and Database deleted, db dump sent to email: ${send_dump_target}`,
+                message: `Account and Database deleted, db dump sent to email: ${send_dump_target}`
               };
             } else {
               throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
-                message: "Failed to delete database",
+                message: "Failed to delete database"
               });
             }
           } else {
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
-              message: dumpRes.reason || "Failed to dump database",
+              message: dumpRes.reason || "Failed to dump database"
             });
           }
         } else {
@@ -186,44 +193,44 @@ export const lineageDatabaseRouter = createTRPCRouter({
             {
               method: "DELETE",
               headers: {
-                Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`,
-              },
+                Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+              }
             }
           );
 
           if (deleteRes.ok) {
             await conn.execute({
               sql: `DELETE FROM User WHERE email = ?`,
-              args: [email],
+              args: [email]
             });
             return {
               ok: true,
               status: 200,
-              message: `Account and Database deleted`,
+              message: `Account and Database deleted`
             };
           } else {
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to delete database",
+              message: "Failed to delete database"
             });
           }
         }
       } else {
         const insertRes = await conn.execute({
           sql: `INSERT INTO cron (email, db_name, db_token, send_dump_target) VALUES (?, ?, ?, ?)`,
-          args: [email, db_name, db_token, send_dump_target],
+          args: [email, db_name, db_token, send_dump_target]
         });
 
         if (insertRes.rowsAffected > 0) {
           return {
             ok: true,
             status: 200,
-            message: `Deletion scheduled.`,
+            message: `Deletion scheduled.`
           };
         } else {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: `Deletion not scheduled, due to server failure`,
+            message: `Deletion not scheduled, due to server failure`
           });
         }
       }
@@ -238,7 +245,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
       try {
         const res = await conn.execute({
           sql: `SELECT * FROM cron WHERE email = ?`,
-          args: [email],
+          args: [email]
         });
         const cronRow = res.rows[0];
 
@@ -249,12 +256,12 @@ export const lineageDatabaseRouter = createTRPCRouter({
         return {
           ok: true,
           status: 200,
-          created_at: cronRow.created_at as string,
+          created_at: cronRow.created_at as string
         };
       } catch (e) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to check deletion status",
+          message: "Failed to check deletion status"
         });
       }
     }),
@@ -263,7 +270,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
-        authToken: z.string(),
+        authToken: z.string()
       })
     )
     .mutation(async ({ input }) => {
@@ -273,13 +280,13 @@ export const lineageDatabaseRouter = createTRPCRouter({
 
       const resUser = await conn.execute({
         sql: `SELECT * FROM User WHERE email = ?;`,
-        args: [email],
+        args: [email]
       });
 
       if (resUser.rows.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found.",
+          message: "User not found."
         });
       }
 
@@ -287,31 +294,31 @@ export const lineageDatabaseRouter = createTRPCRouter({
 
       const valid = await validateLineageRequest({
         auth_token: authToken,
-        userRow,
+        userRow
       });
 
       if (!valid) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid credentials for cancelation.",
+          message: "Invalid credentials for cancelation."
         });
       }
 
       const result = await conn.execute({
         sql: `DELETE FROM cron WHERE email = ?;`,
-        args: [email],
+        args: [email]
       });
 
       if (result.rowsAffected > 0) {
         return {
           status: 200,
           ok: true,
-          message: "Cron job(s) canceled successfully.",
+          message: "Cron job(s) canceled successfully."
         };
       } else {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "No cron job found for the given email.",
+          message: "No cron job found for the given email."
         });
       }
     }),
@@ -332,7 +339,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
           const dumpRes = await dumpAndSendDB({
             dbName: db_name as string,
             dbToken: db_token as string,
-            sendTarget: send_dump_target as string,
+            sendTarget: send_dump_target as string
           });
 
           if (dumpRes.success) {
@@ -341,15 +348,15 @@ export const lineageDatabaseRouter = createTRPCRouter({
               {
                 method: "DELETE",
                 headers: {
-                  Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`,
-                },
+                  Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+                }
               }
             );
 
             if (deleteRes.ok) {
               await conn.execute({
                 sql: `DELETE FROM User WHERE email = ?`,
-                args: [email],
+                args: [email]
               });
               executed_ids.push(id as number);
             }
@@ -360,15 +367,15 @@ export const lineageDatabaseRouter = createTRPCRouter({
             {
               method: "DELETE",
               headers: {
-                Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`,
-              },
+                Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+              }
             }
           );
 
           if (deleteRes.ok) {
             await conn.execute({
               sql: `DELETE FROM User WHERE email = ?`,
-              args: [email],
+              args: [email]
             });
             executed_ids.push(id as number);
           }
@@ -383,11 +390,11 @@ export const lineageDatabaseRouter = createTRPCRouter({
         return {
           status: 200,
           message:
-            "Processed databases deleted and corresponding cron rows removed.",
+            "Processed databases deleted and corresponding cron rows removed."
         };
       }
     }
 
     return { status: 200, ok: true };
-  }),
+  })
 });

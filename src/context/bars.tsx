@@ -13,8 +13,6 @@ const BarsContext = createContext<{
   setLeftBarVisible: (visible: boolean) => void;
   rightBarVisible: Accessor<boolean>;
   setRightBarVisible: (visible: boolean) => void;
-  toggleLeftBar: () => void;
-  toggleRightBar: () => void;
   barsInitialized: Accessor<boolean>;
 }>({
   leftBarSize: () => 0,
@@ -27,8 +25,6 @@ const BarsContext = createContext<{
   setLeftBarVisible: () => {},
   rightBarVisible: () => true,
   setRightBarVisible: () => {},
-  toggleLeftBar: () => {},
-  toggleRightBar: () => {},
   barsInitialized: () => false
 });
 
@@ -112,10 +108,6 @@ export function BarsProvider(props: { children: any }) {
     hapticFeedback(50);
     _setRightBarVisible(visible);
   };
-
-  const toggleLeftBar = () => setLeftBarVisible(!leftBarVisible());
-  const toggleRightBar = () => setRightBarVisible(!rightBarVisible());
-
   return (
     <BarsContext.Provider
       value={{
@@ -129,8 +121,6 @@ export function BarsProvider(props: { children: any }) {
         setLeftBarVisible,
         rightBarVisible,
         setRightBarVisible,
-        toggleLeftBar,
-        toggleRightBar,
         barsInitialized
       }}
     >

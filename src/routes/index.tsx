@@ -6,7 +6,6 @@ export default function Home() {
       <Typewriter speed={30} keepAlive={2000}>
         <div class="text-4xl">Hey!</div>
       </Typewriter>
-
       <Typewriter speed={80} keepAlive={2000}>
         <div>
           My name is <span class="text-green">Mike Freno</span>, I'm a{" "}
@@ -15,10 +14,16 @@ export default function Home() {
         </div>
       </Typewriter>
       <Typewriter speed={100}>
-        I'm a passionate dev tooling and game developer, recently been working
-        in the world of Love2D and you can see some of my work here: <a></a>
-        I'm a huge lover of open source software, and
+        I'm a passionate dev tooling, game, and open source software developer.
+        Recently been working in the world of{" "}
+        <a
+          href="https://www.love2d.org"
+          class="text-blue hover-underline-animation"
+        >
+          LÖVE
+        </a>{" "}
       </Typewriter>
+      You can see some of my work <a>here</a>(github)
       <Typewriter speed={50} keepAlive={false}>
         <div>My Collection of By-the-ways:</div>
       </Typewriter>

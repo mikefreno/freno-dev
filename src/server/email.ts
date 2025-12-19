@@ -8,17 +8,16 @@ export async function sendEmailVerification(userEmail: string): Promise<{
   messageId?: string;
   message?: string;
 }> {
-  const apiKey = env().SENDINBLUE_KEY;
+  const apiKey = env.SENDINBLUE_KEY;
   const apiUrl = "https://api.brevo.com/v3/smtp/email";
 
-  const secret = new TextEncoder().encode(env().JWT_SECRET_KEY);
+  const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
   const token = await new SignJWT({ email: userEmail })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("15m")
     .sign(secret);
 
-  const domain =
-    env().VITE_DOMAIN || env().NEXT_PUBLIC_DOMAIN || "https://freno.me";
+  const domain = env.VITE_DOMAIN || "https://freno.me";
 
   const emailPayload = {
     sender: {

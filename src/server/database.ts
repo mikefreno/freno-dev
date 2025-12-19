@@ -10,8 +10,8 @@ let lineageDBConnection: ReturnType<typeof createClient> | null = null;
 export function ConnectionFactory() {
   if (!mainDBConnection) {
     const config = {
-      url: env().TURSO_DB_URL,
-      authToken: env().TURSO_DB_TOKEN
+      url: env.TURSO_DB_URL,
+      authToken: env.TURSO_DB_TOKEN
     };
     mainDBConnection = createClient(config);
   }
@@ -21,8 +21,8 @@ export function ConnectionFactory() {
 export function LineageConnectionFactory() {
   if (!lineageDBConnection) {
     const config = {
-      url: env().TURSO_LINEAGE_URL,
-      authToken: env().TURSO_LINEAGE_TOKEN
+      url: env.TURSO_LINEAGE_URL,
+      authToken: env.TURSO_LINEAGE_TOKEN
     };
     lineageDBConnection = createClient(config);
   }
@@ -32,7 +32,7 @@ export function LineageConnectionFactory() {
 export async function LineageDBInit() {
   const turso = createAPIClient({
     org: "mikefreno",
-    token: env().TURSO_DB_API_TOKEN
+    token: env.TURSO_DB_API_TOKEN
   });
 
   const db_name = uuid();
@@ -95,7 +95,7 @@ export async function dumpAndSendDB({
   const text = await res.text();
   const base64Content = Buffer.from(text, "utf-8").toString("base64");
 
-  const apiKey = env().SENDINBLUE_KEY as string;
+  const apiKey = env.SENDINBLUE_KEY as string;
   const apiUrl = "https://api.brevo.com/v3/smtp/email";
 
   const emailPayload = {

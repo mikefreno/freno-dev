@@ -12,11 +12,11 @@ export async function getPrivilegeLevel(
 
     if (userIDToken) {
       try {
-        const secret = new TextEncoder().encode(env().JWT_SECRET_KEY);
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const { payload } = await jwtVerify(userIDToken, secret);
 
         if (payload.id && typeof payload.id === "string") {
-          return payload.id === env().ADMIN_ID ? "admin" : "user";
+          return payload.id === env.ADMIN_ID ? "admin" : "user";
         }
       } catch (err) {
         console.log("Failed to authenticate token.");
@@ -38,7 +38,7 @@ export async function getUserID(event: H3Event): Promise<string | null> {
 
     if (userIDToken) {
       try {
-        const secret = new TextEncoder().encode(env().JWT_SECRET_KEY);
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const { payload } = await jwtVerify(userIDToken, secret);
 
         if (payload.id && typeof payload.id === "string") {
@@ -79,7 +79,7 @@ export async function validateLineageRequest({
   const { provider, email } = userRow;
   if (provider === "email") {
     try {
-      const secret = new TextEncoder().encode(env().JWT_SECRET_KEY);
+      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
       const { payload } = await jwtVerify(auth_token, secret);
       if (email !== payload.email) {
         return false;
