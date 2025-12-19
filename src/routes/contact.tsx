@@ -199,11 +199,9 @@ export default function ContactPage() {
 
       <div class="flex min-h-screen w-full justify-center">
         <div class="w-full max-w-4xl px-4 pt-[20vh]">
-          <div class="text-center text-3xl tracking-widest dark:text-white">
-            Contact
-          </div>
+          <div class="text-center text-3xl tracking-widest">Contact</div>
           <Show when={viewer() !== "lineage"}>
-            <div class="mt-4 -mb-4 text-center text-xl tracking-widest dark:text-white">
+            <div class="mt-4 -mb-4 text-center text-xl tracking-widest">
               (for this website or any of my apps...)
             </div>
           </Show>
@@ -302,32 +300,6 @@ export default function ContactPage() {
           >
             {emailSent() ? "Email Sent!" : error()}
           </div>
-          <ul class="icons flex justify-center pt-24 pb-6">
-            <li>
-              <A
-                href="https://github.com/MikeFreno/"
-                target="_blank"
-                rel="noreferrer"
-                class="shaker rounded-full border-zinc-800 dark:border-zinc-300"
-              >
-                <span class="m-auto p-2">
-                  <GitHub height={24} width={24} fill={undefined} />
-                </span>
-              </A>
-            </li>
-            <li>
-              <A
-                href="https://www.linkedin.com/in/michael-freno-176001256/"
-                target="_blank"
-                rel="noreferrer"
-                class="shaker rounded-full border-zinc-800 dark:border-zinc-300"
-              >
-                <span class="m-auto rounded-md p-2">
-                  <LinkedIn height={24} width={24} fill={undefined} />
-                </span>
-              </A>
-            </li>
-          </ul>
         </div>
       </div>
     </>

@@ -128,8 +128,37 @@
   }
 }
 
-/* Manual dark mode via .dark class */
-.dark {
+/* Manual theme override via classes (higher specificity than media query) */
+:root.light {
+  --color-rosewater: #c14a4a;
+  --color-flamingo: #c14a4a;
+  --color-pink: #945e80;
+  --color-mauve: #945e80;
+  --color-red: #c14a4a;
+  --color-maroon: #c14a4a;
+  --color-peach: #c35e0a;
+  --color-yellow: #a96b2c;
+  --color-green: #6c782e;
+  --color-teal: #4c7a5d;
+  --color-sky: #4c7a5d;
+  --color-sapphire: #4c7a5d;
+  --color-blue: #45707a;
+  --color-lavender: #45707a;
+  --color-text: #654735;
+  --color-subtext1: #7b5d44;
+  --color-subtext0: #8f6f56;
+  --color-overlay2: #a28368;
+  --color-overlay1: #b6977a;
+  --color-overlay0: #c9aa8c;
+  --color-surface2: #a79c86;
+  --color-surface1: #c9c19f;
+  --color-surface0: #dfd6b1;
+  --color-base: #fbf1c7;
+  --color-mantle: #f3eac1;
+  --color-crust: #e7deb7;
+}
+
+:root.dark {
   --color-rosewater: #efc9c2;
   --color-flamingo: #ebb2b2;
   --color-pink: #f2a7de;
@@ -496,11 +525,12 @@ input[type="checkbox"]:checked::before {
 }
 
 /* Hamburger menu button - only show on non-touch devices under mobile breakpoint */
-@media (max-width: 767px) and (hover: hover) and (pointer: fine) {
+@media (max-width: 767px) {
   .hamburger-menu-btn {
     display: block !important;
   }
 }
+
 @keyframes shaker {
   0% {
     transform: rotate(0deg);
