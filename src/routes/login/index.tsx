@@ -14,10 +14,10 @@ import EyeSlash from "~/components/icons/EyeSlash";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { isValidEmail, validatePassword } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
-import { checkAuthStatus } from "~/server/utils";
 
 const checkAuth = cache(async () => {
   "use server";
+  const { checkAuthStatus } = await import("~/server/utils");
   const event = getEvent()!;
   const { isAuthenticated } = await checkAuthStatus(event);
 

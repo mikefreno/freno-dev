@@ -7,7 +7,6 @@ import XCircle from "~/components/icons/XCircle";
 import Dropzone from "~/components/blog/Dropzone";
 import AddImageToS3 from "~/lib/s3upload";
 import { validatePassword, isValidEmail } from "~/lib/validation";
-import { checkAuthStatus } from "~/server/utils";
 
 type UserProfile = {
   id: string;
@@ -21,6 +20,7 @@ type UserProfile = {
 
 const checkAuth = cache(async () => {
   "use server";
+  const { checkAuthStatus } = await import("~/server/utils");
   const event = getEvent()!;
   const { isAuthenticated } = await checkAuthStatus(event);
 

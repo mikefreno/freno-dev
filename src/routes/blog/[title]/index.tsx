@@ -2,11 +2,6 @@ import { Show, Suspense, For } from "solid-js";
 import { useParams, A, Navigate, query } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
-import {
-  ConnectionFactory,
-  getUserID,
-  getPrivilegeLevel
-} from "~/server/utils";
 import { getRequestEvent } from "solid-js/web";
 import SessionDependantLike from "~/components/blog/SessionDependantLike";
 import CommentIcon from "~/components/icons/CommentIcon";
@@ -19,7 +14,8 @@ import { TerminalSplash } from "~/components/TerminalSplash";
 // Server function to fetch post by title
 const getPostByTitle = query(async (title: string) => {
   "use server";
-
+  const { ConnectionFactory, getUserID, getPrivilegeLevel } =
+    await import("~/server/utils");
   const event = getRequestEvent()!;
   const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
   const userID = await getUserID(event.nativeEvent);

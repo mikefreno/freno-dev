@@ -3,6 +3,7 @@ import { createClient as createAPIClient } from "@tursodatabase/api";
 import { v4 as uuid } from "uuid";
 import { env } from "~/env/server";
 import type { H3Event } from "vinxi/http";
+import { getUserID } from "./auth";
 
 let mainDBConnection: ReturnType<typeof createClient> | null = null;
 let lineageDBConnection: ReturnType<typeof createClient> | null = null;
@@ -139,7 +140,6 @@ export async function getUserBasicInfo(event: H3Event): Promise<{
   email: string | null;
   isAuthenticated: boolean;
 } | null> {
-  const { getUserID } = await import("./auth");
   const userId = await getUserID(event);
 
   if (!userId) {

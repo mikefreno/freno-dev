@@ -1,12 +1,5 @@
 // @refresh reload
 import { createHandler, StartServer } from "@solidjs/start/server";
-import { validateServerEnv } from "./env/server";
-
-try {
-  validateServerEnv(process.env);
-} catch (error) {
-  console.error("Environment validation failed:", error);
-}
 
 export default createHandler(() => (
   <StartServer

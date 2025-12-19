@@ -1,5 +1,5 @@
 import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { AppRouter } from "~/server/api/root";
+import type { AppRouter } from "~/server/api/root";
 
 const getBaseUrl = () => {
   // Browser: use relative URL

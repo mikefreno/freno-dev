@@ -3,10 +3,8 @@ import { useParams, useNavigate, query } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
-import { getPrivilegeLevel, getUserID } from "~/server/utils";
 import { api } from "~/lib/api";
 import { debounce } from "~/lib/client-utils";
-import { ConnectionFactory } from "~/server/utils";
 import Dropzone from "~/components/blog/Dropzone";
 import TextEditor from "~/components/blog/TextEditor";
 import TagMaker from "~/components/blog/TagMaker";
@@ -16,7 +14,8 @@ import AddImageToS3 from "~/lib/s3upload";
 
 const getPostForEdit = query(async (id: string) => {
   "use server";
-
+  const { getPrivilegeLevel, getUserID, ConnectionFactory } =
+    await import("~/server/utils");
   const event = getRequestEvent()!;
   const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
   const userID = await getUserID(event.nativeEvent);

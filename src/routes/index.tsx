@@ -134,7 +134,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div class="flex flex-col items-end gap-4">
+      <div class="flex flex-col items-end gap-4 pr-4">
         <Typewriter speed={50} keepAlive={false}>
           <div>
             My Collection of

@@ -1,12 +1,11 @@
 import { createSignal, For, Show } from "solid-js";
 import { query, createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
-import { getPrivilegeLevel } from "~/server/utils";
 import { api } from "~/lib/api";
 
 const getAuthState = query(async () => {
   "use server";
-
+  const { getPrivilegeLevel } = await import("~/server/utils");
   const event = getRequestEvent()!;
   const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
 
