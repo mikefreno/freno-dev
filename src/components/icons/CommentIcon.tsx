@@ -9,7 +9,7 @@ export default function CommentIcon(props: {
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={props.strokeWidth}
-      class="fill-black dark:fill-white"
+      class="hover:fill-blue fill-text"
       height={props.height}
       width={props.width}
     >

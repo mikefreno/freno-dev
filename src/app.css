@@ -449,7 +449,7 @@ input[type="checkbox"]:checked::before {
   visibility: hidden;
   min-width: fit-content;
   background-color: var(--color-mantle);
-  color: #fff;
+  color: var(--color-text);
   text-align: center;
   padding: 5px 0;
   border-radius: 6px;
@@ -547,4 +547,42 @@ input[type="checkbox"]:checked::before {
 }
 .shaker:hover {
   animation: shaker 0.5s ease;
+}
+
+.prose {
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-text);
+  --tw-prose-lead: var(--color-text);
+  --tw-prose-links: var(--color-blue);
+  --tw-prose-bold: var(--color-text);
+  --tw-prose-counters: var(--color-subtext1);
+  --tw-prose-bullets: var(--color-subtext1);
+  --tw-prose-hr: var(--color-surface2);
+  --tw-prose-quotes: var(--color-text);
+  --tw-prose-quote-borders: var(--color-surface2);
+  --tw-prose-captions: var(--color-subtext1);
+  --tw-prose-code: var(--color-text);
+  --tw-prose-pre-code: var(--color-text);
+  --tw-prose-pre-bg: var(--color-surface0);
+  --tw-prose-th-borders: var(--color-surface2);
+  --tw-prose-td-borders: var(--color-surface1);
+}
+
+.prose-invert {
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-text);
+  --tw-prose-lead: var(--color-text);
+  --tw-prose-links: var(--color-blue);
+  --tw-prose-bold: var(--color-text);
+  --tw-prose-counters: var(--color-subtext1);
+  --tw-prose-bullets: var(--color-subtext1);
+  --tw-prose-hr: var(--color-surface2);
+  --tw-prose-quotes: var(--color-text);
+  --tw-prose-quote-borders: var(--color-surface2);
+  --tw-prose-captions: var(--color-subtext1);
+  --tw-prose-code: var(--color-text);
+  --tw-prose-pre-code: var(--color-text);
+  --tw-prose-pre-bg: var(--color-surface0);
+  --tw-prose-th-borders: var(--color-surface2);
+  --tw-prose-td-borders: var(--color-surface1);
 }

@@ -118,7 +118,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     <div class="mx-auto max-w-4xl px-4 pt-32 md:pt-40">
       <div
         ref={contentRef}
-        class="prose dark:prose-invert max-w-none"
+        class="text-text prose dark:prose-invert max-w-none"
         innerHTML={props.body}
       />
     </div>

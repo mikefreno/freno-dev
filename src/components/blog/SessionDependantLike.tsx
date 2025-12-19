@@ -36,37 +36,28 @@ export default function SessionDependantLike(props: SessionDependantLikeProps) {
       if (initialHasLiked) {
         const result = await api.database.removePostLike.mutate({
           user_id: props.currentUserID,
-          post_id: props.projectID.toString(),
+          post_id: props.projectID.toString()
         });
         setLikes(result.newLikes as PostLike[]);
       } else {
         const result = await api.database.addPostLike.mutate({
           user_id: props.currentUserID,
-          post_id: props.projectID.toString(),
+          post_id: props.projectID.toString()
         });
         setLikes(result.newLikes as PostLike[]);
       }
       setInstantOffset(0);
     } catch (error) {
-      console.error("There has been a problem with your like operation:", error);
+      console.error(
+        "There has been a problem with your like operation:",
+        error
+      );
       setHasLiked(initialHasLiked);
       setInstantOffset(0);
     }
   };
 
   const likeCount = () => likes().length + instantOffset();
-  
-  const getLikeIconColor = () => {
-    if (hasLiked()) {
-      return "fill-orange-400";
-    }
-    
-    if (hovering()) {
-      return "fill-orange-400 dark:fill-orange-500";
-    }
-    
-    return "fill-black dark:fill-white";
-  };
 
   return (
     <Show
@@ -76,12 +67,12 @@ export default function SessionDependantLike(props: SessionDependantLikeProps) {
           <div class="mx-auto">
             <LikeIcon
               strokeWidth={1}
-              color="fill-black dark:fill-white"
+              color="fill-text"
               height={32}
               width={32}
             />
           </div>
-          <div class="my-auto pl-2 pt-0.5 text-sm text-black dark:text-white">
+          <div class="my-auto pt-0.5 pl-2 text-sm text-black dark:text-white">
             {likes().length} {likes().length === 1 ? "Like" : "Likes"}
           </div>
           <div class="tooltip-text -ml-12 w-12">Must be logged in</div>
@@ -93,18 +84,18 @@ export default function SessionDependantLike(props: SessionDependantLikeProps) {
         onMouseOver={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
       >
-        <div class="hover:text-orange-400 tooltip flex flex-col text-black dark:text-white">
-          <div class="mx-auto">
+        <div class="tooltip text-text flex flex-col hover:brightness-125">
+          <div class="mx-auto hover:brightness-125">
             <LikeIcon
               strokeWidth={1}
-              color={getLikeIconColor()}
+              color={`fill-blue`}
               height={32}
               width={32}
             />
           </div>
           <div
             class={`${
-              hasLiked() ? "text-orange-400" : ""
+              hasLiked() ? "text-blue" : ""
             } mx-auto flex pl-2 transition-colors duration-200 ease-in`}
           >
             {likeCount()} {likeCount() === 1 ? "Like" : "Likes"}

@@ -179,7 +179,7 @@ export default function PostPage() {
                           />
                         </div>
                         <div
-                          class="text-shadow absolute top-1/3 z-10 my-auto px-4 text-center tracking-widest text-white brightness-150 select-text"
+                          class="text-shadow text-text absolute top-1/3 z-10 my-auto px-4 text-center tracking-widest brightness-150 select-text"
                           style={{
                             "pointer-events": "none",
                             width: `${centerWidth()}px`,
@@ -223,7 +223,7 @@ export default function PostPage() {
                           <div class="flex flex-row justify-center pt-4 md:pt-0 md:pr-8">
                             <a href="#comments" class="mx-2">
                               <div class="tooltip flex flex-col">
-                                <div class="mx-auto">
+                                <div class="mx-auto hover:brightness-125">
                                   <CommentIcon
                                     strokeWidth={1}
                                     height={32}
