@@ -1,5 +1,4 @@
 import { Title, Meta } from "@solidjs/meta";
-import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
 import { Typewriter } from "~/components/Typewriter";
 
 export default function Home() {
@@ -25,17 +24,17 @@ export default function Home() {
           </Typewriter>
           <Typewriter speed={100} keepAlive={2000}>
             I'm a passionate developer tooling, game, and open source software
-            developer. Recently been working in the world of{" "}
+            developer.
+          </Typewriter>
+          <Typewriter speed={100} keepAlive={2000}>
+            Recently been working in the world of{" "}
             <a
               href="https://www.love2d.org"
               class="text-blue hover-underline-animation"
             >
               LÖVE
             </a>{" "}
-            (an open source game engine for Lua).
-          </Typewriter>
-          <Typewriter speed={100} keepAlive={2000}>
-            You can see some of my work{" "}
+            (an open source game engine for Lua). You can see some of my work{" "}
             <a
               href="https://github.com/mikefreno"
               class="text-blue hover-underline-animation"
@@ -51,7 +50,7 @@ export default function Home() {
                 <div>My LÖVE UI library</div>
                 <a
                   href="https://github.com/mikefreno/flexlove"
-                  class="text-blue hover-underline-animation"
+                  class="text-blue hover-underline-animation mx-auto w-fit"
                 >
                   FlexLöve
                 </a>
@@ -93,7 +92,7 @@ export default function Home() {
               <div class="border-surface0 flex w-full max-w-3/4 flex-col gap-2 rounded-md border-2 p-4 text-center">
                 <div>My mobile game:</div>
                 <a
-                  class="text-blue hover-underline-animation"
+                  class="text-blue hover-underline-animation mx-auto w-fit"
                   href="https://apps.apple.com/us/app/life-and-lineage/id6737252442"
                 >
                   Life and Lineage

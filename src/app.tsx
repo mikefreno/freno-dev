@@ -166,10 +166,9 @@ function AppLayout(props: { children: any }) {
       </Show>
 
       <div
-        class="flex max-w-screen flex-row"
+        class="flex max-w-screen flex-row transition-all duration-500 ease-in-out"
         style={{
-          opacity: barsInitialized() ? "1" : "0",
-          transition: "opacity 0.3s ease-in-out"
+          opacity: barsInitialized() ? "1" : "0"
         }}
       >
         <LeftBar />

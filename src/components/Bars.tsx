@@ -356,7 +356,7 @@ export function LeftBar() {
 
       <div class="flex h-full min-h-full flex-col overflow-y-auto">
         <Typewriter speed={10} keepAlive={10000} class="z-50 pr-8 pl-4">
-          <h3 class="hover:text-subtext0 w-fit text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
+          <h3 class="hover:text-subtext0 w-fit pt-6 text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
             <a href="/">Freno.dev</a>
           </h3>
         </Typewriter>
