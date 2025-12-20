@@ -1,5 +1,6 @@
 import { Accessor, createContext, useContext, createMemo } from "solid-js";
 import { createSignal } from "solid-js";
+import { hapticFeedback } from "~/lib/client-utils";
 
 const BarsContext = createContext<{
   leftBarSize: Accessor<number>;
@@ -97,11 +98,14 @@ export function BarsProvider(props: { children: any }) {
     return barsInitialized() ? syncedBarSize() : naturalSize;
   });
 
+  // Wrap visibility setters with haptic feedback
   const setLeftBarVisible = (visible: boolean) => {
+    hapticFeedback(50);
     _setLeftBarVisible(visible);
   };
 
   const setRightBarVisible = (visible: boolean) => {
+    hapticFeedback(50);
     _setRightBarVisible(visible);
   };
   return (

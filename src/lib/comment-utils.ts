@@ -205,8 +205,7 @@ export function debounce<T extends (...args: any[]) => any>(
 // ============================================================================
 
 /**
- * Validates that a comment body meets requirements (client-side UX only)
- * Server validation is in src/server/api/schemas/validation.ts
+ * Validates that a comment body meets requirements
  */
 export function isValidCommentBody(body: string): boolean {
   return body.trim().length > 0 && body.length <= 10000;

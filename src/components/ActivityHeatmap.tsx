@@ -74,15 +74,15 @@ export const ActivityHeatmap: Component<{
                 {() => (
                   <div class="flex flex-col gap-[2px]">
                     <For each={Array(7)}>
-                      {() => <SkeletonBox class="h-2 w-2 rounded-[2px]" />}
+                      {() => <div class="bg-surface0 h-2 w-2 rounded-[2px]" />}
                     </For>
                   </div>
                 )}
               </For>
             </div>
             {/* Centered spinner overlay */}
-            <div class="bg-base/70 absolute inset-0 flex items-center justify-center backdrop-blur-sm">
-              <SkeletonBox class="h-8 w-8" />
+            <div class="absolute inset-0 top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2">
+              <SkeletonBox class="-ml-2 h-8 w-8" />
             </div>
           </div>
         }

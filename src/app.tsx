@@ -31,12 +31,6 @@ function AppLayout(props: { children: any }) {
   let lastScrollY = 0;
   const SCROLL_THRESHOLD = 100;
 
-  // Compute left margin reactively
-  const leftMargin = () => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    return isMobile ? 0 : leftBarSize();
-  };
-
   createEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768; // md breakpoint
@@ -47,9 +41,7 @@ function AppLayout(props: { children: any }) {
         setRightBarVisible(true);
       }
 
-      // On mobile, leftbar overlays (don't subtract its size)
-      const leftOffset = isMobile ? 0 : leftBarSize();
-      const newWidth = window.innerWidth - leftOffset - rightBarSize();
+      const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
       setCenterWidth(newWidth);
     };
 
@@ -63,10 +55,7 @@ function AppLayout(props: { children: any }) {
 
   // Recalculate when bar sizes change (visibility or actual resize)
   createEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    // On mobile, leftbar overlays (don't subtract its size)
-    const leftOffset = isMobile ? 0 : leftBarSize();
-    const newWidth = window.innerWidth - leftOffset - rightBarSize();
+    const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
     setCenterWidth(newWidth);
   });
 
@@ -170,31 +159,13 @@ function AppLayout(props: { children: any }) {
 
   return (
     <>
-      <Show when={!barsInitialized()}>
-        <div class="bg-base fixed inset-0 z-100">
-          <TerminalSplash />
-        </div>
-      </Show>
-
-      <div
-        class="flex max-w-screen flex-row"
-        style={{
-          opacity: barsInitialized() ? "1" : "0",
-          transition: "opacity 0.3s ease-in-out"
-        }}
-      >
+      <div class="flex max-w-screen flex-row">
         <LeftBar />
         <div
           class="bg-base relative min-h-screen rounded-t-lg shadow-2xl"
           style={{
             width: `${centerWidth()}px`,
-            "margin-left": `${leftMargin()}px`
-          }}
-          onClick={() => {
-            const isMobile = window.innerWidth < 768;
-            if (isMobile && leftBarVisible()) {
-              setLeftBarVisible(false);
-            }
+            "margin-left": `${leftBarSize()}px`
           }}
         >
           <Show when={barsInitialized()} fallback={<TerminalSplash />}>

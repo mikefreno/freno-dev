@@ -9,7 +9,6 @@ import {
   onCleanup
 } from "solid-js";
 import { api } from "~/lib/api";
-import { TerminalSplash } from "./TerminalSplash";
 import { insertSoftHyphens } from "~/lib/client-utils";
 import GitHub from "./icons/GitHub";
 import LinkedIn from "./icons/LinkedIn";
@@ -397,13 +396,15 @@ export function LeftBar() {
                 fallback={
                   <For each={[1, 2, 3]}>
                     {() => (
-                      <div class="flex flex-col gap-2">
-                        <div class="relative overflow-hidden">
-                          <SkeletonBox class="float-right mb-1 ml-2 h-12 w-16" />
-                          <SkeletonText class="mb-1 w-full" />
-                          <SkeletonText class="w-3/4" />
+                      <div class="flex flex-col">
+                        <div class="flex items-start gap-2">
+                          <div class="flex flex-1 flex-col gap-2">
+                            <SkeletonText class="h-6 w-full" />
+                            <SkeletonText class="h-6 w-full" />
+                          </div>
+                          <SkeletonBox class="h-14 w-16 shrink-0" />
                         </div>
-                        <SkeletonText class="clear-both w-24 text-xs" />
+                        <SkeletonText class="mt-2 h-6 w-full" />
                       </div>
                     )}
                   </For>

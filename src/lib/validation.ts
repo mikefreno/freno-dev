@@ -1,18 +1,9 @@
 /**
- * Client-Side Validation Utilities (UX Only - NOT Security)
- *
- * ⚠️ IMPORTANT: These functions are for user experience only!
- *
- * Server-side validation in src/server/api/schemas/validation.ts is the
- * source of truth and security boundary. These client functions provide
- * instant feedback before submission but can be bypassed.
- *
- * Always rely on server validation for security.
+ * Form validation utilities
  */
 
 /**
- * Validate email format (client-side UX only)
- * Server validation is in src/server/api/schemas/validation.ts
+ * Validate email format
  */
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,8 +11,7 @@ export function isValidEmail(email: string): boolean {
 }
 
 /**
- * Validate password strength (client-side UX only)
- * Server validation is in src/server/api/schemas/validation.ts
+ * Validate password strength
  */
 export function validatePassword(password: string): {
   isValid: boolean;
@@ -51,8 +41,7 @@ export function validatePassword(password: string): {
 }
 
 /**
- * Check if two passwords match (client-side UX only)
- * Server validation is in src/server/api/schemas/validation.ts
+ * Check if two passwords match
  */
 export function passwordsMatch(
   password: string,
@@ -62,8 +51,7 @@ export function passwordsMatch(
 }
 
 /**
- * Validate display name (client-side UX only)
- * Server validation is in src/server/api/schemas/validation.ts
+ * Validate display name
  */
 export function isValidDisplayName(name: string): boolean {
   return name.trim().length >= 1 && name.trim().length <= 50;
