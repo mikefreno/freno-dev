@@ -1,4 +1,5 @@
-import { Component, For, createMemo } from "solid-js";
+import { Component, For, createMemo, Show } from "solid-js";
+import { SkeletonBox } from "./SkeletonLoader";
 
 interface ContributionDay {
   date: string;
@@ -63,26 +64,50 @@ export const ActivityHeatmap: Component<{
   return (
     <div class="flex flex-col gap-3">
       <h3 class="text-subtext0 text-sm font-semibold">{props.title}</h3>
-      <div class="flex gap-[2px] overflow-x-auto">
-        <For each={weeks()}>
-          {(week) => (
-            <div class="flex flex-col gap-[2px]">
-              <For each={week}>
-                {(day) => (
-                  <div
-                    class="h-2 w-2 rounded-[2px] transition-all hover:scale-125"
-                    style={{
-                      "background-color": getColor(day.count),
-                      opacity: getOpacity(day.count)
-                    }}
-                    title={`${day.date}: ${day.count} contributions`}
-                  />
+      <Show
+        when={props.contributions && props.contributions.length > 0}
+        fallback={
+          <div class="relative">
+            {/* Skeleton grid matching heatmap dimensions */}
+            <div class="flex gap-[2px]">
+              <For each={Array(12)}>
+                {() => (
+                  <div class="flex flex-col gap-[2px]">
+                    <For each={Array(7)}>
+                      {() => <SkeletonBox class="h-2 w-2 rounded-[2px]" />}
+                    </For>
+                  </div>
                 )}
               </For>
             </div>
-          )}
-        </For>
-      </div>
+            {/* Centered spinner overlay */}
+            <div class="bg-base/70 absolute inset-0 flex items-center justify-center backdrop-blur-sm">
+              <SkeletonBox class="h-8 w-8" />
+            </div>
+          </div>
+        }
+      >
+        <div class="flex gap-[2px] overflow-x-auto">
+          <For each={weeks()}>
+            {(week) => (
+              <div class="flex flex-col gap-[2px]">
+                <For each={week}>
+                  {(day) => (
+                    <div
+                      class="h-2 w-2 rounded-[2px] transition-all hover:scale-125"
+                      style={{
+                        "background-color": getColor(day.count),
+                        opacity: getOpacity(day.count)
+                      }}
+                      title={`${day.date}: ${day.count} contributions`}
+                    />
+                  )}
+                </For>
+              </div>
+            )}
+          </For>
+        </div>
+      </Show>
       <div class="flex items-center gap-2 text-[10px]">
         <span class="text-subtext1">Less</span>
         <div class="flex gap-1">

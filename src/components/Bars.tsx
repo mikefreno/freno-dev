@@ -1,6 +1,13 @@
 import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
-import { onMount, createEffect, createSignal, Show, For } from "solid-js";
+import {
+  onMount,
+  createEffect,
+  createSignal,
+  Show,
+  For,
+  onCleanup
+} from "solid-js";
 import { api } from "~/lib/api";
 import { TerminalSplash } from "./TerminalSplash";
 import { insertSoftHyphens } from "~/lib/client-utils";
@@ -9,6 +16,7 @@ import LinkedIn from "./icons/LinkedIn";
 import { RecentCommits } from "./RecentCommits";
 import { ActivityHeatmap } from "./ActivityHeatmap";
 import { DarkModeToggle } from "./DarkModeToggle";
+import { SkeletonBox, SkeletonText } from "./SkeletonLoader";
 
 interface GitCommit {
   sha: string;
@@ -33,25 +41,35 @@ export function RightBarContent() {
   const [giteaActivity, setGiteaActivity] = createSignal<ContributionDay[]>([]);
   const [loading, setLoading] = createSignal(true);
 
-  onMount(async () => {
+  onMount(() => {
     // Fetch all data client-side only to avoid hydration mismatch
-    try {
-      const [ghCommits, gtCommits, ghActivity, gtActivity] = await Promise.all([
-        api.gitActivity.getGitHubCommits.query({ limit: 3 }).catch(() => []),
-        api.gitActivity.getGiteaCommits.query({ limit: 3 }).catch(() => []),
-        api.gitActivity.getGitHubActivity.query().catch(() => []),
-        api.gitActivity.getGiteaActivity.query().catch(() => [])
-      ]);
+    const fetchData = async () => {
+      try {
+        const [ghCommits, gtCommits, ghActivity, gtActivity] =
+          await Promise.all([
+            api.gitActivity.getGitHubCommits
+              .query({ limit: 3 })
+              .catch(() => []),
+            api.gitActivity.getGiteaCommits.query({ limit: 3 }).catch(() => []),
+            api.gitActivity.getGitHubActivity.query().catch(() => []),
+            api.gitActivity.getGiteaActivity.query().catch(() => [])
+          ]);
 
-      setGithubCommits(ghCommits);
-      setGiteaCommits(gtCommits);
-      setGithubActivity(ghActivity);
-      setGiteaActivity(gtActivity);
-    } catch (error) {
-      console.error("Failed to fetch git activity:", error);
-    } finally {
-      setLoading(false);
-    }
+        setGithubCommits(ghCommits);
+        setGiteaCommits(gtCommits);
+        setGithubActivity(ghActivity);
+        setGiteaActivity(gtActivity);
+      } catch (error) {
+        console.error("Failed to fetch git activity:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Defer API calls to next tick to allow initial render to complete first
+    setTimeout(() => {
+      fetchData();
+    }, 0);
   });
 
   return (
@@ -166,43 +184,11 @@ export function LeftBar() {
     }
   };
 
-  onMount(async () => {
+  onMount(() => {
     // Mark as mounted to avoid hydration mismatch
     setIsMounted(true);
 
-    // Fetch recent posts only on client side to avoid hydration mismatch
-    try {
-      const posts = await api.blog.getRecentPosts.query();
-      setRecentPosts(posts as any[]);
-    } catch (error) {
-      console.error("Failed to fetch recent posts:", error);
-      setRecentPosts([]);
-    }
-
-    // Fetch user info client-side only to avoid hydration mismatch
-    try {
-      const response = await fetch("/api/trpc/user.getProfile", {
-        method: "GET"
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.result?.data) {
-          setUserInfo({
-            email: result.result.data.email,
-            isAuthenticated: true
-          });
-        } else {
-          setUserInfo({ email: null, isAuthenticated: false });
-        }
-      } else {
-        setUserInfo({ email: null, isAuthenticated: false });
-      }
-    } catch (error) {
-      console.error("Failed to fetch user info:", error);
-      setUserInfo({ email: null, isAuthenticated: false });
-    }
-
+    // Setup ResizeObserver FIRST (synchronous) - this allows bar sizing to happen immediately
     if (ref) {
       const updateSize = () => {
         actualWidth = ref?.offsetWidth || 0;
@@ -282,13 +268,54 @@ export function LeftBar() {
       ref.addEventListener("touchend", handleTouchEnd, { passive: true });
       ref.addEventListener("keydown", handleKeyDown);
 
-      return () => {
+      onCleanup(() => {
         resizeObserver.disconnect();
         ref?.removeEventListener("touchstart", handleTouchStart);
         ref?.removeEventListener("touchend", handleTouchEnd);
         ref?.removeEventListener("keydown", handleKeyDown);
-      };
+      });
     }
+
+    // Fetch data asynchronously AFTER sizing setup (non-blocking)
+    const fetchData = async () => {
+      // Fetch recent posts only on client side to avoid hydration mismatch
+      try {
+        const posts = await api.blog.getRecentPosts.query();
+        setRecentPosts(posts as any[]);
+      } catch (error) {
+        console.error("Failed to fetch recent posts:", error);
+        setRecentPosts([]);
+      }
+
+      // Fetch user info client-side only to avoid hydration mismatch
+      try {
+        const response = await fetch("/api/trpc/user.getProfile", {
+          method: "GET"
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.result?.data) {
+            setUserInfo({
+              email: result.result.data.email,
+              isAuthenticated: true
+            });
+          } else {
+            setUserInfo({ email: null, isAuthenticated: false });
+          }
+        } else {
+          setUserInfo({ email: null, isAuthenticated: false });
+        }
+      } catch (error) {
+        console.error("Failed to fetch user info:", error);
+        setUserInfo({ email: null, isAuthenticated: false });
+      }
+    };
+
+    // Defer API calls to next tick to allow initial render/sizing to complete first
+    setTimeout(() => {
+      fetchData();
+    }, 0);
   });
 
   // Update size when visibility changes
@@ -365,7 +392,23 @@ export function LeftBar() {
           <div class="flex flex-col py-8">
             <span class="text-lg font-semibold">Recent Posts</span>
             <div class="flex max-h-[50dvh] flex-col gap-3 pt-4">
-              <Show when={recentPosts()} fallback={<TerminalSplash />}>
+              <Show
+                when={recentPosts()}
+                fallback={
+                  <For each={[1, 2, 3]}>
+                    {() => (
+                      <div class="flex flex-col gap-2">
+                        <div class="relative overflow-hidden">
+                          <SkeletonBox class="float-right mb-1 ml-2 h-12 w-16" />
+                          <SkeletonText class="mb-1 w-full" />
+                          <SkeletonText class="w-3/4" />
+                        </div>
+                        <SkeletonText class="clear-both w-24 text-xs" />
+                      </div>
+                    )}
+                  </For>
+                }
+              >
                 <For each={recentPosts()}>
                   {(post) => (
                     <a
