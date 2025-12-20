@@ -206,11 +206,7 @@ export default function ContactPage() {
           </Show>
           <LineageQuestionsDropDown />
           <form onSubmit={sendEmailTrigger} class="w-full">
-            <div
-              class={`flex w-full flex-col justify-evenly pt-6 ${
-                viewer() !== "lineage" ? "md:mt-24" : ""
-              }`}
-            >
+            <div class="flex w-full flex-col justify-evenly">
               <div class="mx-auto w-full justify-evenly md:flex md:flex-row">
                 <div class="input-group md:mx-4">
                   <input

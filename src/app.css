@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Register --color-base as animatable color property */
+@property --color-base {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #fbf1c7;
+}
+
 :root {
   /* Comments indicate what they are used for in vim/term
   /* Base Colors (Background/Text) */
@@ -220,6 +227,7 @@
 body {
   background: var(--color-base);
   color: var(--color-text);
+  transition: background-color 500ms ease-in-out;
 }
 
 .cursor-typing {

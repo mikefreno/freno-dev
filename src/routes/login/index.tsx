@@ -328,16 +328,6 @@ export default function LoginPage() {
         content="Sign in to your account or register for a new account to access personalized features and manage your profile."
       />
       <div class="flex h-dvh flex-row justify-evenly">
-        {/* Logo section - hidden on mobile */}
-        {/* <div class="hidden md:flex">
-          <div class="vertical-rule-around z-0 flex justify-center">
-            <picture class="-mr-8">
-              <source srcset="/WhiteLogo.png" media="(prefers-color-scheme: dark)" />
-              <img src="/BlackLogo.png" alt="logo" width={64} height={64} />
-            </picture>
-          </div>
-        </div> */}
-
         {/* Main content */}
         <div class="pt-24 md:pt-48">
           {/* Error message */}

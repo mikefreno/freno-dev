@@ -350,7 +350,8 @@ export function LeftBar() {
         "transition-timing-function": leftBarVisible()
           ? "cubic-bezier(0.34, 1.56, 0.64, 1)" // Bounce out when revealing
           : "cubic-bezier(0.4, 0, 0.2, 1)", // Smooth when hiding
-        "min-width": leftBarSize() > 0 ? `${leftBarSize()}px` : undefined
+        "min-width": leftBarSize() > 0 ? `${leftBarSize()}px` : undefined,
+        "box-shadow": "inset -6px 0 16px -6px rgba(0, 0, 0, 0.1)"
       }}
     >
       {/* Hamburger menu button - positioned at right edge of navbar */}
@@ -542,7 +543,8 @@ export function RightBar() {
         "transition-timing-function": rightBarVisible()
           ? "cubic-bezier(0.34, 1.56, 0.64, 1)"
           : "cubic-bezier(0.4, 0, 0.2, 1)",
-        "min-width": rightBarSize() > 0 ? `${rightBarSize()}px` : undefined
+        "min-width": rightBarSize() > 0 ? `${rightBarSize()}px` : undefined,
+        "box-shadow": "inset 6px 0 16px -6px rgba(0, 0, 0, 0.1)"
       }}
     >
       <RightBarContent />

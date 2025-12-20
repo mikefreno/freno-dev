@@ -46,8 +46,10 @@ export default function RevealDropDown(props: {
 
       {/* Reveal Content */}
       <div
-        class={`absolute right-0 left-0 z-10 overflow-hidden transition-all duration-300 ease-in-out ${
-          isRevealed() ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+        class={`absolute right-0 left-0 z-10 overflow-scroll transition-all duration-300 ease-in-out ${
+          isRevealed()
+            ? "mx-h-[75dvh] opacity-100 md:max-h-[60vh]"
+            : "max-h-0 opacity-0"
         }`}
       >
         <div class="bg-mantle p-4 shadow-lg dark:bg-gray-900">
