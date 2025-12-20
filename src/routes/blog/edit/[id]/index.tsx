@@ -61,6 +61,9 @@ export default function EditPost() {
   const [error, setError] = createSignal("");
   const [showAutoSaveMessage, setShowAutoSaveMessage] = createSignal(false);
   const [isInitialLoad, setIsInitialLoad] = createSignal(true);
+  const [initialBody, setInitialBody] = createSignal<string | undefined>(
+    undefined
+  );
 
   // Populate form when data loads
   createEffect(() => {
@@ -69,7 +72,13 @@ export default function EditPost() {
       const p = postData.post as any;
       setTitle(p.title?.replaceAll("_", " ") || "");
       setSubtitle(p.subtitle || "");
-      setBody(p.body || "");
+      setBody(p.body);
+
+      // Set initial body only once for the editor
+      if (initialBody() === undefined) {
+        setInitialBody(p.body);
+      }
+
       setBannerPhoto(p.banner_photo || "");
       setPublished(p.published || false);
 
@@ -338,7 +347,7 @@ export default function EditPost() {
 
                 {/* Text Editor */}
                 <div class="-mx-6 md:-mx-36">
-                  <TextEditor updateContent={setBody} preSet={body()} />
+                  <TextEditor updateContent={setBody} preSet={initialBody()} />
                 </div>
 
                 {/* Tags */}

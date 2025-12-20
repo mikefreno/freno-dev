@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, untrack, createEffect, on } from "solid-js";
 import { createTiptapEditor, useEditorHTML } from "solid-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -118,9 +118,25 @@ export default function TextEditor(props: TextEditorProps) {
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
     onUpdate: ({ editor }) => {
-      props.updateContent(editor.getHTML());
+      untrack(() => {
+        props.updateContent(editor.getHTML());
+      });
     }
   }));
+
+  // Update editor content when preSet changes (e.g., when data loads), but only if editor exists and content is different
+  createEffect(
+    on(
+      () => props.preSet,
+      (newContent) => {
+        const instance = editor();
+        if (instance && newContent && instance.getHTML() !== newContent) {
+          instance.commands.setContent(newContent, false); // false = don't emit update event
+        }
+      },
+      { defer: true }
+    )
+  );
 
   const setLink = () => {
     const instance = editor();
