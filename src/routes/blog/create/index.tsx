@@ -4,7 +4,7 @@ import { Title, Meta } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { api } from "~/lib/api";
-import { debounce } from "~/lib/client-utils";
+import { debounce } from "es-toolkit";
 import Dropzone from "~/components/blog/Dropzone";
 import TextEditor from "~/components/blog/TextEditor";
 import TagMaker from "~/components/blog/TagMaker";

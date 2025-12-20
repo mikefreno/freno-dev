@@ -12,7 +12,7 @@ import type {
   CommentReaction,
   UserPublicData
 } from "~/types/comment";
-import { debounce } from "~/lib/comment-utils";
+import { debounce } from "es-toolkit";
 import UserDefaultImage from "~/components/icons/UserDefaultImage";
 import ReplyIcon from "~/components/icons/ReplyIcon";
 import TrashIcon from "~/components/icons/TrashIcon";
