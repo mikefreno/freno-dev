@@ -196,7 +196,7 @@ export default function ContactPage() {
       <Title>Contact | Michael Freno</Title>
       <Meta name="description" content="Contact Me" />
 
-      <div class="flex min-h-screen w-full justify-center">
+      <div class="bg-base flex min-h-screen w-full justify-center">
         <div class="w-full max-w-4xl px-4 pt-[20vh]">
           <div class="text-center text-3xl tracking-widest">Contact</div>
           <Show when={viewer() !== "lineage"}>
