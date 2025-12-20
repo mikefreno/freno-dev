@@ -42,6 +42,9 @@ export default function Home() {
               here (github).
             </a>
           </Typewriter>
+          <Typewriter speed={100} keepAlive={2000}>
+            Check the side bar(s) for more info and important links.
+          </Typewriter>
           <div class="pt-8 text-center">
             <div class="pb-4">Some of my recent projects:</div>
             <div class="flex flex-col items-center gap-2 2xl:flex-row 2xl:items-start 2xl:justify-center">
@@ -89,7 +92,7 @@ export default function Home() {
               </div>
 
               {/* Life and Lineage */}
-              <div class="border-surface0 flex w-full max-w-3/4 flex-col gap-2 rounded-md border-2 p-4 text-center 2xl:mr-4">
+              <div class="border-surface0 flex w-full max-w-5/6 flex-col gap-2 rounded-md border-2 p-4 text-center 2xl:mr-4">
                 <div>My mobile game:</div>
                 <a
                   class="text-blue hover-underline-animation mx-auto w-fit"

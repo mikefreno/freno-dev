@@ -31,6 +31,12 @@ function AppLayout(props: { children: any }) {
   let lastScrollY = 0;
   const SCROLL_THRESHOLD = 100;
 
+  // Compute left margin reactively
+  const leftMargin = () => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    return isMobile ? 0 : leftBarSize();
+  };
+
   createEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768; // md breakpoint
@@ -41,7 +47,9 @@ function AppLayout(props: { children: any }) {
         setRightBarVisible(true);
       }
 
-      const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
+      // On mobile, leftbar overlays (don't subtract its size)
+      const leftOffset = isMobile ? 0 : leftBarSize();
+      const newWidth = window.innerWidth - leftOffset - rightBarSize();
       setCenterWidth(newWidth);
     };
 
@@ -55,7 +63,10 @@ function AppLayout(props: { children: any }) {
 
   // Recalculate when bar sizes change (visibility or actual resize)
   createEffect(() => {
-    const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
+    const isMobile = window.innerWidth < 768;
+    // On mobile, leftbar overlays (don't subtract its size)
+    const leftOffset = isMobile ? 0 : leftBarSize();
+    const newWidth = window.innerWidth - leftOffset - rightBarSize();
     setCenterWidth(newWidth);
   });
 
@@ -177,7 +188,13 @@ function AppLayout(props: { children: any }) {
           class="bg-base relative min-h-screen rounded-t-lg shadow-2xl"
           style={{
             width: `${centerWidth()}px`,
-            "margin-left": `${leftBarSize()}px`
+            "margin-left": `${leftMargin()}px`
+          }}
+          onClick={() => {
+            const isMobile = window.innerWidth < 768;
+            if (isMobile && leftBarVisible()) {
+              setLeftBarVisible(false);
+            }
           }}
         >
           <Show when={barsInitialized()} fallback={<TerminalSplash />}>

@@ -7,6 +7,13 @@ import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
 import { SignJWT, jwtVerify } from "jose";
 import { setCookie, getCookie } from "vinxi/http";
 import type { User } from "~/types/user";
+import {
+  emailSchema,
+  passwordSchema,
+  registrationSchema,
+  loginSchema,
+  passwordResetSchema
+} from "~/server/api/schemas/validation";
 
 // Helper to create JWT token
 async function createJWT(
@@ -239,7 +246,7 @@ export const authRouter = createTRPCRouter({
   emailLogin: publicProcedure
     .input(
       z.object({
-        email: z.string().email(),
+        email: emailSchema,
         token: z.string(),
         rememberMe: z.boolean().optional()
       })
@@ -317,7 +324,7 @@ export const authRouter = createTRPCRouter({
   emailVerification: publicProcedure
     .input(
       z.object({
-        email: z.string().email(),
+        email: emailSchema,
         token: z.string()
       })
     )
@@ -360,22 +367,9 @@ export const authRouter = createTRPCRouter({
 
   // Email/password registration
   emailRegistration: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        password: z.string().min(8),
-        passwordConfirmation: z.string().min(8)
-      })
-    )
+    .input(registrationSchema)
     .mutation(async ({ input, ctx }) => {
-      const { email, password, passwordConfirmation } = input;
-
-      if (password !== passwordConfirmation) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "passwordMismatch"
-        });
-      }
+      const { email, password } = input;
 
       const passwordHash = await hashPassword(password);
       const conn = ConnectionFactory();
@@ -411,13 +405,7 @@ export const authRouter = createTRPCRouter({
 
   // Email/password login
   emailPasswordLogin: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        password: z.string(),
-        rememberMe: z.boolean().optional()
-      })
-    )
+    .input(loginSchema)
     .mutation(async ({ input, ctx }) => {
       const { email, password, rememberMe } = input;
 
@@ -477,7 +465,7 @@ export const authRouter = createTRPCRouter({
   requestEmailLinkLogin: publicProcedure
     .input(
       z.object({
-        email: z.string().email(),
+        email: emailSchema,
         rememberMe: z.boolean().optional()
       })
     )
@@ -582,7 +570,7 @@ export const authRouter = createTRPCRouter({
 
   // Request password reset
   requestPasswordReset: publicProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(z.object({ email: emailSchema }))
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
@@ -681,22 +669,9 @@ export const authRouter = createTRPCRouter({
 
   // Reset password with token
   resetPassword: publicProcedure
-    .input(
-      z.object({
-        token: z.string(),
-        newPassword: z.string().min(8),
-        newPasswordConfirmation: z.string().min(8)
-      })
-    )
+    .input(passwordResetSchema)
     .mutation(async ({ input, ctx }) => {
-      const { token, newPassword, newPasswordConfirmation } = input;
-
-      if (newPassword !== newPasswordConfirmation) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Password Mismatch"
-        });
-      }
+      const { token, newPassword } = input;
 
       try {
         // Verify JWT token
@@ -743,7 +718,7 @@ export const authRouter = createTRPCRouter({
 
   // Resend email verification
   resendEmailVerification: publicProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(z.object({ email: emailSchema }))
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
@@ -852,4 +827,3 @@ export const authRouter = createTRPCRouter({
     return { success: true };
   })
 });
-

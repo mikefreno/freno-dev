@@ -17,3 +17,12 @@ export {
 export { hashPassword, checkPassword } from "./password";
 
 export { sendEmailVerification, LINEAGE_JWT_EXPIRY } from "./email";
+
+export {
+  getSQLFormattedDate,
+  formatDateForSQL,
+  parseClientDate,
+  formatRelativeDate,
+  formatDateForDisplay,
+  getCurrentTimestamp
+} from "./date-utils";

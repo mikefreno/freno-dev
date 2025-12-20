@@ -11,6 +11,13 @@ import {
 import { setCookie } from "vinxi/http";
 import type { User } from "~/types/user";
 import { toUserProfile } from "~/types/user";
+import {
+  updateEmailSchema,
+  updateDisplayNameSchema,
+  passwordChangeSchema,
+  passwordSetSchema,
+  deleteAccountSchema
+} from "~/server/api/schemas/validation";
 
 export const userRouter = createTRPCRouter({
   // Get current user profile
@@ -43,7 +50,7 @@ export const userRouter = createTRPCRouter({
 
   // Update email
   updateEmail: publicProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(updateEmailSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
 
@@ -80,7 +87,7 @@ export const userRouter = createTRPCRouter({
 
   // Update display name
   updateDisplayName: publicProcedure
-    .input(z.object({ displayName: z.string().min(1).max(50) }))
+    .input(updateDisplayNameSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
 
@@ -111,7 +118,9 @@ export const userRouter = createTRPCRouter({
 
   // Update profile image
   updateProfileImage: publicProcedure
-    .input(z.object({ imageUrl: z.string() }))
+    .input(
+      z.object({ imageUrl: z.string().url().optional().or(z.literal("")) })
+    )
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
 
@@ -142,13 +151,7 @@ export const userRouter = createTRPCRouter({
 
   // Change password (requires old password)
   changePassword: publicProcedure
-    .input(
-      z.object({
-        oldPassword: z.string(),
-        newPassword: z.string().min(8),
-        newPasswordConfirmation: z.string().min(8)
-      })
-    )
+    .input(passwordChangeSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
 
@@ -159,14 +162,7 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      const { oldPassword, newPassword, newPasswordConfirmation } = input;
-
-      if (newPassword !== newPasswordConfirmation) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Password Mismatch"
-        });
-      }
+      const { oldPassword, newPassword } = input;
 
       const conn = ConnectionFactory();
       const res = await conn.execute({
@@ -224,12 +220,7 @@ export const userRouter = createTRPCRouter({
 
   // Set password (for OAuth users who don't have password)
   setPassword: publicProcedure
-    .input(
-      z.object({
-        newPassword: z.string().min(8),
-        newPasswordConfirmation: z.string().min(8)
-      })
-    )
+    .input(passwordSetSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
 
@@ -240,14 +231,7 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      const { newPassword, newPasswordConfirmation } = input;
-
-      if (newPassword !== newPasswordConfirmation) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Password Mismatch"
-        });
-      }
+      const { password } = input;
 
       const conn = ConnectionFactory();
       const res = await conn.execute({
@@ -272,7 +256,7 @@ export const userRouter = createTRPCRouter({
       }
 
       // Set password
-      const passwordHash = await hashPassword(newPassword);
+      const passwordHash = await hashPassword(password);
       await conn.execute({
         sql: "UPDATE User SET password_hash = ? WHERE id = ?",
         args: [passwordHash, userId]
@@ -293,7 +277,7 @@ export const userRouter = createTRPCRouter({
 
   // Delete account (anonymize data)
   deleteAccount: publicProcedure
-    .input(z.object({ password: z.string() }))
+    .input(deleteAccountSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = await getUserID(ctx.event.nativeEvent);
 
