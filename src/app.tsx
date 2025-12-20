@@ -157,6 +157,24 @@ function AppLayout(props: { children: any }) {
     });
   });
 
+  const handleCenterTap = (e: MouseEvent) => {
+    const isMobile = window.innerWidth < 768;
+
+    // Only hide left bar on mobile when it's visible
+    if (isMobile && leftBarVisible()) {
+      // Check if the click is on an interactive element
+      const target = e.target as HTMLElement;
+      const isInteractive = target.closest(
+        "a, button, input, select, textarea, [onclick]"
+      );
+
+      // Don't hide if clicking on interactive elements
+      if (!isInteractive) {
+        setLeftBarVisible(false);
+      }
+    }
+  };
+
   return (
     <>
       <div class="flex max-w-screen flex-row">
@@ -167,6 +185,7 @@ function AppLayout(props: { children: any }) {
             width: `${centerWidth()}px`,
             "margin-left": `${leftBarSize()}px`
           }}
+          onClick={handleCenterTap}
         >
           <Show when={barsInitialized()} fallback={<TerminalSplash />}>
             <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
