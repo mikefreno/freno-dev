@@ -71,6 +71,10 @@ export function getCommentLevel(
 // ============================================================================
 
 /**
+ * @deprecated Server-side sorting is now implemented in the blog post route.
+ * Comments are sorted by SQL queries for better performance.
+ * This function remains for backward compatibility only.
+ *
  * Calculates "hot" score for a comment based on votes and time
  * Uses logarithmic decay for older comments
  */
@@ -90,6 +94,10 @@ function calculateHotScore(
 }
 
 /**
+ * @deprecated Server-side sorting is now implemented in the blog post route.
+ * Use SQL-based sorting instead for better performance.
+ * This function remains for backward compatibility only.
+ *
  * Counts upvotes for a comment from reaction map
  */
 function getUpvoteCount(
@@ -103,6 +111,10 @@ function getUpvoteCount(
 }
 
 /**
+ * @deprecated Server-side sorting is now implemented in the blog post route.
+ * Use SQL-based sorting instead for better performance.
+ * This function remains for backward compatibility only.
+ *
  * Counts downvotes for a comment from reaction map
  */
 function getDownvoteCount(
@@ -116,6 +128,11 @@ function getDownvoteCount(
 }
 
 /**
+ * @deprecated Server-side sorting is now implemented in the blog post route.
+ * Comments are now sorted by SQL queries in src/routes/blog/[title]/index.tsx
+ * for better performance and reduced client-side processing.
+ * This function remains for backward compatibility only.
+ *
  * Sorts comments based on the selected sorting mode
  *
  * Modes:

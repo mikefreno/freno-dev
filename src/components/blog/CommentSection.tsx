@@ -1,4 +1,5 @@
 import { createSignal, Show } from "solid-js";
+import { useSearchParams } from "@solidjs/router";
 import type {
   Comment,
   CommentReaction,
@@ -42,8 +43,10 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection(props: CommentSectionProps) {
+  const [searchParams] = useSearchParams();
+
   const [selectedSorting, setSelectedSorting] = createSignal<SortingMode>(
-    COMMENT_SORTING_OPTIONS[0].val
+    (searchParams.sortBy as SortingMode) || COMMENT_SORTING_OPTIONS[0].val
   );
 
   const hasComments = () =>

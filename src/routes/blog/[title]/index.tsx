@@ -1,5 +1,11 @@
 import { Show, Suspense, For } from "solid-js";
-import { useParams, A, Navigate, query } from "@solidjs/router";
+import {
+  useParams,
+  A,
+  Navigate,
+  query,
+  useSearchParams
+} from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
@@ -12,39 +18,56 @@ import { useBars } from "~/context/bars";
 import { TerminalSplash } from "~/components/TerminalSplash";
 
 // Server function to fetch post by title
-const getPostByTitle = query(async (title: string) => {
-  "use server";
-  const { ConnectionFactory, getUserID, getPrivilegeLevel } =
-    await import("~/server/utils");
-  const event = getRequestEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
-  const userID = await getUserID(event.nativeEvent);
-  const conn = ConnectionFactory();
+const getPostByTitle = query(
+  async (
+    title: string,
+    sortBy: "newest" | "oldest" | "highest_rated" | "hot" = "newest"
+  ) => {
+    "use server";
+    const { ConnectionFactory, getUserID, getPrivilegeLevel } =
+      await import("~/server/utils");
+    const event = getRequestEvent()!;
+    const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
+    const userID = await getUserID(event.nativeEvent);
+    const conn = ConnectionFactory();
 
-  let query = "SELECT * FROM Post WHERE title = ?";
-  if (privilegeLevel !== "admin") {
-    query += ` AND published = TRUE`;
-  }
+    let query = "SELECT * FROM Post WHERE title = ?";
+    if (privilegeLevel !== "admin") {
+      query += ` AND published = TRUE`;
+    }
 
-  const postResults = await conn.execute({
-    sql: query,
-    args: [decodeURIComponent(title)]
-  });
-
-  const post = postResults.rows[0] as any;
-
-  if (!post) {
-    // Check if post exists but is unpublished
-    const existQuery = "SELECT id FROM Post WHERE title = ?";
-    const existRes = await conn.execute({
-      sql: existQuery,
+    const postResults = await conn.execute({
+      sql: query,
       args: [decodeURIComponent(title)]
     });
 
-    if (existRes.rows[0]) {
+    const post = postResults.rows[0] as any;
+
+    if (!post) {
+      // Check if post exists but is unpublished
+      const existQuery = "SELECT id FROM Post WHERE title = ?";
+      const existRes = await conn.execute({
+        sql: existQuery,
+        args: [decodeURIComponent(title)]
+      });
+
+      if (existRes.rows[0]) {
+        return {
+          post: null,
+          exists: true,
+          comments: [],
+          likes: [],
+          tags: [],
+          userCommentArray: [],
+          reactionArray: [],
+          privilegeLevel: "anonymous" as const,
+          userID: null
+        };
+      }
+
       return {
         post: null,
-        exists: true,
+        exists: false,
         comments: [],
         likes: [],
         tags: [],
@@ -55,82 +78,134 @@ const getPostByTitle = query(async (title: string) => {
       };
     }
 
-    return {
-      post: null,
-      exists: false,
-      comments: [],
-      likes: [],
-      tags: [],
-      userCommentArray: [],
-      reactionArray: [],
-      privilegeLevel: "anonymous" as const,
-      userID: null
-    };
-  }
+    // Fetch comments with sorting
+    let commentQuery = "SELECT * FROM Comment WHERE post_id = ?";
 
-  // Fetch comments
-  const commentQuery = "SELECT * FROM Comment WHERE post_id = ?";
-  const comments = (await conn.execute({ sql: commentQuery, args: [post.id] }))
-    .rows;
-
-  // Fetch likes
-  const likeQuery = "SELECT * FROM PostLike WHERE post_id = ?";
-  const likes = (await conn.execute({ sql: likeQuery, args: [post.id] })).rows;
-
-  // Fetch tags
-  const tagQuery = "SELECT * FROM Tag WHERE post_id = ?";
-  const tags = (await conn.execute({ sql: tagQuery, args: [post.id] })).rows;
-
-  // Build commenter map
-  const commenterToCommentIDMap = new Map<string, number[]>();
-  comments.forEach((comment: any) => {
-    const prev = commenterToCommentIDMap.get(comment.commenter_id) || [];
-    commenterToCommentIDMap.set(comment.commenter_id, [...prev, comment.id]);
-  });
-
-  const commenterQuery =
-    "SELECT email, display_name, image FROM User WHERE id = ?";
-
-  // Convert to serializable array format
-  const userCommentArray: Array<[UserPublicData, number[]]> = [];
-
-  for (const [key, value] of commenterToCommentIDMap.entries()) {
-    const res = await conn.execute({ sql: commenterQuery, args: [key] });
-    const user = res.rows[0];
-    if (user) {
-      userCommentArray.push([user as UserPublicData, value]);
+    // Build ORDER BY clause based on sortBy parameter
+    switch (sortBy) {
+      case "newest":
+        commentQuery += " ORDER BY date DESC";
+        break;
+      case "oldest":
+        commentQuery += " ORDER BY date ASC";
+        break;
+      case "highest_rated":
+        // Calculate net score (upvotes - downvotes) for each comment
+        commentQuery = `
+        SELECT c.*,
+          COALESCE((
+            SELECT COUNT(*) FROM CommentReaction 
+            WHERE comment_id = c.id 
+            AND type IN ('tears', 'heartEye', 'moneyEye')
+          ), 0) - COALESCE((
+            SELECT COUNT(*) FROM CommentReaction 
+            WHERE comment_id = c.id 
+            AND type IN ('angry', 'sick', 'worried')
+          ), 0) as net_score
+        FROM Comment c
+        WHERE c.post_id = ?
+        ORDER BY net_score DESC, c.date DESC
+      `;
+        break;
+      case "hot":
+        // Calculate hot score: (upvotes - downvotes) / log10(age_in_hours + 2)
+        commentQuery = `
+        SELECT c.*,
+          (COALESCE((
+            SELECT COUNT(*) FROM CommentReaction 
+            WHERE comment_id = c.id 
+            AND type IN ('tears', 'heartEye', 'moneyEye')
+          ), 0) - COALESCE((
+            SELECT COUNT(*) FROM CommentReaction 
+            WHERE comment_id = c.id 
+            AND type IN ('angry', 'sick', 'worried')
+          ), 0)) / 
+          LOG10(((JULIANDAY('now') - JULIANDAY(c.date)) * 24) + 2) as hot_score
+        FROM Comment c
+        WHERE c.post_id = ?
+        ORDER BY hot_score DESC, c.date DESC
+      `;
+        break;
     }
-  }
 
-  // Get reaction map as serializable array
-  const reactionArray: Array<[number, CommentReaction[]]> = [];
-  for (const comment of comments) {
-    const reactionQuery = "SELECT * FROM CommentReaction WHERE comment_id = ?";
-    const res = await conn.execute({
-      sql: reactionQuery,
-      args: [(comment as any).id]
+    const comments = (
+      await conn.execute({ sql: commentQuery, args: [post.id] })
+    ).rows;
+
+    // Fetch likes
+    const likeQuery = "SELECT * FROM PostLike WHERE post_id = ?";
+    const likes = (await conn.execute({ sql: likeQuery, args: [post.id] }))
+      .rows;
+
+    // Fetch tags
+    const tagQuery = "SELECT * FROM Tag WHERE post_id = ?";
+    const tags = (await conn.execute({ sql: tagQuery, args: [post.id] })).rows;
+
+    // Build commenter map
+    const commenterToCommentIDMap = new Map<string, number[]>();
+    comments.forEach((comment: any) => {
+      const prev = commenterToCommentIDMap.get(comment.commenter_id) || [];
+      commenterToCommentIDMap.set(comment.commenter_id, [...prev, comment.id]);
     });
-    reactionArray.push([(comment as any).id, res.rows as CommentReaction[]]);
-  }
 
-  return {
-    post,
-    exists: true,
-    comments,
-    likes,
-    tags,
-    topLevelComments: comments.filter((c: any) => c.parent_comment_id == null),
-    userCommentArray,
-    reactionArray,
-    privilegeLevel,
-    userID
-  };
-}, "post-by-title");
+    const commenterQuery =
+      "SELECT email, display_name, image FROM User WHERE id = ?";
+
+    // Convert to serializable array format
+    const userCommentArray: Array<[UserPublicData, number[]]> = [];
+
+    for (const [key, value] of commenterToCommentIDMap.entries()) {
+      const res = await conn.execute({ sql: commenterQuery, args: [key] });
+      const user = res.rows[0];
+      if (user) {
+        userCommentArray.push([user as UserPublicData, value]);
+      }
+    }
+
+    // Get reaction map as serializable array
+    const reactionArray: Array<[number, CommentReaction[]]> = [];
+    for (const comment of comments) {
+      const reactionQuery =
+        "SELECT * FROM CommentReaction WHERE comment_id = ?";
+      const res = await conn.execute({
+        sql: reactionQuery,
+        args: [(comment as any).id]
+      });
+      reactionArray.push([(comment as any).id, res.rows as CommentReaction[]]);
+    }
+
+    // Filter top-level comments (preserve sort order from SQL)
+    const topLevelComments = comments.filter(
+      (c: any) => c.parent_comment_id == null
+    );
+
+    return {
+      post,
+      exists: true,
+      comments,
+      likes,
+      tags,
+      topLevelComments,
+      userCommentArray,
+      reactionArray,
+      privilegeLevel,
+      userID,
+      sortBy
+    };
+  },
+  "post-by-title"
+);
 
 export default function PostPage() {
   const params = useParams();
+  const [searchParams] = useSearchParams();
 
-  const data = createAsync(() => getPostByTitle(params.title));
+  const data = createAsync(() => {
+    const sortBy =
+      (searchParams.sortBy as "newest" | "oldest" | "highest_rated" | "hot") ||
+      "newest";
+    return getPostByTitle(params.title, sortBy);
+  });
 
   const hasCodeBlock = (str: string): boolean => {
     return str.includes("<code") && str.includes("</code>");

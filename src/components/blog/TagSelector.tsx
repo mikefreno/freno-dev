@@ -65,8 +65,17 @@ export default function TagSelector(props: TagSelectorProps) {
     }
   };
 
+  const handleUncheckAll = () => {
+    // Build filter string with all tags
+    const allTags =
+      Object.keys(props.tagMap)
+        .map((key) => key.slice(1))
+        .join("|") + "|";
+    navigate(`${location.pathname}?sort=${currentSort()}&filter=${allTags}`);
+  };
+
   return (
-    <>
+    <div class="relative">
       <button
         ref={buttonRef}
         type="button"
@@ -78,8 +87,17 @@ export default function TagSelector(props: TagSelectorProps) {
       <Show when={showingMenu()}>
         <div
           ref={menuRef}
-          class="bg-surface0 absolute z-50 mt-12 rounded-lg py-2 pr-4 pl-2 shadow-lg"
+          class="bg-surface0 absolute top-full left-0 z-50 mt-2 rounded-lg py-2 pr-4 pl-2 shadow-lg"
         >
+          <div class="border-overlay0 mb-2 flex justify-center border-b pb-2">
+            <button
+              type="button"
+              onClick={handleUncheckAll}
+              class="text-text hover:text-red text-xs font-medium underline"
+            >
+              Uncheck All
+            </button>
+          </div>
           <For each={Object.entries(props.tagMap)}>
             {([key, value]) => (
               <div class="mx-auto my-2 flex">
@@ -98,6 +116,6 @@ export default function TagSelector(props: TagSelectorProps) {
           </For>
         </div>
       </Show>
-    </>
+    </div>
   );
 }

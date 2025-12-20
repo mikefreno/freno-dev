@@ -1,7 +1,6 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { ConnectionFactory } from "~/server/utils";
 import { withCache } from "~/server/cache";
-import { postQueryInputSchema } from "~/server/api/schemas/blog";
 
 export const blogRouter = createTRPCRouter({
   getRecentPosts: publicProcedure.query(async () => {
@@ -37,25 +36,14 @@ export const blogRouter = createTRPCRouter({
     });
   }),
 
-  getPosts: publicProcedure
-    .input(postQueryInputSchema)
-    .query(async ({ ctx, input }) => {
-      const privilegeLevel = ctx.privilegeLevel;
-      const { filters, sortBy } = input;
+  getPosts: publicProcedure.query(async ({ ctx }) => {
+    const privilegeLevel = ctx.privilegeLevel;
 
-      // Create cache key based on filters and sort
-      const cacheKey = `posts-${privilegeLevel}-${filters || "all"}-${sortBy}`;
-
-      // Note: We're removing simple cache due to filtering/sorting variations
-      // Consider implementing a more sophisticated cache strategy if needed
-
+    return withCache(`posts-${privilegeLevel}`, 5 * 60 * 1000, async () => {
       const conn = ConnectionFactory();
 
-      // Parse filter tags (pipe-separated)
-      const filterTags = filters ? filters.split("|").filter(Boolean) : [];
-
-      // Build base query
-      let query = `
+      // Fetch all posts with aggregated data
+      let postsQuery = `
         SELECT 
           p.id,
           p.title,
@@ -69,85 +57,40 @@ export const blogRouter = createTRPCRouter({
           p.reads,
           p.attachments,
           COUNT(DISTINCT pl.user_id) as total_likes,
-          COUNT(DISTINCT c.id) as total_comments,
-          GROUP_CONCAT(t.value) as tags
+          COUNT(DISTINCT c.id) as total_comments
         FROM Post p
         LEFT JOIN PostLike pl ON p.id = pl.post_id
         LEFT JOIN Comment c ON p.id = c.post_id
-        LEFT JOIN Tag t ON p.id = t.post_id`;
+      `;
 
-      // Build WHERE clause
-      const whereClauses: string[] = [];
-      const queryArgs: any[] = [];
-
-      // Published filter (if not admin)
       if (privilegeLevel !== "admin") {
-        whereClauses.push("p.published = TRUE");
+        postsQuery += ` WHERE p.published = TRUE`;
       }
 
-      // Tag filter (if provided)
-      if (filterTags.length > 0) {
-        // Use EXISTS subquery for tag filtering
-        whereClauses.push(`
-          EXISTS (
-            SELECT 1 FROM Tag t2 
-            WHERE t2.post_id = p.id 
-            AND t2.value IN (${filterTags.map(() => "?").join(", ")})
-          )
-        `);
-        queryArgs.push(...filterTags);
-      }
+      postsQuery += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments`;
+      postsQuery += ` ORDER BY p.date ASC;`;
 
-      // Add WHERE clause if any conditions exist
-      if (whereClauses.length > 0) {
-        query += ` WHERE ${whereClauses.join(" AND ")}`;
-      }
+      const postsResult = await conn.execute(postsQuery);
+      const posts = postsResult.rows;
 
-      // Add GROUP BY
-      query += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments`;
+      const tagsQuery = `
+        SELECT t.value, t.post_id
+        FROM Tag t
+        JOIN Post p ON t.post_id = p.id
+        ${privilegeLevel !== "admin" ? "WHERE p.published = TRUE" : ""}
+        ORDER BY t.value ASC
+      `;
 
-      // Add ORDER BY based on sortBy parameter
-      switch (sortBy) {
-        case "newest":
-          query += ` ORDER BY p.date DESC`;
-          break;
-        case "oldest":
-          query += ` ORDER BY p.date ASC`;
-          break;
-        case "most_liked":
-          query += ` ORDER BY total_likes DESC`;
-          break;
-        case "most_read":
-          query += ` ORDER BY p.reads DESC`;
-          break;
-        case "most_comments":
-          query += ` ORDER BY total_comments DESC`;
-          break;
-        default:
-          query += ` ORDER BY p.date DESC`;
-      }
+      const tagsResult = await conn.execute(tagsQuery);
+      const tags = tagsResult.rows;
 
-      query += ";";
-
-      // Execute query
-      const results = await conn.execute({
-        sql: query,
-        args: queryArgs
-      });
-      const posts = results.rows;
-
-      // Process tags into a map for the UI
-      // Note: This includes ALL tags from filtered results
-      let tagMap: Record<string, number> = {};
-      posts.forEach((post: any) => {
-        if (post.tags) {
-          const postTags = post.tags.split(",");
-          postTags.forEach((tag: string) => {
-            tagMap[tag] = (tagMap[tag] || 0) + 1;
-          });
-        }
+      const tagMap: Record<string, number> = {};
+      tags.forEach((tag: any) => {
+        const key = `${tag.value}`;
+        tagMap[key] = (tagMap[key] || 0) + 1;
       });
 
-      return { posts, tagMap, privilegeLevel };
-    })
+      return { posts, tags, tagMap, privilegeLevel };
+    });
+  })
 });

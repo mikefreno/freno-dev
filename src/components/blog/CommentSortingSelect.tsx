@@ -1,4 +1,5 @@
 import { For, Show, createSignal } from "solid-js";
+import { useNavigate, useLocation } from "@solidjs/router";
 import type { CommentSortingSelectProps, SortingMode } from "~/types/comment";
 import Check from "~/components/icons/Check";
 import UpDownArrows from "~/components/icons/UpDownArrows";
@@ -12,6 +13,8 @@ const SORTING_OPTIONS: { val: SortingMode; label: string }[] = [
 
 export default function CommentSortingSelect(props: CommentSortingSelectProps) {
   const [isOpen, setIsOpen] = createSignal(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const selectedLabel = () => {
     const option = SORTING_OPTIONS.find(
@@ -23,6 +26,14 @@ export default function CommentSortingSelect(props: CommentSortingSelectProps) {
   const handleSelect = (mode: SortingMode) => {
     props.setSorting(mode);
     setIsOpen(false);
+
+    // Update URL with sortBy parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set("sortBy", mode);
+    navigate(`${location.pathname}?${url.searchParams.toString()}#comments`, {
+      scroll: false,
+      replace: true
+    });
   };
 
   return (

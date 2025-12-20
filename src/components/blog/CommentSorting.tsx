@@ -1,6 +1,5 @@
-import { createSignal, createEffect, For, Show, createMemo } from "solid-js";
+import { createSignal, createEffect, For, Show } from "solid-js";
 import type { CommentSortingProps } from "~/types/comment";
-import { sortComments } from "~/lib/comment-utils";
 import CommentBlock from "./CommentBlock";
 
 export default function CommentSorting(props: CommentSortingProps) {
@@ -35,17 +34,9 @@ export default function CommentSorting(props: CommentSortingProps) {
     }
   };
 
-  // Memoized sorted comments
-  const sortedComments = createMemo(() => {
-    return sortComments(
-      props.topLevelComments,
-      props.selectedSorting.val,
-      props.reactionMap
-    );
-  });
-
+  // Comments are already sorted from server, no need for client-side sorting
   return (
-    <For each={sortedComments()}>
+    <For each={props.topLevelComments}>
       {(topLevelComment) => (
         <div
           onClick={() => checkForDoubleClick(topLevelComment.id)}

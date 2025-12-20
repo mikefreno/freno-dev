@@ -160,6 +160,7 @@ function AppLayout(props: { children: any }) {
   const handleCenterTapRelease = (e: MouseEvent | TouchEvent) => {
     const isMobile = window.innerWidth < 768;
 
+    // Only hide left bar on mobile when it's visible
     if (isMobile && leftBarVisible()) {
       const target = e.target as HTMLElement;
       const isInteractive = target.closest(
