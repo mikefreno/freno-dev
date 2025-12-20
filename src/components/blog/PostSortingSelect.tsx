@@ -4,11 +4,11 @@ import Check from "~/components/icons/Check";
 import UpDownArrows from "~/components/icons/UpDownArrows";
 
 const sorting = [
-  { val: "Newest" },
-  { val: "Oldest" },
-  { val: "Most Liked" },
-  { val: "Most Read" },
-  { val: "Most Comments" }
+  { val: "newest", label: "Newest" },
+  { val: "oldest", label: "Oldest" },
+  { val: "most_liked", label: "Most Liked" },
+  { val: "most_read", label: "Most Read" },
+  { val: "most_comments", label: "Most Comments" }
 ];
 
 export interface PostSortingSelectProps {}
@@ -23,14 +23,14 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
   const currentFilters = () => searchParams.filter || null;
 
   createEffect(() => {
-    let newRoute = location.pathname + "?sort=" + selected().val.toLowerCase();
+    let newRoute = location.pathname + "?sort=" + selected().val;
     if (currentFilters()) {
       newRoute += "&filter=" + currentFilters();
     }
     navigate(newRoute);
   });
 
-  const handleSelect = (sort: { val: string }) => {
+  const handleSelect = (sort: { val: string; label: string }) => {
     setSelected(sort);
     setIsOpen(false);
   };
@@ -42,7 +42,7 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
         onClick={() => setIsOpen(!isOpen())}
         class="focus-visible:border-peach focus-visible:ring-offset-peach bg-surface0 focus-visible:ring-opacity-75 relative w-full cursor-default rounded-lg py-2 pr-10 pl-3 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:text-sm"
       >
-        <span class="block truncate">{selected().val}</span>
+        <span class="block truncate">{selected().label}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
           <UpDownArrows
             strokeWidth={1.5}
@@ -71,7 +71,7 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
                     selected().val === sort.val ? "font-medium" : "font-normal"
                   }`}
                 >
-                  {sort.val}
+                  {sort.label}
                 </span>
                 <Show when={selected().val === sort.val}>
                   <span class="text-peach absolute inset-y-0 left-0 flex items-center pl-3">

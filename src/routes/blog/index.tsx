@@ -14,7 +14,13 @@ export default function BlogIndex() {
   const sort = () => searchParams.sort || "newest";
   const filters = () => searchParams.filter || "";
 
-  const data = createAsync(() => api.blog.getPosts.query());
+  // Pass filters and sortBy to server query
+  const data = createAsync(() =>
+    api.blog.getPosts.query({
+      filters: filters(),
+      sortBy: sort() as any // Will be validated by Zod schema
+    })
+  );
 
   return (
     <>
@@ -51,8 +57,6 @@ export default function BlogIndex() {
               <PostSorting
                 posts={data()!.posts}
                 privilegeLevel={data()!.privilegeLevel}
-                filters={filters()}
-                sort={sort()}
               />
             </div>
           </Show>
