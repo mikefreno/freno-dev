@@ -934,7 +934,7 @@ export default function TextEditor(props: TextEditorProps) {
             <Show when={showBubbleMenu()}>
               <div
                 ref={bubbleMenuRef}
-                class="bg-mantle text-text fixed z-50 w-fit rounded p-2 text-sm whitespace-nowrap shadow-lg"
+                class="bg-mantle text-text fixed z-[110] w-fit rounded p-2 text-sm whitespace-nowrap shadow-lg"
                 style={{
                   top: `${bubbleMenuPosition().top}px`,
                   left: `${bubbleMenuPosition().left}px`,
@@ -1180,7 +1180,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Language Selector Dropdown */}
             <Show when={showLanguageSelector()}>
               <div
-                class="language-selector bg-mantle text-text border-surface2 fixed z-50 max-h-64 w-48 overflow-y-auto rounded border shadow-lg"
+                class="language-selector bg-mantle text-text border-surface2 fixed z-[110] max-h-64 w-48 overflow-y-auto rounded border shadow-lg"
                 style={{
                   top: `${languageSelectorPosition().top}px`,
                   left: `${languageSelectorPosition().left}px`
@@ -1203,7 +1203,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Table Grid Selector */}
             <Show when={showTableMenu()}>
               <div
-                class="table-menu fixed z-50"
+                class="table-menu fixed z-[110]"
                 style={{
                   top: `${tableMenuPosition().top}px`,
                   left: `${tableMenuPosition().left}px`
@@ -1216,7 +1216,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Mermaid Template Selector */}
             <Show when={showMermaidTemplates()}>
               <div
-                class="mermaid-menu bg-mantle text-text border-surface2 fixed z-50 max-h-96 w-56 overflow-y-auto rounded border shadow-lg"
+                class="mermaid-menu bg-mantle text-text border-surface2 fixed z-[110] max-h-96 w-56 overflow-y-auto rounded border shadow-lg"
                 style={{
                   top: `${mermaidMenuPosition().top}px`,
                   left: `${mermaidMenuPosition().left}px`
@@ -1667,7 +1667,7 @@ export default function TextEditor(props: TextEditorProps) {
       {/* Keyboard Help Modal */}
       <Show when={showKeyboardHelp()}>
         <div
-          class="bg-opacity-50 fixed inset-0 z-[100] flex items-center justify-center bg-black"
+          class="bg-opacity-50 fixed inset-0 z-[110] flex items-center justify-center bg-black"
           onClick={() => setShowKeyboardHelp(false)}
         >
           <div
