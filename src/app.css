@@ -969,3 +969,257 @@ details[open] div[data-type="details-content"] {
     transform: translateY(0);
   }
 }
+
+/* Mermaid diagram styles */
+.mermaid-diagram,
+pre[data-type="mermaid"] {
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: var(--color-surface0);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-surface2);
+  overflow: visible;
+}
+
+.mermaid-diagram code,
+pre[data-type="mermaid"] code {
+  display: block;
+  white-space: pre;
+  font-family: "JetBrainsMono", monospace;
+  color: var(--color-text);
+  background: transparent;
+}
+
+/* Rendered mermaid SVG container */
+.mermaid-rendered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+}
+
+.mermaid-rendered svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Mermaid theme adjustments */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node polygon,
+.mermaid .node ellipse,
+.mermaid .node path {
+  fill: var(--color-surface1) !important;
+  stroke: var(--color-blue) !important;
+  stroke-width: 2px;
+}
+
+.mermaid .node .label,
+.mermaid .nodeLabel {
+  color: var(--color-text) !important;
+  fill: var(--color-text) !important;
+}
+
+.mermaid .edgePath .path,
+.mermaid .flowchart-link {
+  stroke: var(--color-blue) !important;
+  stroke-width: 2px;
+}
+
+.mermaid .edgeLabel,
+.mermaid .edgeLabel rect {
+  background-color: var(--color-surface0) !important;
+  fill: var(--color-surface0) !important;
+}
+
+.mermaid .edgeLabel span {
+  color: var(--color-text) !important;
+}
+
+.mermaid .cluster rect {
+  fill: var(--color-surface0) !important;
+  stroke: var(--color-surface2) !important;
+}
+
+.mermaid .cluster-label {
+  fill: var(--color-text) !important;
+}
+
+/* Class diagram styles */
+.mermaid .classGroup rect,
+.mermaid .classGroup line {
+  stroke: var(--color-blue) !important;
+  fill: var(--color-surface1) !important;
+}
+
+.mermaid .classLabel {
+  fill: var(--color-text) !important;
+}
+
+/* State diagram styles */
+.mermaid .statediagram-state rect {
+  fill: var(--color-surface1) !important;
+  stroke: var(--color-blue) !important;
+}
+
+.mermaid .statediagram-state text {
+  fill: var(--color-text) !important;
+}
+
+/* Sequence diagram styles */
+.mermaid .actor {
+  fill: var(--color-surface1) !important;
+  stroke: var(--color-blue) !important;
+}
+
+.mermaid .actor text,
+.mermaid .messageText {
+  fill: var(--color-text) !important;
+  stroke: none !important;
+}
+
+.mermaid .activation0,
+.mermaid .activation1,
+.mermaid .activation2 {
+  fill: var(--color-surface2) !important;
+  stroke: var(--color-blue) !important;
+}
+
+/* ER diagram styles */
+.mermaid .er.entityBox {
+  fill: var(--color-surface1) !important;
+  stroke: var(--color-blue) !important;
+}
+
+.mermaid .er.entityLabel {
+  fill: var(--color-text) !important;
+}
+
+.mermaid .er.relationshipLabel {
+  fill: var(--color-text) !important;
+}
+
+/* Gantt chart styles */
+.mermaid .grid .tick line {
+  stroke: var(--color-surface2) !important;
+}
+
+.mermaid .grid .tick text {
+  fill: var(--color-text) !important;
+}
+
+.mermaid .task {
+  fill: var(--color-blue) !important;
+  stroke: var(--color-blue) !important;
+}
+
+.mermaid .taskText {
+  fill: var(--color-text) !important;
+}
+
+.mermaid .taskTextOutsideRight,
+.mermaid .taskTextOutsideLeft {
+  fill: var(--color-text) !important;
+}
+
+/* Pie chart styles */
+.mermaid .pieCircle {
+  stroke: var(--color-surface2) !important;
+}
+
+.mermaid .pieTitleText {
+  fill: var(--color-text) !important;
+}
+
+.mermaid .slice {
+  stroke-width: 2px;
+  stroke: var(--color-surface0) !important;
+}
+
+.mermaid .legend rect {
+  fill: var(--color-blue) !important;
+  stroke: var(--color-blue) !important;
+}
+
+/* Override all text elements in mermaid SVG for high contrast */
+.mermaid-rendered svg text,
+.mermaid svg text,
+svg.mermaid text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  stroke: #000000 !important;
+  stroke-width: 0.25px !important;
+}
+
+/* Ensure percentage labels in pie charts are visible */
+.mermaid text.slice,
+.mermaid .slice {
+  fill: #ffffff !important;
+  font-weight: bold !important;
+  font-size: 14px !important;
+  stroke: #000000 !important;
+  stroke-width: 0.75px !important;
+  paint-order: stroke fill !important;
+}
+
+/* Text alignment styles */
+.ProseMirror [style*="text-align: left"],
+.ProseMirror p[style*="text-align: left"],
+.ProseMirror h1[style*="text-align: left"],
+.ProseMirror h2[style*="text-align: left"],
+.ProseMirror h3[style*="text-align: left"],
+.ProseMirror h4[style*="text-align: left"],
+.ProseMirror h5[style*="text-align: left"],
+.ProseMirror h6[style*="text-align: left"] {
+  text-align: left;
+}
+
+.ProseMirror [style*="text-align: center"],
+.ProseMirror p[style*="text-align: center"],
+.ProseMirror h1[style*="text-align: center"],
+.ProseMirror h2[style*="text-align: center"],
+.ProseMirror h3[style*="text-align: center"],
+.ProseMirror h4[style*="text-align: center"],
+.ProseMirror h5[style*="text-align: center"],
+.ProseMirror h6[style*="text-align: center"] {
+  text-align: center;
+}
+
+.ProseMirror [style*="text-align: right"],
+.ProseMirror p[style*="text-align: right"],
+.ProseMirror h1[style*="text-align: right"],
+.ProseMirror h2[style*="text-align: right"],
+.ProseMirror h3[style*="text-align: right"],
+.ProseMirror h4[style*="text-align: right"],
+.ProseMirror h5[style*="text-align: right"],
+.ProseMirror h6[style*="text-align: right"] {
+  text-align: right;
+}
+
+.ProseMirror [style*="text-align: justify"],
+.ProseMirror p[style*="text-align: justify"],
+.ProseMirror h1[style*="text-align: justify"],
+.ProseMirror h2[style*="text-align: justify"],
+.ProseMirror h3[style*="text-align: justify"],
+.ProseMirror h4[style*="text-align: justify"],
+.ProseMirror h5[style*="text-align: justify"],
+.ProseMirror h6[style*="text-align: justify"] {
+  text-align: justify;
+}
+
+/* Image alignment */
+.ProseMirror img[style*="text-align: center"] {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ProseMirror img[style*="text-align: right"] {
+  display: block;
+  margin-left: auto;
+}
+
+.ProseMirror img[style*="text-align: left"] {
+  display: block;
+  margin-right: auto;
+}

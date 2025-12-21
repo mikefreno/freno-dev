@@ -15,6 +15,8 @@ import DetailsSummary from "@tiptap/extension-details-summary";
 import DetailsContent from "@tiptap/extension-details-content";
 import { Node } from "@tiptap/core";
 import { createLowlight, common } from "lowlight";
+import { Mermaid } from "./extensions/Mermaid";
+import TextAlign from "@tiptap/extension-text-align";
 import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
@@ -108,6 +110,160 @@ const AVAILABLE_LANGUAGES = [
   { value: "xml", label: "XML" },
   { value: "yaml", label: "YAML" }
 ] as const;
+
+// Mermaid diagram templates
+const MERMAID_TEMPLATES = [
+  {
+    name: "Flowchart",
+    code: `graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Option 1]
+    B -->|No| D[Option 2]
+    C --> E[End]
+    D --> E`
+  },
+  {
+    name: "Sequence Diagram",
+    code: `sequenceDiagram
+    participant A as Alice
+    participant B as Bob
+    A->>B: Hello Bob!
+    B->>A: Hello Alice!`
+  },
+  {
+    name: "State Diagram",
+    code: `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Processing
+    Processing --> Done
+    Done --> [*]`
+  },
+  {
+    name: "Class Diagram",
+    code: `classDiagram
+    class Animal {
+        +String name
+        +makeSound()
+    }
+    class Dog {
+        +bark()
+    }
+    Animal <|-- Dog`
+  },
+  {
+    name: "Entity Relationship",
+    code: `erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ LINE-ITEM : contains
+    CUSTOMER {
+        string name
+        string email
+    }`
+  },
+  {
+    name: "Gantt Chart",
+    code: `gantt
+    title Project Timeline
+    dateFormat YYYY-MM-DD
+    section Phase 1
+    Task 1 :a1, 2024-01-01, 30d
+    Task 2 :after a1, 20d`
+  },
+  {
+    name: "Pie Chart",
+    code: `pie title Languages Used
+    "JavaScript" : 45
+    "TypeScript" : 30
+    "Python" : 15
+    "Go" : 10`
+  }
+];
+
+// Keyboard shortcuts data
+interface ShortcutCategory {
+  name: string;
+  shortcuts: Array<{
+    keys: string;
+    keysAlt?: string;
+    description: string;
+  }>;
+}
+
+const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
+  {
+    name: "Text Formatting",
+    shortcuts: [
+      { keys: "⌘ B", keysAlt: "Ctrl B", description: "Bold" },
+      { keys: "⌘ I", keysAlt: "Ctrl I", description: "Italic" },
+      { keys: "⌘ ⇧ X", keysAlt: "Ctrl Shift X", description: "Strikethrough" },
+      { keys: "⌘ E", keysAlt: "Ctrl E", description: "Inline Code" }
+    ]
+  },
+  {
+    name: "Headings",
+    shortcuts: [
+      { keys: "⌘ ⌥ 1", keysAlt: "Ctrl Alt 1", description: "Heading 1" },
+      { keys: "⌘ ⌥ 2", keysAlt: "Ctrl Alt 2", description: "Heading 2" },
+      { keys: "⌘ ⌥ 3", keysAlt: "Ctrl Alt 3", description: "Heading 3" },
+      { keys: "⌘ ⌥ 0", keysAlt: "Ctrl Alt 0", description: "Paragraph" }
+    ]
+  },
+  {
+    name: "Lists",
+    shortcuts: [
+      { keys: "⌘ ⇧ 7", keysAlt: "Ctrl Shift 7", description: "Ordered List" },
+      { keys: "⌘ ⇧ 8", keysAlt: "Ctrl Shift 8", description: "Bullet List" },
+      { keys: "⌘ ⇧ 9", keysAlt: "Ctrl Shift 9", description: "Task List" },
+      { keys: "Tab", keysAlt: "Tab", description: "Indent" },
+      { keys: "⇧ Tab", keysAlt: "Shift Tab", description: "Outdent" }
+    ]
+  },
+  {
+    name: "Text Alignment",
+    shortcuts: [
+      { keys: "⌘ ⇧ L", keysAlt: "Ctrl Shift L", description: "Align Left" },
+      { keys: "⌘ ⇧ E", keysAlt: "Ctrl Shift E", description: "Align Center" },
+      { keys: "⌘ ⇧ R", keysAlt: "Ctrl Shift R", description: "Align Right" },
+      { keys: "⌘ ⇧ J", keysAlt: "Ctrl Shift J", description: "Justify" }
+    ]
+  },
+  {
+    name: "Insert",
+    shortcuts: [
+      { keys: "⌘ K", keysAlt: "Ctrl K", description: "Insert/Edit Link" },
+      { keys: "⌘ ⇧ C", keysAlt: "Ctrl Shift C", description: "Code Block" },
+      { keys: "⌘ Enter", keysAlt: "Ctrl Enter", description: "Hard Break" },
+      { keys: "⌘ ⇧ -", keysAlt: "Ctrl Shift -", description: "Horizontal Rule" }
+    ]
+  },
+  {
+    name: "Editing",
+    shortcuts: [
+      { keys: "⌘ Z", keysAlt: "Ctrl Z", description: "Undo" },
+      { keys: "⌘ ⇧ Z", keysAlt: "Ctrl Shift Z", description: "Redo" },
+      { keys: "⌘ Y", keysAlt: "Ctrl Y", description: "Redo (Alt)" },
+      { keys: "⌘ A", keysAlt: "Ctrl A", description: "Select All" }
+    ]
+  },
+  {
+    name: "Other",
+    shortcuts: [
+      {
+        keys: "⌘ ⇧ \\",
+        keysAlt: "Ctrl Shift \\",
+        description: "Clear Formatting"
+      },
+      { keys: "ESC", keysAlt: "ESC", description: "Exit Fullscreen" }
+    ]
+  }
+];
+
+const isMac = () => {
+  return (
+    typeof window !== "undefined" &&
+    /Mac|iPhone|iPad|iPod/.test(window.navigator.platform)
+  );
+};
 
 // IFrame extension
 interface IframeOptions {
@@ -212,6 +368,14 @@ export default function TextEditor(props: TextEditorProps) {
     left: 0
   });
 
+  const [showMermaidTemplates, setShowMermaidTemplates] = createSignal(false);
+  const [mermaidMenuPosition, setMermaidMenuPosition] = createSignal({
+    top: 0,
+    left: 0
+  });
+
+  const [showKeyboardHelp, setShowKeyboardHelp] = createSignal(false);
+
   const [isFullscreen, setIsFullscreen] = createSignal(false);
 
   const editor = createTiptapEditor(() => ({
@@ -262,6 +426,12 @@ export default function TextEditor(props: TextEditorProps) {
         HTMLAttributes: {
           class: "tiptap-table-cell"
         }
+      }),
+      Mermaid,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+        alignments: ["left", "center", "right", "justify"],
+        defaultAlignment: "left"
       })
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
@@ -638,6 +808,44 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
+  // Close mermaid menu on outside click
+  createEffect(() => {
+    if (showMermaidTemplates()) {
+      const handleClickOutside = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (
+          !target.closest(".mermaid-menu") &&
+          !target.closest("[data-mermaid-trigger]")
+        ) {
+          setShowMermaidTemplates(false);
+        }
+      };
+
+      setTimeout(() => {
+        document.addEventListener("click", handleClickOutside);
+      }, 0);
+
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  });
+
+  const showMermaidSelector = (e: MouseEvent) => {
+    const buttonRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMermaidMenuPosition({
+      top: buttonRect.bottom + 5,
+      left: buttonRect.left
+    });
+    setShowMermaidTemplates(!showMermaidTemplates());
+  };
+
+  const insertMermaidDiagram = (template: (typeof MERMAID_TEMPLATES)[0]) => {
+    const instance = editor();
+    if (!instance) return;
+
+    instance.chain().focus().setMermaid(template.code).run();
+    setShowMermaidTemplates(false);
+  };
+
   // Toggle fullscreen mode
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen());
@@ -1005,6 +1213,34 @@ export default function TextEditor(props: TextEditorProps) {
               </div>
             </Show>
 
+            {/* Mermaid Template Selector */}
+            <Show when={showMermaidTemplates()}>
+              <div
+                class="mermaid-menu bg-mantle text-text border-surface2 fixed z-50 max-h-96 w-56 overflow-y-auto rounded border shadow-lg"
+                style={{
+                  top: `${mermaidMenuPosition().top}px`,
+                  left: `${mermaidMenuPosition().left}px`
+                }}
+              >
+                <div class="border-surface2 border-b p-2">
+                  <div class="text-subtext0 text-xs font-semibold">
+                    Select Diagram Type
+                  </div>
+                </div>
+                <For each={MERMAID_TEMPLATES}>
+                  {(template) => (
+                    <button
+                      type="button"
+                      onClick={() => insertMermaidDiagram(template)}
+                      class="hover:bg-surface1 w-full px-3 py-2 text-left text-sm"
+                    >
+                      {template.name}
+                    </button>
+                  )}
+                </For>
+              </div>
+            </Show>
+
             <div class="border-surface2 mb-2 flex flex-wrap gap-1 border-b pb-2">
               <button
                 type="button"
@@ -1151,6 +1387,65 @@ export default function TextEditor(props: TextEditorProps) {
                 ▼ Details
               </button>
               <div class="border-surface2 mx-1 border-l"></div>
+
+              {/* Text Alignment */}
+              <button
+                type="button"
+                onClick={() =>
+                  instance().chain().focus().setTextAlign("left").run()
+                }
+                class={`${
+                  instance().isActive({ textAlign: "left" })
+                    ? "bg-surface2"
+                    : "hover:bg-surface1"
+                } rounded px-2 py-1 text-xs`}
+                title="Align Left"
+              >
+                ⬅
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  instance().chain().focus().setTextAlign("center").run()
+                }
+                class={`${
+                  instance().isActive({ textAlign: "center" })
+                    ? "bg-surface2"
+                    : "hover:bg-surface1"
+                } rounded px-2 py-1 text-xs`}
+                title="Align Center"
+              >
+                ↔
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  instance().chain().focus().setTextAlign("right").run()
+                }
+                class={`${
+                  instance().isActive({ textAlign: "right" })
+                    ? "bg-surface2"
+                    : "hover:bg-surface1"
+                } rounded px-2 py-1 text-xs`}
+                title="Align Right"
+              >
+                ➡
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  instance().chain().focus().setTextAlign("justify").run()
+                }
+                class={`${
+                  instance().isActive({ textAlign: "justify" })
+                    ? "bg-surface2"
+                    : "hover:bg-surface1"
+                } rounded px-2 py-1 text-xs`}
+                title="Justify"
+              >
+                ⬌
+              </button>
+              <div class="border-surface2 mx-1 border-l"></div>
               <button
                 type="button"
                 onClick={showLanguagePicker}
@@ -1205,6 +1500,15 @@ export default function TextEditor(props: TextEditorProps) {
               >
                 ⊞ Table
               </button>
+              <button
+                type="button"
+                onClick={showMermaidSelector}
+                data-mermaid-trigger
+                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                title="Insert Diagram"
+              >
+                📊 Diagram
+              </button>
               <div class="border-surface2 mx-1 border-l"></div>
               <button
                 type="button"
@@ -1226,6 +1530,14 @@ export default function TextEditor(props: TextEditorProps) {
                 }
               >
                 {isFullscreen() ? "⇲ Exit" : "⇱ Fullscreen"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowKeyboardHelp(!showKeyboardHelp())}
+                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                title="Keyboard Shortcuts"
+              >
+                ⌨ Help
               </button>
 
               {/* Table controls - shown when cursor is in a table */}
@@ -1351,6 +1663,66 @@ export default function TextEditor(props: TextEditorProps) {
           "h-[calc(100dvh-8rem)]": isFullscreen()
         }}
       />
+
+      {/* Keyboard Help Modal */}
+      <Show when={showKeyboardHelp()}>
+        <div
+          class="bg-opacity-50 fixed inset-0 z-[100] flex items-center justify-center bg-black"
+          onClick={() => setShowKeyboardHelp(false)}
+        >
+          <div
+            class="bg-base border-surface2 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg border p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div class="mb-6 flex items-center justify-between">
+              <h2 class="text-text text-2xl font-bold">Keyboard Shortcuts</h2>
+              <button
+                type="button"
+                onClick={() => setShowKeyboardHelp(false)}
+                class="hover:bg-surface1 text-subtext0 rounded p-2 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Shortcuts Grid */}
+            <div class="space-y-6">
+              <For each={KEYBOARD_SHORTCUTS}>
+                {(category) => (
+                  <div>
+                    <h3 class="text-blue mb-3 text-lg font-semibold">
+                      {category.name}
+                    </h3>
+                    <div class="space-y-2">
+                      <For each={category.shortcuts}>
+                        {(shortcut) => (
+                          <div class="flex items-center justify-between">
+                            <span class="text-text">
+                              {shortcut.description}
+                            </span>
+                            <kbd class="bg-surface0 border-surface2 text-subtext0 rounded border px-3 py-1 font-mono text-sm">
+                              {isMac()
+                                ? shortcut.keys
+                                : shortcut.keysAlt || shortcut.keys}
+                            </kbd>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+
+            {/* Footer */}
+            <div class="text-subtext0 border-surface2 mt-6 border-t pt-4 text-center text-sm">
+              Press <span class="text-text font-semibold">⌨ Help</span> button
+              to toggle this help
+            </div>
+          </div>
+        </div>
+      </Show>
     </div>
   );
 }

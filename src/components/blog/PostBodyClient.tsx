@@ -1,6 +1,7 @@
 import { createEffect } from "solid-js";
 import { createSignal } from "solid-js";
 import type { HLJSApi } from "highlight.js";
+import MermaidRenderer from "./MermaidRenderer";
 
 export interface PostBodyClientProps {
   body: string;
@@ -121,6 +122,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         class="text-text prose dark:prose-invert max-w-none"
         innerHTML={props.body}
       />
+      <MermaidRenderer />
     </div>
   );
 }
