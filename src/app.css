@@ -819,14 +819,19 @@ ul[data-type="taskList"] {
 
 ul[data-type="taskList"] li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   margin: 0.5rem 0;
+  gap: 0.5rem;
 }
 
 ul[data-type="taskList"] li > label {
   flex: 0 0 auto;
-  margin-right: 0.5rem;
   user-select: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
 }
 
 ul[data-type="taskList"] li > div {
@@ -835,10 +840,23 @@ ul[data-type="taskList"] li > div {
 
 ul[data-type="taskList"] input[type="checkbox"] {
   cursor: pointer;
-  width: 1.2em;
-  height: 1.2em;
-  margin-top: 0.2em;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
   accent-color: var(--color-blue);
+  transform: none;
+  vertical-align: middle;
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
+  border: 2px solid var(--color-blue);
+  border-radius: 0.15em;
+  background-color: transparent;
+}
+
+ul[data-type="taskList"] input[type="checkbox"]:checked {
+  background-color: var(--color-blue);
 }
 
 ul[data-type="taskList"] li[data-checked="true"] > div {
