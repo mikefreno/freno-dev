@@ -106,11 +106,10 @@ function AppLayout(props: { children: any }) {
     });
   });
 
-  // Swipe gestures to reveal bars
+  // Global swipe gestures to reveal/hide bars
   onMount(() => {
     let touchStartX = 0;
     let touchStartY = 0;
-    const EDGE_THRESHOLD = 100;
     const SWIPE_THRESHOLD = 100;
 
     const handleTouchStart = (e: TouchEvent) => {
@@ -129,21 +128,22 @@ function AppLayout(props: { children: any }) {
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
         // Mobile: Only left bar
         if (isMobile) {
-          // Swipe right from left edge - reveal left bar
-          if (touchStartX < EDGE_THRESHOLD && deltaX > SWIPE_THRESHOLD) {
+          // Swipe right anywhere - reveal left bar
+          if (deltaX > SWIPE_THRESHOLD) {
             setLeftBarVisible(true);
+          }
+          // Swipe left anywhere - hide left bar
+          else if (deltaX < -SWIPE_THRESHOLD) {
+            setLeftBarVisible(false);
           }
         } else {
           // Desktop: Both bars
-          // Swipe right from left edge - reveal left bar
-          if (touchStartX < EDGE_THRESHOLD && deltaX > SWIPE_THRESHOLD) {
+          // Swipe right anywhere - reveal left bar
+          if (deltaX > SWIPE_THRESHOLD) {
             setLeftBarVisible(true);
           }
-          // Swipe left from right edge - reveal right bar
-          else if (
-            touchStartX > window.innerWidth - EDGE_THRESHOLD &&
-            deltaX < -SWIPE_THRESHOLD
-          ) {
+          // Swipe left anywhere - reveal right bar
+          else if (deltaX < -SWIPE_THRESHOLD) {
             setRightBarVisible(true);
           }
         }

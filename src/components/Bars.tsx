@@ -164,8 +164,6 @@ export function LeftBar() {
     useBars();
   let ref: HTMLDivElement | undefined;
   let actualWidth = 0;
-  let touchStartX = 0;
-  let touchStartY = 0;
 
   const [recentPosts, setRecentPosts] = createSignal<any[] | undefined>(
     undefined
@@ -191,10 +189,8 @@ export function LeftBar() {
   };
 
   onMount(() => {
-    // Mark as mounted to avoid hydration mismatch
     setIsMounted(true);
 
-    // Setup ResizeObserver FIRST (synchronous) - this allows bar sizing to happen immediately
     if (ref) {
       const updateSize = () => {
         actualWidth = ref?.offsetWidth || 0;
@@ -211,30 +207,6 @@ export function LeftBar() {
         });
       });
       resizeObserver.observe(ref);
-
-      // Swipe-to-dismiss gesture on sidebar itself (mobile only)
-      const handleTouchStart = (e: TouchEvent) => {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      };
-
-      const handleTouchEnd = (e: TouchEvent) => {
-        const isMobile = window.innerWidth < 768;
-        if (!isMobile) return; // Only allow dismiss on mobile
-
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        const deltaX = touchEndX - touchStartX;
-        const deltaY = touchEndY - touchStartY;
-
-        // Only trigger if horizontal swipe is dominant
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Swipe left to dismiss (at least 50px)
-          if (deltaX < -50 && leftBarVisible()) {
-            setLeftBarVisible(false);
-          }
-        }
-      };
 
       // Focus trap for accessibility on mobile
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -270,14 +242,10 @@ export function LeftBar() {
         }
       };
 
-      ref.addEventListener("touchstart", handleTouchStart, { passive: true });
-      ref.addEventListener("touchend", handleTouchEnd, { passive: true });
       ref.addEventListener("keydown", handleKeyDown);
 
       onCleanup(() => {
         resizeObserver.disconnect();
-        ref?.removeEventListener("touchstart", handleTouchStart);
-        ref?.removeEventListener("touchend", handleTouchEnd);
         ref?.removeEventListener("keydown", handleKeyDown);
       });
     }
@@ -348,17 +316,17 @@ export function LeftBar() {
   return (
     <nav
       ref={ref}
-      class="border-r-overlay2 bg-base fixed z-50 h-full w-min border-r-2 transition-transform duration-500 ease-out md:max-w-[20%]"
+      class="border-r-overlay2 bg-base fixed z-50 h-dvh w-min border-r-2 transition-transform duration-500 ease-out md:max-w-[20%]"
       classList={{
         "-translate-x-full": !leftBarVisible(),
         "translate-x-0": leftBarVisible()
       }}
       style={{
-        "transition-timing-function": leftBarVisible()
-          ? "cubic-bezier(0.34, 1.56, 0.64, 1)" // Bounce out when revealing
-          : "cubic-bezier(0.4, 0, 0.2, 1)", // Smooth when hiding
+        "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)", // Smooth for both revealing and hiding
         "min-width": leftBarSize() > 0 ? `${leftBarSize()}px` : undefined,
-        "box-shadow": "inset -6px 0 16px -6px rgba(0, 0, 0, 0.1)"
+        "box-shadow": "inset -6px 0 16px -6px rgba(0, 0, 0, 0.1)",
+        "padding-top": "env(safe-area-inset-top)",
+        "padding-bottom": "env(safe-area-inset-bottom)"
       }}
     >
       {/* Hamburger menu button - positioned at right edge of navbar */}
@@ -388,7 +356,7 @@ export function LeftBar() {
         </svg>
       </button>
 
-      <div class="flex h-full min-h-full flex-col overflow-y-auto">
+      <div class="flex h-full flex-col overflow-y-auto">
         <Typewriter speed={10} keepAlive={10000} class="z-50 pr-8 pl-4">
           <h3 class="hover:text-subtext0 w-fit pt-6 text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
             <a href="/">{formatDomainName(env.VITE_DOMAIN)}</a>
@@ -541,17 +509,17 @@ export function RightBar() {
   return (
     <nav
       ref={ref}
-      class="border-l-overlay2 bg-base fixed right-0 z-50 hidden h-full min-h-screen w-fit border-l-2 transition-transform duration-500 ease-out md:block md:max-w-[20%]"
+      class="border-l-overlay2 bg-base fixed right-0 z-50 hidden h-dvh w-fit border-l-2 transition-transform duration-500 ease-out md:block md:max-w-[20%]"
       classList={{
         "translate-x-full": !rightBarVisible(),
         "translate-x-0": rightBarVisible()
       }}
       style={{
-        "transition-timing-function": rightBarVisible()
-          ? "cubic-bezier(0.34, 1.56, 0.64, 1)"
-          : "cubic-bezier(0.4, 0, 0.2, 1)",
+        "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)", // Smooth for both revealing and hiding
         "min-width": rightBarSize() > 0 ? `${rightBarSize()}px` : undefined,
-        "box-shadow": "inset 6px 0 16px -6px rgba(0, 0, 0, 0.1)"
+        "box-shadow": "inset 6px 0 16px -6px rgba(0, 0, 0, 0.1)",
+        "padding-top": "env(safe-area-inset-top)",
+        "padding-bottom": "env(safe-area-inset-bottom)"
       }}
     >
       <RightBarContent />
