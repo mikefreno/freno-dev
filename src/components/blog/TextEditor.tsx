@@ -231,9 +231,17 @@ export default function TextEditor(props: TextEditorProps) {
           class: "task-item"
         }
       }),
-      Details,
+      Details.configure({
+        HTMLAttributes: {
+          class: "tiptap-details"
+        }
+      }),
       DetailsSummary,
-      DetailsContent,
+      DetailsContent.configure({
+        HTMLAttributes: {
+          class: "details-content"
+        }
+      }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -260,6 +268,37 @@ export default function TextEditor(props: TextEditorProps) {
     editorProps: {
       attributes: {
         class: "focus:outline-none"
+      },
+      handleClickOn(view, pos, node, nodePos, event) {
+        const target = event.target as HTMLElement;
+
+        // Check if click is on a summary element inside details
+        const summary = target.closest("summary");
+        if (summary) {
+          const details = summary.closest('[data-type="details"]');
+          if (details) {
+            // Toggle the open attribute
+            const isOpen = details.hasAttribute("open");
+            if (isOpen) {
+              details.removeAttribute("open");
+            } else {
+              details.setAttribute("open", "");
+            }
+            // Also toggle hidden attribute on details content
+            const content = details.querySelector(
+              '[data-type="detailsContent"]'
+            );
+            if (content) {
+              if (isOpen) {
+                content.setAttribute("hidden", "hidden");
+              } else {
+                content.removeAttribute("hidden");
+              }
+            }
+            return true; // Prevent default behavior
+          }
+        }
+        return false;
       }
     },
     onUpdate: ({ editor }) => {

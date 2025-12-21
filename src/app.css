@@ -890,6 +890,75 @@ details[open] div[data-type="details-content"] {
   animation: slideDown 0.2s ease-out;
 }
 
+/* TipTap Details/Summary nodes - using data-type attributes */
+.ProseMirror [data-type="details"] {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid var(--color-surface2);
+  border-radius: 0.5rem;
+  background-color: var(--color-surface0);
+  position: relative;
+}
+
+/* Hide the empty button that TipTap creates */
+.ProseMirror [data-type="details"] > button {
+  display: none;
+}
+
+.ProseMirror [data-type="details"] summary {
+  cursor: pointer;
+  font-weight: 600;
+  user-select: none;
+  padding: 0.5rem;
+  margin: -1rem -1rem 0 -1rem;
+  background-color: var(--color-surface1);
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: background-color 0.2s;
+  list-style: none;
+}
+
+.ProseMirror [data-type="details"] summary::-webkit-details-marker {
+  display: none;
+}
+
+.ProseMirror [data-type="details"] summary::before {
+  content: "▶ ";
+  color: var(--color-blue);
+  display: inline-block;
+  transition: transform 0.2s;
+  margin-right: 0.25rem;
+}
+
+.ProseMirror [data-type="details"][open] summary::before {
+  transform: rotate(90deg);
+  color: var(--color-green);
+}
+
+.ProseMirror [data-type="details"] summary:hover {
+  background-color: var(--color-surface2);
+}
+
+.ProseMirror [data-type="details"][open] summary {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-surface2);
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.ProseMirror [data-type="detailsContent"] {
+  padding: 0.5rem;
+}
+
+.ProseMirror [data-type="detailsContent"][hidden] {
+  display: none;
+}
+
+.ProseMirror
+  [data-type="details"][open]
+  [data-type="detailsContent"]:not([hidden]) {
+  display: block;
+  animation: slideDown 0.2s ease-out;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
