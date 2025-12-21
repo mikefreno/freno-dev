@@ -8,6 +8,8 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
 import { Node } from "@tiptap/core";
 import { createLowlight, common } from "lowlight";
 import css from "highlight.js/lib/languages/css";
@@ -216,6 +218,13 @@ export default function TextEditor(props: TextEditorProps) {
       }),
       Image,
       IframeEmbed,
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+        HTMLAttributes: {
+          class: "task-item"
+        }
+      }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -711,6 +720,20 @@ export default function TextEditor(props: TextEditorProps) {
                   >
                     Code
                   </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      instance().chain().focus().toggleTaskList().run()
+                    }
+                    class={`${
+                      instance().isActive("taskList")
+                        ? "bg-crust"
+                        : "hover:bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                    title="Task List"
+                  >
+                    ☑
+                  </button>
 
                   {/* Table controls in bubble menu */}
                   <Show when={instance().isActive("table")}>
@@ -961,6 +984,20 @@ export default function TextEditor(props: TextEditorProps) {
                 title="Ordered List"
               >
                 1. List
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  instance().chain().focus().toggleTaskList().run()
+                }
+                class={`${
+                  instance().isActive("taskList")
+                    ? "bg-surface2"
+                    : "hover:bg-surface1"
+                } rounded px-2 py-1 text-xs`}
+                title="Task List"
+              >
+                ☑ Tasks
               </button>
               <button
                 type="button"

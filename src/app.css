@@ -809,3 +809,44 @@ a.hover-underline-animation:hover::after {
   background-color: var(--color-blue);
   pointer-events: none;
 }
+
+/* Task list styles */
+ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  margin: 0.5rem 0;
+}
+
+ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
+  user-select: none;
+}
+
+ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+}
+
+ul[data-type="taskList"] input[type="checkbox"] {
+  cursor: pointer;
+  width: 1.2em;
+  height: 1.2em;
+  margin-top: 0.2em;
+  accent-color: var(--color-blue);
+}
+
+ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Nested task lists */
+ul[data-type="taskList"] ul[data-type="taskList"] {
+  margin: 0.5rem 0 0.5rem 1.5rem;
+}
