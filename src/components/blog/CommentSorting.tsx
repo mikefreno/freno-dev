@@ -40,7 +40,7 @@ export default function CommentSorting(props: CommentSortingProps) {
       {(topLevelComment) => (
         <div
           onClick={() => checkForDoubleClick(topLevelComment.id)}
-          class="bg-crust mt-4 max-w-full rounded py-2 pl-2 shadow-xl select-none sm:pl-4 md:pl-8 lg:pl-12"
+          class="bg-mantle mt-4 max-w-full rounded-lg py-2 pl-2 shadow-xl select-none sm:pl-4 md:pl-8 lg:pl-12"
         >
           <Show
             when={showingBlock().get(topLevelComment.id)}

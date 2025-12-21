@@ -4,6 +4,7 @@ import {
   onMount,
   createEffect,
   createSignal,
+  createMemo,
   Show,
   For,
   onCleanup
@@ -17,6 +18,12 @@ import { ActivityHeatmap } from "./ActivityHeatmap";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { SkeletonBox, SkeletonText } from "./SkeletonLoader";
 import { env } from "~/env/client";
+
+function formatDomainName(url: string): string {
+  const domain = url.split("://")[1]?.split(":")[0] ?? url;
+  const withoutWww = domain.replace(/^www\./i, "");
+  return withoutWww.charAt(0).toUpperCase() + withoutWww.slice(1);
+}
 
 interface GitCommit {
   sha: string;
@@ -385,10 +392,7 @@ export function LeftBar() {
       <div class="flex h-full min-h-full flex-col overflow-y-auto">
         <Typewriter speed={10} keepAlive={10000} class="z-50 pr-8 pl-4">
           <h3 class="hover:text-subtext0 w-fit pt-6 text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
-            <a href="/">
-              {env.VITE_DOMAIN.split("://")[1].charAt(0).toUpperCase() +
-                env.VITE_DOMAIN.split("://")[1].slice(1)}
-            </a>
+            <a href="/">{formatDomainName(env.VITE_DOMAIN)}</a>
           </h3>
         </Typewriter>
 

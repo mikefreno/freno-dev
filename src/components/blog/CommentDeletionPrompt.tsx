@@ -37,6 +37,11 @@ export default function CommentDeletionPrompt(
     } else if (fullDeleteChecked()) {
       deleteType = "database";
     }
+    console.log("[CommentDeletionPrompt] Calling deleteComment:", {
+      commentID: props.commentID,
+      commenterID: props.commenterID,
+      deleteType
+    });
     props.deleteComment(props.commentID, props.commenterID, deleteType);
   };
 
@@ -45,7 +50,7 @@ export default function CommentDeletionPrompt(
 
   return (
     <div class="flex justify-center">
-      <div class="fixed top-48 z-100 h-fit w-11/12 sm:w-4/5 md:w-2/3">
+      <div class="fixed top-48 z-100 h-fit">
         <div
           id="delete_prompt"
           class="fade-in bg-red rounded-md px-8 py-4 shadow-lg brightness-110"

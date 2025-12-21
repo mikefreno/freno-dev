@@ -1,4 +1,8 @@
-import { createTRPCRouter, publicProcedure } from "../utils";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure
+} from "../utils";
 import { z } from "zod";
 import { ConnectionFactory } from "~/server/utils";
 import { TRPCError } from "@trpc/server";
@@ -121,6 +125,132 @@ export const databaseRouter = createTRPCRouter({
       });
     }
   }),
+
+  deleteComment: protectedProcedure
+    .input(
+      z.object({
+        commentID: z.number(),
+        commenterID: z.string(),
+        deletionType: z.enum(["user", "admin", "database"])
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const conn = ConnectionFactory();
+
+        console.log("[deleteComment] Starting deletion:", {
+          commentID: input.commentID,
+          deletionType: input.deletionType,
+          userId: ctx.userId,
+          privilegeLevel: ctx.privilegeLevel
+        });
+
+        // Get the comment to check ownership
+        const commentQuery = await conn.execute({
+          sql: "SELECT * FROM Comment WHERE id = ?",
+          args: [input.commentID]
+        });
+
+        const comment = commentQuery.rows[0] as any;
+        if (!comment) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Comment not found"
+          });
+        }
+
+        // Authorization checks
+        const isOwner = comment.commenter_id === ctx.userId;
+        const isAdmin = ctx.privilegeLevel === "admin";
+
+        console.log("[deleteComment] Authorization check:", {
+          isOwner,
+          isAdmin,
+          commentOwner: comment.commenter_id,
+          requestingUser: ctx.userId
+        });
+
+        // User can only delete their own comments with "user" type
+        if (input.deletionType === "user" && !isOwner && !isAdmin) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You can only delete your own comments"
+          });
+        }
+
+        // Only admins can do admin or database deletion
+        if (
+          (input.deletionType === "admin" ||
+            input.deletionType === "database") &&
+          !isAdmin
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Admin access required for this deletion type"
+          });
+        }
+
+        if (input.deletionType === "database") {
+          console.log("[deleteComment] Performing database deletion");
+          // Full deletion - remove from database
+          // First delete reactions
+          await conn.execute({
+            sql: "DELETE FROM CommentReaction WHERE comment_id = ?",
+            args: [input.commentID]
+          });
+
+          // Then delete the comment
+          await conn.execute({
+            sql: "DELETE FROM Comment WHERE id = ?",
+            args: [input.commentID]
+          });
+
+          console.log("[deleteComment] Database deletion successful");
+          return {
+            success: true,
+            deletionType: "database",
+            commentBody: null
+          };
+        } else if (input.deletionType === "admin") {
+          console.log("[deleteComment] Performing admin deletion");
+          // Admin delete - replace body with admin message
+          await conn.execute({
+            sql: "UPDATE Comment SET body = ?, commenter_id = ? WHERE id = ?",
+            args: ["[deleted by admin]", "", input.commentID]
+          });
+
+          console.log("[deleteComment] Admin deletion successful");
+          return {
+            success: true,
+            deletionType: "admin",
+            commentBody: "[deleted by admin]"
+          };
+        } else {
+          console.log("[deleteComment] Performing user deletion");
+          // User delete - replace body with user message
+          await conn.execute({
+            sql: "UPDATE Comment SET body = ?, commenter_id = ? WHERE id = ?",
+            args: ["[deleted]", "", input.commentID]
+          });
+
+          console.log("[deleteComment] User deletion successful");
+          return {
+            success: true,
+            deletionType: "user",
+            commentBody: "[deleted]"
+          };
+        }
+      } catch (error) {
+        console.error("[deleteComment] Failed to delete comment:", error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete comment"
+        });
+      }
+    }),
 
   getCommentsByPostId: publicProcedure
     .input(z.object({ post_id: z.string() }))

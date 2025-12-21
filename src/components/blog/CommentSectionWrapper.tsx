@@ -10,6 +10,7 @@ import type {
   DeletionType
 } from "~/types/comment";
 import { getSQLFormattedDate } from "~/lib/comment-utils";
+import { api } from "~/lib/api";
 import CommentSection from "./CommentSection";
 import CommentDeletionPrompt from "./CommentDeletionPrompt";
 import EditCommentModal from "./EditCommentModal";
@@ -332,20 +333,31 @@ export default function CommentSectionWrapper(
   };
 
   // Comment deletion
-  const deleteComment = (
+  const deleteComment = async (
     commentID: number,
     commenterID: string,
     deletionType: DeletionType
   ) => {
+    console.log("[deleteComment] Starting deletion:", {
+      commentID,
+      commenterID,
+      deletionType,
+      currentUserID: props.currentUserID,
+      socketState: socket?.readyState
+    });
+
     setCommentDeletionLoading(true);
 
     if (!props.currentUserID) {
-      console.warn("Cannot delete comment: user not authenticated");
+      console.warn(
+        "[deleteComment] Cannot delete comment: user not authenticated"
+      );
       setCommentDeletionLoading(false);
       return;
     }
 
-    if (socket) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      console.log("[deleteComment] Using WebSocket");
       try {
         socket.send(
           JSON.stringify({
@@ -358,9 +370,53 @@ export default function CommentSectionWrapper(
           })
         );
       } catch (error) {
-        console.error("Error sending comment deletion:", error);
-        setCommentDeletionLoading(false);
+        console.error(
+          "[deleteComment] WebSocket error, falling back to HTTP:",
+          error
+        );
+        // Fallback to HTTP API on WebSocket error
+        await fallbackCommentDeletion(commentID, commenterID, deletionType);
       }
+    } else {
+      console.log(
+        "[deleteComment] WebSocket not available, using HTTP fallback"
+      );
+      // Fallback to HTTP API if WebSocket unavailable
+      await fallbackCommentDeletion(commentID, commenterID, deletionType);
+    }
+  };
+
+  const fallbackCommentDeletion = async (
+    commentID: number,
+    commenterID: string,
+    deletionType: DeletionType
+  ) => {
+    console.log("[fallbackCommentDeletion] Calling tRPC endpoint:", {
+      commentID,
+      commenterID,
+      deletionType
+    });
+
+    try {
+      const result = await api.database.deleteComment.mutate({
+        commentID,
+        commenterID,
+        deletionType
+      });
+
+      console.log("[fallbackCommentDeletion] Success:", result);
+
+      // Handle the deletion response
+      deleteCommentHandler({
+        action: "commentDeletionBroadcast",
+        commentID: commentID,
+        commentBody: result.commentBody || undefined,
+        commenterID: commenterID,
+        deletionType: deletionType
+      });
+    } catch (error) {
+      console.error("[fallbackCommentDeletion] Error:", error);
+      setCommentDeletionLoading(false);
     }
   };
 
