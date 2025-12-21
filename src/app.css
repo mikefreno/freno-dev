@@ -726,3 +726,86 @@ a.hover-underline-animation:hover::after {
     }
   }
 }
+
+/* Table styles for TipTap editor */
+.tiptap-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.tiptap-table td,
+.tiptap-table th {
+  min-width: 1em;
+  border: 2px solid var(--color-surface2);
+  padding: 0.5rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tiptap-table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: var(--color-surface0);
+}
+
+.tiptap-table .selectedCell {
+  background-color: var(--color-surface1);
+}
+
+.tiptap-table p {
+  margin: 0;
+}
+
+/* Additional table styles for ProseMirror */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  min-width: 3em;
+  border: 2px solid var(--color-text);
+  padding: 0.5rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  background-color: var(--color-mantle);
+}
+
+.ProseMirror table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: var(--color-surface0);
+}
+
+.ProseMirror table .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: var(--color-blue);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.ProseMirror table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 20;
+  background-color: var(--color-blue);
+  pointer-events: none;
+}

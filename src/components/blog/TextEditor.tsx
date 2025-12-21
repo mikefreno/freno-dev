@@ -4,6 +4,10 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Image from "@tiptap/extension-image";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
 import { Node } from "@tiptap/core";
 import { createLowlight, common } from "lowlight";
 import css from "highlight.js/lib/languages/css";
@@ -196,6 +200,12 @@ export default function TextEditor(props: TextEditorProps) {
     left: 0
   });
 
+  const [showTableMenu, setShowTableMenu] = createSignal(false);
+  const [tableMenuPosition, setTableMenuPosition] = createSignal({
+    top: 0,
+    left: 0
+  });
+
   const editor = createTiptapEditor(() => ({
     element: editorRef,
     extensions: [
@@ -205,7 +215,28 @@ export default function TextEditor(props: TextEditorProps) {
         openOnClick: true
       }),
       Image,
-      IframeEmbed
+      IframeEmbed,
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: "tiptap-table"
+        }
+      }),
+      TableRow.configure({
+        HTMLAttributes: {
+          class: "tiptap-table-row"
+        }
+      }),
+      TableHeader.configure({
+        HTMLAttributes: {
+          class: "tiptap-table-header"
+        }
+      }),
+      TableCell.configure({
+        HTMLAttributes: {
+          class: "tiptap-table-cell"
+        }
+      })
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
     editorProps: {
@@ -319,6 +350,31 @@ export default function TextEditor(props: TextEditorProps) {
     setShowLanguageSelector(!showLanguageSelector());
   };
 
+  const insertTable = (rows: number, cols: number) => {
+    const instance = editor();
+    if (!instance) return;
+
+    console.log("Inserting table:", rows, "x", cols);
+
+    instance
+      .chain()
+      .focus()
+      .insertTable({ rows, cols, withHeaderRow: true })
+      .run();
+
+    console.log("Table inserted, isActive:", instance.isActive("table"));
+    setShowTableMenu(false);
+  };
+
+  const showTableInserter = (e: MouseEvent) => {
+    const buttonRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setTableMenuPosition({
+      top: buttonRect.bottom + 5,
+      left: buttonRect.left
+    });
+    setShowTableMenu(!showTableMenu());
+  };
+
   // Close language selector on outside click
   createEffect(() => {
     if (showLanguageSelector()) {
@@ -339,6 +395,78 @@ export default function TextEditor(props: TextEditorProps) {
       return () => document.removeEventListener("click", handleClickOutside);
     }
   });
+
+  // Close table menu on outside click
+  createEffect(() => {
+    if (showTableMenu()) {
+      const handleClickOutside = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (
+          !target.closest(".table-menu") &&
+          !target.closest("[data-table-trigger]")
+        ) {
+          setShowTableMenu(false);
+        }
+      };
+
+      setTimeout(() => {
+        document.addEventListener("click", handleClickOutside);
+      }, 0);
+
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  });
+
+  // Table Grid Selector Component
+  const TableGridSelector = () => {
+    const [hoverCell, setHoverCell] = createSignal({ row: 0, col: 0 });
+    const maxRows = 10;
+    const maxCols = 10;
+
+    return (
+      <div class="bg-mantle border-surface2 rounded border p-3 shadow-lg">
+        <div class="text-subtext0 mb-2 text-xs">
+          Insert Table: {hoverCell().row + 1} × {hoverCell().col + 1}
+        </div>
+        <div
+          class="grid gap-1"
+          style={{ "grid-template-columns": `repeat(${maxCols}, 1fr)` }}
+        >
+          <For each={Array.from({ length: maxRows * maxCols })}>
+            {(_, idx) => {
+              const row = Math.floor(idx() / maxCols);
+              const col = idx() % maxCols;
+
+              return (
+                <div
+                  class={`border-surface2 h-4 w-4 cursor-pointer border ${
+                    row <= hoverCell().row && col <= hoverCell().col
+                      ? "bg-blue"
+                      : "bg-surface0"
+                  }`}
+                  onMouseEnter={() => setHoverCell({ row, col })}
+                  onClick={() => insertTable(row + 1, col + 1)}
+                />
+              );
+            }}
+          </For>
+        </div>
+        <div class="mt-2 flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const rows = parseInt(prompt("Number of rows:", "3") || "3");
+              const cols = parseInt(prompt("Number of columns:", "3") || "3");
+              if (rows && cols) insertTable(rows, cols);
+            }}
+            class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+          >
+            Custom Size...
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div class="border-surface2 text-text w-full rounded-md border px-4 py-2">
@@ -496,6 +624,19 @@ export default function TextEditor(props: TextEditorProps) {
                     </button>
                   )}
                 </For>
+              </div>
+            </Show>
+
+            {/* Table Grid Selector */}
+            <Show when={showTableMenu()}>
+              <div
+                class="table-menu fixed z-50"
+                style={{
+                  top: `${tableMenuPosition().top}px`,
+                  left: `${tableMenuPosition().left}px`
+                }}
+              >
+                <TableGridSelector />
               </div>
             </Show>
 
@@ -664,6 +805,19 @@ export default function TextEditor(props: TextEditorProps) {
               >
                 📺 Iframe
               </button>
+              <button
+                type="button"
+                onClick={showTableInserter}
+                data-table-trigger
+                class={`${
+                  instance().isActive("table")
+                    ? "bg-surface2"
+                    : "hover:bg-surface1"
+                } rounded px-2 py-1 text-xs`}
+                title="Insert Table"
+              >
+                ⊞ Table
+              </button>
               <div class="border-surface2 mx-1 border-l"></div>
               <button
                 type="button"
@@ -675,6 +829,119 @@ export default function TextEditor(props: TextEditorProps) {
               >
                 ━━ HR
               </button>
+
+              {/* Table controls - shown when cursor is in a table */}
+              <Show when={instance().isActive("table")}>
+                <div class="border-surface2 mx-1 border-l"></div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().addColumnBefore().run()
+                  }
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Add Column Before"
+                >
+                  ← Col
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().addColumnAfter().run()
+                  }
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Add Column After"
+                >
+                  Col →
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().deleteColumn().run()
+                  }
+                  class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
+                  title="Delete Column"
+                >
+                  ✕ Col
+                </button>
+
+                <div class="border-surface2 mx-1 border-l"></div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().addRowBefore().run()
+                  }
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Add Row Before"
+                >
+                  ↑ Row
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().addRowAfter().run()}
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Add Row After"
+                >
+                  Row ↓
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().deleteRow().run()}
+                  class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
+                  title="Delete Row"
+                >
+                  ✕ Row
+                </button>
+
+                <div class="border-surface2 mx-1 border-l"></div>
+
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().deleteTable().run()}
+                  class="hover:bg-red rounded px-2 py-1 text-xs"
+                  title="Delete Table"
+                >
+                  ✕ Table
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleHeaderRow().run()
+                  }
+                  class={`${
+                    instance().isActive("tableHeader")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Toggle Header Row"
+                >
+                  ≡ Header
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().mergeCells().run()}
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Merge Cells"
+                >
+                  ⊡ Merge
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().splitCell().run()}
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Split Cell"
+                >
+                  ⊞ Split
+                </button>
+              </Show>
             </div>
           </>
         )}
