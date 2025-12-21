@@ -192,6 +192,7 @@ export interface TextEditorProps {
 export default function TextEditor(props: TextEditorProps) {
   let editorRef!: HTMLDivElement;
   let bubbleMenuRef!: HTMLDivElement;
+  let containerRef!: HTMLDivElement;
 
   const [showBubbleMenu, setShowBubbleMenu] = createSignal(false);
   const [bubbleMenuPosition, setBubbleMenuPosition] = createSignal({
@@ -210,6 +211,8 @@ export default function TextEditor(props: TextEditorProps) {
     top: 0,
     left: 0
   });
+
+  const [isFullscreen, setIsFullscreen] = createSignal(false);
 
   const editor = createTiptapEditor(() => ({
     element: editorRef,
@@ -596,6 +599,26 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
+  // Toggle fullscreen mode
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen());
+  };
+
+  // ESC key to exit fullscreen
+  createEffect(() => {
+    if (isFullscreen()) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setIsFullscreen(false);
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  });
+
   // Table Grid Selector Component
   const TableGridSelector = () => {
     const [hoverCell, setHoverCell] = createSignal({ row: 0, col: 0 });
@@ -648,7 +671,15 @@ export default function TextEditor(props: TextEditorProps) {
   };
 
   return (
-    <div class="border-surface2 text-text w-full max-w-full overflow-hidden rounded-md border px-4 py-2">
+    <div
+      ref={containerRef}
+      class="border-surface2 text-text w-full max-w-full overflow-hidden rounded-md border px-4 py-2"
+      classList={{
+        "fixed inset-0 z-[100] m-0 h-screen max-h-screen rounded-none":
+          isFullscreen(),
+        "bg-base": isFullscreen()
+      }}
+    >
       <Show when={editor()}>
         {(instance) => (
           <>
@@ -1146,6 +1177,17 @@ export default function TextEditor(props: TextEditorProps) {
               >
                 ━━ HR
               </button>
+              <div class="border-surface2 mx-1 border-l"></div>
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                title={
+                  isFullscreen() ? "Exit Fullscreen (ESC)" : "Enter Fullscreen"
+                }
+              >
+                {isFullscreen() ? "⇲ Exit" : "⇱ Fullscreen"}
+              </button>
 
               {/* Table controls - shown when cursor is in a table */}
               <Show when={instance().isActive("table")}>
@@ -1264,7 +1306,11 @@ export default function TextEditor(props: TextEditorProps) {
 
       <div
         ref={editorRef}
-        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto h-[80dvh] max-w-full overflow-scroll focus:outline-none"
+        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto max-w-full overflow-scroll focus:outline-none"
+        classList={{
+          "h-[80dvh]": !isFullscreen(),
+          "h-[calc(100dvh-8rem)]": isFullscreen()
+        }}
       />
     </div>
   );
