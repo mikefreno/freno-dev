@@ -154,10 +154,25 @@ export const authRouter = createTRPCRouter({
           // User exists - update email and image if changed
           userId = (res.rows[0] as unknown as User).id;
 
-          await conn.execute({
-            sql: `UPDATE User SET email = ?, email_verified = ?, image = ? WHERE id = ?`,
-            args: [email, emailVerified ? 1 : 0, icon, userId]
-          });
+          try {
+            await conn.execute({
+              sql: `UPDATE User SET email = ?, email_verified = ?, image = ? WHERE id = ?`,
+              args: [email, emailVerified ? 1 : 0, icon, userId]
+            });
+          } catch (updateError: any) {
+            // Handle unique constraint error on email
+            if (
+              updateError.code === "SQLITE_CONSTRAINT" &&
+              updateError.message?.includes("User.email")
+            ) {
+              throw new TRPCError({
+                code: "CONFLICT",
+                message:
+                  "This email is already associated with another account. Please sign in with that account or use a different email address."
+              });
+            }
+            throw updateError;
+          }
         } else {
           // Create new user
           userId = uuidV4();
@@ -171,7 +186,23 @@ export const authRouter = createTRPCRouter({
             "github",
             icon
           ];
-          await conn.execute({ sql: insertQuery, args: insertParams });
+
+          try {
+            await conn.execute({ sql: insertQuery, args: insertParams });
+          } catch (insertError: any) {
+            // Handle unique constraint error on email
+            if (
+              insertError.code === "SQLITE_CONSTRAINT" &&
+              insertError.message?.includes("User.email")
+            ) {
+              throw new TRPCError({
+                code: "CONFLICT",
+                message:
+                  "This email is already associated with another account. Please sign in with that account or use a different email address."
+              });
+            }
+            throw insertError;
+          }
         }
 
         // Create JWT token
@@ -291,6 +322,7 @@ export const authRouter = createTRPCRouter({
           // User exists - update email, email_verified, display_name, and image if changed
           userId = (res.rows[0] as unknown as User).id;
 
+          // No need to catch constraint error here since we're updating the same user's record
           await conn.execute({
             sql: `UPDATE User SET email = ?, email_verified = ?, display_name = ?, image = ? WHERE id = ?`,
             args: [email, email_verified ? 1 : 0, name, image, userId]
@@ -308,10 +340,26 @@ export const authRouter = createTRPCRouter({
             "google",
             image
           ];
-          await conn.execute({
-            sql: insertQuery,
-            args: insertParams
-          });
+
+          try {
+            await conn.execute({
+              sql: insertQuery,
+              args: insertParams
+            });
+          } catch (insertError: any) {
+            // Handle unique constraint error on email
+            if (
+              insertError.code === "SQLITE_CONSTRAINT" &&
+              insertError.message?.includes("User.email")
+            ) {
+              throw new TRPCError({
+                code: "CONFLICT",
+                message:
+                  "This email is already associated with another account. Please sign in with that account instead."
+              });
+            }
+            throw insertError;
+          }
         }
 
         // Create JWT token

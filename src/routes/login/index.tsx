@@ -111,7 +111,9 @@ export default function LoginPage() {
         server_error: "Server error - please try again later",
         missing_params: "Invalid login link - missing parameters",
         link_expired: "Login link has expired - please request a new one",
-        access_denied: "Access denied - you cancelled the login"
+        access_denied: "Access denied - you cancelled the login",
+        email_in_use:
+          "This email is already associated with another account. Please sign in with that account instead."
       };
       setError(errorMessages[errorParam] || "An error occurred during login");
     }
@@ -333,11 +335,22 @@ export default function LoginPage() {
         {/* Main content */}
         <div class="pt-12 md:pt-24">
           {/* Error message */}
-          <div class="absolute -mt-12 text-center text-3xl text-red-400 italic">
+          <div class="absolute -mt-12 text-center text-red-400 italic">
             <Show when={error() === "passwordMismatch"}>
-              Passwords did not match!
+              <div class="text-3xl">Passwords did not match!</div>
             </Show>
-            <Show when={error() === "duplicate"}>Email Already Exists!</Show>
+            <Show when={error() === "duplicate"}>
+              <div class="text-3xl">Email Already Exists!</div>
+            </Show>
+            <Show
+              when={
+                error() &&
+                error() !== "passwordMismatch" &&
+                error() !== "duplicate"
+              }
+            >
+              <div class="max-w-md px-4 text-base">{error()}</div>
+            </Show>
           </div>
 
           {/* Title */}

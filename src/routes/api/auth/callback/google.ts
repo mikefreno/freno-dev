@@ -11,7 +11,7 @@ export async function GET(event: APIEvent) {
   if (error) {
     return new Response(null, {
       status: 302,
-      headers: { Location: `/login?error=${encodeURIComponent(error)}` },
+      headers: { Location: `/login?error=${encodeURIComponent(error)}` }
     });
   }
 
@@ -19,7 +19,7 @@ export async function GET(event: APIEvent) {
   if (!code) {
     return new Response(null, {
       status: 302,
-      headers: { Location: "/login?error=missing_code" },
+      headers: { Location: "/login?error=missing_code" }
     });
   }
 
@@ -35,20 +35,33 @@ export async function GET(event: APIEvent) {
       // Redirect to account page on success
       return new Response(null, {
         status: 302,
-        headers: { Location: result.redirectTo || "/account" },
+        headers: { Location: result.redirectTo || "/account" }
       });
     } else {
       // Redirect to login with error
       return new Response(null, {
         status: 302,
-        headers: { Location: "/login?error=auth_failed" },
+        headers: { Location: "/login?error=auth_failed" }
       });
     }
   } catch (error) {
     console.error("Google OAuth callback error:", error);
+
+    // Handle specific TRPC errors
+    if (error && typeof error === "object" && "code" in error) {
+      const trpcError = error as { code: string; message?: string };
+
+      if (trpcError.code === "CONFLICT") {
+        return new Response(null, {
+          status: 302,
+          headers: { Location: "/login?error=email_in_use" }
+        });
+      }
+    }
+
     return new Response(null, {
       status: 302,
-      headers: { Location: "/login?error=server_error" },
+      headers: { Location: "/login?error=server_error" }
     });
   }
 }
