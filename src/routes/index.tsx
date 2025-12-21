@@ -86,6 +86,16 @@ export default function Home() {
                     />
                   </div>
                 </div>
+                <div class="pt-2 text-left text-sm">
+                  Built for developers who know CSS and want that same power
+                  (and more) in their game UIs. FlexLöve brings CSS-familiar
+                  flexbox and grid layouts to Löve2D, supporting both rapid
+                  prototyping (immediate mode) and production-optimized
+                  (retained mode) rendering. Whether you're sketching ideas or
+                  shipping products, FlexLöve adapts to your
+                  workflow—essentially no learning curve required if you've
+                  touched CSS.
+                </div>
               </div>
 
               {/* Life and Lineage */}
@@ -122,6 +132,14 @@ export default function Home() {
                       class="h-full w-full object-cover"
                     />
                   </div>
+                </div>
+                <div class="pt-2 text-left text-sm">
+                  Started as a basic project to learn react-native, it grew over
+                  time into a full-fledged mobile game. It's a turn-based
+                  dungeon crawler with a family lineage twist - each time you
+                  die (which happens a lot) you can continue on through your
+                  children (if you have any) - otherwise you start from square
+                  one.
                 </div>
               </div>
             </div>
