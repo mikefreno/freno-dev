@@ -89,7 +89,19 @@ export const miscRouter = createTRPCRouter({
           credentials: credentials
         });
 
-        const Key = `${input.type}/${input.title}/${input.filename}`;
+        // Sanitize the title and filename for S3 key (replace spaces with hyphens, remove special chars)
+        const sanitizeForS3 = (str: string) => {
+          return str
+            .replace(/\s+/g, "-") // Replace spaces with hyphens
+            .replace(/[^\w\-\.]/g, "") // Remove special characters except hyphens, dots, and word chars
+            .replace(/\-+/g, "-") // Replace multiple hyphens with single hyphen
+            .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+        };
+
+        const sanitizedTitle = sanitizeForS3(input.title);
+        const sanitizedFilename = sanitizeForS3(input.filename);
+        const Key = `${input.type}/${sanitizedTitle}/${sanitizedFilename}`;
+
         const ext = /^.+\.([^.]+)$/.exec(input.filename);
 
         const s3params = {
@@ -105,7 +117,7 @@ export const miscRouter = createTRPCRouter({
 
         return { uploadURL: signedUrl, key: Key };
       } catch (error) {
-        console.error(error);
+        console.error("Failed to generate pre-signed URL:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to generate pre-signed URL"
@@ -124,13 +136,19 @@ export const miscRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
+        const credentials = {
+          accessKeyId: env._AWS_ACCESS_KEY,
+          secretAccessKey: env._AWS_SECRET_KEY
+        };
+
         const s3params = {
           Bucket: env.AWS_S3_BUCKET_NAME,
           Key: input.key
         };
 
         const client = new S3Client({
-          region: env.AWS_REGION
+          region: env.AWS_REGION,
+          credentials: credentials
         });
 
         const command = new DeleteObjectCommand(s3params);
@@ -157,13 +175,19 @@ export const miscRouter = createTRPCRouter({
     .input(z.object({ key: z.string() }))
     .mutation(async ({ input }) => {
       try {
+        const credentials = {
+          accessKeyId: env._AWS_ACCESS_KEY,
+          secretAccessKey: env._AWS_SECRET_KEY
+        };
+
         const s3params = {
           Bucket: env.AWS_S3_BUCKET_NAME,
           Key: input.key
         };
 
         const client = new S3Client({
-          region: env.AWS_REGION
+          region: env.AWS_REGION,
+          credentials: credentials
         });
 
         const command = new DeleteObjectCommand(s3params);

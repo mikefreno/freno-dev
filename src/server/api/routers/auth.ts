@@ -7,6 +7,14 @@ import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
 import { SignJWT, jwtVerify } from "jose";
 import { setCookie, getCookie } from "vinxi/http";
 import type { User } from "~/types/user";
+import {
+  fetchWithTimeout,
+  checkResponse,
+  fetchWithRetry,
+  NetworkError,
+  TimeoutError,
+  APIError
+} from "~/server/fetch-utils";
 
 // Helper to create JWT token
 async function createJWT(
@@ -21,7 +29,7 @@ async function createJWT(
   return token;
 }
 
-// Helper to send email via Brevo/SendInBlue
+// Helper to send email via Brevo/SendInBlue with retry logic
 async function sendEmail(to: string, subject: string, htmlContent: string) {
   const apiKey = env.SENDINBLUE_KEY;
   const apiUrl = "https://api.sendinblue.com/v3/smtp/email";
@@ -36,21 +44,27 @@ async function sendEmail(to: string, subject: string, htmlContent: string) {
     subject
   };
 
-  const response = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "api-key": apiKey,
-      "content-type": "application/json"
+  return fetchWithRetry(
+    async () => {
+      const response = await fetchWithTimeout(apiUrl, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "api-key": apiKey,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(sendinblueData),
+        timeout: 15000
+      });
+
+      await checkResponse(response);
+      return response;
     },
-    body: JSON.stringify(sendinblueData)
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to send email");
-  }
-
-  return response;
+    {
+      maxRetries: 2,
+      retryDelay: 1000
+    }
+  );
 }
 
 export const authRouter = createTRPCRouter({
@@ -61,8 +75,8 @@ export const authRouter = createTRPCRouter({
       const { code } = input;
 
       try {
-        // Exchange code for access token
-        const tokenResponse = await fetch(
+        // Exchange code for access token with timeout
+        const tokenResponse = await fetchWithTimeout(
           "https://github.com/login/oauth/access_token",
           {
             method: "POST",
@@ -74,18 +88,33 @@ export const authRouter = createTRPCRouter({
               client_id: env.VITE_GITHUB_CLIENT_ID,
               client_secret: env.GITHUB_CLIENT_SECRET,
               code
-            })
+            }),
+            timeout: 15000
           }
         );
+
+        await checkResponse(tokenResponse);
         const { access_token } = await tokenResponse.json();
 
-        // Fetch user info from GitHub
-        const userResponse = await fetch("https://api.github.com/user", {
-          headers: {
-            Authorization: `token ${access_token}`
-          }
-        });
+        if (!access_token) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Failed to get access token from GitHub"
+          });
+        }
 
+        // Fetch user info from GitHub with timeout
+        const userResponse = await fetchWithTimeout(
+          "https://api.github.com/user",
+          {
+            headers: {
+              Authorization: `token ${access_token}`
+            },
+            timeout: 15000
+          }
+        );
+
+        await checkResponse(userResponse);
         const user = await userResponse.json();
         const login = user.login;
         const conn = ConnectionFactory();
@@ -128,6 +157,31 @@ export const authRouter = createTRPCRouter({
           redirectTo: "/account"
         };
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        // Provide specific error messages for different failure types
+        if (error instanceof TimeoutError) {
+          console.error("GitHub API timeout:", error.message);
+          throw new TRPCError({
+            code: "TIMEOUT",
+            message: "GitHub authentication timed out. Please try again."
+          });
+        } else if (error instanceof NetworkError) {
+          console.error("GitHub API network error:", error.message);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Unable to connect to GitHub. Please try again later."
+          });
+        } else if (error instanceof APIError) {
+          console.error("GitHub API error:", error.status, error.statusText);
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "GitHub authentication failed. Please try again."
+          });
+        }
+
         console.error("GitHub authentication failed:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -143,8 +197,8 @@ export const authRouter = createTRPCRouter({
       const { code } = input;
 
       try {
-        // Exchange code for access token
-        const tokenResponse = await fetch(
+        // Exchange code for access token with timeout
+        const tokenResponse = await fetchWithTimeout(
           "https://oauth2.googleapis.com/token",
           {
             method: "POST",
@@ -157,22 +211,33 @@ export const authRouter = createTRPCRouter({
               client_secret: env.GOOGLE_CLIENT_SECRET,
               redirect_uri: `${env.VITE_DOMAIN || "https://freno.me"}/api/auth/callback/google`,
               grant_type: "authorization_code"
-            })
+            }),
+            timeout: 15000
           }
         );
 
+        await checkResponse(tokenResponse);
         const { access_token } = await tokenResponse.json();
 
-        // Fetch user info from Google
-        const userResponse = await fetch(
+        if (!access_token) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Failed to get access token from Google"
+          });
+        }
+
+        // Fetch user info from Google with timeout
+        const userResponse = await fetchWithTimeout(
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
             headers: {
               Authorization: `Bearer ${access_token}`
-            }
+            },
+            timeout: 15000
           }
         );
 
+        await checkResponse(userResponse);
         const userData = await userResponse.json();
         const name = userData.name;
         const image = userData.picture;
@@ -227,6 +292,31 @@ export const authRouter = createTRPCRouter({
           redirectTo: "/account"
         };
       } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        // Provide specific error messages for different failure types
+        if (error instanceof TimeoutError) {
+          console.error("Google API timeout:", error.message);
+          throw new TRPCError({
+            code: "TIMEOUT",
+            message: "Google authentication timed out. Please try again."
+          });
+        } else if (error instanceof NetworkError) {
+          console.error("Google API network error:", error.message);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Unable to connect to Google. Please try again later."
+          });
+        } else if (error instanceof APIError) {
+          console.error("Google API error:", error.status, error.statusText);
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Google authentication failed. Please try again."
+          });
+        }
+
         console.error("Google authentication failed:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -484,48 +574,49 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { email, rememberMe } = input;
 
-      // Check rate limiting
-      const requested = getCookie(
-        ctx.event.nativeEvent,
-        "emailLoginLinkRequested"
-      );
-      if (requested) {
-        const expires = new Date(requested);
-        const remaining = expires.getTime() - Date.now();
-        if (remaining > 0) {
+      try {
+        // Check rate limiting
+        const requested = getCookie(
+          ctx.event.nativeEvent,
+          "emailLoginLinkRequested"
+        );
+        if (requested) {
+          const expires = new Date(requested);
+          const remaining = expires.getTime() - Date.now();
+          if (remaining > 0) {
+            throw new TRPCError({
+              code: "TOO_MANY_REQUESTS",
+              message: "countdown not expired"
+            });
+          }
+        }
+
+        const conn = ConnectionFactory();
+        const res = await conn.execute({
+          sql: "SELECT * FROM User WHERE email = ?",
+          args: [email]
+        });
+
+        if (res.rows.length === 0) {
           throw new TRPCError({
-            code: "TOO_MANY_REQUESTS",
-            message: "countdown not expired"
+            code: "NOT_FOUND",
+            message: "User not found"
           });
         }
-      }
 
-      const conn = ConnectionFactory();
-      const res = await conn.execute({
-        sql: "SELECT * FROM User WHERE email = ?",
-        args: [email]
-      });
+        // Create JWT token for email link (15min expiry)
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        const token = await new SignJWT({
+          email,
+          rememberMe: rememberMe ?? false
+        })
+          .setProtectedHeader({ alg: "HS256" })
+          .setExpirationTime("15m")
+          .sign(secret);
 
-      if (res.rows.length === 0) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found"
-        });
-      }
-
-      // Create JWT token for email link (15min expiry)
-      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-      const token = await new SignJWT({
-        email,
-        rememberMe: rememberMe ?? false
-      })
-        .setProtectedHeader({ alg: "HS256" })
-        .setExpirationTime("15m")
-        .sign(secret);
-
-      // Send email
-      const domain = env.VITE_DOMAIN || "https://freno.me";
-      const htmlContent = `<html>
+        // Send email
+        const domain = env.VITE_DOMAIN || "https://freno.me";
+        const htmlContent = `<html>
 <head>
     <style>
         .center {
@@ -563,21 +654,45 @@ export const authRouter = createTRPCRouter({
 </body>
 </html>`;
 
-      await sendEmail(email, "freno.me login link", htmlContent);
+        await sendEmail(email, "freno.me login link", htmlContent);
 
-      // Set rate limit cookie (2 minutes)
-      const exp = new Date(Date.now() + 2 * 60 * 1000);
-      setCookie(
-        ctx.event.nativeEvent,
-        "emailLoginLinkRequested",
-        exp.toUTCString(),
-        {
-          maxAge: 2 * 60,
-          path: "/"
+        // Set rate limit cookie (2 minutes)
+        const exp = new Date(Date.now() + 2 * 60 * 1000);
+        setCookie(
+          ctx.event.nativeEvent,
+          "emailLoginLinkRequested",
+          exp.toUTCString(),
+          {
+            maxAge: 2 * 60,
+            path: "/"
+          }
+        );
+
+        return { success: true, message: "email sent" };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
         }
-      );
 
-      return { success: true, message: "email sent" };
+        // Handle email sending failures gracefully
+        if (
+          error instanceof TimeoutError ||
+          error instanceof NetworkError ||
+          error instanceof APIError
+        ) {
+          console.error("Failed to send login email:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to send email. Please try again later."
+          });
+        }
+
+        console.error("Email login link request failed:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An error occurred. Please try again."
+        });
+      }
     }),
 
   // Request password reset
@@ -586,45 +701,46 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
-      // Check rate limiting
-      const requested = getCookie(
-        ctx.event.nativeEvent,
-        "passwordResetRequested"
-      );
-      if (requested) {
-        const expires = new Date(requested);
-        const remaining = expires.getTime() - Date.now();
-        if (remaining > 0) {
-          throw new TRPCError({
-            code: "TOO_MANY_REQUESTS",
-            message: "countdown not expired"
-          });
+      try {
+        // Check rate limiting
+        const requested = getCookie(
+          ctx.event.nativeEvent,
+          "passwordResetRequested"
+        );
+        if (requested) {
+          const expires = new Date(requested);
+          const remaining = expires.getTime() - Date.now();
+          if (remaining > 0) {
+            throw new TRPCError({
+              code: "TOO_MANY_REQUESTS",
+              message: "countdown not expired"
+            });
+          }
         }
-      }
 
-      const conn = ConnectionFactory();
-      const res = await conn.execute({
-        sql: "SELECT * FROM User WHERE email = ?",
-        args: [email]
-      });
+        const conn = ConnectionFactory();
+        const res = await conn.execute({
+          sql: "SELECT * FROM User WHERE email = ?",
+          args: [email]
+        });
 
-      if (res.rows.length === 0) {
-        // Don't reveal if user exists
-        return { success: true, message: "email sent" };
-      }
+        if (res.rows.length === 0) {
+          // Don't reveal if user exists
+          return { success: true, message: "email sent" };
+        }
 
-      const user = res.rows[0] as unknown as User;
+        const user = res.rows[0] as unknown as User;
 
-      // Create JWT token with user ID (15min expiry)
-      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-      const token = await new SignJWT({ id: user.id })
-        .setProtectedHeader({ alg: "HS256" })
-        .setExpirationTime("15m")
-        .sign(secret);
+        // Create JWT token with user ID (15min expiry)
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        const token = await new SignJWT({ id: user.id })
+          .setProtectedHeader({ alg: "HS256" })
+          .setExpirationTime("15m")
+          .sign(secret);
 
-      // Send email
-      const domain = env.VITE_DOMAIN || "https://freno.me";
-      const htmlContent = `<html>
+        // Send email
+        const domain = env.VITE_DOMAIN || "https://freno.me";
+        const htmlContent = `<html>
 <head>
     <style>
         .center {
@@ -662,21 +778,45 @@ export const authRouter = createTRPCRouter({
 </body>
 </html>`;
 
-      await sendEmail(email, "password reset", htmlContent);
+        await sendEmail(email, "password reset", htmlContent);
 
-      // Set rate limit cookie (5 minutes)
-      const exp = new Date(Date.now() + 5 * 60 * 1000);
-      setCookie(
-        ctx.event.nativeEvent,
-        "passwordResetRequested",
-        exp.toUTCString(),
-        {
-          maxAge: 5 * 60,
-          path: "/"
+        // Set rate limit cookie (5 minutes)
+        const exp = new Date(Date.now() + 5 * 60 * 1000);
+        setCookie(
+          ctx.event.nativeEvent,
+          "passwordResetRequested",
+          exp.toUTCString(),
+          {
+            maxAge: 5 * 60,
+            path: "/"
+          }
+        );
+
+        return { success: true, message: "email sent" };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
         }
-      );
 
-      return { success: true, message: "email sent" };
+        // Handle email sending failures gracefully
+        if (
+          error instanceof TimeoutError ||
+          error instanceof NetworkError ||
+          error instanceof APIError
+        ) {
+          console.error("Failed to send password reset email:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to send email. Please try again later."
+          });
+        }
+
+        console.error("Password reset request failed:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An error occurred. Please try again."
+        });
+      }
     }),
 
   // Reset password with token
@@ -747,47 +887,49 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
-      // Check rate limiting
-      const requested = getCookie(
-        ctx.event.nativeEvent,
-        "emailVerificationRequested"
-      );
-      if (requested) {
-        const time = parseInt(requested);
-        const currentTime = Date.now();
-        const difference = (currentTime - time) / (1000 * 60);
+      try {
+        // Check rate limiting
+        const requested = getCookie(
+          ctx.event.nativeEvent,
+          "emailVerificationRequested"
+        );
+        if (requested) {
+          const time = parseInt(requested);
+          const currentTime = Date.now();
+          const difference = (currentTime - time) / (1000 * 60);
 
-        if (difference < 15) {
+          if (difference < 15) {
+            throw new TRPCError({
+              code: "TOO_MANY_REQUESTS",
+              message:
+                "Please wait before requesting another verification email"
+            });
+          }
+        }
+
+        const conn = ConnectionFactory();
+        const res = await conn.execute({
+          sql: "SELECT * FROM User WHERE email = ?",
+          args: [email]
+        });
+
+        if (res.rows.length === 0) {
           throw new TRPCError({
-            code: "TOO_MANY_REQUESTS",
-            message: "Please wait before requesting another verification email"
+            code: "NOT_FOUND",
+            message: "User not found"
           });
         }
-      }
 
-      const conn = ConnectionFactory();
-      const res = await conn.execute({
-        sql: "SELECT * FROM User WHERE email = ?",
-        args: [email]
-      });
+        // Create JWT token (15min expiry)
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        const token = await new SignJWT({ email })
+          .setProtectedHeader({ alg: "HS256" })
+          .setExpirationTime("15m")
+          .sign(secret);
 
-      if (res.rows.length === 0) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found"
-        });
-      }
-
-      // Create JWT token (15min expiry)
-      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-      const token = await new SignJWT({ email })
-        .setProtectedHeader({ alg: "HS256" })
-        .setExpirationTime("15m")
-        .sign(secret);
-
-      // Send email
-      const domain = env.VITE_DOMAIN || "https://freno.me";
-      const htmlContent = `<html>
+        // Send email
+        const domain = env.VITE_DOMAIN || "https://freno.me";
+        const htmlContent = `<html>
 <head>
     <style>
         .center {
@@ -822,20 +964,44 @@ export const authRouter = createTRPCRouter({
 </body>
 </html>`;
 
-      await sendEmail(email, "freno.me email verification", htmlContent);
+        await sendEmail(email, "freno.me email verification", htmlContent);
 
-      // Set rate limit cookie
-      setCookie(
-        ctx.event.nativeEvent,
-        "emailVerificationRequested",
-        Date.now().toString(),
-        {
-          maxAge: 15 * 60,
-          path: "/"
+        // Set rate limit cookie
+        setCookie(
+          ctx.event.nativeEvent,
+          "emailVerificationRequested",
+          Date.now().toString(),
+          {
+            maxAge: 15 * 60,
+            path: "/"
+          }
+        );
+
+        return { success: true, message: "Verification email sent" };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
         }
-      );
 
-      return { success: true, message: "Verification email sent" };
+        // Handle email sending failures gracefully
+        if (
+          error instanceof TimeoutError ||
+          error instanceof NetworkError ||
+          error instanceof APIError
+        ) {
+          console.error("Failed to send verification email:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to send email. Please try again later."
+          });
+        }
+
+        console.error("Email verification request failed:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An error occurred. Please try again."
+        });
+      }
     }),
 
   // Sign out
@@ -852,4 +1018,3 @@ export const authRouter = createTRPCRouter({
     return { success: true };
   })
 });
-

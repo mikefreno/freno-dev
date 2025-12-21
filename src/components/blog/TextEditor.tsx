@@ -1,4 +1,4 @@
-import { Show, untrack, createEffect, on } from "solid-js";
+import { Show, untrack, createEffect, on, createSignal } from "solid-js";
 import { createTiptapEditor, useEditorHTML } from "solid-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -104,6 +104,13 @@ export interface TextEditorProps {
 
 export default function TextEditor(props: TextEditorProps) {
   let editorRef!: HTMLDivElement;
+  let bubbleMenuRef!: HTMLDivElement;
+
+  const [showBubbleMenu, setShowBubbleMenu] = createSignal(false);
+  const [bubbleMenuPosition, setBubbleMenuPosition] = createSignal({
+    top: 0,
+    left: 0
+  });
 
   const editor = createTiptapEditor(() => ({
     element: editorRef,
@@ -126,6 +133,26 @@ export default function TextEditor(props: TextEditorProps) {
       untrack(() => {
         props.updateContent(editor.getHTML());
       });
+    },
+    onSelectionUpdate: ({ editor }) => {
+      const { from, to } = editor.state.selection;
+      const hasSelection = from !== to;
+
+      if (hasSelection && !editor.state.selection.empty) {
+        setShowBubbleMenu(true);
+
+        // Position the bubble menu
+        const { view } = editor;
+        const start = view.coordsAtPos(from);
+        const end = view.coordsAtPos(to);
+
+        const left = Math.max((start.left + end.left) / 2, 0);
+        const top = Math.max(start.top - 10, 0);
+
+        setBubbleMenuPosition({ top, left });
+      } else {
+        setShowBubbleMenu(false);
+      }
     }
   }));
 
@@ -191,13 +218,17 @@ export default function TextEditor(props: TextEditorProps) {
         {(instance) => (
           <>
             {/* Bubble Menu - appears when text is selected */}
-            <div
-              class="tiptap-bubble-menu"
-              style={{
-                display: "none" // Will be shown by Tiptap when text is selected
-              }}
-            >
-              <div class="bg-mantle text-text mt-4 w-fit rounded p-2 text-sm whitespace-nowrap shadow-lg">
+            <Show when={showBubbleMenu()}>
+              <div
+                ref={bubbleMenuRef}
+                class="bg-mantle text-text fixed z-50 w-fit rounded p-2 text-sm whitespace-nowrap shadow-lg"
+                style={{
+                  top: `${bubbleMenuPosition().top}px`,
+                  left: `${bubbleMenuPosition().left}px`,
+                  transform: "translate(-50%, -100%)",
+                  "margin-top": "-8px"
+                }}
+              >
                 <div class="flex flex-wrap gap-1">
                   <button
                     type="button"
@@ -315,9 +346,8 @@ export default function TextEditor(props: TextEditorProps) {
                   </button>
                 </div>
               </div>
-            </div>
+            </Show>
 
-            {/* Toolbar - always visible */}
             <div class="border-surface2 mb-2 flex flex-wrap gap-1 border-b pb-2">
               <button
                 type="button"
