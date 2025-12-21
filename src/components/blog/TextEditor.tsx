@@ -10,6 +10,9 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
+import Details from "@tiptap/extension-details";
+import DetailsSummary from "@tiptap/extension-details-summary";
+import DetailsContent from "@tiptap/extension-details-content";
 import { Node } from "@tiptap/core";
 import { createLowlight, common } from "lowlight";
 import css from "highlight.js/lib/languages/css";
@@ -225,6 +228,9 @@ export default function TextEditor(props: TextEditorProps) {
           class: "task-item"
         }
       }),
+      Details,
+      DetailsSummary,
+      DetailsContent,
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -333,6 +339,38 @@ export default function TextEditor(props: TextEditorProps) {
     const url = window.prompt("URL");
     if (url) {
       instance.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  const insertCollapsibleSection = () => {
+    const instance = editor();
+    if (!instance) return;
+
+    const title = window.prompt("Section title:", "Click to expand");
+
+    if (title !== null) {
+      instance
+        .chain()
+        .focus()
+        .insertContent({
+          type: "details",
+          content: [
+            {
+              type: "detailsSummary",
+              content: [{ type: "text", text: title }]
+            },
+            {
+              type: "detailsContent",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Add your content here..." }]
+                }
+              ]
+            }
+          ]
+        })
+        .run();
     }
   };
 
@@ -1012,6 +1050,14 @@ export default function TextEditor(props: TextEditorProps) {
                 title="Blockquote"
               >
                 " Quote
+              </button>
+              <button
+                type="button"
+                onClick={insertCollapsibleSection}
+                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                title="Insert Collapsible Section"
+              >
+                ▼ Details
               </button>
               <div class="border-surface2 mx-1 border-l"></div>
               <button

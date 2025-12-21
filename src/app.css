@@ -810,7 +810,6 @@ a.hover-underline-animation:hover::after {
   pointer-events: none;
 }
 
-/* Task list styles */
 ul[data-type="taskList"] {
   list-style: none;
   padding: 0;
@@ -820,51 +819,80 @@ ul[data-type="taskList"] {
 ul[data-type="taskList"] li {
   display: flex;
   align-items: center;
-  margin: 0.5rem 0;
   gap: 0.5rem;
+  line-height: 0;
 }
 
-ul[data-type="taskList"] li > label {
-  flex: 0 0 auto;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-  line-height: 1;
+/* Collapsible section (details/summary) styles */
+details {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid var(--color-surface2);
+  border-radius: 0.5rem;
+  background-color: var(--color-surface0);
 }
 
-ul[data-type="taskList"] li > div {
-  flex: 1 1 auto;
-}
-
-ul[data-type="taskList"] input[type="checkbox"] {
+summary {
   cursor: pointer;
-  width: 1em;
-  height: 1em;
-  margin: 0;
-  padding: 0;
-  flex-shrink: 0;
-  accent-color: var(--color-blue);
-  transform: none;
-  vertical-align: middle;
-  -webkit-appearance: checkbox;
-  appearance: checkbox;
-  border: 2px solid var(--color-blue);
-  border-radius: 0.15em;
-  background-color: transparent;
+  font-weight: 600;
+  user-select: none;
+  padding: 0.5rem;
+  margin: -1rem -1rem 0 -1rem;
+  background-color: var(--color-surface1);
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: background-color 0.2s;
+  list-style: none;
 }
 
-ul[data-type="taskList"] input[type="checkbox"]:checked {
-  background-color: var(--color-blue);
+summary::-webkit-details-marker {
+  display: none;
 }
 
-ul[data-type="taskList"] li[data-checked="true"] > div {
-  text-decoration: line-through;
-  opacity: 0.6;
+summary::before {
+  content: "▶ ";
+  color: var(--color-blue);
+  display: inline-block;
+  transition: transform 0.2s;
 }
 
-/* Nested task lists */
-ul[data-type="taskList"] ul[data-type="taskList"] {
-  margin: 0.5rem 0 0.5rem 1.5rem;
+details[open] summary::before {
+  transform: rotate(90deg);
+  color: var(--color-green);
+}
+
+summary:hover {
+  background-color: var(--color-surface2);
+}
+
+details[open] summary {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-surface2);
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* Content inside details */
+details div[data-type="details-content"] {
+  padding: 0.5rem;
+}
+
+/* Nested details */
+details details {
+  margin: 1rem 0;
+  border-color: var(--color-surface1);
+}
+
+/* Animation */
+details[open] div[data-type="details-content"] {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
