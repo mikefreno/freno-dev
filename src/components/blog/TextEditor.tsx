@@ -648,7 +648,7 @@ export default function TextEditor(props: TextEditorProps) {
   };
 
   return (
-    <div class="border-surface2 text-text w-full rounded-md border px-4 py-2">
+    <div class="border-surface2 text-text w-full max-w-full overflow-hidden rounded-md border px-4 py-2">
       <Show when={editor()}>
         {(instance) => (
           <>
@@ -1264,7 +1264,7 @@ export default function TextEditor(props: TextEditorProps) {
 
       <div
         ref={editorRef}
-        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto h-[80dvh] min-w-full overflow-scroll focus:outline-none"
+        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto h-[80dvh] max-w-full overflow-scroll focus:outline-none"
       />
     </div>
   );

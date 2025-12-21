@@ -255,12 +255,12 @@ export default function PostForm(props: PostFormProps) {
   };
 
   return (
-    <div class="bg-base text-text min-h-screen py-32">
+    <div class="bg-base text-text min-h-screen overflow-x-hidden py-32">
       <div class="text-center text-2xl tracking-wide">
         {props.mode === "edit" ? "Edit a Blog" : "Create a Blog"}
       </div>
       <div class="flex h-full w-full justify-center">
-        <form onSubmit={handleSubmit} class="px-4">
+        <form onSubmit={handleSubmit} class="w-full max-w-full px-4">
           <div class="mx-auto w-full md:w-3/4 xl:w-1/2">
             {/* Title */}
             <div class="input-group mx-4">
@@ -331,7 +331,7 @@ export default function PostForm(props: PostFormProps) {
           </div>
 
           {/* Text Editor */}
-          <div class="">
+          <div class="w-full max-w-full overflow-hidden">
             <TextEditor updateContent={setBody} preSet={initialBody()} />
           </div>
 

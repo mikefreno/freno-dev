@@ -536,7 +536,7 @@ a.hover-underline-animation:hover::after {
   position: relative;
   min-height: 300px;
   width: 100%;
-  min-width: 350px;
+  min-width: min(350px, 100%);
   max-width: 100% !important;
   background-color: black;
 }
@@ -732,8 +732,10 @@ a.hover-underline-animation:hover::after {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
+  max-width: 100%;
   margin: 1rem 0;
-  overflow: hidden;
+  overflow: auto;
+  display: block;
 }
 
 .tiptap-table td,
@@ -765,8 +767,10 @@ a.hover-underline-animation:hover::after {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
+  max-width: 100%;
   margin: 1rem 0;
-  overflow: hidden;
+  overflow: auto;
+  display: block;
 }
 
 .ProseMirror table td,
