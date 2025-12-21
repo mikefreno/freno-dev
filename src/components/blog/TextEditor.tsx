@@ -117,6 +117,11 @@ export default function TextEditor(props: TextEditorProps) {
       IframeEmbed
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
+    editorProps: {
+      attributes: {
+        class: "focus:outline-none"
+      }
+    },
     onUpdate: ({ editor }) => {
       untrack(() => {
         props.updateContent(editor.getHTML());
@@ -497,7 +502,7 @@ export default function TextEditor(props: TextEditorProps) {
 
       <div
         ref={editorRef}
-        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl [&_hr]:border-surface2 mx-auto min-h-[400px] min-w-full focus:outline-none [&_hr]:my-8 [&_hr]:border-t-2"
+        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto h-[80dvh] min-w-full overflow-scroll focus:outline-none"
       />
     </div>
   );

@@ -628,6 +628,7 @@ a.hover-underline-animation:hover::after {
   ul,
   ol {
     padding: 0 1rem;
+    margin-left: 2rem;
   }
 
   h1,
@@ -654,7 +655,7 @@ a.hover-underline-animation:hover::after {
 
   hr {
     border: none;
-    border-top: 2px solid rgba(#0d0d0d, 0.1);
+    border-top: 2px solid var(--color-text);
     margin: 2rem 0;
   }
 

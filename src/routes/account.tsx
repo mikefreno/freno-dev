@@ -8,6 +8,7 @@ import XCircle from "~/components/icons/XCircle";
 import Dropzone from "~/components/blog/Dropzone";
 import AddImageToS3 from "~/lib/s3upload";
 import { validatePassword, isValidEmail } from "~/lib/validation";
+import { TerminalSplash } from "~/components/TerminalSplash";
 
 type UserProfile = {
   id: string;
@@ -463,14 +464,7 @@ export default function AccountPage() {
 
       <div class="bg-base mx-8 min-h-screen md:mx-24 lg:mx-36">
         <div class="pt-24">
-          <Show
-            when={!loading() && user()}
-            fallback={
-              <div class="mt-[35vh] flex w-full justify-center">
-                <div class="text-text text-xl">Loading...</div>
-              </div>
-            }
-          >
+          <Show when={!loading() && user()} fallback={<TerminalSplash />}>
             {(currentUser) => (
               <>
                 <div class="text-text mb-8 text-center text-3xl font-bold">
