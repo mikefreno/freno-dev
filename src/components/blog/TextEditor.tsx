@@ -354,15 +354,12 @@ export default function TextEditor(props: TextEditorProps) {
     const instance = editor();
     if (!instance) return;
 
-    console.log("Inserting table:", rows, "x", cols);
-
     instance
       .chain()
       .focus()
       .insertTable({ rows, cols, withHeaderRow: true })
       .run();
 
-    console.log("Table inserted, isActive:", instance.isActive("table"));
     setShowTableMenu(false);
   };
 
@@ -373,6 +370,120 @@ export default function TextEditor(props: TextEditorProps) {
       left: buttonRect.left
     });
     setShowTableMenu(!showTableMenu());
+  };
+
+  const deleteTableWithConfirmation = () => {
+    const instance = editor();
+    if (!instance) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this table?"
+    );
+    if (!confirmed) return;
+
+    instance.chain().focus().deleteTable().run();
+  };
+
+  const deleteRowWithConfirmation = () => {
+    const instance = editor();
+    if (!instance) return;
+
+    const { state } = instance;
+    const { selection } = state;
+
+    // Find the row node
+    let rowNode = null;
+    let depth = 0;
+    for (let d = selection.$anchor.depth; d > 0; d--) {
+      const node = selection.$anchor.node(d);
+      if (node.type.name === "tableRow") {
+        rowNode = node;
+        depth = d;
+        break;
+      }
+    }
+
+    if (rowNode) {
+      let hasContent = false;
+      rowNode.descendants((node) => {
+        if (node.textContent.trim().length > 0) {
+          hasContent = true;
+          return false;
+        }
+      });
+
+      if (hasContent) {
+        const confirmed = window.confirm(
+          "This row contains content. Are you sure you want to delete it?"
+        );
+        if (!confirmed) return;
+      }
+    }
+
+    instance.chain().focus().deleteRow().run();
+  };
+
+  const deleteColumnWithConfirmation = () => {
+    const instance = editor();
+    if (!instance) return;
+
+    const { state } = instance;
+    const { selection } = state;
+
+    // Get the current cell position
+    const cellPos = selection.$anchor;
+
+    // Find table and column index
+    let tableNode = null;
+    let tableDepth = 0;
+    for (let d = cellPos.depth; d > 0; d--) {
+      const node = cellPos.node(d);
+      if (node.type.name === "table") {
+        tableNode = node;
+        tableDepth = d;
+        break;
+      }
+    }
+
+    if (tableNode) {
+      // Find which column we're in
+      let colIndex = 0;
+      const cellNode = cellPos.node(cellPos.depth);
+      const rowNode = cellPos.node(cellPos.depth - 1);
+
+      rowNode.forEach((node, offset, index) => {
+        if (
+          cellPos.pos >= cellPos.start(cellPos.depth - 1) + offset &&
+          cellPos.pos <
+            cellPos.start(cellPos.depth - 1) + offset + node.nodeSize
+        ) {
+          colIndex = index;
+        }
+      });
+
+      // Check if this column has content
+      let hasContent = false;
+      tableNode.descendants((node, pos, parent) => {
+        if (parent && parent.type.name === "tableRow") {
+          let currentCol = 0;
+          parent.forEach((cell, offset, index) => {
+            if (index === colIndex && cell.textContent.trim().length > 0) {
+              hasContent = true;
+              return false;
+            }
+          });
+        }
+      });
+
+      if (hasContent) {
+        const confirmed = window.confirm(
+          "This column contains content. Are you sure you want to delete it?"
+        );
+        if (!confirmed) return;
+      }
+    }
+
+    instance.chain().focus().deleteColumn().run();
   };
 
   // Close language selector on outside click
@@ -600,6 +711,108 @@ export default function TextEditor(props: TextEditorProps) {
                   >
                     Code
                   </button>
+
+                  {/* Table controls in bubble menu */}
+                  <Show when={instance().isActive("table")}>
+                    <div class="border-crust mx-1 border-l opacity-30"></div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        instance().chain().focus().addRowBefore().run()
+                      }
+                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Add Row Before"
+                    >
+                      ↑ Row
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        instance().chain().focus().addRowAfter().run()
+                      }
+                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Add Row After"
+                    >
+                      Row ↓
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={deleteRowWithConfirmation}
+                      class="hover:bg-red hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Delete Row"
+                    >
+                      ✕ Row
+                    </button>
+
+                    <div class="border-crust mx-1 border-l opacity-30"></div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        instance().chain().focus().addColumnBefore().run()
+                      }
+                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Add Column Before"
+                    >
+                      ← Col
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        instance().chain().focus().addColumnAfter().run()
+                      }
+                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Add Column After"
+                    >
+                      Col →
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={deleteColumnWithConfirmation}
+                      class="hover:bg-red hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Delete Column"
+                    >
+                      ✕ Col
+                    </button>
+
+                    <div class="border-crust mx-1 border-l opacity-30"></div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        instance().chain().focus().mergeCells().run()
+                      }
+                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Merge Cells"
+                    >
+                      ⊡
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        instance().chain().focus().splitCell().run()
+                      }
+                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Split Cell"
+                    >
+                      ⊞
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={deleteTableWithConfirmation}
+                      class="hover:bg-red hover:bg-opacity-30 rounded px-2 py-1"
+                      title="Delete Table"
+                    >
+                      ✕ Table
+                    </button>
+                  </Show>
                 </div>
               </div>
             </Show>
@@ -858,9 +1071,7 @@ export default function TextEditor(props: TextEditorProps) {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    instance().chain().focus().deleteColumn().run()
-                  }
+                  onClick={deleteColumnWithConfirmation}
                   class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
                   title="Delete Column"
                 >
@@ -891,7 +1102,7 @@ export default function TextEditor(props: TextEditorProps) {
 
                 <button
                   type="button"
-                  onClick={() => instance().chain().focus().deleteRow().run()}
+                  onClick={deleteRowWithConfirmation}
                   class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
                   title="Delete Row"
                 >
@@ -902,7 +1113,7 @@ export default function TextEditor(props: TextEditorProps) {
 
                 <button
                   type="button"
-                  onClick={() => instance().chain().focus().deleteTable().run()}
+                  onClick={deleteTableWithConfirmation}
                   class="hover:bg-red rounded px-2 py-1 text-xs"
                   title="Delete Table"
                 >
