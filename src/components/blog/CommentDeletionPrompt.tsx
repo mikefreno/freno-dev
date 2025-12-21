@@ -45,10 +45,10 @@ export default function CommentDeletionPrompt(
 
   return (
     <div class="flex justify-center">
-      <div class="fixed top-48 z-50 h-fit w-11/12 sm:w-4/5 md:w-2/3">
+      <div class="fixed top-48 z-100 h-fit w-11/12 sm:w-4/5 md:w-2/3">
         <div
           id="delete_prompt"
-          class="fade-in rounded-md bg-red-400 px-8 py-4 shadow-lg dark:bg-red-900"
+          class="fade-in bg-red rounded-md px-8 py-4 shadow-lg brightness-110"
         >
           <button class="absolute right-4" onClick={() => {}}>
             <Xmark strokeWidth={0.5} color="white" height={50} width={50} />
@@ -56,7 +56,7 @@ export default function CommentDeletionPrompt(
           <div class="py-4 text-center text-3xl tracking-wide">
             Comment Deletion
           </div>
-          <div class="mx-auto w-3/4 rounded bg-zinc-50 px-6 py-4 dark:bg-zinc-800">
+          <div class="bg-surface0 mx-auto w-3/4 rounded px-6 py-4">
             <div class="flex overflow-x-auto overflow-y-hidden select-text">
               {/* Comment body will be passed as prop */}
             </div>
@@ -132,9 +132,9 @@ export default function CommentDeletionPrompt(
               disabled={props.commentDeletionLoading || !isDeleteEnabled()}
               class={`${
                 props.commentDeletionLoading || !isDeleteEnabled()
-                  ? "bg-zinc-400"
-                  : "border-orange-500 bg-orange-400 hover:bg-orange-500"
-              } rounded border px-4 py-2 text-white shadow-md transition-all duration-300 ease-in-out active:scale-90`}
+                  ? "bg-surface2 opacity-50"
+                  : "border-red bg-red hover:brightness-125"
+              } rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out active:scale-90`}
             >
               Delete
             </button>

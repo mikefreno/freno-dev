@@ -21,7 +21,7 @@ export default function CommentInputBlock(props: CommentInputBlockProps) {
   if (props.privilegeLevel === "user" || props.privilegeLevel === "admin") {
     return (
       <div class="flex w-full justify-center select-none">
-        <div class="h-fit w-3/4 md:w-1/2">
+        <div class="h-fit w-3/4">
           <form onSubmit={newCommentWrapper}>
             <div class="textarea-group blog">
               <textarea
@@ -43,9 +43,9 @@ export default function CommentInputBlock(props: CommentInputBlockProps) {
                 disabled={props.commentSubmitLoading}
                 class={`${
                   props.commentSubmitLoading
-                    ? "bg-zinc-400"
-                    : "border-orange-500 bg-orange-400 hover:bg-orange-500"
-                } rounded border px-4 py-2 font-light text-white shadow-md transition-all duration-300 ease-in-out active:scale-90`}
+                    ? "bg-surface2 opacity-50"
+                    : "border-sapphire bg-blue hover:brightness-125"
+                } rounded border px-4 py-2 text-base font-light shadow-md transition-all duration-300 ease-in-out active:scale-90`}
               >
                 Submit
               </button>

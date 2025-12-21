@@ -49,7 +49,7 @@ export default function ReactionBar(props: ReactionBarProps) {
     <div
       class={`${
         props.showingReactionOptions
-          ? "bg-zinc-50 px-2 py-4 shadow-inner dark:bg-zinc-700"
+          ? "bg-surface0 px-2 py-4 shadow-inner brightness-90"
           : ""
       } fade-in scrollYDisabled ml-2 flex min-h-[1.5rem] w-48 max-w-[1/4] flex-row overflow-scroll rounded-md py-1 sm:w-56 md:w-fit md:overflow-hidden`}
     >
@@ -57,7 +57,7 @@ export default function ReactionBar(props: ReactionBarProps) {
         {({ type, Component }) => (
           <Show when={shouldShowEmoji(type)}>
             <div class="fade-in mx-1 flex">
-              <div class={hasUserReacted(type) ? "text-green-500" : ""}>
+              <div class={hasUserReacted(type) ? "text-green" : ""}>
                 <Show when={getReactionCount(type) > 0}>
                   {getReactionCount(type)}
                 </Show>

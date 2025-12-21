@@ -159,7 +159,7 @@ export default function CommentBlock(props: CommentBlockProps) {
 
   const isAnonymous = () => props.privilegeLevel === "anonymous";
 
-  const replyIconColor = () => "#fb923c";
+  const replyIconColor = () => "var(--color-peach)";
 
   return (
     <>
@@ -169,13 +169,13 @@ export default function CommentBlock(props: CommentBlockProps) {
           onClick={collapseCommentToggle}
           class="ml-5 w-full px-2 lg:w-3/4"
         >
-          <div class="my-auto mt-1 mr-2 h-8 border-l-2 border-black dark:border-white" />
+          <div class="border-text my-auto mt-1 mr-2 h-8 border-l-2" />
         </button>
       </Show>
 
       {/* Expanded state */}
       <Show when={!commentCollapsed()}>
-        <div class="z-[500] transition-all duration-300 ease-in-out">
+        <div class="z-500 transition-all duration-300 ease-in-out">
           <div class="my-4 flex w-full overflow-x-hidden overflow-y-hidden lg:w-3/4">
             {/* Vote buttons column */}
             <div
@@ -191,8 +191,8 @@ export default function CommentBlock(props: CommentBlockProps) {
                 <div
                   class={`h-5 w-5 ${
                     hasUpvoted()
-                      ? "fill-emerald-500"
-                      : `fill-black hover:fill-emerald-500 dark:fill-white ${
+                      ? "fill-green"
+                      : `fill-text hover:fill-green ${
                           isAnonymous() ? "tooltip z-50" : ""
                         }`
                   }`}
@@ -218,8 +218,8 @@ export default function CommentBlock(props: CommentBlockProps) {
                 <div
                   class={`h-5 w-5 ${
                     hasDownvoted()
-                      ? "fill-rose-500"
-                      : `fill-black hover:fill-rose-500 dark:fill-white ${
+                      ? "fill-red"
+                      : `fill-text hover:fill-red ${
                           isAnonymous() ? "tooltip z-50" : ""
                         }`
                   }`}
@@ -239,7 +239,7 @@ export default function CommentBlock(props: CommentBlockProps) {
             {/* Collapse toggle line */}
             <button onClick={collapseCommentToggle} class="z-0 px-2">
               <div
-                class="border-l-2 border-black transition-all duration-300 ease-in-out dark:border-white"
+                class="border-text border-l-2 transition-all duration-300 ease-in-out"
                 style={{ height: `${toggleHeight()}px` }}
               />
             </button>
@@ -292,7 +292,7 @@ export default function CommentBlock(props: CommentBlockProps) {
                       <TrashIcon
                         height={24}
                         width={24}
-                        stroke="red"
+                        stroke="var(--color-red)"
                         strokeWidth={1.5}
                       />
                     </Show>

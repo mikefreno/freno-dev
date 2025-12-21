@@ -348,29 +348,50 @@ export default function TextEditor(props: TextEditorProps) {
 
     const title = window.prompt("Section title:", "Click to expand");
 
-    if (title !== null) {
-      instance
-        .chain()
-        .focus()
-        .insertContent({
-          type: "details",
-          content: [
-            {
-              type: "detailsSummary",
-              content: [{ type: "text", text: title }]
-            },
-            {
-              type: "detailsContent",
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ type: "text", text: "Add your content here..." }]
-                }
-              ]
-            }
-          ]
-        })
-        .run();
+    if (title !== null && title.trim() !== "") {
+      const content = {
+        type: "details",
+        attrs: { open: true },
+        content: [
+          {
+            type: "detailsSummary",
+            content: [{ type: "text", text: title }]
+          },
+          {
+            type: "detailsContent",
+            content: [
+              {
+                type: "paragraph"
+              }
+            ]
+          }
+        ]
+      };
+
+      const { from } = instance.state.selection;
+      instance.chain().focus().insertContent(content).run();
+
+      // Move cursor to the paragraph inside detailsContent
+      // Structure: details (from+1) > detailsSummary > detailsContent > paragraph
+      // We need to position inside the paragraph which is roughly from + title.length + 3 nodes deep
+      setTimeout(() => {
+        const { state } = instance;
+        let targetPos = from;
+
+        // Navigate through the document to find the paragraph inside detailsContent
+        state.doc.nodesBetween(from, from + 200, (node, pos) => {
+          if (node.type.name === "detailsContent") {
+            // Position cursor at the start of the first child (paragraph)
+            targetPos = pos + 1;
+            return false; // Stop iteration
+          }
+        });
+
+        if (targetPos > from) {
+          instance.commands.setTextSelection(targetPos);
+          instance.commands.focus();
+        }
+      }, 10);
     }
   };
 

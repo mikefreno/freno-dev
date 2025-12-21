@@ -130,7 +130,16 @@ export default function CommentSectionWrapper(
 
   // Helper functions
   const updateChannel = () => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    if (!props.currentUserID || !props.id) {
+      console.warn("Cannot update channel: missing userID or postID");
+      return;
+    }
+
+    try {
       socket.send(
         JSON.stringify({
           action: "channelUpdate",
@@ -139,25 +148,49 @@ export default function CommentSectionWrapper(
           invoker_id: props.currentUserID
         })
       );
+    } catch (error) {
+      console.error("Error sending channel update:", error);
     }
   };
 
   // Comment creation
   const newComment = async (commentBody: string, parentCommentID?: number) => {
     setCommentSubmitLoading(true);
+
+    if (!props.currentUserID) {
+      console.warn("Cannot create comment: user not authenticated");
+      setCommentSubmitLoading(false);
+      return;
+    }
+
     if (commentBody && socket) {
-      socket.send(
-        JSON.stringify({
-          action: "commentCreation",
-          commentBody: commentBody,
-          postType: "blog",
-          postID: props.id,
-          parentCommentID: parentCommentID,
-          invokerID: props.currentUserID
-        })
-      );
+      try {
+        socket.send(
+          JSON.stringify({
+            action: "commentCreation",
+            commentBody: commentBody,
+            postType: "blog",
+            postID: props.id,
+            parentCommentID: parentCommentID,
+            invokerID: props.currentUserID
+          })
+        );
+      } catch (error) {
+        console.error("Error sending comment creation:", error);
+        // Fallback to HTTP API on WebSocket error
+        await fallbackCommentCreation(commentBody, parentCommentID);
+      }
     } else {
       // Fallback to HTTP API if WebSocket unavailable
+      await fallbackCommentCreation(commentBody, parentCommentID);
+    }
+  };
+
+  const fallbackCommentCreation = async (
+    commentBody: string,
+    parentCommentID?: number
+  ) => {
+    try {
       const domain = import.meta.env.VITE_DOMAIN;
       const res = await fetch(
         `${domain}/api/database/comments/create/blog/${props.id}`,
@@ -179,6 +212,9 @@ export default function CommentSectionWrapper(
           commentParent: parentCommentID
         });
       }
+    } catch (error) {
+      console.error("Error in fallback comment creation:", error);
+      setCommentSubmitLoading(false);
     }
   };
 
@@ -237,17 +273,29 @@ export default function CommentSectionWrapper(
   // Comment updating
   const editComment = async (body: string, comment_id: number) => {
     setCommentEditLoading(true);
+
+    if (!props.currentUserID) {
+      console.warn("Cannot edit comment: user not authenticated");
+      setCommentEditLoading(false);
+      return;
+    }
+
     if (socket) {
-      socket.send(
-        JSON.stringify({
-          action: "commentUpdate",
-          commentBody: body,
-          postType: "blog",
-          postID: props.id,
-          commentID: comment_id,
-          invokerID: props.currentUserID
-        })
-      );
+      try {
+        socket.send(
+          JSON.stringify({
+            action: "commentUpdate",
+            commentBody: body,
+            postType: "blog",
+            postID: props.id,
+            commentID: comment_id,
+            invokerID: props.currentUserID
+          })
+        );
+      } catch (error) {
+        console.error("Error sending comment update:", error);
+        setCommentEditLoading(false);
+      }
     }
   };
 
@@ -290,17 +338,29 @@ export default function CommentSectionWrapper(
     deletionType: DeletionType
   ) => {
     setCommentDeletionLoading(true);
+
+    if (!props.currentUserID) {
+      console.warn("Cannot delete comment: user not authenticated");
+      setCommentDeletionLoading(false);
+      return;
+    }
+
     if (socket) {
-      socket.send(
-        JSON.stringify({
-          action: "commentDeletion",
-          deleteType: deletionType,
-          commentID: commentID,
-          invokerID: props.currentUserID,
-          postType: "blog",
-          postID: props.id
-        })
-      );
+      try {
+        socket.send(
+          JSON.stringify({
+            action: "commentDeletion",
+            deleteType: deletionType,
+            commentID: commentID,
+            invokerID: props.currentUserID,
+            postType: "blog",
+            postID: props.id
+          })
+        );
+      } catch (error) {
+        console.error("Error sending comment deletion:", error);
+        setCommentDeletionLoading(false);
+      }
     }
   };
 
@@ -393,17 +453,26 @@ export default function CommentSectionWrapper(
 
   // Reaction handling
   const commentReaction = (reactionType: ReactionType, commentID: number) => {
+    if (!props.currentUserID) {
+      console.warn("Cannot react to comment: user not authenticated");
+      return;
+    }
+
     if (socket) {
-      socket.send(
-        JSON.stringify({
-          action: "commentReaction",
-          postType: "blog",
-          postID: props.id,
-          commentID: commentID,
-          invokerID: props.currentUserID,
-          reactionType: reactionType
-        })
-      );
+      try {
+        socket.send(
+          JSON.stringify({
+            action: "commentReaction",
+            postType: "blog",
+            postID: props.id,
+            commentID: commentID,
+            invokerID: props.currentUserID,
+            reactionType: reactionType
+          })
+        );
+      } catch (error) {
+        console.error("Error sending comment reaction:", error);
+      }
     }
   };
 

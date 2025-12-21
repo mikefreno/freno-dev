@@ -43,7 +43,7 @@ export default function CommentSortingSelect(props: CommentSortingSelectProps) {
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen())}
-            class="focus-visible:ring-opacity-75 relative w-full cursor-default rounded-lg bg-white py-2 pr-10 pl-3 text-left shadow-md focus:outline-none focus-visible:border-orange-600 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm dark:bg-zinc-900"
+            class="focus-visible:border-peach focus-visible:ring-offset-peach bg-surface0 focus-visible:ring-opacity-75 relative w-full cursor-default rounded-lg py-2 pr-10 pl-3 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:text-sm"
           >
             <span class="block truncate">{selectedLabel()}</span>
             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -51,13 +51,13 @@ export default function CommentSortingSelect(props: CommentSortingSelectProps) {
                 strokeWidth={1.5}
                 height={24}
                 width={24}
-                class="fill-zinc-900 dark:fill-white"
+                class="fill-text"
               />
             </span>
           </button>
 
           <Show when={isOpen()}>
-            <div class="ring-opacity-5 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black transition duration-100 ease-in focus:outline-none sm:text-sm dark:bg-zinc-900">
+            <div class="ring-opacity-5 bg-surface0 ring-overlay0 absolute mt-1 max-h-60 w-full overflow-auto rounded-md py-1 text-base shadow-lg ring-1 focus:outline-none sm:text-sm">
               <For each={SORTING_OPTIONS}>
                 {(sort) => (
                   <button
@@ -65,8 +65,8 @@ export default function CommentSortingSelect(props: CommentSortingSelectProps) {
                     onClick={() => handleSelect(sort.val)}
                     class={`relative w-full cursor-default py-2 pr-4 pl-10 text-left select-none ${
                       props.selectedSorting.val === sort.val
-                        ? "bg-orange-100 text-orange-900"
-                        : "text-zinc-900 hover:bg-orange-50 dark:text-white dark:hover:bg-zinc-800"
+                        ? "bg-peach text-base brightness-75"
+                        : "text-text hover:brightness-125"
                     }`}
                   >
                     <span
@@ -79,12 +79,12 @@ export default function CommentSortingSelect(props: CommentSortingSelectProps) {
                       {sort.label}
                     </span>
                     <Show when={props.selectedSorting.val === sort.val}>
-                      <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-orange-600">
+                      <span class="text-peach absolute inset-y-0 left-0 flex items-center pl-3">
                         <Check
                           strokeWidth={1}
                           height={24}
                           width={24}
-                          class="stroke-zinc-900 dark:stroke-white"
+                          class="stroke-text"
                         />
                       </span>
                     </Show>
