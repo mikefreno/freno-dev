@@ -4,7 +4,6 @@ import {
   onMount,
   createEffect,
   createSignal,
-  createMemo,
   Show,
   For,
   onCleanup

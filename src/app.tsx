@@ -41,6 +41,7 @@ function AppLayout(props: { children: any }) {
         setRightBarVisible(true);
       }
 
+      // On mobile, leftBarSize() is always 0 (overlay mode)
       const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
       setCenterWidth(newWidth);
     };
@@ -55,6 +56,7 @@ function AppLayout(props: { children: any }) {
 
   // Recalculate when bar sizes change (visibility or actual resize)
   createEffect(() => {
+    // On mobile, leftBarSize() is always 0 (overlay mode)
     const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
     setCenterWidth(newWidth);
   });

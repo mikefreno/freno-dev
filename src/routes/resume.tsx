@@ -5,7 +5,6 @@ export default function Resume() {
   let iframeRef: HTMLIFrameElement | undefined;
 
   onMount(() => {
-    // Prevent iframe errors from bubbling up
     const handleError = (e: ErrorEvent) => {
       if (e.filename?.includes("resume.pdf") || e.message === "Script error.") {
         e.preventDefault();
@@ -18,7 +17,6 @@ export default function Resume() {
     onCleanup(() => {
       window.removeEventListener("error", handleError, true);
 
-      // Clear iframe source before unmount to prevent script errors
       if (iframeRef) {
         iframeRef.src = "about:blank";
       }
@@ -30,7 +28,7 @@ export default function Resume() {
       <Title>Resume | Michael Freno</Title>
       <Meta
         name="description"
-        content="View Michael Freno's resume - Software Engineer with expertise in full-stack development, game development, and open source."
+        content="View Michael Freno's resume - Software Engineer."
       />
 
       <main class="flex h-screen w-full flex-col">

@@ -22,7 +22,7 @@ export default function BlogIndex() {
 
       <div class="mx-auto pt-8 pb-24">
         <Suspense fallback={<TerminalSplash />}>
-          <div class="flex flex-col justify-center gap-4 md:flex-row md:justify-around">
+          <div class="flex flex-row justify-around gap-4">
             <PostSortingSelect />
 
             <Show when={data() && Object.keys(data()!.tagMap).length > 0}>
@@ -33,7 +33,7 @@ export default function BlogIndex() {
               <div class="mt-2 flex justify-center md:mt-0 md:justify-end">
                 <A
                   href="/blog/create"
-                  class="border-text rounded border px-4 py-2 transition-all duration-300 ease-out hover:brightness-125 active:scale-90 md:mr-4"
+                  class="border-text rounded border px-4 py-2 text-center transition-all duration-300 ease-out hover:brightness-125 active:scale-90 md:mr-4"
                 >
                   Create Post
                 </A>

@@ -1,4 +1,11 @@
-import { Accessor, createContext, useContext, createMemo } from "solid-js";
+import {
+  Accessor,
+  createContext,
+  useContext,
+  createMemo,
+  onMount,
+  onCleanup
+} from "solid-js";
 import { createSignal } from "solid-js";
 import { hapticFeedback } from "~/lib/client-utils";
 
@@ -41,9 +48,25 @@ export function BarsProvider(props: { children: any }) {
   const [leftBarVisible, _setLeftBarVisible] = createSignal(true);
   const [rightBarVisible, _setRightBarVisible] = createSignal(true);
   const [barsInitialized, setBarsInitialized] = createSignal(false);
+  const [windowWidth, setWindowWidth] = createSignal(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
 
   let leftBarSized = false;
   let rightBarSized = false;
+
+  // Track window width reactively for mobile/desktop detection
+  onMount(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    onCleanup(() => {
+      window.removeEventListener("resize", handleResize);
+    });
+  });
 
   const wrappedSetLeftBarSize = (size: number) => {
     if (!barsInitialized()) {
@@ -88,6 +111,9 @@ export function BarsProvider(props: { children: any }) {
     // Return 0 if hidden (natural size is 0), otherwise return synced size when initialized
     const naturalSize = _leftBarNaturalSize();
     if (naturalSize === 0) return 0; // Hidden
+    // On mobile (<768px), always return 0 for layout (overlay mode)
+    const isMobile = windowWidth() < 768;
+    if (isMobile) return 0;
     return barsInitialized() ? syncedBarSize() : naturalSize;
   });
 
