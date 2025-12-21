@@ -24,16 +24,6 @@ export async function safeFetch(
 }
 
 /**
- * Triggers haptic feedback on mobile devices
- * @param duration - Duration in milliseconds (default 50ms for a light tap)
- */
-export function hapticFeedback(duration: number = 50) {
-  if (typeof window !== "undefined" && "vibrate" in navigator) {
-    navigator.vibrate(duration);
-  }
-}
-
-/**
  * Inserts soft hyphens (&shy;) into long words to enable manual hyphenation
  * Works with Typewriter component since it uses actual characters
  * @param text - The text to add hyphens to

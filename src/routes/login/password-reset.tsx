@@ -181,8 +181,8 @@ export default function PasswordResetPage() {
         name="description"
         content="Set a new password for your account to regain access to your profile and personalized features."
       />
-      <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-        <div class="pt-24 text-center text-xl font-semibold text-slate-800 dark:text-slate-100">
+      <div>
+        <div class="pt-24 text-center text-xl font-semibold">
           Set New Password
         </div>
 
@@ -277,8 +277,8 @@ export default function PasswordResetPage() {
                   class={`${
                     passwordChangeLoading() || !passwordsMatch()
                       ? "cursor-not-allowed bg-zinc-400"
-                      : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
-                  } my-6 flex justify-center rounded px-4 py-2 font-medium text-white transition-all duration-300 ease-out`}
+                      : "bg-blue hover:brightness-125 active:scale-90"
+                  } my-6 flex justify-center rounded px-4 py-2 text-base font-medium transition-all duration-300 ease-out`}
                 >
                   {passwordChangeLoading() ? "Setting..." : "Set New Password"}
                 </button>
@@ -303,7 +303,7 @@ export default function PasswordResetPage() {
         {/* Error Message */}
         <Show when={error() && !showRequestNewEmail()}>
           <div class="mt-4 flex justify-center">
-            <div class="text-sm text-red-500 italic">{error()}</div>
+            <div class="text-red text-sm italic">{error()}</div>
           </div>
         </Show>
 
@@ -311,11 +311,11 @@ export default function PasswordResetPage() {
         <div
           class={`${
             showRequestNewEmail() ? "" : "opacity-0 select-none"
-          } flex justify-center px-4 text-red-500 italic transition-opacity duration-300 ease-in-out`}
+          } text-red flex justify-center px-4 italic transition-opacity duration-300 ease-in-out`}
         >
           Token has expired, request a new one{" "}
           <A
-            class="pl-1 text-blue-500 underline underline-offset-4 hover:text-blue-400"
+            class="text-blue pl-1 underline underline-offset-4 hover:brightness-125"
             href="/login/request-password-reset"
           >
             here
@@ -327,7 +327,7 @@ export default function PasswordResetPage() {
           <div class="mt-6 flex justify-center">
             <A
               href="/login"
-              class="text-blue-500 underline underline-offset-4 transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+              class="text-blue underline underline-offset-4 transition-colors hover:brightness-125"
             >
               Back to Login
             </A>

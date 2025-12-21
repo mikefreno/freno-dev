@@ -2,12 +2,13 @@ import { Component, createSignal, onMount, onCleanup } from "solid-js";
 
 interface CountdownCircleTimerProps {
   duration: number;
-  initialRemainingTime: number;
+  initialRemainingTime?: number;
   size: number;
   strokeWidth: number;
   colors: string;
-  children: (time: number) => any;
+  children: (props: { remainingTime: number }) => any;
   onComplete?: () => void;
+  isPlaying?: boolean;
 }
 
 const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
@@ -15,7 +16,7 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
   const circumference = radius * 2 * Math.PI;
 
   const [remainingTime, setRemainingTime] = createSignal(
-    props.initialRemainingTime
+    props.initialRemainingTime ?? props.duration
   );
 
   // Calculate progress (0 to 1)
@@ -87,7 +88,7 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
           transform: "translate(-50%, -50%)"
         }}
       >
-        {props.children(remainingTime())}
+        {props.children({ remainingTime: remainingTime() })}
       </div>
     </div>
   );

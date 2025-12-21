@@ -272,10 +272,10 @@ export default function LoginPage() {
   };
 
   // Countdown timer render function
-  const renderTime = () => {
+  const renderTime = ({ remainingTime }: { remainingTime: number }) => {
     return (
       <div class="timer">
-        <div class="value">{countDown().toFixed(0)}</div>
+        <div class="value">{remainingTime.toFixed(0)}</div>
       </div>
     );
   };

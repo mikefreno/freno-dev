@@ -42,6 +42,9 @@ export default function Home() {
               here (github).
             </a>
           </Typewriter>
+          <Typewriter speed={100} keepAlive={2000}>
+            If you want to get in touch, check to side bar for various links.
+          </Typewriter>
           <div class="pt-8 text-center">
             <div class="pb-4">Some of my recent projects:</div>
             <div class="flex flex-col items-center gap-2 2xl:flex-row 2xl:items-start 2xl:justify-center">

@@ -183,10 +183,10 @@ export default function ContactPage() {
     );
   };
 
-  const renderTime = (time: number) => {
+  const renderTime = ({ remainingTime }: { remainingTime: number }) => {
     return (
       <div class="timer">
-        <div class="value">{time.toFixed(0)}</div>
+        <div class="value">{remainingTime.toFixed(0)}</div>
       </div>
     );
   };

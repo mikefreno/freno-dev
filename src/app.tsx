@@ -180,7 +180,7 @@ function AppLayout(props: { children: any }) {
       <div class="flex max-w-screen flex-row">
         <LeftBar />
         <div
-          class="bg-base relative h-screen overflow-y-scroll rounded-t-lg p-4 pt-16 shadow-2xl"
+          class="bg-base relative h-screen overflow-y-scroll rounded-t-lg pt-16 shadow-2xl"
           style={{
             width: `${centerWidth()}px`,
             "margin-left": `${leftBarSize()}px`

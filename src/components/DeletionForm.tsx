@@ -36,7 +36,7 @@ export default function DeletionForm() {
     if (timer) {
       timerInterval = setInterval(
         () => calcRemainder(timer),
-        1000,
+        1000
       ) as unknown as number;
       onCleanup(() => {
         if (timerInterval) {
@@ -65,7 +65,7 @@ export default function DeletionForm() {
       const response = await fetch("/api/trpc/misc.sendDeletionRequestEmail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email })
       });
 
       const result = await response.json();
@@ -79,7 +79,7 @@ export default function DeletionForm() {
           }
           timerInterval = setInterval(
             () => calcRemainder(timer),
-            1000,
+            1000
           ) as unknown as number;
         }
       } else {
@@ -96,10 +96,10 @@ export default function DeletionForm() {
   };
 
   // Countdown timer render function
-  const renderTime = () => {
+  const renderTime = ({ remainingTime }: { remainingTime: number }) => {
     return (
       <div class="timer">
-        <div class="value">{countDown().toFixed(0)}</div>
+        <div class="value">{remainingTime.toFixed(0)}</div>
       </div>
     );
   };
@@ -136,7 +136,7 @@ export default function DeletionForm() {
                       loading()
                         ? "bg-lavender"
                         : "bg-maroon hover:brightness-125 active:scale-90"
-                    } flex w-36 justify-center rounded py-3 font-light text-white shadow-lg shadow-maroon transition-all duration-300 ease-out`}
+                    } shadow-maroon flex w-36 justify-center rounded py-3 font-light text-white shadow-lg transition-all duration-300 ease-out`}
                   >
                     <Show when={loading()} fallback="Send Deletion Request">
                       <LoadingSpinner height={24} width={24} />
@@ -162,8 +162,8 @@ export default function DeletionForm() {
             emailSent()
               ? "text-green"
               : error() !== ""
-              ? "text-red"
-              : "select-none opacity-0"
+                ? "text-red"
+                : "opacity-0 select-none"
           } mt-4 flex justify-center text-center italic transition-opacity duration-300 ease-in-out`}
         >
           <Show when={emailSent()} fallback={error()}>

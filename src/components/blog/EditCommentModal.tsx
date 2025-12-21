@@ -21,7 +21,7 @@ export default function EditCommentModal(props: EditCommentModalProps) {
   };
 
   return (
-    <div class="flex justify-center">
+    <div class="z-100 flex justify-center">
       <div class="fixed top-48 h-fit w-11/12 sm:w-4/5 md:w-2/3">
         <div
           id="edit_prompt"

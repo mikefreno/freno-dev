@@ -7,7 +7,6 @@ import {
   onCleanup
 } from "solid-js";
 import { createSignal } from "solid-js";
-import { hapticFeedback } from "~/lib/client-utils";
 
 const BarsContext = createContext<{
   leftBarSize: Accessor<number>;
@@ -28,7 +27,8 @@ const BarsContext = createContext<{
   setRightBarSize: () => {},
   centerWidth: () => 0,
   setCenterWidth: () => {},
-  leftBarVisible: () => true,
+  leftBarVisible: () =>
+    typeof window !== "undefined" ? window.innerWidth >= 768 : true,
   setLeftBarVisible: () => {},
   rightBarVisible: () => true,
   setRightBarVisible: () => {},
@@ -45,12 +45,13 @@ export function BarsProvider(props: { children: any }) {
   const [_rightBarNaturalSize, _setRightBarNaturalSize] = createSignal(0);
   const [syncedBarSize, setSyncedBarSize] = createSignal(0);
   const [centerWidth, setCenterWidth] = createSignal(0);
-  const [leftBarVisible, _setLeftBarVisible] = createSignal(true);
-  const [rightBarVisible, _setRightBarVisible] = createSignal(true);
+  const initialWindowWidth =
+    typeof window !== "undefined" ? window.innerWidth : 1024;
+  const isMobile = initialWindowWidth < 768;
+  const [leftBarVisible, setLeftBarVisible] = createSignal(!isMobile);
+  const [rightBarVisible, setRightBarVisible] = createSignal(true);
   const [barsInitialized, setBarsInitialized] = createSignal(false);
-  const [windowWidth, setWindowWidth] = createSignal(
-    typeof window !== "undefined" ? window.innerWidth : 1024
-  );
+  const [windowWidth, setWindowWidth] = createSignal(initialWindowWidth);
 
   let leftBarSized = false;
   let rightBarSized = false;
@@ -81,6 +82,16 @@ export function BarsProvider(props: { children: any }) {
       _setLeftBarNaturalSize(size);
     }
   };
+
+  // Initialize immediately on mobile if left bar starts hidden
+  onMount(() => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    if (isMobile && !leftBarVisible()) {
+      // Skip waiting for left bar size on mobile when it starts hidden
+      leftBarSized = true;
+      checkAndSync();
+    }
+  });
 
   const wrappedSetRightBarSize = (size: number) => {
     if (!barsInitialized()) {
@@ -124,16 +135,6 @@ export function BarsProvider(props: { children: any }) {
     return barsInitialized() ? syncedBarSize() : naturalSize;
   });
 
-  // Wrap visibility setters with haptic feedback
-  const setLeftBarVisible = (visible: boolean) => {
-    hapticFeedback(50);
-    _setLeftBarVisible(visible);
-  };
-
-  const setRightBarVisible = (visible: boolean) => {
-    hapticFeedback(50);
-    _setRightBarVisible(visible);
-  };
   return (
     <BarsContext.Provider
       value={{

@@ -111,10 +111,10 @@ export default function RequestPasswordResetPage() {
     }
   };
 
-  const renderTime = () => {
+  const renderTime = ({ remainingTime }: { remainingTime: number }) => {
     return (
       <div class="timer">
-        <div class="value">{countDown().toFixed(0)}</div>
+        <div class="value">{remainingTime.toFixed(0)}</div>
       </div>
     );
   };
