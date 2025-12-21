@@ -3,8 +3,8 @@ import {
   A,
   useNavigate,
   useSearchParams,
-  cache,
-  redirect
+  redirect,
+  query
 } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
 import { getEvent } from "vinxi/http";
@@ -17,7 +17,7 @@ import { isValidEmail, validatePassword } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
 import { env } from "~/env/client";
 
-const checkAuth = cache(async () => {
+const checkAuth = query(async () => {
   "use server";
   const { checkAuthStatus } = await import("~/server/utils");
   const event = getEvent()!;
@@ -333,25 +333,31 @@ export default function LoginPage() {
       />
       <div class="flex h-dvh flex-row justify-evenly">
         {/* Main content */}
-        <div class="pt-12 md:pt-24">
+        <div class="relative pt-12 md:pt-24">
           {/* Error message */}
-          <div class="absolute -mt-12 text-center text-red-400 italic">
-            <Show when={error() === "passwordMismatch"}>
-              <div class="text-3xl">Passwords did not match!</div>
-            </Show>
-            <Show when={error() === "duplicate"}>
-              <div class="text-3xl">Email Already Exists!</div>
-            </Show>
-            <Show
-              when={
-                error() &&
-                error() !== "passwordMismatch" &&
-                error() !== "duplicate"
-              }
-            >
-              <div class="max-w-md px-4 text-base">{error()}</div>
-            </Show>
-          </div>
+          <Show when={error()}>
+            <div class="mb-4 w-full max-w-md rounded-lg border border-red-500 bg-red-500/10 px-4 py-3 text-center">
+              <Show when={error() === "passwordMismatch"}>
+                <div class="text-lg font-semibold text-red-500">
+                  Passwords did not match!
+                </div>
+              </Show>
+              <Show when={error() === "duplicate"}>
+                <div class="text-lg font-semibold text-red-500">
+                  Email Already Exists!
+                </div>
+              </Show>
+              <Show
+                when={
+                  error() &&
+                  error() !== "passwordMismatch" &&
+                  error() !== "duplicate"
+                }
+              >
+                <div class="text-sm text-red-500">{error()}</div>
+              </Show>
+            </div>
+          </Show>
 
           {/* Title */}
           <div class="py-2 pl-6 text-2xl md:pl-0">

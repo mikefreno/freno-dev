@@ -1,6 +1,6 @@
-import { createSignal, createEffect, Show, onMount } from "solid-js";
+import { createSignal, Show, onMount } from "solid-js";
 import { Title, Meta } from "@solidjs/meta";
-import { useNavigate, cache, redirect } from "@solidjs/router";
+import { useNavigate, redirect, query } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
 import Eye from "~/components/icons/Eye";
 import EyeSlash from "~/components/icons/EyeSlash";
@@ -23,7 +23,7 @@ type UserProfile = {
   hasPassword: boolean;
 };
 
-const checkAuth = cache(async () => {
+const checkAuth = query(async () => {
   "use server";
   const { checkAuthStatus } = await import("~/server/utils");
   const event = getEvent()!;
