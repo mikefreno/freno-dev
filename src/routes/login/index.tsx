@@ -615,7 +615,7 @@ export default function LoginPage() {
             <div class="mx-auto mb-4 flex flex-col">
               {/* Google OAuth */}
               <A
-                href={`https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${domain}/api/auth/callback/google&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email`}
+                href={`https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${domain}/api/auth/callback/google&response_type=code&scope=openid%20email%20profile`}
                 class="my-4 flex w-80 flex-row justify-between rounded border border-zinc-800 bg-white px-4 py-2 text-black shadow-md transition-all duration-300 ease-out hover:bg-zinc-100 active:scale-95 dark:border dark:border-zinc-50 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
               >
                 {register() ? "Register " : "Sign in "} with Google
@@ -626,7 +626,7 @@ export default function LoginPage() {
 
               {/* GitHub OAuth */}
               <A
-                href={`https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${domain}/api/auth/callback/github&scope=user`}
+                href={`https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${domain}/api/auth/callback/github&scope=read:user%20user:email`}
                 class="my-4 flex w-80 flex-row justify-between rounded bg-zinc-600 px-4 py-2 text-white shadow-md transition-all duration-300 ease-out hover:bg-zinc-700 active:scale-95"
               >
                 {register() ? "Register " : "Sign in "} with Github
