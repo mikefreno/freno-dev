@@ -4,6 +4,14 @@ import { v4 as uuid } from "uuid";
 import { env } from "~/env/server";
 import type { H3Event } from "vinxi/http";
 import { getUserID } from "./auth";
+import {
+  fetchWithTimeout,
+  checkResponse,
+  fetchWithRetry,
+  NetworkError,
+  TimeoutError,
+  APIError
+} from "~/server/fetch-utils";
 
 let mainDBConnection: ReturnType<typeof createClient> | null = null;
 let lineageDBConnection: ReturnType<typeof createClient> | null = null;
@@ -83,56 +91,90 @@ export async function dumpAndSendDB({
   success: boolean;
   reason?: string;
 }> {
-  const res = await fetch(`https://${dbName}-mikefreno.turso.io/dump`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${dbToken}`
-    }
-  });
-  if (!res.ok) {
-    console.error(res);
-    return { success: false, reason: "bad dump request response" };
-  }
-  const text = await res.text();
-  const base64Content = Buffer.from(text, "utf-8").toString("base64");
-
-  const apiKey = env.SENDINBLUE_KEY as string;
-  const apiUrl = "https://api.brevo.com/v3/smtp/email";
-
-  const emailPayload = {
-    sender: {
-      name: "no_reply@freno.me",
-      email: "no_reply@freno.me"
-    },
-    to: [
+  try {
+    // Fetch database dump with timeout
+    const res = await fetchWithTimeout(
+      `https://${dbName}-mikefreno.turso.io/dump`,
       {
-        email: sendTarget
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${dbToken}`
+        },
+        timeout: 30000 // 30s for database dump
       }
-    ],
-    subject: "Your Lineage Database Dump",
-    htmlContent:
-      "<html><body><p>Please find the attached database dump. This contains the state of your person remote Lineage remote saves. Should you ever return to Lineage, you can upload this file to reinstate the saves you had.</p></body></html>",
-    attachment: [
-      {
-        content: base64Content,
-        name: "database_dump.txt"
-      }
-    ]
-  };
-  const sendRes = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "api-key": apiKey,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify(emailPayload)
-  });
+    );
 
-  if (!sendRes.ok) {
-    return { success: false, reason: "email send failure" };
-  } else {
+    await checkResponse(res);
+    const text = await res.text();
+    const base64Content = Buffer.from(text, "utf-8").toString("base64");
+
+    const apiKey = env.SENDINBLUE_KEY as string;
+    const apiUrl = "https://api.brevo.com/v3/smtp/email";
+
+    const emailPayload = {
+      sender: {
+        name: "no_reply@freno.me",
+        email: "no_reply@freno.me"
+      },
+      to: [
+        {
+          email: sendTarget
+        }
+      ],
+      subject: "Your Lineage Database Dump",
+      htmlContent:
+        "<html><body><p>Please find the attached database dump. This contains the state of your person remote Lineage remote saves. Should you ever return to Lineage, you can upload this file to reinstate the saves you had.</p></body></html>",
+      attachment: [
+        {
+          content: base64Content,
+          name: "database_dump.txt"
+        }
+      ]
+    };
+
+    // Send email with retry logic
+    await fetchWithRetry(
+      async () => {
+        const sendRes = await fetchWithTimeout(apiUrl, {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "api-key": apiKey,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify(emailPayload),
+          timeout: 20000 // 20s for email with attachment
+        });
+
+        await checkResponse(sendRes);
+        return sendRes;
+      },
+      {
+        maxRetries: 2,
+        retryDelay: 2000
+      }
+    );
+
     return { success: true };
+  } catch (error) {
+    // Log specific error types for debugging
+    if (error instanceof TimeoutError) {
+      console.error("Database dump timeout:", error.message);
+      return { success: false, reason: "Database dump timed out" };
+    } else if (error instanceof NetworkError) {
+      console.error("Network error during database dump:", error.message);
+      return { success: false, reason: "Network error" };
+    } else if (error instanceof APIError) {
+      console.error(
+        "API error during database dump:",
+        error.status,
+        error.statusText
+      );
+      return { success: false, reason: `API error: ${error.statusText}` };
+    }
+
+    console.error("Unexpected error during database dump:", error);
+    return { success: false, reason: "Unknown error occurred" };
   }
 }
 

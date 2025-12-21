@@ -255,81 +255,83 @@ export default function PostForm(props: PostFormProps) {
   };
 
   return (
-    <div class="bg-base text-text min-h-screen px-8 py-32">
+    <div class="bg-base text-text min-h-screen py-32">
       <div class="text-center text-2xl tracking-wide">
         {props.mode === "edit" ? "Edit a Blog" : "Create a Blog"}
       </div>
       <div class="flex h-full w-full justify-center">
-        <form onSubmit={handleSubmit} class="w-full md:w-3/4 lg:w-1/3 xl:w-1/2">
-          {/* Title */}
-          <div class="input-group mx-4">
-            <input
-              type="text"
-              value={title()}
-              onInput={(e) => setTitle(e.currentTarget.value)}
-              name="title"
-              placeholder=" "
-              class="underlinedInput w-full bg-transparent"
-            />
-            <span class="bar"></span>
-            <label class="underlinedInputLabel">Title</label>
-          </div>
+        <form onSubmit={handleSubmit} class="px-4">
+          <div class="mx-auto w-full md:w-3/4 xl:w-1/2">
+            {/* Title */}
+            <div class="input-group mx-4">
+              <input
+                type="text"
+                value={title()}
+                onInput={(e) => setTitle(e.currentTarget.value)}
+                name="title"
+                placeholder=" "
+                class="underlinedInput w-full bg-transparent"
+              />
+              <span class="bar"></span>
+              <label class="underlinedInputLabel">Title</label>
+            </div>
 
-          {/* Subtitle */}
-          <div class="input-group mx-4">
-            <input
-              type="text"
-              value={subtitle()}
-              onInput={(e) => setSubtitle(e.currentTarget.value)}
-              name="subtitle"
-              placeholder=" "
-              class="underlinedInput w-full bg-transparent"
-            />
-            <span class="bar"></span>
-            <label class="underlinedInputLabel">Subtitle</label>
-          </div>
+            {/* Subtitle */}
+            <div class="input-group mx-4">
+              <input
+                type="text"
+                value={subtitle()}
+                onInput={(e) => setSubtitle(e.currentTarget.value)}
+                name="subtitle"
+                placeholder=" "
+                class="underlinedInput w-full bg-transparent"
+              />
+              <span class="bar"></span>
+              <label class="underlinedInputLabel">Subtitle</label>
+            </div>
 
-          {/* Banner */}
-          <div class="pt-8 text-center text-xl">Banner</div>
-          <div class="flex justify-center pb-8">
-            <Dropzone
-              onDrop={handleBannerImageDrop}
-              accept="image/jpg, image/jpeg, image/png"
-              fileHolder={bannerImageHolder()}
-              preSet={
-                props.mode === "edit" && !requestedDeleteImage()
-                  ? bannerPhoto() || null
-                  : null
+            {/* Banner */}
+            <div class="pt-8 text-center text-xl">Banner</div>
+            <div class="flex justify-center pb-8">
+              <Dropzone
+                onDrop={handleBannerImageDrop}
+                accept="image/jpg, image/jpeg, image/png"
+                fileHolder={bannerImageHolder()}
+                preSet={
+                  props.mode === "edit" && !requestedDeleteImage()
+                    ? bannerPhoto() || null
+                    : null
+                }
+              />
+              <button
+                type="button"
+                class="z-50 -ml-6 h-fit rounded-full"
+                onClick={removeBannerImage}
+              >
+                <XCircle
+                  height={36}
+                  width={36}
+                  stroke={"currentColor"}
+                  strokeWidth={1}
+                />
+              </button>
+            </div>
+
+            {/* Attachments */}
+            <AddAttachmentSection
+              type="blog"
+              postId={props.postId}
+              postTitle={title()}
+              existingAttachments={
+                props.mode === "edit" && props.initialData
+                  ? (props.initialData as any)?.attachments
+                  : undefined
               }
             />
-            <button
-              type="button"
-              class="z-50 -ml-6 h-fit rounded-full"
-              onClick={removeBannerImage}
-            >
-              <XCircle
-                height={36}
-                width={36}
-                stroke={"currentColor"}
-                strokeWidth={1}
-              />
-            </button>
           </div>
 
-          {/* Attachments */}
-          <AddAttachmentSection
-            type="blog"
-            postId={props.postId}
-            postTitle={title()}
-            existingAttachments={
-              props.mode === "edit" && props.initialData
-                ? (props.initialData as any)?.attachments
-                : undefined
-            }
-          />
-
           {/* Text Editor */}
-          <div class="-mx-6 md:-mx-36">
+          <div class="">
             <TextEditor updateContent={setBody} preSet={initialBody()} />
           </div>
 

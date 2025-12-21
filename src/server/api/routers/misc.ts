@@ -12,7 +12,14 @@ import { TRPCError } from "@trpc/server";
 import { ConnectionFactory } from "~/server/utils";
 import * as bcrypt from "bcrypt";
 import { getCookie, setCookie } from "vinxi/http";
-
+import {
+  fetchWithTimeout,
+  checkResponse,
+  fetchWithRetry,
+  NetworkError,
+  TimeoutError,
+  APIError
+} from "~/server/fetch-utils";
 const assets: Record<string, string> = {
   "shapes-with-abigail": "shapes-with-abigail.apk",
   "magic-delve": "magic-delve.apk",
@@ -285,15 +292,27 @@ export const miscRouter = createTRPCRouter({
       };
 
       try {
-        await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            accept: "application/json",
-            "api-key": apiKey,
-            "content-type": "application/json"
+        await fetchWithRetry(
+          async () => {
+            const response = await fetchWithTimeout(apiUrl, {
+              method: "POST",
+              headers: {
+                accept: "application/json",
+                "api-key": apiKey,
+                "content-type": "application/json"
+              },
+              body: JSON.stringify(sendinblueData),
+              timeout: 15000
+            });
+
+            await checkResponse(response);
+            return response;
           },
-          body: JSON.stringify(sendinblueData)
-        });
+          {
+            maxRetries: 2,
+            retryDelay: 1000
+          }
+        );
 
         // Set cookie to prevent spam (60 second cooldown)
         const exp = new Date(Date.now() + 1 * 60 * 1000);
@@ -304,11 +323,37 @@ export const miscRouter = createTRPCRouter({
 
         return { message: "email sent" };
       } catch (error) {
-        console.error(error);
+        // Provide specific error messages for different failure types
+        if (error instanceof TimeoutError) {
+          console.error("Contact form email timeout:", error.message);
+          throw new TRPCError({
+            code: "TIMEOUT",
+            message:
+              "Email service timed out. Please try again or contact michael@freno.me"
+          });
+        } else if (error instanceof NetworkError) {
+          console.error("Contact form network error:", error.message);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "Network error. Please try again or contact michael@freno.me"
+          });
+        } else if (error instanceof APIError) {
+          console.error(
+            "Contact form API error:",
+            error.status,
+            error.statusText
+          );
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Email service error. You can reach me at michael@freno.me"
+          });
+        }
+
+        console.error("Contact form error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message:
-            "SMTP server error: Sorry! You can reach me at michael@freno.me"
+          message: "Sorry! You can reach me at michael@freno.me"
         });
       }
     }),
@@ -362,26 +407,43 @@ export const miscRouter = createTRPCRouter({
       };
 
       try {
-        // Send both emails
-        await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            accept: "application/json",
-            "api-key": apiKey,
-            "content-type": "application/json"
-          },
-          body: JSON.stringify(sendinblueMyData)
-        });
-
-        await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            accept: "application/json",
-            "api-key": apiKey,
-            "content-type": "application/json"
-          },
-          body: JSON.stringify(sendinblueUserData)
-        });
+        // Send both emails with retry logic
+        await Promise.all([
+          fetchWithRetry(
+            async () => {
+              const response = await fetchWithTimeout(apiUrl, {
+                method: "POST",
+                headers: {
+                  accept: "application/json",
+                  "api-key": apiKey,
+                  "content-type": "application/json"
+                },
+                body: JSON.stringify(sendinblueMyData),
+                timeout: 15000
+              });
+              await checkResponse(response);
+              return response;
+            },
+            { maxRetries: 2, retryDelay: 1000 }
+          ),
+          fetchWithRetry(
+            async () => {
+              const response = await fetchWithTimeout(apiUrl, {
+                method: "POST",
+                headers: {
+                  accept: "application/json",
+                  "api-key": apiKey,
+                  "content-type": "application/json"
+                },
+                body: JSON.stringify(sendinblueUserData),
+                timeout: 15000
+              });
+              await checkResponse(response);
+              return response;
+            },
+            { maxRetries: 2, retryDelay: 1000 }
+          )
+        ]);
 
         // Set cookie to prevent spam (60 second cooldown)
         const exp = new Date(Date.now() + 1 * 60 * 1000);
@@ -392,11 +454,35 @@ export const miscRouter = createTRPCRouter({
 
         return { message: "request sent" };
       } catch (error) {
-        console.error(error);
+        // Provide specific error messages
+        if (error instanceof TimeoutError) {
+          console.error("Deletion request email timeout:", error.message);
+          throw new TRPCError({
+            code: "TIMEOUT",
+            message: "Email service timed out. Please try again."
+          });
+        } else if (error instanceof NetworkError) {
+          console.error("Deletion request network error:", error.message);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Network error. Please try again later."
+          });
+        } else if (error instanceof APIError) {
+          console.error(
+            "Deletion request API error:",
+            error.status,
+            error.statusText
+          );
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Email service error. Please try again later."
+          });
+        }
+
+        console.error("Deletion request error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message:
-            "SMTP server error: Sorry! You can reach me at michael@freno.me"
+          message: "Failed to send deletion request. Please try again."
         });
       }
     })

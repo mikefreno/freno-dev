@@ -9,6 +9,13 @@ import { TRPCError } from "@trpc/server";
 import { OAuth2Client } from "google-auth-library";
 import { jwtVerify } from "jose";
 import { createTRPCRouter, publicProcedure } from "~/server/api/utils";
+import {
+  fetchWithTimeout,
+  checkResponse,
+  NetworkError,
+  TimeoutError,
+  APIError
+} from "~/server/fetch-utils";
 
 export const lineageDatabaseRouter = createTRPCRouter({
   credentials: publicProcedure
@@ -155,17 +162,20 @@ export const lineageDatabaseRouter = createTRPCRouter({
           });
 
           if (dumpRes.success) {
-            const deleteRes = await fetch(
-              `https://api.turso.tech/v1/organizations/mikefreno/databases/${db_name}`,
-              {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+            try {
+              const deleteRes = await fetchWithTimeout(
+                `https://api.turso.tech/v1/organizations/mikefreno/databases/${db_name}`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+                  },
+                  timeout: 20000 // 20s for database deletion
                 }
-              }
-            );
+              );
 
-            if (deleteRes.ok) {
+              await checkResponse(deleteRes);
+
               await conn.execute({
                 sql: `DELETE FROM User WHERE email = ?`,
                 args: [email]
@@ -175,11 +185,35 @@ export const lineageDatabaseRouter = createTRPCRouter({
                 status: 200,
                 message: `Account and Database deleted, db dump sent to email: ${send_dump_target}`
               };
-            } else {
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "Failed to delete database"
-              });
+            } catch (error) {
+              if (error instanceof TimeoutError) {
+                console.error("Database deletion timeout:", error.message);
+                throw new TRPCError({
+                  code: "TIMEOUT",
+                  message:
+                    "Database deletion timed out. Please contact support."
+                });
+              } else if (error instanceof NetworkError) {
+                console.error(
+                  "Network error during database deletion:",
+                  error.message
+                );
+                throw new TRPCError({
+                  code: "INTERNAL_SERVER_ERROR",
+                  message: "Network error deleting database. Please try again."
+                });
+              } else if (error instanceof APIError) {
+                console.error(
+                  "API error deleting database:",
+                  error.status,
+                  error.statusText
+                );
+                throw new TRPCError({
+                  code: "INTERNAL_SERVER_ERROR",
+                  message: "Failed to delete database"
+                });
+              }
+              throw error;
             }
           } else {
             throw new TRPCError({
@@ -188,17 +222,20 @@ export const lineageDatabaseRouter = createTRPCRouter({
             });
           }
         } else {
-          const deleteRes = await fetch(
-            `https://api.turso.tech/v1/organizations/mikefreno/databases/${db_name}`,
-            {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+          try {
+            const deleteRes = await fetchWithTimeout(
+              `https://api.turso.tech/v1/organizations/mikefreno/databases/${db_name}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+                },
+                timeout: 20000
               }
-            }
-          );
+            );
 
-          if (deleteRes.ok) {
+            await checkResponse(deleteRes);
+
             await conn.execute({
               sql: `DELETE FROM User WHERE email = ?`,
               args: [email]
@@ -208,11 +245,34 @@ export const lineageDatabaseRouter = createTRPCRouter({
               status: 200,
               message: `Account and Database deleted`
             };
-          } else {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to delete database"
-            });
+          } catch (error) {
+            if (error instanceof TimeoutError) {
+              console.error("Database deletion timeout:", error.message);
+              throw new TRPCError({
+                code: "TIMEOUT",
+                message: "Database deletion timed out. Please contact support."
+              });
+            } else if (error instanceof NetworkError) {
+              console.error(
+                "Network error during database deletion:",
+                error.message
+              );
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Network error deleting database. Please try again."
+              });
+            } else if (error instanceof APIError) {
+              console.error(
+                "API error deleting database:",
+                error.status,
+                error.statusText
+              );
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Failed to delete database"
+              });
+            }
+            throw error;
           }
         }
       } else {
@@ -343,41 +403,59 @@ export const lineageDatabaseRouter = createTRPCRouter({
           });
 
           if (dumpRes.success) {
-            const deleteRes = await fetch(
-              `https://api.turso.tech/v1/organizations/mikefreno/databases/${db_name}`,
-              {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+            try {
+              const deleteRes = await fetchWithTimeout(
+                `https://api.turso.tech/v1/organizations/mikefreno/databases/${db_name}`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+                  },
+                  timeout: 20000
                 }
-              }
-            );
+              );
 
-            if (deleteRes.ok) {
+              await checkResponse(deleteRes);
+
               await conn.execute({
                 sql: `DELETE FROM User WHERE email = ?`,
                 args: [email]
               });
               executed_ids.push(id as number);
+            } catch (error) {
+              console.error(
+                `Failed to delete database ${db_name} in cron job:`,
+                error
+              );
+              // Continue with other deletions even if one fails
             }
           }
         } else {
-          const deleteRes = await fetch(
-            `https://api.turso.tech/v1/organizations/mikefreno/databases/${db_name}`,
-            {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+          try {
+            const deleteRes = await fetchWithTimeout(
+              `https://api.turso.tech/v1/organizations/mikefreno/databases/${db_name}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${env.TURSO_DB_API_TOKEN}`
+                },
+                timeout: 20000
               }
-            }
-          );
+            );
 
-          if (deleteRes.ok) {
+            await checkResponse(deleteRes);
+
             await conn.execute({
               sql: `DELETE FROM User WHERE email = ?`,
               args: [email]
             });
             executed_ids.push(id as number);
+          } catch (error) {
+            console.error(
+              `Failed to delete database ${db_name} in cron job:`,
+              error
+            );
+            // Continue with other deletions even if one fails
           }
         }
       }
