@@ -13,11 +13,11 @@ export default function TagMaker(props: TagMakerProps) {
   return (
     <div class="flex w-full flex-col justify-center md:flex-row md:justify-between">
       <div class="absolute -mt-12 mb-8 flex w-full justify-center md:mt-0 md:mb-0 md:w-full md:justify-normal">
-        <div class="tooltip md:-ml-8">
-          <div class="md:mt-12">
+        <div class="tooltip">
+          <div class="md:mt-2">
             <InfoIcon height={24} width={24} strokeWidth={1} />
           </div>
-          <div class="tooltip-text -ml-20 w-40">
+          <div class="tooltip-text -ml-4 w-40">
             <div class="px-1">start with # end with a space</div>
           </div>
         </div>

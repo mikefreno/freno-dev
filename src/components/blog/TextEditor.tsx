@@ -1,4 +1,4 @@
-import { Show, untrack, createEffect, on, createSignal } from "solid-js";
+import { Show, untrack, createEffect, on, createSignal, For } from "solid-js";
 import { createTiptapEditor, useEditorHTML } from "solid-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -11,16 +11,94 @@ import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
 import ocaml from "highlight.js/lib/languages/ocaml";
 import rust from "highlight.js/lib/languages/rust";
+import python from "highlight.js/lib/languages/python";
+import java from "highlight.js/lib/languages/java";
+import go from "highlight.js/lib/languages/go";
+import c from "highlight.js/lib/languages/c";
+import cpp from "highlight.js/lib/languages/cpp";
+import csharp from "highlight.js/lib/languages/csharp";
+import sql from "highlight.js/lib/languages/sql";
+import bash from "highlight.js/lib/languages/bash";
+import json from "highlight.js/lib/languages/json";
+import yaml from "highlight.js/lib/languages/yaml";
+import markdown from "highlight.js/lib/languages/markdown";
+import xml from "highlight.js/lib/languages/xml";
+import php from "highlight.js/lib/languages/php";
+import ruby from "highlight.js/lib/languages/ruby";
+import swift from "highlight.js/lib/languages/swift";
+import kotlin from "highlight.js/lib/languages/kotlin";
+import dockerfile from "highlight.js/lib/languages/dockerfile";
 
 // Create lowlight instance with common languages
 const lowlight = createLowlight(common);
 
-// Register additional languages
+// Register existing languages
 lowlight.register("css", css);
 lowlight.register("js", js);
+lowlight.register("javascript", js);
 lowlight.register("ts", ts);
+lowlight.register("typescript", ts);
 lowlight.register("ocaml", ocaml);
 lowlight.register("rust", rust);
+
+// Register new languages
+lowlight.register("python", python);
+lowlight.register("py", python);
+lowlight.register("java", java);
+lowlight.register("go", go);
+lowlight.register("golang", go);
+lowlight.register("c", c);
+lowlight.register("cpp", cpp);
+lowlight.register("c++", cpp);
+lowlight.register("csharp", csharp);
+lowlight.register("cs", csharp);
+lowlight.register("sql", sql);
+lowlight.register("bash", bash);
+lowlight.register("shell", bash);
+lowlight.register("sh", bash);
+lowlight.register("json", json);
+lowlight.register("yaml", yaml);
+lowlight.register("yml", yaml);
+lowlight.register("markdown", markdown);
+lowlight.register("md", markdown);
+lowlight.register("xml", xml);
+lowlight.register("html", xml);
+lowlight.register("php", php);
+lowlight.register("ruby", ruby);
+lowlight.register("rb", ruby);
+lowlight.register("swift", swift);
+lowlight.register("kotlin", kotlin);
+lowlight.register("kt", kotlin);
+lowlight.register("dockerfile", dockerfile);
+lowlight.register("docker", dockerfile);
+
+// Available languages for selector
+const AVAILABLE_LANGUAGES = [
+  { value: null, label: "Plain Text" },
+  { value: "bash", label: "Bash/Shell" },
+  { value: "c", label: "C" },
+  { value: "cpp", label: "C++" },
+  { value: "csharp", label: "C#" },
+  { value: "css", label: "CSS" },
+  { value: "dockerfile", label: "Dockerfile" },
+  { value: "go", label: "Go" },
+  { value: "html", label: "HTML" },
+  { value: "java", label: "Java" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "json", label: "JSON" },
+  { value: "kotlin", label: "Kotlin" },
+  { value: "markdown", label: "Markdown" },
+  { value: "ocaml", label: "OCaml" },
+  { value: "php", label: "PHP" },
+  { value: "python", label: "Python" },
+  { value: "ruby", label: "Ruby" },
+  { value: "rust", label: "Rust" },
+  { value: "sql", label: "SQL" },
+  { value: "swift", label: "Swift" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "xml", label: "XML" },
+  { value: "yaml", label: "YAML" }
+] as const;
 
 // IFrame extension
 interface IframeOptions {
@@ -108,6 +186,12 @@ export default function TextEditor(props: TextEditorProps) {
 
   const [showBubbleMenu, setShowBubbleMenu] = createSignal(false);
   const [bubbleMenuPosition, setBubbleMenuPosition] = createSignal({
+    top: 0,
+    left: 0
+  });
+
+  const [showLanguageSelector, setShowLanguageSelector] = createSignal(false);
+  const [languageSelectorPosition, setLanguageSelectorPosition] = createSignal({
     top: 0,
     left: 0
   });
@@ -211,6 +295,50 @@ export default function TextEditor(props: TextEditorProps) {
       instance.chain().focus().setImage({ src: url }).run();
     }
   };
+
+  const insertCodeBlock = (language: string | null) => {
+    const instance = editor();
+    if (!instance) return;
+
+    instance.chain().focus().toggleCodeBlock().run();
+
+    // If language specified, update the node attributes
+    if (language) {
+      instance.chain().updateAttributes("codeBlock", { language }).run();
+    }
+
+    setShowLanguageSelector(false);
+  };
+
+  const showLanguagePicker = (e: MouseEvent) => {
+    const buttonRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setLanguageSelectorPosition({
+      top: buttonRect.bottom + 5,
+      left: buttonRect.left
+    });
+    setShowLanguageSelector(!showLanguageSelector());
+  };
+
+  // Close language selector on outside click
+  createEffect(() => {
+    if (showLanguageSelector()) {
+      const handleClickOutside = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (
+          !target.closest(".language-selector") &&
+          !target.closest("[data-language-picker-trigger]")
+        ) {
+          setShowLanguageSelector(false);
+        }
+      };
+
+      setTimeout(() => {
+        document.addEventListener("click", handleClickOutside);
+      }, 0);
+
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  });
 
   return (
     <div class="border-surface2 text-text w-full rounded-md border px-4 py-2">
@@ -348,6 +476,29 @@ export default function TextEditor(props: TextEditorProps) {
               </div>
             </Show>
 
+            {/* Language Selector Dropdown */}
+            <Show when={showLanguageSelector()}>
+              <div
+                class="language-selector bg-mantle text-text border-surface2 fixed z-50 max-h-64 w-48 overflow-y-auto rounded border shadow-lg"
+                style={{
+                  top: `${languageSelectorPosition().top}px`,
+                  left: `${languageSelectorPosition().left}px`
+                }}
+              >
+                <For each={AVAILABLE_LANGUAGES}>
+                  {(lang) => (
+                    <button
+                      type="button"
+                      onClick={() => insertCodeBlock(lang.value)}
+                      class="hover:bg-surface1 w-full px-3 py-2 text-left text-sm transition-colors"
+                    >
+                      {lang.label}
+                    </button>
+                  )}
+                </For>
+              </div>
+            </Show>
+
             <div class="border-surface2 mb-2 flex flex-wrap gap-1 border-b pb-2">
               <button
                 type="button"
@@ -474,9 +625,8 @@ export default function TextEditor(props: TextEditorProps) {
               <div class="border-surface2 mx-1 border-l"></div>
               <button
                 type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleCodeBlock().run()
-                }
+                onClick={showLanguagePicker}
+                data-language-picker-trigger
                 class={`${
                   instance().isActive("codeBlock")
                     ? "bg-surface2"

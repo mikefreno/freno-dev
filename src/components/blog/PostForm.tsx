@@ -79,8 +79,8 @@ export default function PostForm(props: PostFormProps) {
           await api.database.updatePost.mutate({
             id: props.postId!,
             title: titleVal.replaceAll(" ", "_"),
-            subtitle: subtitle() || null,
-            body: body() || null,
+            subtitle: subtitle() || "",
+            body: body() || "",
             banner_photo:
               bannerImageKey !== ""
                 ? bannerImageKey
