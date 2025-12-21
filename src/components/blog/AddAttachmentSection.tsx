@@ -2,6 +2,7 @@ import { createSignal, createEffect, For, Show } from "solid-js";
 import Dropzone from "./Dropzone";
 import XCircle from "~/components/icons/XCircle";
 import AddImageToS3 from "~/lib/s3upload";
+import { env } from "~/env/client";
 
 export interface AddAttachmentSectionProps {
   type: "blog" | "project";
@@ -92,7 +93,7 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
 
   const copyToClipboard = async (key: string) => {
     try {
-      const bucketString = import.meta.env.VITE_AWS_BUCKET_STRING || "";
+      const bucketString = env.VITE_AWS_BUCKET_STRING || "";
       await navigator.clipboard.writeText(bucketString + key);
       console.log("Text copied to clipboard");
     } catch (err) {

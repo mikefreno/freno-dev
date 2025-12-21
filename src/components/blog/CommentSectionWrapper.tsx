@@ -14,6 +14,7 @@ import { api } from "~/lib/api";
 import CommentSection from "./CommentSection";
 import CommentDeletionPrompt from "./CommentDeletionPrompt";
 import EditCommentModal from "./EditCommentModal";
+import { env } from "~/env/client";
 
 const MAX_RETRIES = 12;
 const RETRY_INTERVAL = 5000;
@@ -72,7 +73,7 @@ export default function CommentSectionWrapper(
         return;
       }
 
-      const websocketUrl = import.meta.env.VITE_WEBSOCKET;
+      const websocketUrl = env.VITE_WEBSOCKET;
       if (!websocketUrl) {
         console.error("VITE_WEBSOCKET environment variable not set");
         return;
@@ -192,7 +193,7 @@ export default function CommentSectionWrapper(
     parentCommentID?: number
   ) => {
     try {
-      const domain = import.meta.env.VITE_DOMAIN;
+      const domain = env.VITE_DOMAIN;
       const res = await fetch(
         `${domain}/api/database/comments/create/blog/${props.id}`,
         {
@@ -228,7 +229,7 @@ export default function CommentSectionWrapper(
     const id = data.commentID;
 
     if (body && commenterID && parentCommentID !== undefined && id) {
-      const domain = import.meta.env.VITE_DOMAIN;
+      const domain = env.VITE_DOMAIN;
       const res = await fetch(
         `${domain}/api/database/user/public-data/${commenterID}`
       );

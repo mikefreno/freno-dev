@@ -22,7 +22,7 @@ export default function BlogIndex() {
 
       <div class="mx-auto pt-8 pb-24">
         <Suspense fallback={<TerminalSplash />}>
-          <div class="flex flex-row justify-around gap-4">
+          <div class="flex flex-row justify-around gap-4 px-4">
             <PostSortingSelect />
 
             <Show when={data() && Object.keys(data()!.tagMap).length > 0}>

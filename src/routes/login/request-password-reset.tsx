@@ -42,12 +42,13 @@ export default function RequestPasswordResetPage() {
         () => calcRemainder(timer),
         1000
       ) as unknown as number;
-      onCleanup(() => {
-        if (timerInterval) {
-          clearInterval(timerInterval);
-        }
-      });
     }
+
+    onCleanup(() => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    });
   });
 
   // Form submission handler
@@ -125,90 +126,88 @@ export default function RequestPasswordResetPage() {
         name="description"
         content="Request a password reset link to regain access to your account. Enter your email to receive reset instructions."
       />
-      <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-        <div class="pt-24 text-center text-xl font-semibold text-slate-800 dark:text-slate-100">
-          Password Reset Request
-        </div>
+      <div class="pt-24 text-center text-xl font-semibold">
+        Password Reset Request
+      </div>
 
-        <form
-          onSubmit={(e) => requestPasswordResetTrigger(e)}
-          class="mt-4 flex w-full justify-center"
-        >
-          <div class="flex flex-col justify-center">
-            {/* Email Input */}
-            <div class="input-group mx-4">
-              <input
-                ref={emailRef}
-                name="email"
-                type="text"
-                required
+      <form
+        onSubmit={(e) => requestPasswordResetTrigger(e)}
+        class="mt-4 flex w-full justify-center"
+      >
+        <div class="flex flex-col justify-center">
+          {/* Email Input */}
+          <div class="input-group mx-4">
+            <input
+              ref={emailRef}
+              name="email"
+              type="email"
+              required
+              disabled={loading()}
+              placeholder=" "
+              class="underlinedInput w-full bg-transparent"
+            />
+            <span class="bar"></span>
+            <label class="underlinedInputLabel">Enter Email</label>
+          </div>
+
+          {/* Countdown Timer or Submit Button */}
+          <Show
+            when={countDown() > 0}
+            fallback={
+              <button
+                type="submit"
                 disabled={loading()}
-                placeholder=" "
-                class="underlinedInput w-full bg-transparent"
-              />
-              <span class="bar"></span>
-              <label class="underlinedInputLabel">Enter Email</label>
-            </div>
-
-            {/* Countdown Timer or Submit Button */}
-            <Show
-              when={countDown() > 0}
-              fallback={
-                <button
-                  type="submit"
-                  disabled={loading()}
-                  class={`${
-                    loading()
-                      ? "bg-zinc-400"
-                      : "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700"
-                  } my-6 flex justify-center rounded px-4 py-2 font-medium text-white transition-all duration-300 ease-out`}
-                >
-                  {loading() ? "Sending..." : "Request Password Reset"}
-                </button>
-              }
-            >
-              <div class="mx-auto pt-4">
-                <CountdownCircleTimer
-                  isPlaying={true}
-                  duration={300}
-                  initialRemainingTime={countDown()}
-                  size={48}
-                  strokeWidth={6}
-                  colors="#60a5fa"
-                  onComplete={() => false}
-                >
-                  {renderTime}
-                </CountdownCircleTimer>
-              </div>
-            </Show>
-          </div>
-        </form>
-
-        {/* Success Message */}
-        <div
-          class={`${
-            showSuccessMessage() ? "" : "opacity-0 select-none"
-          } flex justify-center text-green-500 italic transition-opacity duration-300 ease-in-out`}
-        >
-          If email exists, you will receive an email shortly!
-        </div>
-
-        {/* Error Message */}
-        <Show when={error()}>
-          <div class="mt-4 flex justify-center">
-            <div class="text-sm text-red-500 italic">{error()}</div>
-          </div>
-        </Show>
-
-        {/* Back to Login Link */}
-        <div class="mt-6 flex justify-center">
-          <A
-            href="/login"
-            class="text-blue-500 underline underline-offset-4 transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                class={`${
+                  loading()
+                    ? "bg-zinc-400"
+                    : "bg-blue hover:brightness-125 active:scale-90"
+                } my-6 flex justify-center rounded px-4 py-2 font-medium text-white transition-all duration-300 ease-out`}
+              >
+                {loading() ? "Sending..." : "Request Password Reset"}
+              </button>
+            }
           >
-            Back to Login
-          </A>
+            <div class="mx-auto pt-4">
+              <CountdownCircleTimer
+                isPlaying={true}
+                duration={300}
+                initialRemainingTime={countDown()}
+                size={48}
+                strokeWidth={6}
+                colors="#60a5fa"
+                onComplete={() => false}
+              >
+                {renderTime}
+              </CountdownCircleTimer>
+            </div>
+          </Show>
         </div>
+      </form>
+
+      {/* Success Message */}
+      <div
+        class={`${
+          showSuccessMessage() ? "" : "opacity-0 select-none"
+        } text-green flex justify-center italic transition-opacity duration-300 ease-in-out`}
+      >
+        If email exists, you will receive an email shortly!
+      </div>
+
+      {/* Error Message */}
+      <Show when={error()}>
+        <div class="mt-4 flex justify-center">
+          <div class="text-red text-sm italic">{error()}</div>
+        </div>
+      </Show>
+
+      {/* Back to Login Link */}
+      <div class="mt-6 flex justify-center">
+        <A
+          href="/login"
+          class="text-blue underline underline-offset-4 transition-colors hover:brightness-125"
+        >
+          Back to Login
+        </A>
       </div>
     </>
   );

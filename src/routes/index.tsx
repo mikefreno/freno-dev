@@ -10,7 +10,7 @@ export default function Home() {
         content="Michael Freno - Software Engineer based in Brooklyn, NY. Passionate about dev tooling, game development, and open source software."
       />
 
-      <main class="flex h-full flex-col gap-8 p-4 pt-16 text-xl">
+      <main class="flex h-full flex-col gap-8 text-xl">
         <div class="flex-1">
           <Typewriter speed={30} keepAlive={2000}>
             <div class="text-4xl">Hey!</div>

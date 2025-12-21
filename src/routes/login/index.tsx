@@ -15,6 +15,7 @@ import EyeSlash from "~/components/icons/EyeSlash";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { isValidEmail, validatePassword } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
+import { env } from "~/env/client";
 
 const checkAuth = cache(async () => {
   "use server";
@@ -63,9 +64,9 @@ export default function LoginPage() {
   let timerInterval: number | undefined;
 
   // Environment variables
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-  const domain = import.meta.env.VITE_DOMAIN || "https://www.freno.me";
+  const googleClientId = env.VITE_GOOGLE_CLIENT_ID;
+  const githubClientId = env.VITE_GITHUB_CLIENT_ID;
+  const domain = env.VITE_DOMAIN || "https://www.freno.me";
 
   // Calculate remaining time from cookie
   const calcRemainder = (timer: string) => {
@@ -91,12 +92,13 @@ export default function LoginPage() {
         () => calcRemainder(timer),
         1000
       ) as unknown as number;
-      onCleanup(() => {
-        if (timerInterval) {
-          clearInterval(timerInterval);
-        }
-      });
     }
+
+    onCleanup(() => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    });
   });
 
   // Check for OAuth/callback errors in URL
@@ -329,7 +331,7 @@ export default function LoginPage() {
       />
       <div class="flex h-dvh flex-row justify-evenly">
         {/* Main content */}
-        <div class="pt-24 md:pt-48">
+        <div class="pt-12 md:pt-24">
           {/* Error message */}
           <div class="absolute -mt-12 text-center text-3xl text-red-400 italic">
             <Show when={error() === "passwordMismatch"}>
@@ -347,7 +349,7 @@ export default function LoginPage() {
           <Show
             when={!register()}
             fallback={
-              <div class="py-4 text-center md:min-w-[475px]">
+              <div class="py-4 text-center md:min-w-118.75">
                 Already have an account?
                 <button
                   onClick={() => {
@@ -361,7 +363,7 @@ export default function LoginPage() {
               </div>
             }
           >
-            <div class="py-4 text-center md:min-w-[475px]">
+            <div class="py-4 text-center md:min-w-118.75">
               Don't have an account yet?
               <button
                 onClick={() => {
@@ -381,7 +383,7 @@ export default function LoginPage() {
             <div class="flex justify-center">
               <div class="input-group mx-4">
                 <input
-                  type="text"
+                  type="email"
                   required
                   ref={emailRef}
                   placeholder=" "
