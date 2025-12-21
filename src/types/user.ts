@@ -8,7 +8,7 @@ export interface User {
   email_verified: number; // SQLite boolean (0 or 1)
   password_hash: string | null;
   display_name: string | null;
-  provider: "email" | "google" | "apple" | null;
+  provider: "email" | "google" | "github" | null;
   image: string | null;
   apple_user_string: string | null;
   database_name: string | null;
@@ -27,7 +27,7 @@ export interface UserProfile {
   email?: string;
   emailVerified: boolean;
   displayName?: string;
-  provider?: "email" | "google" | "apple";
+  provider?: "email" | "google" | "github";
   image?: string;
   hasPassword: boolean;
 }
@@ -43,7 +43,7 @@ export function toUserProfile(user: User): UserProfile {
     displayName: user.display_name ?? undefined,
     provider: user.provider ?? undefined,
     image: user.image ?? undefined,
-    hasPassword: !!user.password_hash,
+    hasPassword: !!user.password_hash
   };
 }
 

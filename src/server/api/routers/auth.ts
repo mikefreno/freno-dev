@@ -117,6 +117,30 @@ export const authRouter = createTRPCRouter({
         await checkResponse(userResponse);
         const user = await userResponse.json();
         const login = user.login;
+        const icon = user.avatar_url;
+
+        // Fetch primary email from GitHub emails endpoint
+        const emailsResponse = await fetchWithTimeout(
+          "https://api.github.com/user/emails",
+          {
+            headers: {
+              Authorization: `token ${access_token}`
+            },
+            timeout: 15000
+          }
+        );
+
+        await checkResponse(emailsResponse);
+        const emails = await emailsResponse.json();
+
+        // Find primary verified email
+        const primaryEmail = emails.find(
+          (e: { primary: boolean; verified: boolean; email: string }) =>
+            e.primary && e.verified
+        );
+        const email = primaryEmail?.email || null;
+        const emailVerified = primaryEmail?.verified || false;
+
         const conn = ConnectionFactory();
 
         // Check if user exists
@@ -127,16 +151,26 @@ export const authRouter = createTRPCRouter({
         let userId: string;
 
         if (res.rows[0]) {
-          // User exists
+          // User exists - update email and image if changed
           userId = (res.rows[0] as unknown as User).id;
+
+          await conn.execute({
+            sql: `UPDATE User SET email = ?, email_verified = ?, image = ? WHERE id = ?`,
+            args: [email, emailVerified ? 1 : 0, icon, userId]
+          });
         } else {
           // Create new user
-          const icon = user.avatar_url;
-          const email = user.email;
           userId = uuidV4();
 
-          const insertQuery = `INSERT INTO User (id, email, display_name, provider, image) VALUES (?, ?, ?, ?, ?)`;
-          const insertParams = [userId, email, login, "github", icon];
+          const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
+          const insertParams = [
+            userId,
+            email,
+            emailVerified ? 1 : 0,
+            login,
+            "github",
+            icon
+          ];
           await conn.execute({ sql: insertQuery, args: insertParams });
         }
 
@@ -254,8 +288,13 @@ export const authRouter = createTRPCRouter({
         let userId: string;
 
         if (res.rows[0]) {
-          // User exists
+          // User exists - update email, email_verified, display_name, and image if changed
           userId = (res.rows[0] as unknown as User).id;
+
+          await conn.execute({
+            sql: `UPDATE User SET email = ?, email_verified = ?, display_name = ?, image = ? WHERE id = ?`,
+            args: [email, email_verified ? 1 : 0, name, image, userId]
+          });
         } else {
           // Create new user
           userId = uuidV4();
@@ -264,7 +303,7 @@ export const authRouter = createTRPCRouter({
           const insertParams = [
             userId,
             email,
-            email_verified,
+            email_verified ? 1 : 0,
             name,
             "google",
             image

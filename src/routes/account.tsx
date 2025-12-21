@@ -5,6 +5,9 @@ import { getEvent } from "vinxi/http";
 import Eye from "~/components/icons/Eye";
 import EyeSlash from "~/components/icons/EyeSlash";
 import XCircle from "~/components/icons/XCircle";
+import GoogleLogo from "~/components/icons/GoogleLogo";
+import GitHub from "~/components/icons/GitHub";
+import EmailIcon from "~/components/icons/EmailIcon";
 import Dropzone from "~/components/blog/Dropzone";
 import AddImageToS3 from "~/lib/s3upload";
 import { validatePassword, isValidEmail } from "~/lib/validation";
@@ -16,7 +19,7 @@ type UserProfile = {
   emailVerified: boolean;
   displayName: string | null;
   image: string | null;
-  provider: string;
+  provider: "email" | "google" | "github" | null;
   hasPassword: boolean;
 };
 
@@ -454,6 +457,36 @@ export default function AccountPage() {
     setPasswordBlurred(true);
   };
 
+  // Helper to get provider display info
+  const getProviderInfo = (provider: UserProfile["provider"]) => {
+    switch (provider) {
+      case "google":
+        return {
+          name: "Google",
+          icon: <GoogleLogo height={24} width={24} />,
+          color: "text-blue-500"
+        };
+      case "github":
+        return {
+          name: "GitHub",
+          icon: <GitHub height={24} width={24} fill="currentColor" />,
+          color: "text-gray-700 dark:text-gray-300"
+        };
+      case "email":
+        return {
+          name: "Email",
+          icon: <EmailIcon height={24} width={24} />,
+          color: "text-green-500"
+        };
+      default:
+        return {
+          name: "Unknown",
+          icon: <EmailIcon height={24} width={24} />,
+          color: "text-gray-500"
+        };
+    }
+  };
+
   return (
     <>
       <Title>Account | Michael Freno</Title>
@@ -470,6 +503,47 @@ export default function AccountPage() {
                 <div class="text-text mb-8 text-center text-3xl font-bold">
                   Account Settings
                 </div>
+
+                {/* Account Type Section */}
+                <div class="mx-auto mb-8 max-w-md">
+                  <div class="bg-surface0 border-surface1 rounded-lg border px-6 py-4 shadow-sm">
+                    <div class="text-subtext0 mb-2 text-center text-sm font-semibold tracking-wide uppercase">
+                      Account Type
+                    </div>
+                    <div class="flex items-center justify-center gap-3">
+                      <span
+                        class={getProviderInfo(currentUser().provider).color}
+                      >
+                        {getProviderInfo(currentUser().provider).icon}
+                      </span>
+                      <span class="text-lg font-semibold">
+                        {getProviderInfo(currentUser().provider).name} Account
+                      </span>
+                    </div>
+                    <Show
+                      when={
+                        currentUser().provider !== "email" &&
+                        !currentUser().email
+                      }
+                    >
+                      <div class="mt-3 rounded bg-yellow-500/10 px-3 py-2 text-center text-sm text-yellow-600 dark:text-yellow-400">
+                        ⚠️ Add an email address for account recovery
+                      </div>
+                    </Show>
+                    <Show
+                      when={
+                        currentUser().provider !== "email" &&
+                        !currentUser().hasPassword
+                      }
+                    >
+                      <div class="mt-3 rounded bg-blue-500/10 px-3 py-2 text-center text-sm text-blue-600 dark:text-blue-400">
+                        💡 Add a password to enable email/password login
+                      </div>
+                    </Show>
+                  </div>
+                </div>
+
+                <hr class="mx-auto mb-8 max-w-4xl" />
 
                 {/* Profile Image Section */}
                 <div class="mx-auto mb-8 flex max-w-md justify-center">
@@ -529,13 +603,17 @@ export default function AccountPage() {
                   <div class="flex items-center justify-center text-lg md:justify-normal">
                     <div class="flex flex-col lg:flex-row">
                       <div class="pr-1 font-semibold whitespace-nowrap">
-                        Current email:
+                        {currentUser().provider === "email"
+                          ? "Email:"
+                          : "Linked Email:"}
                       </div>
                       {currentUser().email ? (
                         <span>{currentUser().email}</span>
                       ) : (
                         <span class="font-light italic underline underline-offset-4">
-                          None Set
+                          {currentUser().provider === "email"
+                            ? "None Set"
+                            : "Not Linked"}
                         </span>
                       )}
                     </div>
@@ -566,8 +644,20 @@ export default function AccountPage() {
                         class="underlinedInput bg-transparent"
                       />
                       <span class="bar"></span>
-                      <label class="underlinedInputLabel">Set New Email</label>
+                      <label class="underlinedInputLabel">
+                        {currentUser().email ? "Update Email" : "Add Email"}
+                      </label>
                     </div>
+                    <Show
+                      when={
+                        currentUser().provider !== "email" &&
+                        !currentUser().email
+                      }
+                    >
+                      <div class="text-subtext0 mt-1 px-4 text-xs">
+                        Add an email for account recovery and notifications
+                      </div>
+                    </Show>
                     <div class="flex justify-end">
                       <button
                         type="submit"
@@ -655,11 +745,20 @@ export default function AccountPage() {
                   class="mt-8 flex w-full justify-center"
                 >
                   <div class="flex w-full max-w-md flex-col justify-center">
-                    <div class="mb-4 text-center text-xl font-semibold">
+                    <div class="mb-2 text-center text-xl font-semibold">
                       {currentUser().hasPassword
                         ? "Change Password"
-                        : "Set Password"}
+                        : "Add Password"}
                     </div>
+                    <Show when={!currentUser().hasPassword}>
+                      <div class="text-subtext0 mb-4 text-center text-sm">
+                        {currentUser().provider === "email"
+                          ? "Set a password to enable password login"
+                          : "Add a password to enable email/password login alongside your " +
+                            getProviderInfo(currentUser().provider).name +
+                            " login"}
+                      </div>
+                    </Show>
 
                     <Show when={currentUser().hasPassword}>
                       <div class="input-group relative mx-4 mb-6">
@@ -804,44 +903,66 @@ export default function AccountPage() {
                       irreversible
                     </div>
 
-                    <form onSubmit={deleteAccountTrigger}>
-                      <div class="flex w-full justify-center">
-                        <div class="input-group delete mx-4">
-                          <input
-                            ref={deleteAccountPasswordRef}
-                            type="password"
-                            required
-                            disabled={deleteAccountButtonLoading()}
-                            placeholder=" "
-                            class="underlinedInput bg-transparent"
-                          />
-                          <span class="bar"></span>
-                          <label class="underlinedInputLabel">
-                            Enter Password
-                          </label>
+                    <Show
+                      when={currentUser().hasPassword}
+                      fallback={
+                        <div class="flex flex-col items-center">
+                          <div class="text-crust mb-4 text-center text-sm">
+                            Your {getProviderInfo(currentUser().provider).name}{" "}
+                            account doesn't have a password. To delete your
+                            account, please set a password first, then return
+                            here to proceed with deletion.
+                          </div>
+                          <button
+                            onClick={() => {
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            class="bg-surface0 hover:bg-surface1 rounded px-4 py-2 transition-all"
+                          >
+                            Go to Add Password Section
+                          </button>
                         </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={deleteAccountButtonLoading()}
-                        class={`${
-                          deleteAccountButtonLoading()
-                            ? "bg-red cursor-not-allowed brightness-75"
-                            : "bg-red hover:brightness-125 active:scale-90"
-                        } mx-auto mt-4 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
-                      >
-                        {deleteAccountButtonLoading()
-                          ? "Deleting..."
-                          : "Delete Account"}
-                      </button>
-
-                      <Show when={passwordDeletionError()}>
-                        <div class="text-red mt-2 text-center text-sm">
-                          Password did not match record
+                      }
+                    >
+                      <form onSubmit={deleteAccountTrigger}>
+                        <div class="flex w-full justify-center">
+                          <div class="input-group delete mx-4">
+                            <input
+                              ref={deleteAccountPasswordRef}
+                              type="password"
+                              required
+                              disabled={deleteAccountButtonLoading()}
+                              placeholder=" "
+                              class="underlinedInput bg-transparent"
+                            />
+                            <span class="bar"></span>
+                            <label class="underlinedInputLabel">
+                              Enter Password
+                            </label>
+                          </div>
                         </div>
-                      </Show>
-                    </form>
+
+                        <button
+                          type="submit"
+                          disabled={deleteAccountButtonLoading()}
+                          class={`${
+                            deleteAccountButtonLoading()
+                              ? "bg-red cursor-not-allowed brightness-75"
+                              : "bg-red hover:brightness-125 active:scale-90"
+                          } mx-auto mt-4 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                        >
+                          {deleteAccountButtonLoading()
+                            ? "Deleting..."
+                            : "Delete Account"}
+                        </button>
+
+                        <Show when={passwordDeletionError()}>
+                          <div class="text-red mt-2 text-center text-sm">
+                            Password did not match record
+                          </div>
+                        </Show>
+                      </form>
+                    </Show>
                   </div>
                 </div>
               </>
