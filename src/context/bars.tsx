@@ -27,8 +27,7 @@ const BarsContext = createContext<{
   setRightBarSize: () => {},
   centerWidth: () => 0,
   setCenterWidth: () => {},
-  leftBarVisible: () =>
-    typeof window !== "undefined" ? window.innerWidth >= 768 : true,
+  leftBarVisible: () => true,
   setLeftBarVisible: () => {},
   rightBarVisible: () => true,
   setRightBarVisible: () => {},
@@ -59,16 +58,7 @@ export function BarsProvider(props: { children: any }) {
   onMount(() => {
     // Immediately sync to actual window width
     setWindowWidth(window.innerWidth);
-    const initialIsMobile = isMobile(window.innerWidth);
-    setLeftBarVisible(!initialIsMobile);
 
-    // Initialize immediately on mobile if left bar starts hidden
-    if (initialIsMobile && !leftBarVisible()) {
-      leftBarSized = true;
-      checkAndSync();
-    }
-
-    // Setup resize listener
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
     };
