@@ -1,68 +1,42 @@
-import { onMount, onCleanup, createSignal, JSX } from "solid-js";
-import { isServer } from "solid-js/web";
-
-const spinnerChars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+import { JSX } from "solid-js";
+import { Spinner } from "~/components/Spinner";
 
 interface SkeletonProps {
   class?: string;
 }
 
-function useSpinner() {
-  const [showing, setShowing] = createSignal(0);
-
-  onMount(() => {
-    if (isServer) return;
-
-    const interval = setInterval(() => {
-      setShowing((prev) => (prev + 1) % spinnerChars.length);
-    }, 50);
-
-    onCleanup(() => {
-      clearInterval(interval);
-    });
-  });
-
-  return () => spinnerChars[showing()];
-}
-
 export function SkeletonBox(props: SkeletonProps) {
-  const spinner = useSpinner();
-
   return (
     <div
-      class={`bg-surface0 text-overlay0 flex items-center justify-center rounded font-mono ${props.class || ""}`}
+      class={`bg-surface0 text-overlay0 flex items-center justify-center rounded ${props.class || ""}`}
       aria-label="Loading..."
       role="status"
     >
-      {spinner()}
+      <Spinner size="md" />
     </div>
   );
 }
 
 export function SkeletonText(props: SkeletonProps) {
-  const spinner = useSpinner();
-
   return (
     <div
-      class={`bg-surface0 text-overlay0 inline-flex h-4 items-center rounded px-2 font-mono text-sm ${props.class || ""}`}
+      class={`bg-surface0 text-overlay0 inline-flex h-4 items-center rounded px-2 ${props.class || ""}`}
       aria-label="Loading..."
       role="status"
     >
-      {spinner()}
+      <Spinner size="sm" />
     </div>
   );
 }
 
 export function SkeletonCircle(props: SkeletonProps) {
-  const spinner = useSpinner();
-
   return (
     <div
-      class={`bg-surface0 text-overlay0 flex items-center justify-center rounded-full font-mono ${props.class || ""}`}
+      class={`bg-surface0 text-overlay0 flex items-center justify-center rounded-full ${props.class || ""}`}
       aria-label="Loading..."
       role="status"
     >
-      {spinner()}
+      <Spinner size="md" />
     </div>
   );
 }

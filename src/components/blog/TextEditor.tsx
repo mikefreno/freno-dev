@@ -17,6 +17,8 @@ import { Node } from "@tiptap/core";
 import { createLowlight, common } from "lowlight";
 import { Mermaid } from "./extensions/Mermaid";
 import TextAlign from "@tiptap/extension-text-align";
+import Superscript from "@tiptap/extension-superscript";
+import Subscript from "@tiptap/extension-subscript";
 import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
@@ -196,7 +198,9 @@ const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
       { keys: "⌘ B", keysAlt: "Ctrl B", description: "Bold" },
       { keys: "⌘ I", keysAlt: "Ctrl I", description: "Italic" },
       { keys: "⌘ ⇧ X", keysAlt: "Ctrl Shift X", description: "Strikethrough" },
-      { keys: "⌘ E", keysAlt: "Ctrl E", description: "Inline Code" }
+      { keys: "⌘ E", keysAlt: "Ctrl E", description: "Inline Code" },
+      { keys: "⌘ .", keysAlt: "Ctrl .", description: "Superscript" },
+      { keys: "⌘ ,", keysAlt: "Ctrl ,", description: "Subscript" }
     ]
   },
   {
@@ -432,7 +436,9 @@ export default function TextEditor(props: TextEditorProps) {
         types: ["heading", "paragraph"],
         alignments: ["left", "center", "right", "justify"],
         defaultAlignment: "left"
-      })
+      }),
+      Superscript,
+      Subscript
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
     editorProps: {
@@ -474,6 +480,8 @@ export default function TextEditor(props: TextEditorProps) {
     onUpdate: ({ editor }) => {
       untrack(() => {
         props.updateContent(editor.getHTML());
+        // Auto-manage references section
+        setTimeout(() => updateReferencesSection(editor), 100);
       });
     },
     onSelectionUpdate: ({ editor }) => {
@@ -505,12 +513,178 @@ export default function TextEditor(props: TextEditorProps) {
       (newContent) => {
         const instance = editor();
         if (instance && newContent && instance.getHTML() !== newContent) {
-          instance.commands.setContent(newContent, false); // false = don't emit update event
+          instance.commands.setContent(newContent, { emitUpdate: false });
         }
       },
       { defer: true }
     )
   );
+
+  // Auto-manage references section
+  const updateReferencesSection = (editorInstance: any) => {
+    if (!editorInstance) return;
+
+    const doc = editorInstance.state.doc;
+    const foundRefs = new Set<string>();
+
+    // Scan document for superscript marks containing [n] patterns
+    doc.descendants((node: any) => {
+      if (node.isText && node.marks) {
+        const hasSuperscript = node.marks.some(
+          (mark: any) => mark.type.name === "superscript"
+        );
+        if (hasSuperscript) {
+          const text = node.text || "";
+          const match = text.match(/^\[(.+?)\]$/);
+          if (match) {
+            foundRefs.add(match[1]);
+          }
+        }
+      }
+    });
+
+    // If no references found, remove references section if it exists
+    if (foundRefs.size === 0) {
+      let hasReferencesSection = false;
+      let hrPos = -1;
+      let sectionStartPos = -1;
+
+      doc.descendants((node: any, pos: number) => {
+        if (node.type.name === "heading" && node.textContent === "References") {
+          hasReferencesSection = true;
+          sectionStartPos = pos;
+        }
+      });
+
+      if (hasReferencesSection && sectionStartPos > 0) {
+        // Find the HR before References heading
+        doc.nodesBetween(
+          Math.max(0, sectionStartPos - 50),
+          sectionStartPos,
+          (node: any, pos: number) => {
+            if (node.type.name === "horizontalRule") {
+              hrPos = pos;
+            }
+          }
+        );
+
+        // Delete from HR to end of document
+        if (hrPos >= 0) {
+          const tr = editorInstance.state.tr;
+          tr.delete(hrPos, doc.content.size);
+          editorInstance.view.dispatch(tr);
+        }
+      }
+      return;
+    }
+
+    // Convert Set to sorted array
+    const refNumbers = Array.from(foundRefs).sort((a, b) => {
+      const numA = parseInt(a);
+      const numB = parseInt(b);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB;
+      }
+      return a.localeCompare(b);
+    });
+
+    // Check if References section already exists
+    let referencesHeadingPos = -1;
+    let existingRefs = new Set<string>();
+
+    doc.descendants((node: any, pos: number) => {
+      if (node.type.name === "heading" && node.textContent === "References") {
+        referencesHeadingPos = pos;
+      }
+      // Check for existing reference list items
+      if (referencesHeadingPos >= 0 && node.type.name === "paragraph") {
+        const match = node.textContent.match(/^\[(.+?)\]/);
+        if (match) {
+          existingRefs.add(match[1]);
+        }
+      }
+    });
+
+    // If references section doesn't exist, create it
+    if (referencesHeadingPos === -1) {
+      const content: any[] = [
+        { type: "horizontalRule" },
+        {
+          type: "heading",
+          attrs: { level: 2 },
+          content: [{ type: "text", text: "References" }]
+        }
+      ];
+
+      // Add each reference as a paragraph
+      refNumbers.forEach((refNum) => {
+        content.push({
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: `[${refNum}] `,
+              marks: [{ type: "bold" }]
+            } as any,
+            {
+              type: "text",
+              text: "Add your reference text here"
+            }
+          ]
+        });
+      });
+
+      // Insert at the end
+      const tr = editorInstance.state.tr;
+      tr.insert(
+        doc.content.size,
+        editorInstance.schema.nodeFromJSON({ type: "doc", content }).content
+      );
+      editorInstance.view.dispatch(tr);
+    } else {
+      // Update existing references section - add missing refs
+      const newRefs = refNumbers.filter((ref) => !existingRefs.has(ref));
+
+      if (newRefs.length > 0) {
+        // Find position after References heading to insert new refs
+        let insertPos = referencesHeadingPos;
+        doc.nodesBetween(
+          referencesHeadingPos,
+          doc.content.size,
+          (node: any, pos: number) => {
+            if (pos > insertPos) {
+              insertPos = pos + node.nodeSize;
+            }
+          }
+        );
+
+        const content: any[] = [];
+        newRefs.forEach((refNum) => {
+          content.push({
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: `[${refNum}] `,
+                marks: [{ type: "bold" }]
+              } as any,
+              {
+                type: "text",
+                text: "Add your reference text here"
+              }
+            ]
+          });
+        });
+
+        const tr = editorInstance.state.tr;
+        content.forEach((item) => {
+          tr.insert(insertPos, editorInstance.schema.nodeFromJSON(item));
+          insertPos += editorInstance.schema.nodeFromJSON(item).nodeSize;
+        });
+        editorInstance.view.dispatch(tr);
+      }
+    }
+  };
 
   const setLink = () => {
     const instance = editor();
@@ -1060,6 +1234,34 @@ export default function TextEditor(props: TextEditorProps) {
                   <button
                     type="button"
                     onClick={() =>
+                      instance().chain().focus().toggleSuperscript().run()
+                    }
+                    class={`${
+                      instance().isActive("superscript")
+                        ? "bg-crust"
+                        : "hover:bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                    title="Superscript (Reference)"
+                  >
+                    X<sup>n</sup>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      instance().chain().focus().toggleSubscript().run()
+                    }
+                    class={`${
+                      instance().isActive("subscript")
+                        ? "bg-crust"
+                        : "hover:bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                    title="Subscript"
+                  >
+                    X<sub>n</sub>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
                       instance().chain().focus().toggleTaskList().run()
                     }
                     class={`${
@@ -1320,6 +1522,34 @@ export default function TextEditor(props: TextEditorProps) {
                 title="Strikethrough"
               >
                 <s>S</s>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  instance().chain().focus().toggleSuperscript().run()
+                }
+                class={`${
+                  instance().isActive("superscript")
+                    ? "bg-surface2"
+                    : "hover:bg-surface1"
+                } rounded px-2 py-1 text-xs`}
+                title="Superscript (for references)"
+              >
+                X<sup class="text-[0.6em]">n</sup>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  instance().chain().focus().toggleSubscript().run()
+                }
+                class={`${
+                  instance().isActive("subscript")
+                    ? "bg-surface2"
+                    : "hover:bg-surface1"
+                } rounded px-2 py-1 text-xs`}
+                title="Subscript"
+              >
+                X<sub class="text-[0.6em]">n</sub>
               </button>
               <div class="border-surface2 mx-1 border-l"></div>
               <button

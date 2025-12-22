@@ -1,5 +1,4 @@
-import { createEffect } from "solid-js";
-import { createSignal } from "solid-js";
+import { createEffect, createSignal, onMount } from "solid-js";
 import type { HLJSApi } from "highlight.js";
 import MermaidRenderer from "./MermaidRenderer";
 
@@ -98,6 +97,161 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   let contentRef: HTMLDivElement | undefined;
   const [hljs, setHljs] = createSignal<HLJSApi | null>(null);
 
+  // Process superscript references and enhance the References section
+  const processReferences = () => {
+    if (!contentRef) return;
+
+    const foundRefs = new Map<string, HTMLElement>();
+
+    // Find all <sup> elements with [n] pattern
+    const supElements = contentRef.querySelectorAll("sup");
+
+    supElements.forEach((sup) => {
+      const text = sup.textContent?.trim() || "";
+      // Match patterns like [1], [2], [a], [*], etc.
+      const match = text.match(/^\[(.+?)\]$/);
+
+      if (match) {
+        const refNumber = match[1];
+        const refId = `ref-${refNumber}`;
+        const refBackId = `ref-${refNumber}-back`;
+
+        // Add ID to the sup element itself for back navigation
+        sup.id = refBackId;
+
+        // Replace sup content with a clickable link
+        sup.innerHTML = "";
+        const link = document.createElement("a");
+        link.href = `#${refId}`;
+        link.textContent = `[${refNumber}]`;
+        link.className =
+          "reference-link text-blue hover:text-sky no-underline cursor-pointer";
+        link.style.cssText =
+          "text-decoration: none; font-size: 0.75em; vertical-align: super;";
+
+        // Add smooth scroll behavior
+        link.onclick = (e) => {
+          e.preventDefault();
+          const target = document.getElementById(refId);
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            // Highlight the reference briefly
+            target.style.backgroundColor = "rgba(137, 180, 250, 0.2)";
+            setTimeout(() => {
+              target.style.backgroundColor = "";
+            }, 2000);
+          }
+        };
+
+        sup.appendChild(link);
+      }
+    });
+
+    // Find and enhance the References section
+    const headings = contentRef.querySelectorAll("h2");
+    let referencesSection: HTMLElement | null = null;
+
+    headings.forEach((heading) => {
+      if (heading.textContent?.trim() === "References") {
+        referencesSection = heading;
+      }
+    });
+
+    if (referencesSection) {
+      // Style the References heading
+      referencesSection.className = "text-2xl font-bold mb-4 text-text";
+
+      // Find the parent container and add styling
+      const parentDiv = referencesSection.parentElement;
+      if (parentDiv) {
+        // Add top border and padding
+        parentDiv.style.cssText =
+          "border-top: 1px solid var(--surface2); margin-top: 4rem; padding-top: 2rem;";
+      }
+
+      // Find all paragraphs after the References heading that start with [n]
+      let currentElement = referencesSection.nextElementSibling;
+
+      while (currentElement) {
+        if (currentElement.tagName === "P") {
+          const text = currentElement.textContent?.trim() || "";
+          const match = text.match(/^\[(.+?)\]\s*/);
+
+          if (match) {
+            const refNumber = match[1];
+            const refId = `ref-${refNumber}`;
+
+            // Set the ID for linking
+            currentElement.id = refId;
+
+            // Add styling
+            currentElement.className =
+              "reference-item transition-colors duration-500 text-sm mb-3";
+            currentElement.style.cssText = "scroll-margin-top: 100px;";
+
+            // Parse and style the content - get everything after [n]
+            let refText = text.substring(match[0].length);
+
+            // Remove any existing "↑ Back" text (including various Unicode arrow variants)
+            refText = refText.replace(/[↑⬆️]\s*Back\s*$/i, "").trim();
+
+            // Create styled content
+            currentElement.innerHTML = "";
+
+            // Add bold reference number
+            const refNumSpan = document.createElement("span");
+            refNumSpan.className = "text-blue font-semibold";
+            refNumSpan.textContent = `[${refNumber}]`;
+            currentElement.appendChild(refNumSpan);
+
+            // Add reference text
+            if (refText) {
+              const refTextSpan = document.createElement("span");
+              refTextSpan.className = "ml-2";
+              refTextSpan.textContent = refText;
+              currentElement.appendChild(refTextSpan);
+            } else {
+              const refTextSpan = document.createElement("span");
+              refTextSpan.className = "ml-2 text-subtext0 italic";
+              refTextSpan.textContent = "Add your reference text here";
+              currentElement.appendChild(refTextSpan);
+            }
+
+            // Add back button
+            const backLink = document.createElement("a");
+            backLink.href = `#ref-${refNumber}-back`;
+            backLink.className =
+              "text-mauve hover:text-pink ml-2 text-xs cursor-pointer";
+            backLink.textContent = "↑ Back";
+            backLink.onclick = (e) => {
+              e.preventDefault();
+              const target = document.getElementById(`ref-${refNumber}-back`);
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+                // Highlight the reference link briefly
+                target.style.backgroundColor = "rgba(203, 166, 247, 0.2)";
+                setTimeout(() => {
+                  target.style.backgroundColor = "";
+                }, 2000);
+              }
+            };
+            currentElement.appendChild(backLink);
+          }
+        }
+
+        // Check if we've reached another heading (end of references)
+        if (
+          currentElement.tagName.match(/^H[1-6]$/) &&
+          currentElement !== referencesSection
+        ) {
+          break;
+        }
+
+        currentElement = currentElement.nextElementSibling;
+      }
+    }
+  };
+
   // Load highlight.js only when needed
   createEffect(() => {
     if (props.hasCodeBlock && !hljs()) {
@@ -112,6 +266,22 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       setTimeout(() => {
         hljsInstance.highlightAll();
       }, 100);
+    }
+  });
+
+  // Process references after content is mounted and when body changes
+  onMount(() => {
+    setTimeout(() => {
+      processReferences();
+    }, 150);
+  });
+
+  createEffect(() => {
+    // Re-process when body changes
+    if (props.body && contentRef) {
+      setTimeout(() => {
+        processReferences();
+      }, 150);
     }
   });
 

@@ -348,26 +348,6 @@ label.underlinedInputLabel {
   color: var(--color-surface1);
 }
 
-.logoSpinner:hover {
-  animation: spinner 1.5s ease;
-}
-@keyframes spinner {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(-360deg);
-  }
-}
-@keyframes spinReverse {
-  to {
-    transform: rotate(-360deg);
-  }
-}
-.animate-spin-reverse {
-  animation: spinReverse 1s linear infinite;
-}
-
 .vertical-rule-around {
   display: flex;
   flex-direction: column;
@@ -1220,4 +1200,7 @@ svg.mermaid text {
 .ProseMirror img[style*="text-align: left"] {
   display: block;
   margin-right: auto;
+}
+.reference-item > span.ml-2 {
+  font-style: italic;
 }
