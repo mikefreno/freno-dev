@@ -31,7 +31,7 @@ function AppLayout(props: { children: any }) {
   } = useBars();
 
   let lastScrollY = 0;
-  const SCROLL_THRESHOLD = 100;
+  const SCROLL_THRESHOLD = 75;
 
   // Use onMount to avoid hydration issues - window operations are client-only
   onMount(() => {
