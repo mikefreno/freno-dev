@@ -13,12 +13,13 @@ export function Typewriter(props: {
   const [isTyping, setIsTyping] = createSignal(false);
   const [isDelaying, setIsDelaying] = createSignal(delay > 0);
   const [shouldHide, setShouldHide] = createSignal(false);
+  const [animated, setAnimated] = createSignal(false);
   const resolved = children(() => props.children);
 
   onMount(() => {
     if (!containerRef || !cursorRef) return;
 
-    // FIRST: Walk DOM and hide all text immediately
+    // FIRST: Walk DOM and split text into character spans
     const textNodes: { node: Text; text: string; startIndex: number }[] = [];
     let totalChars = 0;
 
@@ -38,7 +39,7 @@ export function Typewriter(props: {
           text.split("").forEach((char, i) => {
             const charSpan = document.createElement("span");
             charSpan.textContent = char;
-            charSpan.style.opacity = "0";
+            // Don't set opacity here - CSS will handle it based on data-typewriter state
             charSpan.setAttribute(
               "data-char-index",
               String(totalChars - text.length + i)
@@ -53,6 +54,12 @@ export function Typewriter(props: {
     };
 
     walkDOM(containerRef);
+
+    // Mark as animated AFTER DOM manipulation - this triggers CSS to hide characters
+    setAnimated(true);
+
+    // Mark container as ready for animation
+    containerRef.setAttribute("data-typewriter-ready", "true");
 
     // Position cursor at the first character location
     const firstChar = containerRef.querySelector(
@@ -143,7 +150,11 @@ export function Typewriter(props: {
   };
 
   return (
-    <div ref={containerRef} class={props.class}>
+    <div
+      ref={containerRef}
+      class={props.class}
+      data-typewriter={!animated() ? "static" : "animated"}
+    >
       {resolved()}
       <span ref={cursorRef} class={getCursorClass()}></span>
     </div>

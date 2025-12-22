@@ -26,6 +26,9 @@ const getPostByTitle = query(
     "use server";
     const { ConnectionFactory, getUserID, getPrivilegeLevel } =
       await import("~/server/utils");
+    const { parseConditionals, getSafeEnvVariables } =
+      await import("~/server/conditional-parser");
+    const { getFeatureFlags } = await import("~/server/feature-flags");
     const event = getRequestEvent()!;
     const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
     const userID = await getUserID(event.nativeEvent);
@@ -76,6 +79,26 @@ const getPostByTitle = query(
         privilegeLevel: "anonymous" as const,
         userID: null
       };
+    }
+
+    // Build conditional evaluation context
+    const conditionalContext = {
+      isAuthenticated: userID !== null,
+      privilegeLevel: privilegeLevel,
+      userId: userID,
+      currentDate: new Date(),
+      featureFlags: getFeatureFlags(),
+      env: getSafeEnvVariables()
+    };
+
+    // Parse conditionals in post body
+    if (post.body) {
+      try {
+        post.body = parseConditionals(post.body, conditionalContext);
+      } catch (error) {
+        console.error("Error parsing conditionals in post body:", error);
+        // Fall back to showing original content
+      }
     }
 
     // Fetch comments with sorting
@@ -274,10 +297,10 @@ export default function PostPage() {
                       </div>
 
                       {/* Spacer to push content down */}
-                      <div class="h-80 sm:h-96 md:h-[50vh]"></div>
+                      <div class="-mt-[10vh] h-80 sm:h-96 md:h-[50vh]" />
 
                       {/* Content that slides over the fixed image */}
-                      <div class="bg-surface0 relative z-40 pb-24">
+                      <div class="bg-base relative z-40 pb-24">
                         <div class="top-4 flex w-full flex-col justify-center md:absolute md:flex-row md:justify-between">
                           <div class="">
                             <div class="flex justify-center italic md:justify-start md:pl-24">
@@ -287,7 +310,7 @@ export default function PostPage() {
                                 By Michael Freno
                               </div>
                             </div>
-                            <div class="flex max-w-[420px] flex-wrap justify-center italic md:justify-start md:pl-24">
+                            <div class="flex max-w-105 flex-wrap justify-center italic md:justify-start md:pl-24">
                               <For each={postData.tags as any[]}>
                                 {(tag) => (
                                   <div class="group relative m-1 h-fit w-fit rounded-xl bg-purple-600 px-2 py-1 text-sm">

@@ -16,6 +16,8 @@ import DetailsContent from "@tiptap/extension-details-content";
 import { Node } from "@tiptap/core";
 import { createLowlight, common } from "lowlight";
 import { Mermaid } from "./extensions/Mermaid";
+import { ConditionalBlock } from "./extensions/ConditionalBlock";
+import { ConditionalInline } from "./extensions/ConditionalInline";
 import TextAlign from "@tiptap/extension-text-align";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
@@ -380,6 +382,24 @@ export default function TextEditor(props: TextEditorProps) {
 
   const [showKeyboardHelp, setShowKeyboardHelp] = createSignal(false);
 
+  const [showConditionalConfig, setShowConditionalConfig] = createSignal(false);
+  const [conditionalConfigPosition, setConditionalConfigPosition] =
+    createSignal({
+      top: 0,
+      left: 0
+    });
+  const [conditionalForm, setConditionalForm] = createSignal<{
+    conditionType: "auth" | "privilege" | "date" | "feature" | "env";
+    conditionValue: string;
+    showWhen: "true" | "false";
+    inline: boolean; // New field for inline vs block
+  }>({
+    conditionType: "auth",
+    conditionValue: "authenticated",
+    showWhen: "true",
+    inline: false
+  });
+
   const [isFullscreen, setIsFullscreen] = createSignal(false);
   const [keyboardVisible, setKeyboardVisible] = createSignal(false);
   const [keyboardHeight, setKeyboardHeight] = createSignal(0);
@@ -434,6 +454,8 @@ export default function TextEditor(props: TextEditorProps) {
         }
       }),
       Mermaid,
+      ConditionalBlock,
+      ConditionalInline,
       TextAlign.configure({
         types: ["heading", "paragraph"],
         alignments: ["left", "center", "right", "justify"],
@@ -1005,6 +1027,27 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
+  // Close conditional config on outside click
+  createEffect(() => {
+    if (showConditionalConfig()) {
+      const handleClickOutside = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (
+          !target.closest(".conditional-config") &&
+          !target.closest("[data-conditional-trigger]")
+        ) {
+          setShowConditionalConfig(false);
+        }
+      };
+
+      setTimeout(() => {
+        document.addEventListener("click", handleClickOutside);
+      }, 0);
+
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  });
+
   const showMermaidSelector = (e: MouseEvent) => {
     const buttonRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setMermaidMenuPosition({
@@ -1020,6 +1063,108 @@ export default function TextEditor(props: TextEditorProps) {
 
     instance.chain().focus().setMermaid(template.code).run();
     setShowMermaidTemplates(false);
+  };
+
+  // Conditional block functions
+  const showConditionalConfigurator = (e: MouseEvent) => {
+    const buttonRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setConditionalConfigPosition({
+      top: buttonRect.bottom + 5,
+      left: buttonRect.left
+    });
+
+    // If cursor is in existing conditional, load its values
+    const instance = editor();
+    if (instance?.isActive("conditionalBlock")) {
+      const attrs = instance.getAttributes("conditionalBlock");
+      setConditionalForm({
+        conditionType: attrs.conditionType || "auth",
+        conditionValue: attrs.conditionValue || "authenticated",
+        showWhen: attrs.showWhen || "true",
+        inline: false
+      });
+    } else if (instance?.isActive("conditionalInline")) {
+      const attrs = instance.getAttributes("conditionalInline");
+      setConditionalForm({
+        conditionType: attrs.conditionType || "auth",
+        conditionValue: attrs.conditionValue || "authenticated",
+        showWhen: attrs.showWhen || "true",
+        inline: true
+      });
+    } else {
+      // Reset to defaults for new conditional
+      setConditionalForm({
+        conditionType: "auth",
+        conditionValue: "authenticated",
+        showWhen: "true",
+        inline: false
+      });
+    }
+
+    setShowConditionalConfig(!showConditionalConfig());
+  };
+
+  const insertConditionalBlock = () => {
+    const instance = editor();
+    if (!instance) return;
+
+    const { conditionType, conditionValue, showWhen, inline } =
+      conditionalForm();
+
+    if (inline) {
+      // Handle inline conditionals (Mark)
+      if (instance.isActive("conditionalInline")) {
+        // Update existing inline conditional
+        instance
+          .chain()
+          .focus()
+          .unsetConditionalInline()
+          .setConditionalInline({
+            conditionType,
+            conditionValue,
+            showWhen
+          })
+          .run();
+      } else {
+        // Apply inline conditional to selection
+        instance
+          .chain()
+          .focus()
+          .setConditionalInline({
+            conditionType,
+            conditionValue,
+            showWhen
+          })
+          .run();
+      }
+    } else {
+      // Handle block conditionals (Node)
+      if (instance.isActive("conditionalBlock")) {
+        // Update existing conditional
+        instance
+          .chain()
+          .focus()
+          .updateConditionalBlock({
+            conditionType,
+            conditionValue,
+            showWhen
+          })
+          .run();
+      } else {
+        // Wrap selection in new conditional
+        instance
+          .chain()
+          .focus()
+          .setConditionalBlock({
+            conditionType,
+            conditionValue,
+            showWhen
+          })
+          .run();
+      }
+    }
+
+    setShowConditionalConfig(false);
   };
 
   // Toggle fullscreen mode
@@ -1117,6 +1262,200 @@ export default function TextEditor(props: TextEditorProps) {
             class="hover:bg-surface1 rounded px-2 py-1 text-xs"
           >
             Custom Size...
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Conditional Configurator Component
+  const ConditionalConfigurator = () => {
+    return (
+      <div class="bg-mantle border-surface2 w-80 rounded border p-4 shadow-lg">
+        <h3 class="text-text mb-3 font-semibold">Conditional Block</h3>
+
+        {/* Condition Type Selector */}
+        <label class="text-subtext0 mb-2 block text-xs">Condition Type</label>
+        <select
+          class="bg-surface0 text-text border-surface2 mb-3 w-full rounded border px-2 py-1"
+          value={conditionalForm().conditionType}
+          onInput={(e) =>
+            setConditionalForm({
+              ...conditionalForm(),
+              conditionType: e.currentTarget.value as any
+            })
+          }
+        >
+          <option value="auth">User Authentication</option>
+          <option value="privilege">Privilege Level</option>
+          <option value="date">Date Range</option>
+          <option value="feature">Feature Flag</option>
+          <option value="env">Environment Variable</option>
+        </select>
+
+        {/* Dynamic Condition Value Input based on type */}
+        <Show when={conditionalForm().conditionType === "auth"}>
+          <label class="text-subtext0 mb-2 block text-xs">User State</label>
+          <select
+            class="bg-surface0 text-text border-surface2 mb-3 w-full rounded border px-2 py-1"
+            value={conditionalForm().conditionValue}
+            onInput={(e) =>
+              setConditionalForm({
+                ...conditionalForm(),
+                conditionValue: e.currentTarget.value
+              })
+            }
+          >
+            <option value="authenticated">Authenticated</option>
+            <option value="anonymous">Anonymous</option>
+          </select>
+        </Show>
+
+        <Show when={conditionalForm().conditionType === "privilege"}>
+          <label class="text-subtext0 mb-2 block text-xs">
+            Privilege Level
+          </label>
+          <select
+            class="bg-surface0 text-text border-surface2 mb-3 w-full rounded border px-2 py-1"
+            value={conditionalForm().conditionValue}
+            onInput={(e) =>
+              setConditionalForm({
+                ...conditionalForm(),
+                conditionValue: e.currentTarget.value
+              })
+            }
+          >
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+            <option value="anonymous">Anonymous</option>
+          </select>
+        </Show>
+
+        <Show when={conditionalForm().conditionType === "date"}>
+          <label class="text-subtext0 mb-2 block text-xs">Date Condition</label>
+          <input
+            type="text"
+            placeholder="before:2026-01-01 or after:2025-01-01"
+            class="bg-surface0 text-text border-surface2 mb-3 w-full rounded border px-2 py-1"
+            value={conditionalForm().conditionValue}
+            onInput={(e) =>
+              setConditionalForm({
+                ...conditionalForm(),
+                conditionValue: e.currentTarget.value
+              })
+            }
+          />
+          <div class="text-subtext0 mb-3 text-xs">
+            Format: before:YYYY-MM-DD, after:YYYY-MM-DD, or
+            between:YYYY-MM-DD,YYYY-MM-DD
+          </div>
+        </Show>
+
+        <Show when={conditionalForm().conditionType === "feature"}>
+          <label class="text-subtext0 mb-2 block text-xs">
+            Feature Flag Name
+          </label>
+          <input
+            type="text"
+            placeholder="feature-name"
+            class="bg-surface0 text-text border-surface2 mb-3 w-full rounded border px-2 py-1"
+            value={conditionalForm().conditionValue}
+            onInput={(e) =>
+              setConditionalForm({
+                ...conditionalForm(),
+                conditionValue: e.currentTarget.value
+              })
+            }
+          />
+        </Show>
+
+        <Show when={conditionalForm().conditionType === "env"}>
+          <label class="text-subtext0 mb-2 block text-xs">
+            Environment Variable
+          </label>
+          <input
+            type="text"
+            list="env-variables"
+            placeholder="NODE_ENV:production"
+            class="bg-surface0 text-text border-surface2 mb-3 w-full rounded border px-2 py-1"
+            value={conditionalForm().conditionValue}
+            onInput={(e) =>
+              setConditionalForm({
+                ...conditionalForm(),
+                conditionValue: e.currentTarget.value
+              })
+            }
+          />
+          <datalist id="env-variables">
+            <option value="NODE_ENV:development">
+              Development environment
+            </option>
+            <option value="NODE_ENV:production">Production environment</option>
+            <option value="NODE_ENV:test">Test environment</option>
+            <option value="VERCEL_ENV:preview">
+              Vercel preview deployment
+            </option>
+            <option value="VERCEL_ENV:production">Vercel production</option>
+            <option value="VITE_DOMAIN:*">Any domain configured</option>
+            <option value="VITE_AWS_BUCKET_STRING:*">
+              S3 bucket configured
+            </option>
+            <option value="VITE_GOOGLE_CLIENT_ID:*">Google auth enabled</option>
+            <option value="VITE_GITHUB_CLIENT_ID:*">GitHub auth enabled</option>
+            <option value="VITE_WEBSOCKET:*">WebSocket configured</option>
+          </datalist>
+          <div class="text-subtext0 mb-3 text-xs">
+            Format: VAR_NAME:value or VAR_NAME:* for any truthy value
+          </div>
+        </Show>
+
+        {/* Show When Toggle */}
+        <label class="text-subtext0 mb-2 block text-xs">Show When</label>
+        <select
+          class="bg-surface0 text-text border-surface2 mb-3 w-full rounded border px-2 py-1"
+          value={conditionalForm().showWhen}
+          onInput={(e) =>
+            setConditionalForm({
+              ...conditionalForm(),
+              showWhen: e.currentTarget.value as "true" | "false"
+            })
+          }
+        >
+          <option value="true">Condition is TRUE</option>
+          <option value="false">Condition is FALSE</option>
+        </select>
+
+        {/* Inline Toggle */}
+        <label class="text-subtext0 mb-3 flex items-center gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={conditionalForm().inline}
+            onChange={(e) =>
+              setConditionalForm({
+                ...conditionalForm(),
+                inline: e.currentTarget.checked
+              })
+            }
+            class="rounded"
+          />
+          <span>Inline (no line break)</span>
+        </label>
+
+        {/* Action Buttons */}
+        <div class="flex gap-2">
+          <button
+            type="button"
+            onClick={insertConditionalBlock}
+            class="bg-blue rounded px-3 py-1 text-sm hover:brightness-125"
+          >
+            Apply
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowConditionalConfig(false)}
+            class="hover:bg-surface1 rounded px-3 py-1 text-sm"
+          >
+            Cancel
           </button>
         </div>
       </div>
@@ -1475,6 +1814,19 @@ export default function TextEditor(props: TextEditorProps) {
               </div>
             </Show>
 
+            {/* Conditional Configurator */}
+            <Show when={showConditionalConfig()}>
+              <div
+                class="conditional-config fixed z-110"
+                style={{
+                  top: `${conditionalConfigPosition().top}px`,
+                  left: `${conditionalConfigPosition().left}px`
+                }}
+              >
+                <ConditionalConfigurator />
+              </div>
+            </Show>
+
             {/* Main Toolbar - Pinned at top in fullscreen */}
             <div
               class="border-surface2 bg-base border-b"
@@ -1781,6 +2133,19 @@ export default function TextEditor(props: TextEditorProps) {
                   title="Insert Diagram"
                 >
                   📊 Diagram
+                </button>
+                <button
+                  type="button"
+                  onClick={showConditionalConfigurator}
+                  data-conditional-trigger
+                  class={`${
+                    instance().isActive("conditionalBlock")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Insert Conditional Block"
+                >
+                  🔒 Conditional
                 </button>
                 <div class="border-surface2 mx-1 border-l"></div>
                 <button

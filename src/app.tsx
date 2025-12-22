@@ -5,8 +5,7 @@ import {
   ErrorBoundary,
   Suspense,
   onMount,
-  onCleanup,
-  Show
+  onCleanup
 } from "solid-js";
 import "./app.css";
 import { LeftBar, RightBar } from "./components/Bars";
@@ -191,16 +190,18 @@ function AppLayout(props: { children: any }) {
         <LeftBar />
         <div
           class="bg-base relative h-screen overflow-x-hidden overflow-y-scroll py-16"
-          style={{
-            width: `${centerWidth()}px`,
-            "margin-left": `${leftBarSize()}px`
-          }}
+          style={
+            barsInitialized()
+              ? {
+                  width: `${centerWidth()}px`,
+                  "margin-left": `${leftBarSize()}px`
+                }
+              : undefined
+          }
           onMouseUp={handleCenterTapRelease}
           onTouchEnd={handleCenterTapRelease}
         >
-          <Show when={barsInitialized()} fallback={<TerminalSplash />}>
-            <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
-          </Show>
+          <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
         </div>
         <RightBar />
       </div>

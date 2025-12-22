@@ -336,14 +336,14 @@ export default function LoginPage() {
         <div class="relative pt-12 md:pt-24">
           {/* Error message */}
           <Show when={error()}>
-            <div class="mb-4 w-full max-w-md rounded-lg border border-red-500 bg-red-500/10 px-4 py-3 text-center">
+            <div class="border-maroon bg-red mb-4 w-full max-w-md rounded-lg border px-4 py-3 text-center">
               <Show when={error() === "passwordMismatch"}>
-                <div class="text-lg font-semibold text-red-500">
+                <div class="text-red text-lg font-semibold">
                   Passwords did not match!
                 </div>
               </Show>
               <Show when={error() === "duplicate"}>
-                <div class="text-lg font-semibold text-red-500">
+                <div class="text-red text-lg font-semibold">
                   Email Already Exists!
                 </div>
               </Show>
@@ -354,7 +354,7 @@ export default function LoginPage() {
                   error() !== "duplicate"
                 }
               >
-                <div class="text-sm text-red-500">{error()}</div>
+                <div class="text-red text-sm">{error()}</div>
               </Show>
             </div>
           </Show>
@@ -519,7 +519,7 @@ export default function LoginPage() {
                   passwordConfRef.value.length >= 6
                     ? ""
                     : "opacity-0 select-none"
-                } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
+                } text-red text-center transition-opacity duration-200 ease-in-out`}
               >
                 Passwords do not match!
               </div>
@@ -535,11 +535,11 @@ export default function LoginPage() {
             <div
               class={`${
                 showPasswordError()
-                  ? "text-red-500"
+                  ? "text-red"
                   : showPasswordSuccess()
-                    ? "text-green-500"
+                    ? "text-green"
                     : "opacity-0 select-none"
-              } flex min-h-[16px] justify-center italic transition-opacity duration-300 ease-in-out`}
+              } flex min-h-4 justify-center italic transition-opacity duration-300 ease-in-out`}
             >
               <Show when={showPasswordError()}>
                 Credentials did not match any record
@@ -576,7 +576,7 @@ export default function LoginPage() {
                   initialRemainingTime={countDown()}
                   size={48}
                   strokeWidth={6}
-                  colors="#60a5fa"
+                  colors="var(--color-blue)"
                 >
                   {renderTime}
                 </CountdownCircleTimer>
