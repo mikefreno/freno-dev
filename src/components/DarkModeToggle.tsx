@@ -1,39 +1,11 @@
-import { createSignal, onMount, Show } from "solid-js";
+import { Show } from "solid-js";
 import MoonIcon from "./icons/MoonIcon";
 import SunIcon from "./icons/SunIcon";
 import { Typewriter } from "./Typewriter";
+import { useDarkMode } from "~/context/darkMode";
 
 export function DarkModeToggle() {
-  const [isDark, setIsDark] = createSignal(false);
-
-  onMount(() => {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-
-    if (prefersDark) {
-      setIsDark(true);
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    } else {
-      setIsDark(false);
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    }
-  });
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDark();
-    setIsDark(newDarkMode);
-
-    if (newDarkMode) {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    } else {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    }
-  };
+  const { isDark, toggleDarkMode } = useDarkMode();
 
   return (
     <button

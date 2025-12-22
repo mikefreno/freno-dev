@@ -148,7 +148,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <Typewriter speed={160} class="max-w-3/4 pt-8 md:max-w-1/2">
+          <Typewriter speed={120} class="max-w-3/4 pt-8 md:max-w-1/2">
             And if you love the color schemes of this site
             <div class="mx-auto w-fit">
               <DarkModeToggle />

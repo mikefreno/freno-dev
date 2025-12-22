@@ -1,6 +1,12 @@
-import { Accessor, createContext, useContext, createMemo } from "solid-js";
+import {
+  Accessor,
+  createContext,
+  useContext,
+  createMemo,
+  onMount
+} from "solid-js";
 import { createSignal } from "solid-js";
-import { createWindowWidth, isMobile } from "~/lib/resize-utils";
+import { isMobile, MOBILE_BREAKPOINT } from "~/lib/resize-utils";
 
 const BarsContext = createContext<{
   leftBarSize: Accessor<number>;
@@ -39,14 +45,40 @@ export function BarsProvider(props: { children: any }) {
   const [_rightBarNaturalSize, _setRightBarNaturalSize] = createSignal(0);
   const [syncedBarSize, setSyncedBarSize] = createSignal(0);
   const [centerWidth, setCenterWidth] = createSignal(0);
-  const windowWidth = createWindowWidth();
-  const initialIsMobile = isMobile(windowWidth());
-  const [leftBarVisible, setLeftBarVisible] = createSignal(!initialIsMobile);
+  const [windowWidth, setWindowWidth] = createSignal(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+  const [leftBarVisible, setLeftBarVisible] = createSignal(true);
   const [rightBarVisible, setRightBarVisible] = createSignal(true);
   const [barsInitialized, setBarsInitialized] = createSignal(false);
 
   let leftBarSized = false;
   let rightBarSized = false;
+
+  // Setup window width tracking and initial mobile detection on client only
+  onMount(() => {
+    // Immediately sync to actual window width
+    setWindowWidth(window.innerWidth);
+    const initialIsMobile = isMobile(window.innerWidth);
+    setLeftBarVisible(!initialIsMobile);
+
+    // Initialize immediately on mobile if left bar starts hidden
+    if (initialIsMobile && !leftBarVisible()) {
+      leftBarSized = true;
+      checkAndSync();
+    }
+
+    // Setup resize listener
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  });
 
   const wrappedSetLeftBarSize = (size: number) => {
     if (!barsInitialized()) {
@@ -62,11 +94,16 @@ export function BarsProvider(props: { children: any }) {
     }
   };
 
-  // Initialize immediately on mobile if left bar starts hidden
-  if (initialIsMobile && !leftBarVisible()) {
-    // Skip waiting for left bar size on mobile when it starts hidden
-    leftBarSized = true;
-  }
+  const checkAndSync = () => {
+    const currentIsMobile = isMobile(windowWidth());
+    const bothBarsReady = leftBarSized && (currentIsMobile || rightBarSized);
+
+    if (bothBarsReady) {
+      const maxWidth = Math.max(_leftBarNaturalSize(), _rightBarNaturalSize());
+      setSyncedBarSize(maxWidth);
+      setBarsInitialized(true);
+    }
+  };
 
   const wrappedSetRightBarSize = (size: number) => {
     if (!barsInitialized()) {
@@ -79,17 +116,6 @@ export function BarsProvider(props: { children: any }) {
     } else {
       // After initialization, just update the natural size for visibility handling
       _setRightBarNaturalSize(size);
-    }
-  };
-
-  const checkAndSync = () => {
-    const currentIsMobile = isMobile(windowWidth());
-    const bothBarsReady = leftBarSized && (currentIsMobile || rightBarSized);
-
-    if (bothBarsReady) {
-      const maxWidth = Math.max(_leftBarNaturalSize(), _rightBarNaturalSize());
-      setSyncedBarSize(maxWidth);
-      setBarsInitialized(true);
     }
   };
 

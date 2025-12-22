@@ -14,6 +14,7 @@ import { TerminalSplash } from "./components/TerminalSplash";
 import { MetaProvider } from "@solidjs/meta";
 import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
 import { BarsProvider, useBars } from "./context/bars";
+import { DarkModeProvider } from "./context/darkMode";
 import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 
 function AppLayout(props: { children: any }) {
@@ -29,31 +30,36 @@ function AppLayout(props: { children: any }) {
     barsInitialized
   } = useBars();
 
-  const windowWidth = createWindowWidth();
   let lastScrollY = 0;
   const SCROLL_THRESHOLD = 100;
 
-  createEffect(() => {
-    const handleResize = () => {
-      const currentIsMobile = isMobile(windowWidth());
+  // Use onMount to avoid hydration issues - window operations are client-only
+  onMount(() => {
+    const windowWidth = createWindowWidth();
 
-      // Show bars when switching to desktop
-      if (!currentIsMobile) {
-        setLeftBarVisible(true);
-        setRightBarVisible(true);
-      }
+    createEffect(() => {
+      const handleResize = () => {
+        const currentIsMobile = isMobile(windowWidth());
 
-      // On mobile, leftBarSize() is always 0 (overlay mode)
-      const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
-      setCenterWidth(newWidth);
-    };
+        // Show bars when switching to desktop
+        if (!currentIsMobile) {
+          setLeftBarVisible(true);
+          setRightBarVisible(true);
+        }
 
-    // Call immediately and whenever dependencies change
-    handleResize();
+        // On mobile, leftBarSize() is always 0 (overlay mode)
+        const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
+        setCenterWidth(newWidth);
+      };
+
+      // Call immediately and whenever dependencies change
+      handleResize();
+    });
   });
 
   // Recalculate when bar sizes change (visibility or actual resize)
   createEffect(() => {
+    if (typeof window === "undefined") return;
     // On mobile, leftBarSize() is always 0 (overlay mode)
     const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
     setCenterWidth(newWidth);
@@ -61,6 +67,8 @@ function AppLayout(props: { children: any }) {
 
   // Auto-hide on scroll (mobile only)
   onMount(() => {
+    const windowWidth = createWindowWidth();
+
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const currentIsMobile = isMobile(windowWidth());
@@ -84,6 +92,8 @@ function AppLayout(props: { children: any }) {
 
   // ESC key to close sidebars on mobile
   onMount(() => {
+    const windowWidth = createWindowWidth();
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const currentIsMobile = isMobile(windowWidth());
 
@@ -106,6 +116,7 @@ function AppLayout(props: { children: any }) {
 
   // Global swipe gestures to reveal/hide bars
   onMount(() => {
+    const windowWidth = createWindowWidth();
     let touchStartX = 0;
     let touchStartY = 0;
     const SWIPE_THRESHOLD = 100;
@@ -158,7 +169,8 @@ function AppLayout(props: { children: any }) {
   });
 
   const handleCenterTapRelease = (e: MouseEvent | TouchEvent) => {
-    const currentIsMobile = isMobile(windowWidth());
+    if (typeof window === "undefined") return;
+    const currentIsMobile = window.innerWidth < 768;
 
     // Only hide left bar on mobile when it's visible
     if (currentIsMobile && leftBarVisible()) {
@@ -204,11 +216,13 @@ export default function App() {
           <ErrorBoundaryFallback error={error} reset={reset} />
         )}
       >
-        <BarsProvider>
-          <Router root={(props) => <AppLayout>{props.children}</AppLayout>}>
-            <FileRoutes />
-          </Router>
-        </BarsProvider>
+        <DarkModeProvider>
+          <BarsProvider>
+            <Router root={(props) => <AppLayout>{props.children}</AppLayout>}>
+              <FileRoutes />
+            </Router>
+          </BarsProvider>
+        </DarkModeProvider>
       </ErrorBoundary>
     </MetaProvider>
   );

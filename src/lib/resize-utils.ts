@@ -12,6 +12,9 @@ export function createWindowWidth(debounceMs?: number): Accessor<number> {
   const [width, setWidth] = createSignal(initialWidth);
 
   onMount(() => {
+    // Sync to actual client width immediately on mount to avoid hydration mismatch
+    setWidth(window.innerWidth);
+
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     const handleResize = () => {
