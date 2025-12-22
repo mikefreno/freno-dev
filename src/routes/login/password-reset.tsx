@@ -5,6 +5,7 @@ import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import Eye from "~/components/icons/Eye";
 import EyeSlash from "~/components/icons/EyeSlash";
 import { validatePassword } from "~/lib/validation";
+import { api } from "~/lib/api";
 
 export default function PasswordResetPage() {
   const navigate = useNavigate();
@@ -67,32 +68,26 @@ export default function PasswordResetPage() {
     setPasswordChangeLoading(true);
 
     try {
-      const response = await fetch("/api/trpc/auth.resetPassword", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token: token,
-          newPassword,
-          newPasswordConfirmation: newPasswordConf
-        })
+      const result = await api.auth.resetPassword.mutate({
+        token: token,
+        newPassword,
+        newPasswordConfirmation: newPasswordConf
       });
 
-      const result = await response.json();
-
-      if (response.ok && result.result?.data) {
+      if (result.success) {
         setCountDown(true);
       } else {
-        const errorMsg = result.error?.message || "Failed to reset password";
-        if (errorMsg.includes("expired") || errorMsg.includes("token")) {
-          setShowRequestNewEmail(true);
-          setError("Token has expired");
-        } else {
-          setError(errorMsg);
-        }
+        setError("Failed to reset password");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Password reset error:", err);
-      setError("An error occurred. Please try again.");
+      const errorMsg = err.message || "An error occurred. Please try again.";
+      if (errorMsg.includes("expired") || errorMsg.includes("token")) {
+        setShowRequestNewEmail(true);
+        setError("Token has expired");
+      } else {
+        setError(errorMsg);
+      }
     } finally {
       setPasswordChangeLoading(false);
     }
@@ -192,27 +187,48 @@ export default function PasswordResetPage() {
         >
           <div class="flex w-full max-w-md flex-col justify-center px-4">
             {/* New Password Input */}
-            <div class="input-group relative mx-4">
-              <input
-                ref={newPasswordRef}
-                name="newPassword"
-                type={showPasswordInput() ? "text" : "password"}
-                required
-                onInput={handleNewPasswordChange}
-                onBlur={handlePasswordBlur}
-                disabled={passwordChangeLoading()}
-                placeholder=" "
-                class="underlinedInput w-full bg-transparent pr-10"
-              />
-              <span class="bar"></span>
-              <label class="underlinedInputLabel">New Password</label>
+            <div class="flex justify-center">
+              <div class="input-group mx-4 flex">
+                <input
+                  ref={newPasswordRef}
+                  name="newPassword"
+                  type={showPasswordInput() ? "text" : "password"}
+                  required
+                  autofocus
+                  onInput={handleNewPasswordChange}
+                  onBlur={handlePasswordBlur}
+                  disabled={passwordChangeLoading()}
+                  placeholder=" "
+                  class="underlinedInput bg-transparent"
+                />
+                <span class="bar"></span>
+                <label class="underlinedInputLabel">New Password</label>
+              </div>
               <button
                 type="button"
-                onClick={() => setShowPasswordInput(!showPasswordInput())}
-                class="absolute top-2 right-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                onClick={() => {
+                  setShowPasswordInput(!showPasswordInput());
+                  newPasswordRef?.focus();
+                }}
+                class="absolute mt-14 ml-60"
               >
-                <Show when={showPasswordInput()} fallback={<Eye />}>
-                  <EyeSlash />
+                <Show
+                  when={showPasswordInput()}
+                  fallback={
+                    <EyeSlash
+                      height={24}
+                      width={24}
+                      strokeWidth={1}
+                      class="stroke-zinc-900 dark:stroke-white"
+                    />
+                  }
+                >
+                  <Eye
+                    height={24}
+                    width={24}
+                    strokeWidth={1}
+                    class="stroke-zinc-900 dark:stroke-white"
+                  />
                 </Show>
               </button>
             </div>
@@ -221,34 +237,54 @@ export default function PasswordResetPage() {
             <div
               class={`${
                 showPasswordLengthWarning() ? "" : "opacity-0 select-none"
-              } mt-2 text-center text-sm text-red-500 transition-opacity duration-200 ease-in-out`}
+              } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
             >
               Password too short! Min Length: 8
             </div>
 
             {/* Password Confirmation Input */}
-            <div class="input-group relative mx-4 mt-6">
-              <input
-                ref={newPasswordConfRef}
-                name="newPasswordConf"
-                onInput={handlePasswordConfChange}
-                type={showPasswordConfInput() ? "text" : "password"}
-                required
-                disabled={passwordChangeLoading()}
-                placeholder=" "
-                class="underlinedInput w-full bg-transparent pr-10"
-              />
-              <span class="bar"></span>
-              <label class="underlinedInputLabel">Password Confirmation</label>
+            <div class="-mt-4 flex justify-center">
+              <div class="input-group mx-4 flex">
+                <input
+                  ref={newPasswordConfRef}
+                  name="newPasswordConf"
+                  onInput={handlePasswordConfChange}
+                  type={showPasswordConfInput() ? "text" : "password"}
+                  required
+                  disabled={passwordChangeLoading()}
+                  placeholder=" "
+                  class="underlinedInput bg-transparent"
+                />
+                <span class="bar"></span>
+                <label class="underlinedInputLabel">
+                  Password Confirmation
+                </label>
+              </div>
               <button
                 type="button"
-                onClick={() =>
-                  setShowPasswordConfInput(!showPasswordConfInput())
-                }
-                class="absolute top-2 right-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                onClick={() => {
+                  setShowPasswordConfInput(!showPasswordConfInput());
+                  newPasswordConfRef?.focus();
+                }}
+                class="absolute mt-14 ml-60"
               >
-                <Show when={showPasswordConfInput()} fallback={<Eye />}>
-                  <EyeSlash />
+                <Show
+                  when={showPasswordConfInput()}
+                  fallback={
+                    <EyeSlash
+                      height={24}
+                      width={24}
+                      strokeWidth={1}
+                      class="stroke-zinc-900 dark:stroke-white"
+                    />
+                  }
+                >
+                  <Eye
+                    height={24}
+                    width={24}
+                    strokeWidth={1}
+                    class="stroke-zinc-900 dark:stroke-white"
+                  />
                 </Show>
               </button>
             </div>
@@ -262,7 +298,7 @@ export default function PasswordResetPage() {
                 newPasswordConfRef.value.length >= 6
                   ? ""
                   : "opacity-0 select-none"
-              } mt-2 text-center text-sm text-red-500 transition-opacity duration-200 ease-in-out`}
+              } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
             >
               Passwords do not match!
             </div>

@@ -1382,7 +1382,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Language Selector Dropdown */}
             <Show when={showLanguageSelector()}>
               <div
-                class="language-selector bg-mantle text-text border-surface2 fixed z-[110] max-h-64 w-48 overflow-y-auto rounded border shadow-lg"
+                class="language-selector bg-mantle text-text border-surface2 fixed z-110 max-h-64 w-48 overflow-y-auto rounded border shadow-lg"
                 style={{
                   top: `${languageSelectorPosition().top}px`,
                   left: `${languageSelectorPosition().left}px`
@@ -1405,7 +1405,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Table Grid Selector */}
             <Show when={showTableMenu()}>
               <div
-                class="table-menu fixed z-[110]"
+                class="table-menu fixed z-110"
                 style={{
                   top: `${tableMenuPosition().top}px`,
                   left: `${tableMenuPosition().left}px`
@@ -1418,7 +1418,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Mermaid Template Selector */}
             <Show when={showMermaidTemplates()}>
               <div
-                class="mermaid-menu bg-mantle text-text border-surface2 fixed z-[110] max-h-96 w-56 overflow-y-auto rounded border shadow-lg"
+                class="mermaid-menu bg-mantle text-text border-surface2 fixed z-110 max-h-96 w-56 overflow-y-auto rounded border shadow-lg"
                 style={{
                   top: `${mermaidMenuPosition().top}px`,
                   left: `${mermaidMenuPosition().left}px`
@@ -1897,11 +1897,11 @@ export default function TextEditor(props: TextEditorProps) {
       {/* Keyboard Help Modal */}
       <Show when={showKeyboardHelp()}>
         <div
-          class="bg-opacity-50 fixed inset-0 z-[110] flex items-center justify-center bg-black"
+          class="bg-opacity-50 fixed inset-0 z-110 flex items-center justify-center bg-black"
           onClick={() => setShowKeyboardHelp(false)}
         >
           <div
-            class="bg-base border-surface2 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-lg border p-6 shadow-2xl"
+            class="bg-base border-surface2 max-h-[80dvh] w-full max-w-2xl overflow-y-auto rounded-lg border p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

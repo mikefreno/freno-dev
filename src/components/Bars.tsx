@@ -39,6 +39,7 @@ interface ContributionDay {
 }
 
 export function RightBarContent() {
+  const { setLeftBarVisible } = useBars();
   const [githubCommits, setGithubCommits] = createSignal<GitCommit[]>([]);
   const [giteaCommits, setGiteaCommits] = createSignal<GitCommit[]>([]);
   const [githubActivity, setGithubActivity] = createSignal<ContributionDay[]>(
@@ -46,6 +47,12 @@ export function RightBarContent() {
   );
   const [giteaActivity, setGiteaActivity] = createSignal<ContributionDay[]>([]);
   const [loading, setLoading] = createSignal(true);
+
+  const handleLinkClick = () => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setLeftBarVisible(false);
+    }
+  };
 
   onMount(() => {
     // Fetch all data client-side only to avoid hydration mismatch
@@ -83,7 +90,9 @@ export function RightBarContent() {
       <Typewriter keepAlive={false} class="z-50 px-4 md:pt-4">
         <ul class="flex flex-col gap-4">
           <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-            <a href="/contact">Contact Me</a>
+            <a href="/contact" onClick={handleLinkClick}>
+              Contact Me
+            </a>
           </li>
           <li>
             <a
@@ -114,6 +123,7 @@ export function RightBarContent() {
           <li>
             <a
               href="/resume"
+              onClick={handleLinkClick}
               class="hover:text-subtext0 flex items-center gap-3 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105"
             >
               <span class="shaker rounded-full p-2">
@@ -176,6 +186,12 @@ export function LeftBar() {
 
   const [isMounted, setIsMounted] = createSignal(false);
   const [signOutLoading, setSignOutLoading] = createSignal(false);
+
+  const handleLinkClick = () => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setLeftBarVisible(false);
+    }
+  };
 
   const handleSignOut = async () => {
     setSignOutLoading(true);
@@ -337,7 +353,9 @@ export function LeftBar() {
       <div class="flex h-full flex-col overflow-y-auto">
         <Typewriter speed={10} keepAlive={10000} class="z-50 pr-8 pl-4">
           <h3 class="hover:text-subtext0 w-fit pt-6 text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
-            <a href="/">{formatDomainName(env.VITE_DOMAIN)}</a>
+            <a href="/" onClick={handleLinkClick}>
+              {formatDomainName(env.VITE_DOMAIN)}
+            </a>
           </h3>
         </Typewriter>
 
@@ -368,6 +386,7 @@ export function LeftBar() {
                   {(post) => (
                     <a
                       href={`/blog/${post.title}`}
+                      onClick={handleLinkClick}
                       class="hover:text-subtext0 block transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
                     >
                       <Typewriter class="flex flex-col" keepAlive={false}>
@@ -402,17 +421,25 @@ export function LeftBar() {
             <Typewriter keepAlive={false}>
               <ul class="flex flex-col gap-4 py-6">
                 <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="/">Home</a>
+                  <a href="/" onClick={handleLinkClick}>
+                    Home
+                  </a>
                 </li>
                 <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <a href="/blog">Blog</a>
+                  <a href="/blog" onClick={handleLinkClick}>
+                    Blog
+                  </a>
                 </li>
                 <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
                   <Show
                     when={isMounted() && userInfo()?.isAuthenticated}
-                    fallback={<a href="/login">Login</a>}
+                    fallback={
+                      <a href="/login" onClick={handleLinkClick}>
+                        Login
+                      </a>
+                    }
                   >
-                    <a href="/account">
+                    <a href="/account" onClick={handleLinkClick}>
                       Account
                       <Show when={userInfo()?.email}>
                         <span class="text-subtext0 text-sm font-normal">

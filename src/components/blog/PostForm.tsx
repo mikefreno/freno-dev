@@ -52,6 +52,9 @@ export default function PostForm(props: PostFormProps) {
     props.initialData?.body
   );
   const [hasSaved, setHasSaved] = createSignal(props.mode === "edit");
+  const [createdPostId, setCreatedPostId] = createSignal<number | undefined>(
+    props.postId
+  );
 
   // Mark initial load as complete after data is loaded (for edit mode)
   createEffect(() => {
@@ -75,12 +78,13 @@ export default function PostForm(props: PostFormProps) {
           )) as string;
         }
 
-        if (props.mode === "edit") {
+        if (props.mode === "edit" || createdPostId()) {
+          // Update existing post (either in edit mode or if already created)
           await api.database.updatePost.mutate({
-            id: props.postId!,
+            id: createdPostId() || props.postId!,
             title: titleVal.replaceAll(" ", "_"),
             subtitle: subtitle() || "",
-            body: body() || "",
+            body: body() || "Hello, World!",
             banner_photo:
               bannerImageKey !== ""
                 ? bannerImageKey
@@ -92,20 +96,19 @@ export default function PostForm(props: PostFormProps) {
             author_id: props.userID
           });
         } else {
-          // Create mode: only save once
-          if (!hasSaved()) {
-            await api.database.createPost.mutate({
-              category: "blog",
-              title: titleVal.replaceAll(" ", "_"),
-              subtitle: subtitle() || null,
-              body: body() || null,
-              banner_photo: bannerImageKey !== "" ? bannerImageKey : null,
-              published: published(),
-              tags: tags().length > 0 ? tags() : null,
-              author_id: props.userID
-            });
-            setHasSaved(true);
-          }
+          // Create mode: only save once (first autosave)
+          const result = await api.database.createPost.mutate({
+            category: "blog",
+            title: titleVal.replaceAll(" ", "_"),
+            subtitle: subtitle() || null,
+            body: body() || "Hello, World!",
+            banner_photo: bannerImageKey !== "" ? bannerImageKey : null,
+            published: published(),
+            tags: tags().length > 0 ? tags() : null,
+            author_id: props.userID
+          });
+          setCreatedPostId(result.data as number);
+          setHasSaved(true);
         }
 
         showAutoSaveTrigger();
@@ -216,12 +219,13 @@ export default function PostForm(props: PostFormProps) {
         )) as string;
       }
 
-      if (props.mode === "edit") {
+      if (props.mode === "edit" || createdPostId()) {
+        // Update existing post (either in edit mode or if autosave created it)
         await api.database.updatePost.mutate({
-          id: props.postId!,
+          id: createdPostId() || props.postId!,
           title: title().replaceAll(" ", "_"),
           subtitle: subtitle() || null,
-          body: body() || null,
+          body: body() || "Hello, World!",
           banner_photo:
             bannerImageKey !== ""
               ? bannerImageKey
@@ -233,16 +237,18 @@ export default function PostForm(props: PostFormProps) {
           author_id: props.userID
         });
       } else {
-        await api.database.createPost.mutate({
+        // Create new post
+        const result = await api.database.createPost.mutate({
           category: "blog",
           title: title().replaceAll(" ", "_"),
           subtitle: subtitle() || null,
-          body: body() || null,
+          body: body() || "Hello, World!",
           banner_photo: bannerImageKey !== "" ? bannerImageKey : null,
           published: published(),
           tags: tags().length > 0 ? tags() : null,
           author_id: props.userID
         });
+        setCreatedPostId(result.data as number);
       }
 
       navigate(`/blog/${encodeURIComponent(title().replaceAll(" ", "_"))}`);

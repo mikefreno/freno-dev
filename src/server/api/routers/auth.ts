@@ -600,8 +600,8 @@ export const authRouter = createTRPCRouter({
 
       const conn = ConnectionFactory();
       const res = await conn.execute({
-        sql: "SELECT * FROM User WHERE email = ? AND provider = ?",
-        args: [email, "email"]
+        sql: "SELECT * FROM User WHERE email = ?",
+        args: [email]
       });
 
       if (res.rows.length === 0) {
@@ -626,6 +626,17 @@ export const authRouter = createTRPCRouter({
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "no-match"
+        });
+      }
+
+      // If provider is unknown/null, update it to "email" since they're logging in with password
+      if (
+        !user.provider ||
+        !["email", "google", "github", "apple"].includes(user.provider)
+      ) {
+        await conn.execute({
+          sql: "UPDATE User SET provider = ? WHERE id = ?",
+          args: ["email", user.id]
         });
       }
 
@@ -940,10 +951,37 @@ export const authRouter = createTRPCRouter({
         const conn = ConnectionFactory();
         const passwordHash = await hashPassword(newPassword);
 
-        await conn.execute({
-          sql: "UPDATE User SET password_hash = ? WHERE id = ?",
-          args: [passwordHash, payload.id]
+        // Get user to check current provider
+        const userRes = await conn.execute({
+          sql: "SELECT provider FROM User WHERE id = ?",
+          args: [payload.id]
         });
+
+        if (userRes.rows.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found"
+          });
+        }
+
+        const currentProvider = (userRes.rows[0] as any).provider;
+
+        // Only update provider to "email" if it's null, undefined, or not a known OAuth provider
+        if (
+          !currentProvider ||
+          !["google", "github", "apple"].includes(currentProvider)
+        ) {
+          await conn.execute({
+            sql: "UPDATE User SET password_hash = ?, provider = ? WHERE id = ?",
+            args: [passwordHash, "email", payload.id]
+          });
+        } else {
+          // Keep existing OAuth provider, just update password
+          await conn.execute({
+            sql: "UPDATE User SET password_hash = ? WHERE id = ?",
+            args: [passwordHash, payload.id]
+          });
+        }
 
         // Clear any session cookies
         setCookie(ctx.event.nativeEvent, "emailToken", "", {
