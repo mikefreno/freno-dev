@@ -14,6 +14,7 @@ import { TerminalSplash } from "./components/TerminalSplash";
 import { MetaProvider } from "@solidjs/meta";
 import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
 import { BarsProvider, useBars } from "./context/bars";
+import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 
 function AppLayout(props: { children: any }) {
   const {
@@ -28,15 +29,16 @@ function AppLayout(props: { children: any }) {
     barsInitialized
   } = useBars();
 
+  const windowWidth = createWindowWidth();
   let lastScrollY = 0;
   const SCROLL_THRESHOLD = 100;
 
   createEffect(() => {
     const handleResize = () => {
-      const isMobile = window.innerWidth < 768; // md breakpoint
+      const currentIsMobile = isMobile(windowWidth());
 
       // Show bars when switching to desktop
-      if (!isMobile) {
+      if (!currentIsMobile) {
         setLeftBarVisible(true);
         setRightBarVisible(true);
       }
@@ -48,10 +50,6 @@ function AppLayout(props: { children: any }) {
 
     // Call immediately and whenever dependencies change
     handleResize();
-
-    window.addEventListener("resize", handleResize);
-
-    return () => window.removeEventListener("resize", handleResize);
   });
 
   // Recalculate when bar sizes change (visibility or actual resize)
@@ -65,9 +63,9 @@ function AppLayout(props: { children: any }) {
   onMount(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const isMobile = window.innerWidth < 768; // md breakpoint
+      const currentIsMobile = isMobile(windowWidth());
 
-      if (isMobile && currentScrollY > SCROLL_THRESHOLD) {
+      if (currentIsMobile && currentScrollY > SCROLL_THRESHOLD) {
         // Scrolling down past threshold - hide left bar on mobile
         if (currentScrollY > lastScrollY) {
           setLeftBarVisible(false);
@@ -87,9 +85,9 @@ function AppLayout(props: { children: any }) {
   // ESC key to close sidebars on mobile
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isMobile = window.innerWidth < 768; // md breakpoint
+      const currentIsMobile = isMobile(windowWidth());
 
-      if (e.key === "Escape" && isMobile) {
+      if (e.key === "Escape" && currentIsMobile) {
         if (leftBarVisible()) {
           setLeftBarVisible(false);
         }
@@ -122,12 +120,12 @@ function AppLayout(props: { children: any }) {
       const touchEndY = e.changedTouches[0].clientY;
       const deltaX = touchEndX - touchStartX;
       const deltaY = touchEndY - touchStartY;
-      const isMobile = window.innerWidth < 768; // md breakpoint
+      const currentIsMobile = isMobile(windowWidth());
 
       // Only trigger if horizontal swipe is dominant
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
         // Mobile: Only left bar
-        if (isMobile) {
+        if (currentIsMobile) {
           // Swipe right anywhere - reveal left bar
           if (deltaX > SWIPE_THRESHOLD) {
             setLeftBarVisible(true);
@@ -160,10 +158,10 @@ function AppLayout(props: { children: any }) {
   });
 
   const handleCenterTapRelease = (e: MouseEvent | TouchEvent) => {
-    const isMobile = window.innerWidth < 768;
+    const currentIsMobile = isMobile(windowWidth());
 
     // Only hide left bar on mobile when it's visible
-    if (isMobile && leftBarVisible()) {
+    if (currentIsMobile && leftBarVisible()) {
       const target = e.target as HTMLElement;
       const isInteractive = target.closest(
         "a, button, input, select, textarea, [onclick]"

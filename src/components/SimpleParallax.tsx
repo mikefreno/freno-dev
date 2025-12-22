@@ -1,5 +1,15 @@
-import { createSignal, createEffect, onMount, onCleanup, children as resolveChildren, type ParentComponent, createMemo, For } from "solid-js";
+import {
+  createSignal,
+  createEffect,
+  onMount,
+  onCleanup,
+  children as resolveChildren,
+  type ParentComponent,
+  createMemo,
+  For
+} from "solid-js";
 import { animate } from "motion";
+import { createWindowWidth } from "~/lib/resize-utils";
 
 type ParallaxBackground = {
   imageSet: { [key: number]: string };
@@ -21,11 +31,17 @@ type ParallaxLayerProps = {
 
 function ParallaxLayer(props: ParallaxLayerProps) {
   let containerRef: HTMLDivElement | undefined;
-  
-  const layerDepthFactor = createMemo(() => props.layer / (Object.keys(props.caveParallax.imageSet).length - 1));
-  const layerVerticalOffset = createMemo(() => props.verticalOffsetPixels * layerDepthFactor());
+
+  const layerDepthFactor = createMemo(
+    () => props.layer / (Object.keys(props.caveParallax.imageSet).length - 1)
+  );
+  const layerVerticalOffset = createMemo(
+    () => props.verticalOffsetPixels * layerDepthFactor()
+  );
   const speed = createMemo(() => (120 - props.layer * 10) * 1000);
-  const targetX = createMemo(() => props.direction * -props.caveParallax.size.width * props.imagesNeeded);
+  const targetX = createMemo(
+    () => props.direction * -props.caveParallax.size.width * props.imagesNeeded
+  );
 
   const containerStyle = createMemo(() => ({
     width: `${props.caveParallax.size.width * props.imagesNeeded * 3}px`,
@@ -33,19 +49,19 @@ function ParallaxLayer(props: ParallaxLayerProps) {
     left: `${(props.dimensions.width - props.scaledWidth) / 2}px`,
     top: `${(props.dimensions.height - props.scaledHeight) / 2 + layerVerticalOffset()}px`,
     "transform-origin": "center center",
-    "will-change": "transform",
+    "will-change": "transform"
   }));
 
   // Set up animation when component mounts or when direction/speed changes
   createEffect(() => {
     if (!containerRef) return;
-    
+
     const target = targetX();
     const duration = speed() / 1000;
-    
+
     const controls = animate(
       containerRef,
-      { 
+      {
         transform: [
           `translateX(0px) scale(${props.scale})`,
           `translateX(${target}px) scale(${props.scale})`
@@ -54,7 +70,7 @@ function ParallaxLayer(props: ParallaxLayerProps) {
       {
         duration,
         easing: "linear",
-        repeat: Infinity,
+        repeat: Infinity
       }
     );
 
@@ -68,7 +84,7 @@ function ParallaxLayer(props: ParallaxLayerProps) {
         style={{
           left: `${groupOffset * props.caveParallax.size.width * props.imagesNeeded}px`,
           width: `${props.caveParallax.size.width * props.imagesNeeded}px`,
-          height: `${props.caveParallax.size.height}px`,
+          height: `${props.caveParallax.size.height}px`
         }}
       >
         {Array.from({ length: props.imagesNeeded }).map((_, index) => (
@@ -77,7 +93,7 @@ function ParallaxLayer(props: ParallaxLayerProps) {
             style={{
               width: `${props.caveParallax.size.width}px`,
               height: `${props.caveParallax.size.height}px`,
-              left: `${index * props.caveParallax.size.width}px`,
+              left: `${index * props.caveParallax.size.width}px`
             }}
           >
             <img
@@ -86,7 +102,12 @@ function ParallaxLayer(props: ParallaxLayerProps) {
               width={props.caveParallax.size.width}
               height={props.caveParallax.size.height}
               style={{ "object-fit": "cover" }}
-              loading={props.layer > Object.keys(props.caveParallax.imageSet).length - 3 ? "eager" : "lazy"}
+              loading={
+                props.layer >
+                Object.keys(props.caveParallax.imageSet).length - 3
+                  ? "eager"
+                  : "lazy"
+              }
             />
           </div>
         ))}
@@ -95,11 +116,7 @@ function ParallaxLayer(props: ParallaxLayerProps) {
   });
 
   return (
-    <div
-      ref={containerRef}
-      class="absolute"
-      style={containerStyle()}
-    >
+    <div ref={containerRef} class="absolute" style={containerStyle()}>
       {imageGroups()}
     </div>
   );
@@ -107,8 +124,16 @@ function ParallaxLayer(props: ParallaxLayerProps) {
 
 const SimpleParallax: ParentComponent = (props) => {
   let containerRef: HTMLDivElement | undefined;
-  const [dimensions, setDimensions] = createSignal({ width: 0, height: 0 });
+  const windowWidth = createWindowWidth(100);
+  const [windowHeight, setWindowHeight] = createSignal(
+    typeof window !== "undefined" ? window.innerHeight : 800
+  );
   const [direction, setDirection] = createSignal(1);
+
+  const dimensions = createMemo(() => ({
+    width: windowWidth(),
+    height: windowHeight()
+  }));
 
   const caveParallax = createMemo<ParallaxBackground>(() => ({
     imageSet: {
@@ -119,33 +144,27 @@ const SimpleParallax: ParentComponent = (props) => {
       4: "/Cave/4.png",
       5: "/Cave/5.png",
       6: "/Cave/6.png",
-      7: "/Cave/7.png",
+      7: "/Cave/7.png"
     },
     size: { width: 384, height: 216 },
-    verticalOffset: 0.4,
+    verticalOffset: 0.4
   }));
 
-  const layerCount = createMemo(() => Object.keys(caveParallax().imageSet).length - 1);
+  const layerCount = createMemo(
+    () => Object.keys(caveParallax().imageSet).length - 1
+  );
   const imagesNeeded = 3;
-
-  const updateDimensions = () => {
-    if (containerRef) {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    }
-  };
 
   onMount(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
 
     const handleResize = () => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(updateDimensions, 100);
+      timeoutId = setTimeout(() => {
+        setWindowHeight(window.innerHeight);
+      }, 100);
     };
 
-    updateDimensions();
     window.addEventListener("resize", handleResize);
 
     const intervalId = setInterval(() => {
@@ -166,7 +185,7 @@ const SimpleParallax: ParentComponent = (props) => {
         scale: 0,
         scaledWidth: 0,
         scaledHeight: 0,
-        verticalOffsetPixels: 0,
+        verticalOffsetPixels: 0
       };
     }
 
@@ -179,7 +198,7 @@ const SimpleParallax: ParentComponent = (props) => {
       scale,
       scaledWidth: cave.size.width * scale,
       scaledHeight: cave.size.height * scale,
-      verticalOffsetPixels: cave.verticalOffset * dims.height,
+      verticalOffsetPixels: cave.verticalOffset * dims.height
     };
   });
 
@@ -214,13 +233,13 @@ const SimpleParallax: ParentComponent = (props) => {
   return (
     <div
       ref={containerRef}
-      class="fixed inset-0 w-screen h-screen overflow-hidden"
+      class="fixed inset-0 h-screen w-screen overflow-hidden"
     >
       <div class="absolute inset-0 bg-black"></div>
       <div
         class="absolute inset-0"
         style={{
-          "margin-top": `${calculations().verticalOffsetPixels}px`,
+          "margin-top": `${calculations().verticalOffsetPixels}px`
         }}
       >
         {parallaxLayers()}

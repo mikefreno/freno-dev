@@ -1,4 +1,5 @@
 import { Title, Meta } from "@solidjs/meta";
+import { DarkModeToggle } from "~/components/DarkModeToggle";
 import { Typewriter } from "~/components/Typewriter";
 
 export default function Home() {
@@ -7,10 +8,10 @@ export default function Home() {
       <Title>Home | Michael Freno</Title>
       <Meta
         name="description"
-        content="Michael Freno - Software Engineer based in Brooklyn, NY. Passionate about dev tooling, game development, and open source software."
+        content="Michael Freno - Software Engineer based in Brooklyn, NY"
       />
 
-      <main class="flex h-full flex-col gap-8 text-xl">
+      <main class="flex h-full flex-col gap-8 px-4 text-xl">
         <div class="flex-1">
           <Typewriter speed={30} keepAlive={2000}>
             <div class="text-4xl">Hey!</div>
@@ -147,9 +148,12 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div class="max-w-3/4 pt-8 md:max-w-1/2">
-            And if you love the color schemes of this site (which of course you
-            do), you can see{" "}
+          <Typewriter speed={160} class="max-w-3/4 pt-8 md:max-w-1/2">
+            And if you love the color schemes of this site
+            <div class="mx-auto w-fit">
+              <DarkModeToggle />
+            </div>
+            (which of course you do), you can see{" "}
             <a
               href="https://github.com/mikefreno/dots/blob/master/mac/nvim/lua/colors.lua"
               class="text-blue hover-underline-animation"
@@ -159,7 +163,7 @@ export default function Home() {
             - and also see the rest of my various dot files idk. There's a macos
             and arch linux rice in there if you're into that kinda thing and a
             home server setup too. Which I will write about soon™.
-          </div>
+          </Typewriter>
         </div>
 
         <div class="flex flex-col items-end gap-4 pr-4">

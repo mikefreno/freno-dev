@@ -12,7 +12,7 @@ import type {
   CommentReaction,
   UserPublicData
 } from "~/types/comment";
-import { debounce } from "es-toolkit";
+import { createWindowWidth } from "~/lib/resize-utils";
 import UserDefaultImage from "~/components/icons/UserDefaultImage";
 import ReplyIcon from "~/components/icons/ReplyIcon";
 import TrashIcon from "~/components/icons/TrashIcon";
@@ -32,7 +32,7 @@ export default function CommentBlock(props: CommentBlockProps) {
   const [replyBoxShowing, setReplyBoxShowing] = createSignal(false);
   const [toggleHeight, setToggleHeight] = createSignal(0);
   const [reactions, setReactions] = createSignal<CommentReaction[]>([]);
-  const [windowWidth, setWindowWidth] = createSignal(0);
+  const windowWidth = createWindowWidth(200);
   const [deletionLoading, setDeletionLoading] = createSignal(false);
   const [userData, setUserData] = createSignal<UserPublicData | null>(null);
 
@@ -43,19 +43,6 @@ export default function CommentBlock(props: CommentBlockProps) {
   // Auto-collapse at level 4+
   createEffect(() => {
     setCommentCollapsed(props.level >= 4);
-  });
-
-  // Window resize handler
-  onMount(() => {
-    const handleResize = debounce(() => {
-      setWindowWidth(window.innerWidth);
-    }, 200);
-
-    window.addEventListener("resize", handleResize);
-
-    onCleanup(() => {
-      window.removeEventListener("resize", handleResize);
-    });
   });
 
   // Find user data from comment map
