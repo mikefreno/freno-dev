@@ -1,10 +1,12 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { ConnectionFactory } from "~/server/utils";
-import { withCache } from "~/server/cache";
+import { withCacheAndStale } from "~/server/cache";
+
+const BLOG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export const blogRouter = createTRPCRouter({
   getRecentPosts: publicProcedure.query(async () => {
-    return withCache("recent-posts", 10 * 60 * 1000, async () => {
+    return withCacheAndStale("blog-recent-posts", BLOG_CACHE_TTL, async () => {
       // Get database connection
       const conn = ConnectionFactory();
 
@@ -39,11 +41,14 @@ export const blogRouter = createTRPCRouter({
   getPosts: publicProcedure.query(async ({ ctx }) => {
     const privilegeLevel = ctx.privilegeLevel;
 
-    return withCache(`posts-${privilegeLevel}`, 5 * 60 * 1000, async () => {
-      const conn = ConnectionFactory();
+    return withCacheAndStale(
+      `blog-posts-${privilegeLevel}`,
+      BLOG_CACHE_TTL,
+      async () => {
+        const conn = ConnectionFactory();
 
-      // Fetch all posts with aggregated data
-      let postsQuery = `
+        // Fetch all posts with aggregated data
+        let postsQuery = `
         SELECT 
           p.id,
           p.title,
@@ -63,17 +68,17 @@ export const blogRouter = createTRPCRouter({
         LEFT JOIN Comment c ON p.id = c.post_id
       `;
 
-      if (privilegeLevel !== "admin") {
-        postsQuery += ` WHERE p.published = TRUE`;
-      }
+        if (privilegeLevel !== "admin") {
+          postsQuery += ` WHERE p.published = TRUE`;
+        }
 
-      postsQuery += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments`;
-      postsQuery += ` ORDER BY p.date ASC;`;
+        postsQuery += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments`;
+        postsQuery += ` ORDER BY p.date ASC;`;
 
-      const postsResult = await conn.execute(postsQuery);
-      const posts = postsResult.rows;
+        const postsResult = await conn.execute(postsQuery);
+        const posts = postsResult.rows;
 
-      const tagsQuery = `
+        const tagsQuery = `
         SELECT t.value, t.post_id
         FROM Tag t
         JOIN Post p ON t.post_id = p.id
@@ -81,16 +86,17 @@ export const blogRouter = createTRPCRouter({
         ORDER BY t.value ASC
       `;
 
-      const tagsResult = await conn.execute(tagsQuery);
-      const tags = tagsResult.rows;
+        const tagsResult = await conn.execute(tagsQuery);
+        const tags = tagsResult.rows;
 
-      const tagMap: Record<string, number> = {};
-      tags.forEach((tag: any) => {
-        const key = `${tag.value}`;
-        tagMap[key] = (tagMap[key] || 0) + 1;
-      });
+        const tagMap: Record<string, number> = {};
+        tags.forEach((tag: any) => {
+          const key = `${tag.value}`;
+          tagMap[key] = (tagMap[key] || 0) + 1;
+        });
 
-      return { posts, tags, tagMap, privilegeLevel };
-    });
+        return { posts, tags, tagMap, privilegeLevel };
+      }
+    );
   })
 });

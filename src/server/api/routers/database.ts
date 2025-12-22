@@ -7,6 +7,9 @@ import { z } from "zod";
 import { ConnectionFactory } from "~/server/utils";
 import { TRPCError } from "@trpc/server";
 import { env } from "~/env/server";
+import { cache, withCacheAndStale } from "~/server/cache";
+
+const BLOG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export const databaseRouter = createTRPCRouter({
   // ============================================================
@@ -290,40 +293,46 @@ export const databaseRouter = createTRPCRouter({
       })
     )
     .query(async ({ input }) => {
-      try {
-        const conn = ConnectionFactory();
-        // Single query with JOIN to get post and tags in one go
-        const query = `
-           SELECT p.*, t.value as tag_value 
-           FROM Post p 
-           LEFT JOIN Tag t ON p.id = t.post_id 
-           WHERE p.id = ?
-         `;
-        const results = await conn.execute({
-          sql: query,
-          args: [input.id]
-        });
+      return withCacheAndStale(
+        `blog-post-id-${input.id}`,
+        BLOG_CACHE_TTL,
+        async () => {
+          try {
+            const conn = ConnectionFactory();
+            // Single query with JOIN to get post and tags in one go
+            const query = `
+               SELECT p.*, t.value as tag_value 
+               FROM Post p 
+               LEFT JOIN Tag t ON p.id = t.post_id 
+               WHERE p.id = ?
+             `;
+            const results = await conn.execute({
+              sql: query,
+              args: [input.id]
+            });
 
-        if (results.rows[0]) {
-          // Group tags by post ID
-          const post = results.rows[0];
-          const tags = results.rows
-            .filter((row) => row.tag_value)
-            .map((row) => row.tag_value);
+            if (results.rows[0]) {
+              // Group tags by post ID
+              const post = results.rows[0];
+              const tags = results.rows
+                .filter((row) => row.tag_value)
+                .map((row) => row.tag_value);
 
-          return {
-            post,
-            tags
-          };
-        } else {
-          return { post: null, tags: [] };
+              return {
+                post,
+                tags
+              };
+            } else {
+              return { post: null, tags: [] };
+            }
+          } catch (error) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to fetch post by ID"
+            });
+          }
         }
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch post by ID"
-        });
-      }
+      );
     }),
 
   getPostByTitle: publicProcedure
@@ -334,47 +343,53 @@ export const databaseRouter = createTRPCRouter({
       })
     )
     .query(async ({ input, ctx }) => {
-      try {
-        const conn = ConnectionFactory();
+      return withCacheAndStale(
+        `blog-post-title-${input.title}`,
+        BLOG_CACHE_TTL,
+        async () => {
+          try {
+            const conn = ConnectionFactory();
 
-        // Get post by title with JOINs to get all related data in one query
-        const postQuery = `
-           SELECT 
-             p.*,
-             COUNT(DISTINCT c.id) as comment_count,
-             COUNT(DISTINCT pl.user_id) as like_count,
-             GROUP_CONCAT(t.value) as tags
-           FROM Post p
-           LEFT JOIN Comment c ON p.id = c.post_id
-           LEFT JOIN PostLike pl ON p.id = pl.post_id
-           LEFT JOIN Tag t ON p.id = t.post_id
-           WHERE p.title = ? AND p.category = ? AND p.published = ?
-           GROUP BY p.id
-         `;
-        const postResults = await conn.execute({
-          sql: postQuery,
-          args: [input.title, input.category, true]
-        });
+            // Get post by title with JOINs to get all related data in one query
+            const postQuery = `
+               SELECT 
+                 p.*,
+                 COUNT(DISTINCT c.id) as comment_count,
+                 COUNT(DISTINCT pl.user_id) as like_count,
+                 GROUP_CONCAT(t.value) as tags
+               FROM Post p
+               LEFT JOIN Comment c ON p.id = c.post_id
+               LEFT JOIN PostLike pl ON p.id = pl.post_id
+               LEFT JOIN Tag t ON p.id = t.post_id
+               WHERE p.title = ? AND p.category = ? AND p.published = ?
+               GROUP BY p.id
+             `;
+            const postResults = await conn.execute({
+              sql: postQuery,
+              args: [input.title, input.category, true]
+            });
 
-        if (!postResults.rows[0]) {
-          return null;
+            if (!postResults.rows[0]) {
+              return null;
+            }
+
+            const postRow = postResults.rows[0];
+
+            // Return structured data with proper formatting
+            return {
+              post: postRow,
+              comments: [], // Comments are not included in this optimized query - would need separate call if needed
+              likes: [], // Likes are not included in this optimized query - would need separate call if needed
+              tags: postRow.tags ? postRow.tags.split(",") : []
+            };
+          } catch (error) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to fetch post by title"
+            });
+          }
         }
-
-        const postRow = postResults.rows[0];
-
-        // Return structured data with proper formatting
-        return {
-          post: postRow,
-          comments: [], // Comments are not included in this optimized query - would need separate call if needed
-          likes: [], // Likes are not included in this optimized query - would need separate call if needed
-          tags: postRow.tags ? postRow.tags.split(",") : []
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch post by title"
-        });
-      }
+      );
     }),
 
   createPost: publicProcedure
@@ -421,6 +436,9 @@ export const databaseRouter = createTRPCRouter({
           tagQuery += values.join(", ");
           await conn.execute(tagQuery);
         }
+
+        // Invalidate blog cache
+        cache.deleteByPrefix("blog-");
 
         return { data: results.lastInsertRowid };
       } catch (error) {
@@ -509,6 +527,9 @@ export const databaseRouter = createTRPCRouter({
           await conn.execute(tagQuery);
         }
 
+        // Invalidate blog cache
+        cache.deleteByPrefix("blog-");
+
         return { data: results.lastInsertRowid };
       } catch (error) {
         console.error(error);
@@ -548,6 +569,9 @@ export const databaseRouter = createTRPCRouter({
           sql: "DELETE FROM Post WHERE id = ?",
           args: [input.id]
         });
+
+        // Invalidate blog cache
+        cache.deleteByPrefix("blog-");
 
         return { success: true };
       } catch (error) {

@@ -48,6 +48,17 @@ class SimpleCache {
   delete(key: string): void {
     this.cache.delete(key);
   }
+
+  /**
+   * Delete all keys starting with a prefix
+   */
+  deleteByPrefix(prefix: string): void {
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
+      }
+    }
+  }
 }
 
 export const cache = new SimpleCache();
