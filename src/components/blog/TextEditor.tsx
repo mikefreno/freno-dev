@@ -381,6 +381,8 @@ export default function TextEditor(props: TextEditorProps) {
   const [showKeyboardHelp, setShowKeyboardHelp] = createSignal(false);
 
   const [isFullscreen, setIsFullscreen] = createSignal(false);
+  const [keyboardVisible, setKeyboardVisible] = createSignal(false);
+  const [keyboardHeight, setKeyboardHeight] = createSignal(0);
 
   const editor = createTiptapEditor(() => ({
     element: editorRef,
@@ -1040,6 +1042,36 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
+  // Detect mobile keyboard visibility
+  createEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const viewport = window.visualViewport;
+    const initialHeight = viewport.height;
+
+    const handleResize = () => {
+      const currentHeight = viewport.height;
+      const heightDiff = initialHeight - currentHeight;
+
+      // If viewport height decreased by more than 150px, keyboard is likely open
+      if (heightDiff > 150) {
+        setKeyboardVisible(true);
+        setKeyboardHeight(heightDiff);
+      } else {
+        setKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    };
+
+    viewport.addEventListener("resize", handleResize);
+    viewport.addEventListener("scroll", handleResize);
+
+    return () => {
+      viewport.removeEventListener("resize", handleResize);
+      viewport.removeEventListener("scroll", handleResize);
+    };
+  });
+
   // Table Grid Selector Component
   const TableGridSelector = () => {
     const [hoverCell, setHoverCell] = createSignal({ row: 0, col: 0 });
@@ -1096,7 +1128,7 @@ export default function TextEditor(props: TextEditorProps) {
       ref={containerRef}
       class="border-surface2 text-text w-full max-w-full overflow-hidden rounded-md border px-4 py-2"
       classList={{
-        "fixed inset-0 z-[100] m-0 h-screen max-h-screen rounded-none":
+        "fixed inset-0 z-[100] m-0 h-screen max-h-screen rounded-none flex flex-col":
           isFullscreen(),
         "bg-base": isFullscreen()
       }}
@@ -1443,443 +1475,461 @@ export default function TextEditor(props: TextEditorProps) {
               </div>
             </Show>
 
-            <div class="border-surface2 mb-2 flex flex-wrap gap-1 border-b pb-2">
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleHeading({ level: 1 }).run()
-                }
-                class={`${
-                  instance().isActive("heading", { level: 1 })
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Heading 1"
-              >
-                H1
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleHeading({ level: 2 }).run()
-                }
-                class={`${
-                  instance().isActive("heading", { level: 2 })
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Heading 2"
-              >
-                H2
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleHeading({ level: 3 }).run()
-                }
-                class={`${
-                  instance().isActive("heading", { level: 3 })
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Heading 3"
-              >
-                H3
-              </button>
-              <div class="border-surface2 mx-1 border-l"></div>
-              <button
-                type="button"
-                onClick={() => instance().chain().focus().toggleBold().run()}
-                class={`${
-                  instance().isActive("bold")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Bold"
-              >
-                <strong>B</strong>
-              </button>
-              <button
-                type="button"
-                onClick={() => instance().chain().focus().toggleItalic().run()}
-                class={`${
-                  instance().isActive("italic")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Italic"
-              >
-                <em>I</em>
-              </button>
-              <button
-                type="button"
-                onClick={() => instance().chain().focus().toggleStrike().run()}
-                class={`${
-                  instance().isActive("strike")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Strikethrough"
-              >
-                <s>S</s>
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleSuperscript().run()
-                }
-                class={`${
-                  instance().isActive("superscript")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Superscript (for references)"
-              >
-                X<sup class="text-[0.6em]">n</sup>
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleSubscript().run()
-                }
-                class={`${
-                  instance().isActive("subscript")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Subscript"
-              >
-                X<sub class="text-[0.6em]">n</sub>
-              </button>
-              <div class="border-surface2 mx-1 border-l"></div>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleBulletList().run()
-                }
-                class={`${
-                  instance().isActive("bulletList")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Bullet List"
-              >
-                • List
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleOrderedList().run()
-                }
-                class={`${
-                  instance().isActive("orderedList")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Ordered List"
-              >
-                1. List
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleTaskList().run()
-                }
-                class={`${
-                  instance().isActive("taskList")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Task List"
-              >
-                ☑ Tasks
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().toggleBlockquote().run()
-                }
-                class={`${
-                  instance().isActive("blockquote")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Blockquote"
-              >
-                " Quote
-              </button>
-              <button
-                type="button"
-                onClick={insertCollapsibleSection}
-                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                title="Insert Collapsible Section"
-              >
-                ▼ Details
-              </button>
-              <div class="border-surface2 mx-1 border-l"></div>
-
-              {/* Text Alignment */}
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().setTextAlign("left").run()
-                }
-                class={`${
-                  instance().isActive({ textAlign: "left" })
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Align Left"
-              >
-                ⬅
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().setTextAlign("center").run()
-                }
-                class={`${
-                  instance().isActive({ textAlign: "center" })
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Align Center"
-              >
-                ↔
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().setTextAlign("right").run()
-                }
-                class={`${
-                  instance().isActive({ textAlign: "right" })
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Align Right"
-              >
-                ➡
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().setTextAlign("justify").run()
-                }
-                class={`${
-                  instance().isActive({ textAlign: "justify" })
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Justify"
-              >
-                ⬌
-              </button>
-              <div class="border-surface2 mx-1 border-l"></div>
-              <button
-                type="button"
-                onClick={showLanguagePicker}
-                data-language-picker-trigger
-                class={`${
-                  instance().isActive("codeBlock")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Code Block"
-              >
-                {"</>"}
-              </button>
-              <button
-                type="button"
-                onClick={setLink}
-                class={`${
-                  instance().isActive("link")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Add Link"
-              >
-                🔗 Link
-              </button>
-              <button
-                type="button"
-                onClick={addImage}
-                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                title="Add Image"
-              >
-                🖼 Image
-              </button>
-              <button
-                type="button"
-                onClick={addIframe}
-                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                title="Add Iframe"
-              >
-                📺 Iframe
-              </button>
-              <button
-                type="button"
-                onClick={showTableInserter}
-                data-table-trigger
-                class={`${
-                  instance().isActive("table")
-                    ? "bg-surface2"
-                    : "hover:bg-surface1"
-                } rounded px-2 py-1 text-xs`}
-                title="Insert Table"
-              >
-                ⊞ Table
-              </button>
-              <button
-                type="button"
-                onClick={showMermaidSelector}
-                data-mermaid-trigger
-                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                title="Insert Diagram"
-              >
-                📊 Diagram
-              </button>
-              <div class="border-surface2 mx-1 border-l"></div>
-              <button
-                type="button"
-                onClick={() =>
-                  instance().chain().focus().setHorizontalRule().run()
-                }
-                class="bg-surface0 hover:bg-surface1 rounded px-3 py-1 text-xs"
-                title="Horizontal Rule"
-              >
-                ━━ HR
-              </button>
-              <div class="border-surface2 mx-1 border-l"></div>
-              <button
-                type="button"
-                onClick={toggleFullscreen}
-                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                title={
-                  isFullscreen() ? "Exit Fullscreen (ESC)" : "Enter Fullscreen"
-                }
-              >
-                {isFullscreen() ? "⇲ Exit" : "⇱ Fullscreen"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowKeyboardHelp(!showKeyboardHelp())}
-                class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                title="Keyboard Shortcuts"
-              >
-                ⌨ Help
-              </button>
-
-              {/* Table controls - shown when cursor is in a table */}
-              <Show when={instance().isActive("table")}>
-                <div class="border-surface2 mx-1 border-l"></div>
-
+            {/* Main Toolbar - Pinned at top in fullscreen */}
+            <div
+              class="border-surface2 bg-base border-b"
+              classList={{
+                "sticky top-0 z-[105]": isFullscreen()
+              }}
+            >
+              <div class="flex flex-wrap gap-1 pb-2">
                 <button
                   type="button"
                   onClick={() =>
-                    instance().chain().focus().addColumnBefore().run()
-                  }
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                  title="Add Column Before"
-                >
-                  ← Col
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    instance().chain().focus().addColumnAfter().run()
-                  }
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                  title="Add Column After"
-                >
-                  Col →
-                </button>
-
-                <button
-                  type="button"
-                  onClick={deleteColumnWithConfirmation}
-                  class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
-                  title="Delete Column"
-                >
-                  ✕ Col
-                </button>
-
-                <div class="border-surface2 mx-1 border-l"></div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    instance().chain().focus().addRowBefore().run()
-                  }
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                  title="Add Row Before"
-                >
-                  ↑ Row
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => instance().chain().focus().addRowAfter().run()}
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                  title="Add Row After"
-                >
-                  Row ↓
-                </button>
-
-                <button
-                  type="button"
-                  onClick={deleteRowWithConfirmation}
-                  class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
-                  title="Delete Row"
-                >
-                  ✕ Row
-                </button>
-
-                <div class="border-surface2 mx-1 border-l"></div>
-
-                <button
-                  type="button"
-                  onClick={deleteTableWithConfirmation}
-                  class="hover:bg-red rounded px-2 py-1 text-xs"
-                  title="Delete Table"
-                >
-                  ✕ Table
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    instance().chain().focus().toggleHeaderRow().run()
+                    instance().chain().focus().toggleHeading({ level: 1 }).run()
                   }
                   class={`${
-                    instance().isActive("tableHeader")
+                    instance().isActive("heading", { level: 1 })
                       ? "bg-surface2"
                       : "hover:bg-surface1"
                   } rounded px-2 py-1 text-xs`}
-                  title="Toggle Header Row"
+                  title="Heading 1"
                 >
-                  ≡ Header
+                  H1
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => instance().chain().focus().mergeCells().run()}
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                  title="Merge Cells"
+                  onClick={() =>
+                    instance().chain().focus().toggleHeading({ level: 2 }).run()
+                  }
+                  class={`${
+                    instance().isActive("heading", { level: 2 })
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Heading 2"
                 >
-                  ⊡ Merge
+                  H2
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => instance().chain().focus().splitCell().run()}
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
-                  title="Split Cell"
+                  onClick={() =>
+                    instance().chain().focus().toggleHeading({ level: 3 }).run()
+                  }
+                  class={`${
+                    instance().isActive("heading", { level: 3 })
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Heading 3"
                 >
-                  ⊞ Split
+                  H3
                 </button>
-              </Show>
+                <div class="border-surface2 mx-1 border-l"></div>
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().toggleBold().run()}
+                  class={`${
+                    instance().isActive("bold")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Bold"
+                >
+                  <strong>B</strong>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleItalic().run()
+                  }
+                  class={`${
+                    instance().isActive("italic")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Italic"
+                >
+                  <em>I</em>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleStrike().run()
+                  }
+                  class={`${
+                    instance().isActive("strike")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Strikethrough"
+                >
+                  <s>S</s>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleSuperscript().run()
+                  }
+                  class={`${
+                    instance().isActive("superscript")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Superscript (for references)"
+                >
+                  X<sup class="text-[0.6em]">n</sup>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleSubscript().run()
+                  }
+                  class={`${
+                    instance().isActive("subscript")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Subscript"
+                >
+                  X<sub class="text-[0.6em]">n</sub>
+                </button>
+                <div class="border-surface2 mx-1 border-l"></div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleBulletList().run()
+                  }
+                  class={`${
+                    instance().isActive("bulletList")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Bullet List"
+                >
+                  • List
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleOrderedList().run()
+                  }
+                  class={`${
+                    instance().isActive("orderedList")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Ordered List"
+                >
+                  1. List
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleTaskList().run()
+                  }
+                  class={`${
+                    instance().isActive("taskList")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Task List"
+                >
+                  ☑ Tasks
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().toggleBlockquote().run()
+                  }
+                  class={`${
+                    instance().isActive("blockquote")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Blockquote"
+                >
+                  " Quote
+                </button>
+                <button
+                  type="button"
+                  onClick={insertCollapsibleSection}
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Insert Collapsible Section"
+                >
+                  ▼ Details
+                </button>
+                <div class="border-surface2 mx-1 border-l"></div>
+
+                {/* Text Alignment */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().setTextAlign("left").run()
+                  }
+                  class={`${
+                    instance().isActive({ textAlign: "left" })
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Align Left"
+                >
+                  ⬅
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().setTextAlign("center").run()
+                  }
+                  class={`${
+                    instance().isActive({ textAlign: "center" })
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Align Center"
+                >
+                  ↔
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().setTextAlign("right").run()
+                  }
+                  class={`${
+                    instance().isActive({ textAlign: "right" })
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Align Right"
+                >
+                  ➡
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().setTextAlign("justify").run()
+                  }
+                  class={`${
+                    instance().isActive({ textAlign: "justify" })
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Justify"
+                >
+                  ⬌
+                </button>
+                <div class="border-surface2 mx-1 border-l"></div>
+                <button
+                  type="button"
+                  onClick={showLanguagePicker}
+                  data-language-picker-trigger
+                  class={`${
+                    instance().isActive("codeBlock")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Code Block"
+                >
+                  {"</>"}
+                </button>
+                <button
+                  type="button"
+                  onClick={setLink}
+                  class={`${
+                    instance().isActive("link")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Add Link"
+                >
+                  🔗 Link
+                </button>
+                <button
+                  type="button"
+                  onClick={addImage}
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Add Image"
+                >
+                  🖼 Image
+                </button>
+                <button
+                  type="button"
+                  onClick={addIframe}
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Add Iframe"
+                >
+                  📺 Iframe
+                </button>
+                <button
+                  type="button"
+                  onClick={showTableInserter}
+                  data-table-trigger
+                  class={`${
+                    instance().isActive("table")
+                      ? "bg-surface2"
+                      : "hover:bg-surface1"
+                  } rounded px-2 py-1 text-xs`}
+                  title="Insert Table"
+                >
+                  ⊞ Table
+                </button>
+                <button
+                  type="button"
+                  onClick={showMermaidSelector}
+                  data-mermaid-trigger
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Insert Diagram"
+                >
+                  📊 Diagram
+                </button>
+                <div class="border-surface2 mx-1 border-l"></div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    instance().chain().focus().setHorizontalRule().run()
+                  }
+                  class="bg-surface0 hover:bg-surface1 rounded px-3 py-1 text-xs"
+                  title="Horizontal Rule"
+                >
+                  ━━ HR
+                </button>
+                <div class="border-surface2 mx-1 border-l"></div>
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title={
+                    isFullscreen()
+                      ? "Exit Fullscreen (ESC)"
+                      : "Enter Fullscreen"
+                  }
+                >
+                  {isFullscreen() ? "⇲ Exit" : "⇱ Fullscreen"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowKeyboardHelp(!showKeyboardHelp())}
+                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  title="Keyboard Shortcuts"
+                >
+                  ⌨ Help
+                </button>
+
+                {/* Table controls - shown when cursor is in a table */}
+                <Show when={instance().isActive("table")}>
+                  <div class="border-surface2 mx-1 border-l"></div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      instance().chain().focus().addColumnBefore().run()
+                    }
+                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    title="Add Column Before"
+                  >
+                    ← Col
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      instance().chain().focus().addColumnAfter().run()
+                    }
+                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    title="Add Column After"
+                  >
+                    Col →
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={deleteColumnWithConfirmation}
+                    class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
+                    title="Delete Column"
+                  >
+                    ✕ Col
+                  </button>
+
+                  <div class="border-surface2 mx-1 border-l"></div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      instance().chain().focus().addRowBefore().run()
+                    }
+                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    title="Add Row Before"
+                  >
+                    ↑ Row
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      instance().chain().focus().addRowAfter().run()
+                    }
+                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    title="Add Row After"
+                  >
+                    Row ↓
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={deleteRowWithConfirmation}
+                    class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
+                    title="Delete Row"
+                  >
+                    ✕ Row
+                  </button>
+
+                  <div class="border-surface2 mx-1 border-l"></div>
+
+                  <button
+                    type="button"
+                    onClick={deleteTableWithConfirmation}
+                    class="hover:bg-red rounded px-2 py-1 text-xs"
+                    title="Delete Table"
+                  >
+                    ✕ Table
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      instance().chain().focus().toggleHeaderRow().run()
+                    }
+                    class={`${
+                      instance().isActive("tableHeader")
+                        ? "bg-surface2"
+                        : "hover:bg-surface1"
+                    } rounded px-2 py-1 text-xs`}
+                    title="Toggle Header Row"
+                  >
+                    ≡ Header
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      instance().chain().focus().mergeCells().run()
+                    }
+                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    title="Merge Cells"
+                  >
+                    ⊡ Merge
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => instance().chain().focus().splitCell().run()}
+                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    title="Split Cell"
+                  >
+                    ⊞ Split
+                  </button>
+                </Show>
+              </div>
             </div>
           </>
         )}
@@ -1887,10 +1937,13 @@ export default function TextEditor(props: TextEditorProps) {
 
       <div
         ref={editorRef}
-        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto max-w-full overflow-scroll focus:outline-none"
+        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto max-w-full overflow-scroll transition-all duration-300 focus:outline-none"
         classList={{
           "h-[80dvh]": !isFullscreen(),
-          "h-[calc(100dvh-8rem)]": isFullscreen()
+          "flex-1 h-full": isFullscreen()
+        }}
+        style={{
+          "padding-bottom": keyboardVisible() ? `${keyboardHeight()}px` : "1rem"
         }}
       />
 

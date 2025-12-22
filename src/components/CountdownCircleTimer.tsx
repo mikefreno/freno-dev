@@ -24,20 +24,28 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
   const strokeDashoffset = () => circumference * (1 - progress());
 
   onMount(() => {
-    const interval = setInterval(() => {
-      setRemainingTime((prev) => {
-        const newTime = prev - 1;
-        if (newTime <= 0) {
-          clearInterval(interval);
-          props.onComplete?.();
-          return 0;
-        }
-        return newTime;
-      });
-    }, 1000);
+    const startTime = Date.now();
+    const initialTime = remainingTime();
+    let animationFrameId: number;
+
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const newTime = Math.max(0, initialTime - elapsed);
+
+      setRemainingTime(newTime);
+
+      if (newTime <= 0) {
+        props.onComplete?.();
+        return;
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
 
     onCleanup(() => {
-      clearInterval(interval);
+      cancelAnimationFrame(animationFrameId);
     });
   });
 
@@ -74,9 +82,6 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
           stroke-dasharray={`${circumference}`}
           stroke-dashoffset={`${strokeDashoffset()}`}
           stroke-linecap="round"
-          style={{
-            transition: "stroke-dashoffset 0.5s linear"
-          }}
         />
       </svg>
       {/* Timer text in center */}

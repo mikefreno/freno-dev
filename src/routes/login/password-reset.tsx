@@ -326,7 +326,7 @@ export default function PasswordResetPage() {
                   duration={5}
                   size={200}
                   strokeWidth={12}
-                  colors="#60a5fa"
+                  colors="var(--color-blue)"
                   onComplete={() => false}
                 >
                   {({ remainingTime }) => renderTime(remainingTime)}
