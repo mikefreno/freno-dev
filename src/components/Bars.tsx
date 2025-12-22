@@ -200,7 +200,6 @@ export function LeftBar() {
       updateSize();
 
       const resizeObserver = new ResizeObserver((entries) => {
-        // Use requestAnimationFrame to avoid ResizeObserver loop error
         requestAnimationFrame(() => {
           actualWidth = ref?.offsetWidth || 0;
           setLeftBarSize(leftBarVisible() ? actualWidth : 0);
@@ -250,9 +249,7 @@ export function LeftBar() {
       });
     }
 
-    // Fetch data asynchronously AFTER sizing setup (non-blocking)
     const fetchData = async () => {
-      // Fetch recent posts only on client side to avoid hydration mismatch
       try {
         const posts = await api.blog.getRecentPosts.query();
         setRecentPosts(posts as any[]);
@@ -261,7 +258,6 @@ export function LeftBar() {
         setRecentPosts([]);
       }
 
-      // Fetch user info client-side only to avoid hydration mismatch
       try {
         const response = await fetch("/api/trpc/user.getProfile", {
           method: "GET"
@@ -286,31 +282,13 @@ export function LeftBar() {
       }
     };
 
-    // Defer API calls to next tick to allow initial render/sizing to complete first
     setTimeout(() => {
       fetchData();
     }, 0);
   });
 
-  // Update size when visibility changes
   createEffect(() => {
     setLeftBarSize(leftBarVisible() ? actualWidth : 0);
-  });
-
-  // Auto-focus first element when sidebar opens on mobile
-  createEffect(() => {
-    const isMobile = window.innerWidth < 768;
-
-    if (leftBarVisible() && isMobile && ref) {
-      const firstFocusable = ref.querySelector(
-        "a[href], button:not([disabled]), input:not([disabled])"
-      ) as HTMLElement;
-
-      if (firstFocusable) {
-        // Small delay to ensure animation has started
-        setTimeout(() => firstFocusable.focus(), 100);
-      }
-    }
   });
 
   return (

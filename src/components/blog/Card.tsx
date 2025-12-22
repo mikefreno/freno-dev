@@ -46,11 +46,11 @@ export default function Card(props: CardProps) {
       <div class="border-opacity-20 bg-opacity-40 dark:bg-opacity-60 bg-base absolute bottom-0 w-full border-t border-white px-2 py-4 backdrop-blur-md md:px-6 dark:border-zinc-900 dark:bg-zinc-800">
         <div class="flex flex-col items-center justify-between md:flex-row">
           <div class="text-center md:text-left">
-            <div class="text-lg text-black md:text-xl dark:text-white">
-              {props.post.subtitle}
-            </div>
             <div class="text-2xl text-black md:text-3xl dark:text-white">
               {props.post.title.replaceAll("_", " ")}
+            </div>
+            <div class="text-lg text-black md:text-xl dark:text-white">
+              {props.post.subtitle}
             </div>
           </div>
           <div class="flex w-full justify-around pt-2 md:w-1/3 md:justify-between md:pt-0 md:pl-2">
