@@ -309,7 +309,10 @@ export function LeftBar() {
 
   return (
     <nav
+      id="navigation"
+      tabindex="-1"
       ref={ref}
+      aria-label="Main navigation"
       class="border-r-overlay2 bg-base fixed z-50 h-dvh w-min border-r-2 transition-transform duration-500 ease-out md:max-w-[20%]"
       classList={{
         "-translate-x-full": !leftBarVisible(),
@@ -512,8 +515,9 @@ export function RightBar() {
   });
 
   return (
-    <nav
+    <aside
       ref={ref}
+      aria-label="Links and activity"
       class="border-l-overlay2 bg-base fixed right-0 z-50 hidden h-dvh w-fit border-l-2 transition-transform duration-500 ease-out md:block md:max-w-[20%]"
       classList={{
         "translate-x-full": !rightBarVisible(),
@@ -528,6 +532,6 @@ export function RightBar() {
       }}
     >
       <RightBarContent />
-    </nav>
+    </aside>
   );
 }

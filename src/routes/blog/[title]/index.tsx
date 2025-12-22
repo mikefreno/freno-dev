@@ -312,93 +312,93 @@ export default function PostPage() {
                     </div>
 
                     {/* Spacer to push content down */}
-                    <div class="-mt-[10vh] h-80 sm:h-96 md:h-[50vh]" />
-
-                    {/* Content that slides over the fixed image */}
-                    <div class="bg-base relative z-40 pb-24">
-                      <div class="top-4 flex w-full flex-col justify-center md:absolute md:flex-row md:justify-between">
-                        <div class="">
-                          <div class="flex justify-center italic md:justify-start md:pl-24">
-                            <div>
-                              Written {new Date(p().date).toDateString()}
-                              <br />
-                              By Michael Freno
+                    <div class="z-10: pt-80 sm:pt-96 md:pt-[50vh]">
+                      {/* Content that slides over the fixed image */}
+                      <div class="bg-base relative pb-24">
+                        <div class="top-4 flex w-full flex-col justify-center md:absolute md:flex-row md:justify-between">
+                          <div class="">
+                            <div class="flex justify-center italic md:justify-start md:pl-24">
+                              <div>
+                                Written {new Date(p().date).toDateString()}
+                                <br />
+                                By Michael Freno
+                              </div>
+                            </div>
+                            <div class="flex max-w-105 flex-wrap justify-center italic md:justify-start md:pl-24">
+                              <For each={postData.tags as any[]}>
+                                {(tag) => (
+                                  <div class="group relative m-1 h-fit w-fit rounded-xl bg-purple-600 px-2 py-1 text-sm">
+                                    <div class="text-white">{tag.value}</div>
+                                  </div>
+                                )}
+                              </For>
                             </div>
                           </div>
-                          <div class="flex max-w-105 flex-wrap justify-center italic md:justify-start md:pl-24">
-                            <For each={postData.tags as any[]}>
-                              {(tag) => (
-                                <div class="group relative m-1 h-fit w-fit rounded-xl bg-purple-600 px-2 py-1 text-sm">
-                                  <div class="text-white">{tag.value}</div>
+
+                          <div class="flex flex-row justify-center pt-4 md:pt-0 md:pr-8">
+                            <a href="#comments" class="mx-2">
+                              <div class="tooltip flex flex-col">
+                                <div class="mx-auto hover:brightness-125">
+                                  <CommentIcon
+                                    strokeWidth={1}
+                                    height={32}
+                                    width={32}
+                                  />
                                 </div>
-                              )}
-                            </For>
-                          </div>
-                        </div>
+                                <div class="text-text my-auto pt-0.5 pl-2 text-sm">
+                                  {postData.comments.length}{" "}
+                                  {postData.comments.length === 1
+                                    ? "Comment"
+                                    : "Comments"}
+                                </div>
+                              </div>
+                            </a>
 
-                        <div class="flex flex-row justify-center pt-4 md:pt-0 md:pr-8">
-                          <a href="#comments" class="mx-2">
-                            <div class="tooltip flex flex-col">
-                              <div class="mx-auto hover:brightness-125">
-                                <CommentIcon
-                                  strokeWidth={1}
-                                  height={32}
-                                  width={32}
-                                />
-                              </div>
-                              <div class="text-text my-auto pt-0.5 pl-2 text-sm">
-                                {postData.comments.length}{" "}
-                                {postData.comments.length === 1
-                                  ? "Comment"
-                                  : "Comments"}
-                              </div>
+                            <div class="mx-2">
+                              <SessionDependantLike
+                                currentUserID={postData.userID}
+                                privilegeLevel={postData.privilegeLevel}
+                                likes={postData.likes as any[]}
+                                projectID={p().id}
+                              />
                             </div>
-                          </a>
-
-                          <div class="mx-2">
-                            <SessionDependantLike
-                              currentUserID={postData.userID}
-                              privilegeLevel={postData.privilegeLevel}
-                              likes={postData.likes as any[]}
-                              projectID={p().id}
-                            />
                           </div>
                         </div>
-                      </div>
 
-                      {/* Post body */}
-                      <PostBodyClient
-                        body={p().body}
-                        hasCodeBlock={hasCodeBlock(p().body)}
-                      />
-
-                      <Show when={postData.privilegeLevel === "admin"}>
-                        <div class="flex justify-center">
-                          <A
-                            class="border-blue bg-blue z-100 h-fit rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
-                            href={`/blog/edit/${p().id}`}
-                          >
-                            Edit
-                          </A>
-                        </div>
-                      </Show>
-
-                      {/* Comments section */}
-                      <div
-                        id="comments"
-                        class="mx-4 pt-12 pb-12 md:mx-8 lg:mx-12"
-                      >
-                        <CommentSectionWrapper
-                          privilegeLevel={postData.privilegeLevel}
-                          allComments={postData.comments as Comment[]}
-                          topLevelComments={
-                            postData.topLevelComments as Comment[]
-                          }
-                          id={p().id}
-                          reactionMap={reactionMap}
-                          currentUserID={postData.userID || ""}
-                          userCommentMap={userCommentMap}
+                        {/* Post body */}
+                        <PostBodyClient
+                          body={p().body}
+                          hasCodeBlock={hasCodeBlock(p().body)}
                         />
+
+                        <Show when={postData.privilegeLevel === "admin"}>
+                          <div class="flex justify-center">
+                            <A
+                              class="border-blue bg-blue z-100 h-fit rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
+                              href={`/blog/edit/${p().id}`}
+                            >
+                              Edit
+                            </A>
+                          </div>
+                        </Show>
+
+                        {/* Comments section */}
+                        <div
+                          id="comments"
+                          class="mx-4 pt-12 pb-12 md:mx-8 lg:mx-12"
+                        >
+                          <CommentSectionWrapper
+                            privilegeLevel={postData.privilegeLevel}
+                            allComments={postData.comments as Comment[]}
+                            topLevelComments={
+                              postData.topLevelComments as Comment[]
+                            }
+                            id={p().id}
+                            reactionMap={reactionMap}
+                            currentUserID={postData.userID || ""}
+                            userCommentMap={userCommentMap}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

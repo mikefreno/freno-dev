@@ -39,7 +39,7 @@ export default function Card(props: CardProps) {
         </div>
       </Show>
       <img
-        src={props.post.banner_photo ? props.post.banner_photo : "/bitcoin.jpg"}
+        src={props.post.banner_photo ?? ""}
         alt={props.post.title.replaceAll("_", " ") + " banner"}
         class="h-full w-full object-cover"
       />

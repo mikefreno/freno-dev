@@ -38,11 +38,13 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Derive state directly from URL parameters (no signals needed)
+  const register = () => searchParams.mode === "register";
+  const usePassword = () => searchParams.auth === "password";
+
   // State management
-  const [register, setRegister] = createSignal(false);
   const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
-  const [usePassword, setUsePassword] = createSignal(false);
   const [countDown, setCountDown] = createSignal(0);
   const [emailSent, setEmailSent] = createSignal(false);
   const [showPasswordError, setShowPasswordError] = createSignal(false);
@@ -370,29 +372,23 @@ export default function LoginPage() {
             fallback={
               <div class="py-4 text-center md:min-w-118.75">
                 Already have an account?
-                <button
-                  onClick={() => {
-                    setRegister(false);
-                    setUsePassword(false);
-                  }}
+                <A
+                  href="/login"
                   class="text-blue pl-1 underline hover:brightness-125"
                 >
                   Click here to Login
-                </button>
+                </A>
               </div>
             }
           >
             <div class="py-4 text-center md:min-w-118.75">
               Don't have an account yet?
-              <button
-                onClick={() => {
-                  setRegister(true);
-                  setUsePassword(false);
-                }}
+              <A
+                href="/login?mode=register"
                 class="text-blue pl-1 underline hover:brightness-125"
               >
                 Click here to Register
-              </button>
+              </A>
             </div>
           </Show>
 
@@ -406,6 +402,7 @@ export default function LoginPage() {
                   required
                   ref={emailRef}
                   placeholder=" "
+                  title="Please enter a valid email address"
                   class="underlinedInput bg-transparent"
                 />
                 <span class="bar"></span>
@@ -425,6 +422,7 @@ export default function LoginPage() {
                     onInput={register() ? handleNewPasswordChange : undefined}
                     onBlur={register() ? handlePasswordBlur : undefined}
                     placeholder=" "
+                    title="Password must be at least 8 characters"
                     class="underlinedInput bg-transparent"
                   />
                   <span class="bar"></span>
@@ -478,6 +476,7 @@ export default function LoginPage() {
                     ref={passwordConfRef}
                     onInput={handlePasswordConfChange}
                     placeholder=" "
+                    title="Password must be at least 8 characters and match the password above"
                     class="underlinedInput bg-transparent"
                   />
                   <span class="bar"></span>
@@ -584,22 +583,20 @@ export default function LoginPage() {
 
               {/* Toggle password/email link */}
               <Show when={!register() && !usePassword()}>
-                <button
-                  type="button"
-                  onClick={() => setUsePassword(true)}
+                <A
+                  href="/login?auth=password"
                   class="hover-underline-animation my-auto ml-2 px-2 text-sm"
                 >
                   Use Password
-                </button>
+                </A>
               </Show>
               <Show when={usePassword()}>
-                <button
-                  type="button"
-                  onClick={() => setUsePassword(false)}
+                <A
+                  href="/login"
                   class="hover-underline-animation my-auto ml-2 px-2 text-sm"
                 >
                   Use Email Link
-                </button>
+                </A>
               </Show>
             </div>
           </form>

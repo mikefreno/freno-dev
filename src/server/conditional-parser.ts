@@ -63,27 +63,37 @@ function processBlockConditionals(
   html: string,
   context: ConditionalContext
 ): string {
-  // Regex to match conditional blocks
-  // Matches: <div class="conditional-block" data-condition-type="..." data-condition-value="..." data-show-when="...">...</div>
-  const conditionalRegex =
-    /<div\s+[^>]*class="[^"]*conditional-block[^"]*"[^>]*data-condition-type="([^"]+)"[^>]*data-condition-value="([^"]+)"[^>]*data-show-when="(true|false)"[^>]*>([\s\S]*?)<\/div>/gi;
+  // More flexible regex that handles attributes in any order
+  // Match div with class="conditional-block" and capture the full tag
+  const divRegex =
+    /<div\s+([^>]*class="[^"]*conditional-block[^"]*"[^>]*)>([\s\S]*?)<\/div>/gi;
 
   let processedHtml = html;
   let match: RegExpExecArray | null;
 
   // Reset regex lastIndex
-  conditionalRegex.lastIndex = 0;
+  divRegex.lastIndex = 0;
 
   // Collect all matches first to avoid regex state issues
   const matches: ConditionalBlock[] = [];
-  while ((match = conditionalRegex.exec(html)) !== null) {
-    matches.push({
-      fullMatch: match[0],
-      conditionType: match[1],
-      conditionValue: match[2],
-      showWhen: match[3],
-      content: match[4]
-    });
+  while ((match = divRegex.exec(html)) !== null) {
+    const attributes = match[1];
+    const content = match[2];
+
+    // Extract individual attributes
+    const typeMatch = /data-condition-type="([^"]+)"/.exec(attributes);
+    const valueMatch = /data-condition-value="([^"]+)"/.exec(attributes);
+    const showWhenMatch = /data-show-when="(true|false)"/.exec(attributes);
+
+    if (typeMatch && valueMatch && showWhenMatch) {
+      matches.push({
+        fullMatch: match[0],
+        conditionType: typeMatch[1],
+        conditionValue: valueMatch[1],
+        showWhen: showWhenMatch[1],
+        content: content
+      });
+    }
   }
 
   // Process each conditional block
@@ -120,27 +130,37 @@ function processInlineConditionals(
   html: string,
   context: ConditionalContext
 ): string {
-  // Regex to match inline conditionals
-  // Matches: <span class="conditional-inline" data-condition-type="..." data-condition-value="..." data-show-when="...">...</span>
-  const inlineRegex =
-    /<span\s+[^>]*class="[^"]*conditional-inline[^"]*"[^>]*data-condition-type="([^"]+)"[^>]*data-condition-value="([^"]+)"[^>]*data-show-when="(true|false)"[^>]*>([\s\S]*?)<\/span>/gi;
+  // More flexible regex that handles attributes in any order
+  // Match span with class="conditional-inline" and capture the full tag
+  const spanRegex =
+    /<span\s+([^>]*class="[^"]*conditional-inline[^"]*"[^>]*)>([\s\S]*?)<\/span>/gi;
 
   let processedHtml = html;
   let match: RegExpExecArray | null;
 
   // Reset regex lastIndex
-  inlineRegex.lastIndex = 0;
+  spanRegex.lastIndex = 0;
 
   // Collect all matches first
   const matches: ConditionalBlock[] = [];
-  while ((match = inlineRegex.exec(html)) !== null) {
-    matches.push({
-      fullMatch: match[0],
-      conditionType: match[1],
-      conditionValue: match[2],
-      showWhen: match[3],
-      content: match[4]
-    });
+  while ((match = spanRegex.exec(html)) !== null) {
+    const attributes = match[1];
+    const content = match[2];
+
+    // Extract individual attributes
+    const typeMatch = /data-condition-type="([^"]+)"/.exec(attributes);
+    const valueMatch = /data-condition-value="([^"]+)"/.exec(attributes);
+    const showWhenMatch = /data-show-when="(true|false)"/.exec(attributes);
+
+    if (typeMatch && valueMatch && showWhenMatch) {
+      matches.push({
+        fullMatch: match[0],
+        conditionType: typeMatch[1],
+        conditionValue: valueMatch[1],
+        showWhen: showWhenMatch[1],
+        content: content
+      });
+    }
   }
 
   // Process each inline conditional

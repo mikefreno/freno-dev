@@ -144,6 +144,7 @@ export default function RequestPasswordResetPage() {
               required
               disabled={loading()}
               placeholder=" "
+              title="Please enter a valid email address"
               class="underlinedInput w-full bg-transparent"
             />
             <span class="bar"></span>

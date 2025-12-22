@@ -215,6 +215,7 @@ export default function ContactPage() {
                     name="name"
                     value={user()?.displayName ?? ""}
                     placeholder=" "
+                    title="Please enter your name"
                     class="underlinedInput w-full bg-transparent"
                   />
                   <span class="bar"></span>
@@ -227,6 +228,7 @@ export default function ContactPage() {
                     name="email"
                     value={user()?.email ?? ""}
                     placeholder=" "
+                    title="Please enter a valid email address"
                     class="underlinedInput w-full bg-transparent"
                   />
                   <span class="bar"></span>
@@ -239,6 +241,7 @@ export default function ContactPage() {
                     required
                     name="message"
                     placeholder=" "
+                    title="Please enter your message"
                     class="underlinedInput w-full bg-transparent"
                     rows={4}
                   />
