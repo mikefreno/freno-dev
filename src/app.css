@@ -259,6 +259,33 @@ body {
 
 /* Note: JS will add inline styles and reactive classList that override these defaults */
 
+/* Blog banner fallbacks - similar to main layout */
+.blog-banner-image {
+  /* Full width by default on mobile */
+  width: 100vw;
+  margin-left: 0;
+}
+
+.blog-banner-text {
+  /* Full width by default on mobile */
+  width: 100vw;
+  margin-left: 0;
+}
+
+@media (min-width: 768px) {
+  .blog-banner-image {
+    /* Account for sidebars on desktop */
+    width: calc(100vw - 600px);
+    margin-left: 300px;
+  }
+
+  .blog-banner-text {
+    /* Account for sidebars on desktop */
+    width: calc(100vw - 600px);
+    margin-left: 300px;
+  }
+}
+
 .cursor-typing {
   display: inline-block;
   width: 2px;

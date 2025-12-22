@@ -1,12 +1,6 @@
 # Agent Guidelines for freno-dev
 
-## Build/Lint/Test Commands
-- **Dev**: `bun dev` (starts Vinxi dev server)
-- **Build**: `bun build` (production build)
-- **Start**: `bun start` (production server)
-- **No tests configured** - No test runner or test scripts exist yet
-
-## Tech Stack
+### Tech Stack
 - **Framework**: SolidJS with SolidStart (Vinxi)
 - **Routing**: @solidjs/router
 - **API**: tRPC v10 with Zod validation

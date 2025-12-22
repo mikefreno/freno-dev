@@ -3,9 +3,9 @@ import { FileRoutes } from "@solidjs/start/router";
 import {
   createEffect,
   ErrorBoundary,
-  Suspense,
   onMount,
-  onCleanup
+  onCleanup,
+  Suspense
 } from "solid-js";
 import "./app.css";
 import { LeftBar, RightBar } from "./components/Bars";
@@ -189,7 +189,7 @@ function AppLayout(props: { children: any }) {
       <div class="flex max-w-screen flex-row">
         <LeftBar />
         <div
-          class="bg-base relative h-screen overflow-x-hidden overflow-y-scroll py-16"
+          class="bg-base relative h-screen overflow-x-hidden overflow-y-scroll"
           style={
             barsInitialized()
               ? {
@@ -198,10 +198,19 @@ function AppLayout(props: { children: any }) {
                 }
               : undefined
           }
-          onMouseUp={handleCenterTapRelease}
-          onTouchEnd={handleCenterTapRelease}
         >
-          <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
+          <noscript>
+            <div class="bg-yellow text-crust border-text fixed top-0 z-150 ml-16 border-b-2 p-4 text-center font-semibold md:ml-64">
+              JavaScript is disabled. Features will be limited.
+            </div>
+          </noscript>
+          <div
+            class="py-16"
+            onMouseUp={handleCenterTapRelease}
+            onTouchEnd={handleCenterTapRelease}
+          >
+            <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
+          </div>
         </div>
         <RightBar />
       </div>

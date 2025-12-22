@@ -1,4 +1,4 @@
-import { Show, Suspense, For } from "solid-js";
+import { Show, For } from "solid-js";
 import {
   useParams,
   A,
@@ -222,13 +222,20 @@ const getPostByTitle = query(
 export default function PostPage() {
   const params = useParams();
   const [searchParams] = useSearchParams();
+  const { centerWidth, leftBarSize, barsInitialized } = useBars();
 
-  const data = createAsync(() => {
-    const sortBy =
-      (searchParams.sortBy as "newest" | "oldest" | "highest_rated" | "hot") ||
-      "newest";
-    return getPostByTitle(params.title, sortBy);
-  });
+  const data = createAsync(
+    () => {
+      const sortBy =
+        (searchParams.sortBy as
+          | "newest"
+          | "oldest"
+          | "highest_rated"
+          | "hot") || "newest";
+      return getPostByTitle(params.title, sortBy);
+    },
+    { deferStream: true }
+  );
 
   const hasCodeBlock = (str: string): boolean => {
     return str.includes("<code") && str.includes("</code>");
@@ -236,164 +243,171 @@ export default function PostPage() {
 
   return (
     <>
-      <Suspense fallback={<TerminalSplash />}>
-        <Show when={data()} fallback={null}>
-          {(loadedData) => (
-            <Show when={loadedData().post} fallback={<Navigate href="/404" />}>
-              {(p) => {
-                const postData = loadedData();
+      <Show when={data()} fallback={<TerminalSplash />}>
+        {(loadedData) => (
+          <Show when={loadedData().post} fallback={<Navigate href="/404" />}>
+            {(p) => {
+              const postData = loadedData();
 
-                // Convert arrays back to Maps for component
-                const userCommentMap = new Map<UserPublicData, number[]>(
-                  postData.userCommentArray || []
-                );
-                const reactionMap = new Map<number, CommentReaction[]>(
-                  postData.reactionArray || []
-                );
-                const { centerWidth, leftBarSize } = useBars();
+              // Convert arrays back to Maps for component
+              const userCommentMap = new Map<UserPublicData, number[]>(
+                postData.userCommentArray || []
+              );
+              const reactionMap = new Map<number, CommentReaction[]>(
+                postData.reactionArray || []
+              );
 
-                return (
-                  <>
-                    <Title>
-                      {p().title.replaceAll("_", " ")} | Michael Freno
-                    </Title>
-                    <Meta
-                      name="description"
-                      content={
-                        p().subtitle ||
-                        `Read ${p().title.replaceAll("_", " ")} by Michael Freno on the freno.me blog.`
-                      }
-                    />
+              return (
+                <>
+                  <Title>
+                    {p().title.replaceAll("_", " ")} | Michael Freno
+                  </Title>
+                  <Meta
+                    name="description"
+                    content={
+                      p().subtitle ||
+                      `Read ${p().title.replaceAll("_", " ")} by Michael Freno on the freno.me blog.`
+                    }
+                  />
 
-                    <div class="relative overflow-x-hidden">
-                      {/* Fixed banner image background */}
-                      <div class="fixed top-0 left-0 z-0 h-80 w-full sm:h-96 md:h-[50vh]">
-                        <div class="absolute inset-0 h-full w-full overflow-hidden brightness-75">
-                          <img
-                            src={p().banner_photo || "/blueprint.jpg"}
-                            alt="post-cover"
-                            class="h-full object-cover select-none"
-                            style={{
-                              width: `${centerWidth()}px`,
-                              "margin-left": `${leftBarSize()}px`,
-                              "pointer-events": "none"
-                            }}
-                          />
-                        </div>
-                        <div
-                          class="text-shadow text-text absolute top-1/3 z-10 my-auto px-4 text-center tracking-widest brightness-150 select-text"
-                          style={{
-                            width: `${centerWidth()}px`,
-                            "margin-left": `${leftBarSize()}px`
-                          }}
-                        >
-                          <div class="text-3xl font-light tracking-widest">
-                            {p().title.replaceAll("_", " ")}
-                            <div class="py-8 text-xl font-light tracking-widest">
-                              {p().subtitle}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Spacer to push content down */}
-                      <div class="-mt-[10vh] h-80 sm:h-96 md:h-[50vh]" />
-
-                      {/* Content that slides over the fixed image */}
-                      <div class="bg-base relative z-40 pb-24">
-                        <div class="top-4 flex w-full flex-col justify-center md:absolute md:flex-row md:justify-between">
-                          <div class="">
-                            <div class="flex justify-center italic md:justify-start md:pl-24">
-                              <div>
-                                Written {new Date(p().date).toDateString()}
-                                <br />
-                                By Michael Freno
-                              </div>
-                            </div>
-                            <div class="flex max-w-105 flex-wrap justify-center italic md:justify-start md:pl-24">
-                              <For each={postData.tags as any[]}>
-                                {(tag) => (
-                                  <div class="group relative m-1 h-fit w-fit rounded-xl bg-purple-600 px-2 py-1 text-sm">
-                                    <div class="text-white">{tag.value}</div>
-                                  </div>
-                                )}
-                              </For>
-                            </div>
-                          </div>
-
-                          <div class="flex flex-row justify-center pt-4 md:pt-0 md:pr-8">
-                            <a href="#comments" class="mx-2">
-                              <div class="tooltip flex flex-col">
-                                <div class="mx-auto hover:brightness-125">
-                                  <CommentIcon
-                                    strokeWidth={1}
-                                    height={32}
-                                    width={32}
-                                  />
-                                </div>
-                                <div class="text-text my-auto pt-0.5 pl-2 text-sm">
-                                  {postData.comments.length}{" "}
-                                  {postData.comments.length === 1
-                                    ? "Comment"
-                                    : "Comments"}
-                                </div>
-                              </div>
-                            </a>
-
-                            <div class="mx-2">
-                              <SessionDependantLike
-                                currentUserID={postData.userID}
-                                privilegeLevel={postData.privilegeLevel}
-                                likes={postData.likes as any[]}
-                                projectID={p().id}
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Post body */}
-                        <PostBodyClient
-                          body={p().body}
-                          hasCodeBlock={hasCodeBlock(p().body)}
+                  <div class="relative overflow-x-hidden">
+                    {/* Fixed banner image background */}
+                    <div class="fixed top-0 left-0 z-0 h-80 w-full sm:h-96 md:h-[50vh]">
+                      <div class="absolute inset-0 h-full w-full overflow-hidden brightness-75">
+                        <img
+                          src={p().banner_photo || "/blueprint.jpg"}
+                          alt="post-cover"
+                          class="blog-banner-image h-full object-cover select-none"
+                          style={
+                            barsInitialized()
+                              ? {
+                                  width: `${centerWidth()}px`,
+                                  "margin-left": `${leftBarSize()}px`,
+                                  "pointer-events": "none"
+                                }
+                              : {
+                                  "pointer-events": "none"
+                                }
+                          }
                         />
-
-                        <Show when={postData.privilegeLevel === "admin"}>
-                          <div class="flex justify-center">
-                            <A
-                              class="border-blue bg-blue z-100 h-fit rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
-                              href={`/blog/edit/${p().id}`}
-                            >
-                              Edit
-                            </A>
+                      </div>
+                      <div
+                        class="text-shadow text-text blog-banner-text absolute top-1/3 z-10 my-auto px-4 text-center tracking-widest brightness-150 select-text"
+                        style={
+                          barsInitialized()
+                            ? {
+                                width: `${centerWidth()}px`,
+                                "margin-left": `${leftBarSize()}px`
+                              }
+                            : undefined
+                        }
+                      >
+                        <div class="text-3xl font-light tracking-widest">
+                          {p().title.replaceAll("_", " ")}
+                          <div class="py-8 text-xl font-light tracking-widest">
+                            {p().subtitle}
                           </div>
-                        </Show>
-
-                        {/* Comments section */}
-                        <div
-                          id="comments"
-                          class="mx-4 pt-12 pb-12 md:mx-8 lg:mx-12"
-                        >
-                          <CommentSectionWrapper
-                            privilegeLevel={postData.privilegeLevel}
-                            allComments={postData.comments as Comment[]}
-                            topLevelComments={
-                              postData.topLevelComments as Comment[]
-                            }
-                            id={p().id}
-                            reactionMap={reactionMap}
-                            currentUserID={postData.userID || ""}
-                            userCommentMap={userCommentMap}
-                          />
                         </div>
                       </div>
                     </div>
-                  </>
-                );
-              }}
-            </Show>
-          )}
-        </Show>
-      </Suspense>
+
+                    {/* Spacer to push content down */}
+                    <div class="-mt-[10vh] h-80 sm:h-96 md:h-[50vh]" />
+
+                    {/* Content that slides over the fixed image */}
+                    <div class="bg-base relative z-40 pb-24">
+                      <div class="top-4 flex w-full flex-col justify-center md:absolute md:flex-row md:justify-between">
+                        <div class="">
+                          <div class="flex justify-center italic md:justify-start md:pl-24">
+                            <div>
+                              Written {new Date(p().date).toDateString()}
+                              <br />
+                              By Michael Freno
+                            </div>
+                          </div>
+                          <div class="flex max-w-105 flex-wrap justify-center italic md:justify-start md:pl-24">
+                            <For each={postData.tags as any[]}>
+                              {(tag) => (
+                                <div class="group relative m-1 h-fit w-fit rounded-xl bg-purple-600 px-2 py-1 text-sm">
+                                  <div class="text-white">{tag.value}</div>
+                                </div>
+                              )}
+                            </For>
+                          </div>
+                        </div>
+
+                        <div class="flex flex-row justify-center pt-4 md:pt-0 md:pr-8">
+                          <a href="#comments" class="mx-2">
+                            <div class="tooltip flex flex-col">
+                              <div class="mx-auto hover:brightness-125">
+                                <CommentIcon
+                                  strokeWidth={1}
+                                  height={32}
+                                  width={32}
+                                />
+                              </div>
+                              <div class="text-text my-auto pt-0.5 pl-2 text-sm">
+                                {postData.comments.length}{" "}
+                                {postData.comments.length === 1
+                                  ? "Comment"
+                                  : "Comments"}
+                              </div>
+                            </div>
+                          </a>
+
+                          <div class="mx-2">
+                            <SessionDependantLike
+                              currentUserID={postData.userID}
+                              privilegeLevel={postData.privilegeLevel}
+                              likes={postData.likes as any[]}
+                              projectID={p().id}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Post body */}
+                      <PostBodyClient
+                        body={p().body}
+                        hasCodeBlock={hasCodeBlock(p().body)}
+                      />
+
+                      <Show when={postData.privilegeLevel === "admin"}>
+                        <div class="flex justify-center">
+                          <A
+                            class="border-blue bg-blue z-100 h-fit rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
+                            href={`/blog/edit/${p().id}`}
+                          >
+                            Edit
+                          </A>
+                        </div>
+                      </Show>
+
+                      {/* Comments section */}
+                      <div
+                        id="comments"
+                        class="mx-4 pt-12 pb-12 md:mx-8 lg:mx-12"
+                      >
+                        <CommentSectionWrapper
+                          privilegeLevel={postData.privilegeLevel}
+                          allComments={postData.comments as Comment[]}
+                          topLevelComments={
+                            postData.topLevelComments as Comment[]
+                          }
+                          id={p().id}
+                          reactionMap={reactionMap}
+                          currentUserID={postData.userID || ""}
+                          userCommentMap={userCommentMap}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            }}
+          </Show>
+        )}
+      </Show>
     </>
   );
 }
