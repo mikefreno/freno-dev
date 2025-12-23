@@ -1,4 +1,11 @@
-import { createSignal, createEffect, For, Show, onCleanup } from "solid-js";
+import {
+  createSignal,
+  createEffect,
+  createMemo,
+  For,
+  Show,
+  onCleanup
+} from "solid-js";
 import { useNavigate, useLocation, useSearchParams } from "@solidjs/router";
 
 export interface TagSelectorProps {
@@ -7,6 +14,7 @@ export interface TagSelectorProps {
 
 export default function TagSelector(props: TagSelectorProps) {
   const [showingMenu, setShowingMenu] = createSignal(false);
+  const [showingRareTags, setShowingRareTags] = createSignal(false);
   let buttonRef: HTMLButtonElement | undefined;
   let menuRef: HTMLDivElement | undefined;
   const navigate = useNavigate();
@@ -15,6 +23,22 @@ export default function TagSelector(props: TagSelectorProps) {
 
   const currentSort = () => searchParams.sort || "";
   const currentFilters = () => searchParams.filter?.split("|") || [];
+
+  const frequentTags = createMemo(() =>
+    Object.entries(props.tagMap).filter(([_, count]) => count > 1)
+  );
+
+  const rareTags = createMemo(() =>
+    Object.entries(props.tagMap).filter(([_, count]) => count <= 1)
+  );
+
+  const allTagKeys = createMemo(() =>
+    Object.keys(props.tagMap).map((key) => key.slice(1))
+  );
+
+  const allChecked = createMemo(() =>
+    allTagKeys().every((tag) => !currentFilters().includes(tag))
+  );
 
   const handleClickOutside = (e: MouseEvent) => {
     if (
@@ -65,13 +89,15 @@ export default function TagSelector(props: TagSelectorProps) {
     }
   };
 
-  const handleUncheckAll = () => {
-    // Build filter string with all tags
-    const allTags =
-      Object.keys(props.tagMap)
-        .map((key) => key.slice(1))
-        .join("|") + "|";
-    navigate(`${location.pathname}?sort=${currentSort()}&filter=${allTags}`);
+  const handleToggleAll = () => {
+    if (allChecked()) {
+      // Uncheck all: Build filter string with all tags
+      const allTags = allTagKeys().join("|") + "|";
+      navigate(`${location.pathname}?sort=${currentSort()}&filter=${allTags}`);
+    } else {
+      // Check all: Remove filter param
+      navigate(`${location.pathname}?sort=${currentSort()}`);
+    }
   };
 
   return (
@@ -92,13 +118,13 @@ export default function TagSelector(props: TagSelectorProps) {
           <div class="border-overlay0 mb-2 flex justify-center border-b pb-2">
             <button
               type="button"
-              onClick={handleUncheckAll}
+              onClick={handleToggleAll}
               class="text-text hover:text-red text-xs font-medium underline"
             >
-              Uncheck All
+              {allChecked() ? "Uncheck All" : "Check All"}
             </button>
           </div>
-          <For each={Object.entries(props.tagMap)}>
+          <For each={frequentTags()}>
             {([key, value]) => (
               <div class="mx-auto my-2 flex">
                 <input
@@ -114,6 +140,35 @@ export default function TagSelector(props: TagSelectorProps) {
               </div>
             )}
           </For>
+          <Show when={rareTags().length > 0}>
+            <div class="border-overlay0 mt-2 border-t pt-2">
+              <button
+                type="button"
+                onClick={() => setShowingRareTags(!showingRareTags())}
+                class="text-subtext0 hover:text-text mb-1 w-full text-left text-xs font-medium"
+              >
+                {showingRareTags() ? "▼" : "▶"} Rare tags ({rareTags().length})
+              </button>
+              <Show when={showingRareTags()}>
+                <For each={rareTags()}>
+                  {([key, value]) => (
+                    <div class="mx-auto my-2 flex">
+                      <input
+                        type="checkbox"
+                        checked={!currentFilters().includes(key.slice(1))}
+                        onChange={(e) =>
+                          handleCheck(key.slice(1), e.currentTarget.checked)
+                        }
+                      />
+                      <div class="-mt-0.5 pl-1 text-sm font-normal">
+                        {`${key.slice(1)} (${value}) `}
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </Show>
+            </div>
+          </Show>
         </div>
       </Show>
     </div>

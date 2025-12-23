@@ -1,4 +1,4 @@
-import { Show, For } from "solid-js";
+import { Show, For, createEffect } from "solid-js";
 import {
   useParams,
   A,
@@ -11,10 +11,12 @@ import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import SessionDependantLike from "~/components/blog/SessionDependantLike";
 import CommentIcon from "~/components/icons/CommentIcon";
+import { Fire } from "~/components/icons/Fire";
 import CommentSectionWrapper from "~/components/blog/CommentSectionWrapper";
 import PostBodyClient from "~/components/blog/PostBodyClient";
 import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
 import { TerminalSplash } from "~/components/TerminalSplash";
+import { api } from "~/lib/api";
 
 // Server function to fetch post by title
 const getPostByTitle = query(
@@ -90,7 +92,6 @@ const getPostByTitle = query(
       env: getSafeEnvVariables()
     };
 
-    // Parse conditionals in post body
     if (post.body) {
       try {
         post.body = parseConditionals(post.body, conditionalContext);
@@ -212,7 +213,8 @@ const getPostByTitle = query(
       reactionArray,
       privilegeLevel,
       userID,
-      sortBy
+      sortBy,
+      reads: post.reads || 0
     };
   },
   "post-by-title"
@@ -234,6 +236,18 @@ export default function PostPage() {
     },
     { deferStream: true }
   );
+
+  // Increment read count when post loads
+  createEffect(() => {
+    const postData = data();
+    if (postData?.post?.id) {
+      api.blog.incrementPostRead
+        .mutate({ postId: postData.post.id })
+        .catch((err) => {
+          console.error("Failed to increment read count:", err);
+        });
+    }
+  });
 
   const hasCodeBlock = (str: string): boolean => {
     return str.includes("<code") && str.includes("</code>");
@@ -313,6 +327,22 @@ export default function PostPage() {
                           </div>
 
                           <div class="flex flex-row justify-center pt-4 md:pt-0 md:pr-8">
+                            <div class="mx-2">
+                              <div class="tooltip flex flex-col">
+                                <div class="mx-auto">
+                                  <Fire
+                                    height={32}
+                                    width={32}
+                                    color="var(--color-text)"
+                                  />
+                                </div>
+                                <div class="text-text my-auto pt-0.5 pl-2 text-sm">
+                                  {postData.reads || 0}{" "}
+                                  {postData.reads === 1 ? "Hit" : "Hits"}
+                                </div>
+                              </div>
+                            </div>
+
                             <a href="#comments" class="mx-2">
                               <div class="tooltip flex flex-col">
                                 <div class="mx-auto hover:brightness-125">

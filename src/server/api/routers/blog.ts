@@ -1,6 +1,7 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { ConnectionFactory } from "~/server/utils";
 import { withCacheAndStale } from "~/server/cache";
+import { z } from "zod";
 
 const BLOG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -98,5 +99,18 @@ export const blogRouter = createTRPCRouter({
         return { posts, tags, tagMap, privilegeLevel };
       }
     );
-  })
+  }),
+
+  incrementPostRead: publicProcedure
+    .input(z.object({ postId: z.number() }))
+    .mutation(async ({ input }) => {
+      const conn = ConnectionFactory();
+
+      await conn.execute({
+        sql: "UPDATE Post SET reads = reads + 1 WHERE id = ?",
+        args: [input.postId]
+      });
+
+      return { success: true };
+    })
 });
