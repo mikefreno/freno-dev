@@ -114,15 +114,8 @@ export default function Home() {
                 >
                   Life and Lineage
                 </a>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
-                    <img
-                      src="/lineage-home.png"
-                      alt="Life and Lineage Home"
-                      class="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
+                <div class="flex flex-col gap-4 sm:grid sm:grid-cols-3">
+                  <div class="aspect-auto w-full overflow-hidden rounded-lg sm:col-span-1">
                     <video
                       src="/lineage-preview.mp4"
                       class="h-full w-full object-cover"
@@ -132,12 +125,21 @@ export default function Home() {
                       playsinline
                     />
                   </div>
-                  <div class="aspect-auto w-full overflow-hidden rounded-lg">
-                    <img
-                      src="/lineage-shops.png"
-                      alt="Life and Lineage Shops"
-                      class="h-full w-full object-cover"
-                    />
+                  <div class="grid grid-cols-2 gap-4 sm:col-span-2 sm:grid-cols-2">
+                    <div class="aspect-auto w-full overflow-hidden rounded-lg">
+                      <img
+                        src="/lineage-home.png"
+                        alt="Life and Lineage Home"
+                        class="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div class="aspect-auto w-full overflow-hidden rounded-lg">
+                      <img
+                        src="/lineage-shops.png"
+                        alt="Life and Lineage Shops"
+                        class="h-full w-full object-cover"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div class="pt-2 text-left text-sm">
