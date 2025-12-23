@@ -468,33 +468,31 @@ export default function AccountPage() {
     setPasswordBlurred(true);
   };
 
-  // Helper to get provider display info
-  const getProviderInfo = (provider: UserProfile["provider"]) => {
+  // Helper to get provider display name
+  const getProviderName = (provider: UserProfile["provider"]) => {
     switch (provider) {
       case "google":
-        return {
-          name: "Google",
-          icon: <GoogleLogo height={24} width={24} />,
-          color: "text-blue-500"
-        };
+        return "Google";
       case "github":
-        return {
-          name: "GitHub",
-          icon: <GitHub height={24} width={24} fill="currentColor" />,
-          color: "text-gray-700 dark:text-gray-300"
-        };
+        return "GitHub";
       case "email":
-        return {
-          name: "Email",
-          icon: <EmailIcon height={24} width={24} />,
-          color: "text-green-500"
-        };
+        return "Email";
       default:
-        return {
-          name: "Unknown",
-          icon: <EmailIcon height={24} width={24} />,
-          color: "text-gray-500"
-        };
+        return "Unknown";
+    }
+  };
+
+  // Helper to get provider icon color
+  const getProviderColor = (provider: UserProfile["provider"]) => {
+    switch (provider) {
+      case "google":
+        return "text-blue-500";
+      case "github":
+        return "text-gray-700 dark:text-gray-300";
+      case "email":
+        return "text-green-500";
+      default:
+        return "text-gray-500";
     }
   };
 
@@ -533,13 +531,24 @@ export default function AccountPage() {
                       Account Type
                     </div>
                     <div class="flex items-center justify-center gap-3">
-                      <span
-                        class={getProviderInfo(userProfile().provider).color}
-                      >
-                        {getProviderInfo(userProfile().provider).icon}
+                      <span class={getProviderColor(userProfile().provider)}>
+                        <Show when={userProfile().provider === "google"}>
+                          <GoogleLogo height={24} width={24} />
+                        </Show>
+                        <Show when={userProfile().provider === "github"}>
+                          <GitHub height={24} width={24} fill="currentColor" />
+                        </Show>
+                        <Show
+                          when={
+                            userProfile().provider === "email" ||
+                            !userProfile().provider
+                          }
+                        >
+                          <EmailIcon height={24} width={24} />
+                        </Show>
                       </span>
                       <span class="text-lg font-semibold">
-                        {getProviderInfo(userProfile().provider).name} Account
+                        {getProviderName(userProfile().provider)} Account
                       </span>
                     </div>
                     <Show
@@ -800,7 +809,7 @@ export default function AccountPage() {
                         {userProfile().provider === "email"
                           ? "Set a password to enable password login"
                           : "Add a password to enable email/password login alongside your " +
-                            getProviderInfo(userProfile().provider).name +
+                            getProviderName(userProfile().provider) +
                             " login"}
                       </div>
                     </Show>
@@ -979,7 +988,7 @@ export default function AccountPage() {
                       fallback={
                         <div class="flex flex-col items-center">
                           <div class="text-crust mb-4 text-center text-sm">
-                            Your {getProviderInfo(userProfile().provider).name}{" "}
+                            Your {getProviderName(userProfile().provider)}{" "}
                             account doesn't have a password. To delete your
                             account, please set a password first, then return
                             here to proceed with deletion.
@@ -1022,7 +1031,7 @@ export default function AccountPage() {
                             deleteAccountButtonLoading()
                               ? "bg-red cursor-not-allowed brightness-75"
                               : "bg-red hover:brightness-125 active:scale-90"
-                          } mx-auto mt-4 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                          } border-text mx-auto mt-4 flex justify-center rounded border px-4 py-2 text-base transition-all duration-300 ease-out`}
                         >
                           {deleteAccountButtonLoading()
                             ? "Deleting..."

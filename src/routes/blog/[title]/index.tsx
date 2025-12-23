@@ -293,8 +293,8 @@ export default function PostPage() {
                           "pointer-events": "none"
                         }}
                       />
-                      <div class="text-text fixed top-1/3 z-50 m-auto w-full px-4 text-center tracking-widest backdrop-blur-xs select-text md:w-[calc(100vw-500px)]">
-                        <div class="text-3xl font-light tracking-widest">
+                      <div class="fixed top-1/3 z-50 m-auto w-full px-4 text-center tracking-widest text-white backdrop-blur-md select-text text-shadow-lg backdrop:brightness-50 md:w-[calc(100vw-500px)]">
+                        <div class="text-3xl font-semibold tracking-widest">
                           {p().title.replaceAll("_", " ")}
                           <div class="py-8 text-xl font-light tracking-widest">
                             {p().subtitle}

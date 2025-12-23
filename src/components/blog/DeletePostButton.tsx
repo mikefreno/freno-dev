@@ -29,9 +29,12 @@ export default function DeletePostButton(props: DeletePostButtonProps) {
 
   return (
     <form onSubmit={deletePostTrigger} class="flex w-full justify-end">
-      <button type="submit">
-        <Show when={loading()} fallback={<TrashIcon height={24} width={24} strokeWidth={1.5} />}>
-          <LoadingSpinner height={24} width={24} />
+      <button type="submit" class="hover:cursor-pointer">
+        <Show
+          when={!loading()}
+          fallback={<LoadingSpinner height={24} width={24} />}
+        >
+          <TrashIcon height={24} width={24} strokeWidth={1.5} />
         </Show>
       </button>
     </form>

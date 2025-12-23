@@ -17,6 +17,7 @@ import { ActivityHeatmap } from "./ActivityHeatmap";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { SkeletonBox, SkeletonText } from "./SkeletonLoader";
 import { env } from "~/env/client";
+import { A, useNavigate } from "@solidjs/router";
 
 function formatDomainName(url: string): string {
   const domain = url.split("://")[1]?.split(":")[0] ?? url;
@@ -284,6 +285,7 @@ export function LeftBar() {
       fetchData();
     }, 0);
   });
+  const navigate = useNavigate();
 
   return (
     <nav
@@ -412,7 +414,13 @@ export function LeftBar() {
                     Blog
                   </a>
                 </li>
-                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <li
+                  class="hover:text-subtext0 w-fit cursor-pointer transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"
+                  onClick={() => {
+                    navigate("/account");
+                    handleLinkClick();
+                  }}
+                >
                   <Show
                     when={isMounted() && userInfo()?.isAuthenticated}
                     fallback={
@@ -421,7 +429,7 @@ export function LeftBar() {
                       </a>
                     }
                   >
-                    <a href="/account" onClick={handleLinkClick}>
+                    <A href="/account" onClick={handleLinkClick}>
                       Account
                       <Show when={userInfo()?.email}>
                         <span class="text-subtext0 text-sm font-normal">
@@ -429,7 +437,7 @@ export function LeftBar() {
                           ({userInfo()!.email})
                         </span>
                       </Show>
-                    </a>
+                    </A>
                   </Show>
                 </li>
                 <Show when={isMounted() && userInfo()?.isAuthenticated}>
@@ -462,7 +470,7 @@ export function LeftBar() {
 }
 
 export function RightBar() {
-  const { rightBarSize, rightBarVisible } = useBars();
+  const { rightBarVisible } = useBars();
   let ref: HTMLDivElement | undefined;
 
   return (
