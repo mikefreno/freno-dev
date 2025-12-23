@@ -357,7 +357,7 @@ export function LeftBar() {
                             <SkeletonText class="mt-1.5 h-6 w-2/3" />
                           </div>
                         </div>
-                        <SkeletonText class="mt-1.5 h-6 w-1/2" />
+                        <SkeletonText class="mt-1.5 h-6 w-40" />
                         <SkeletonText class="mt-1.5 h-4 w-1/2" />
                       </div>
                     )}

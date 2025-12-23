@@ -1,25 +1,167 @@
 import { createSignal, onMount, onCleanup, Show } from "solid-js";
-import { useSearchParams } from "@solidjs/router";
+import {
+  useSearchParams,
+  useNavigate,
+  useLocation,
+  query,
+  createAsync
+} from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
 import { A } from "@solidjs/router";
+import { action, redirect } from "@solidjs/router";
 import { api } from "~/lib/api";
-import GitHub from "~/components/icons/GitHub";
-import LinkedIn from "~/components/icons/LinkedIn";
 import { getClientCookie, setClientCookie } from "~/lib/cookies.client";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import RevealDropDown from "~/components/RevealDropDown";
 import type { UserProfile } from "~/types/user";
+import { getCookie, setCookie } from "vinxi/http";
+import { z } from "zod";
+import { env } from "~/env/server";
+import {
+  fetchWithTimeout,
+  checkResponse,
+  fetchWithRetry,
+  NetworkError,
+  TimeoutError,
+  APIError
+} from "~/server/fetch-utils";
+
+const getContactData = query(async () => {
+  "use server";
+  const contactExp = getCookie("contactRequestSent");
+  let remainingTime = 0;
+
+  if (contactExp) {
+    const expires = new Date(contactExp);
+    remainingTime = Math.max(0, (expires.getTime() - Date.now()) / 1000);
+  }
+
+  return { remainingTime };
+}, "contact-data");
+
+// Server action for form submission
+const sendContactEmail = action(async (formData: FormData) => {
+  "use server";
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const message = formData.get("message") as string;
+
+  // Validate inputs
+  const schema = z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Valid email is required"),
+    message: z
+      .string()
+      .min(1, "Message is required")
+      .max(500, "Message too long")
+  });
+
+  try {
+    schema.parse({ name, email, message });
+  } catch (err: any) {
+    return redirect(
+      `/contact?error=${encodeURIComponent(err.errors[0]?.message || "Invalid input")}`
+    );
+  }
+
+  // Check rate limit
+  const contactExp = getCookie("contactRequestSent");
+  if (contactExp) {
+    const expires = new Date(contactExp);
+    const remaining = expires.getTime() - Date.now();
+    if (remaining > 0) {
+      return redirect(
+        "/contact?error=Please wait before sending another message"
+      );
+    }
+  }
+
+  // Send email
+  const apiKey = env.SENDINBLUE_KEY;
+  const apiUrl = "https://api.sendinblue.com/v3/smtp/email";
+
+  const sendinblueData = {
+    sender: {
+      name: "freno.me",
+      email: "michael@freno.me"
+    },
+    to: [{ email: "michael@freno.me" }],
+    htmlContent: `<html><head></head><body><div>Request Name: ${name}</div><div>Request Email: ${email}</div><div>Request Message: ${message}</div></body></html>`,
+    subject: "freno.me Contact Request"
+  };
+
+  try {
+    await fetchWithRetry(
+      async () => {
+        const response = await fetchWithTimeout(apiUrl, {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "api-key": apiKey,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify(sendinblueData),
+          timeout: 15000
+        });
+
+        await checkResponse(response);
+        return response;
+      },
+      {
+        maxRetries: 2,
+        retryDelay: 1000
+      }
+    );
+
+    // Set cooldown cookie
+    const exp = new Date(Date.now() + 1 * 60 * 1000);
+    setCookie("contactRequestSent", exp.toUTCString(), {
+      expires: exp,
+      path: "/"
+    });
+
+    return redirect("/contact?success=true");
+  } catch (error) {
+    let errorMessage =
+      "Failed to send message. You can reach me at michael@freno.me";
+
+    if (error instanceof TimeoutError) {
+      errorMessage =
+        "Email service timed out. Please try again or contact michael@freno.me";
+    } else if (error instanceof NetworkError) {
+      errorMessage =
+        "Network error. Please try again or contact michael@freno.me";
+    } else if (error instanceof APIError) {
+      errorMessage =
+        "Email service error. You can reach me at michael@freno.me";
+    }
+
+    return redirect(`/contact?error=${encodeURIComponent(errorMessage)}`);
+  }
+});
 
 export default function ContactPage() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const viewer = () => searchParams.viewer ?? "default";
 
+  // Load server data using createAsync
+  const contactData = createAsync(() => getContactData(), {
+    deferStream: true
+  });
+
   const [countDown, setCountDown] = createSignal<number>(0);
-  const [emailSent, setEmailSent] = createSignal<boolean>(false);
-  const [error, setError] = createSignal<string>("");
+  const [emailSent, setEmailSent] = createSignal<boolean>(
+    searchParams.success === "true"
+  );
+  const [error, setError] = createSignal<string>(
+    searchParams.error ? decodeURIComponent(searchParams.error) : ""
+  );
   const [loading, setLoading] = createSignal<boolean>(false);
   const [user, setUser] = createSignal<UserProfile | null>(null);
+  const [jsEnabled, setJsEnabled] = createSignal<boolean>(false);
 
   let timerIdRef: ReturnType<typeof setInterval> | null = null;
 
@@ -39,6 +181,14 @@ export default function ContactPage() {
   };
 
   onMount(() => {
+    setJsEnabled(true);
+
+    // Initialize countdown from server data
+    const serverData = contactData();
+    if (serverData?.remainingTime) {
+      setCountDown(serverData.remainingTime);
+    }
+
     // Check for existing timer
     const timer = getClientCookie("contactRequestSent");
     if (timer) {
@@ -57,6 +207,20 @@ export default function ContactPage() {
         // User not authenticated, no problem
       });
 
+    // Clear URL params after reading them (for better UX on refresh)
+    if (searchParams.success || searchParams.error) {
+      const timer = setTimeout(() => {
+        const newUrl =
+          location.pathname +
+          (viewer() !== "default" ? `?viewer=${viewer()}` : "");
+        navigate(newUrl, { replace: true });
+        setEmailSent(false);
+        setError("");
+      }, 5000);
+
+      onCleanup(() => clearTimeout(timer));
+    }
+
     onCleanup(() => {
       if (timerIdRef !== null) {
         clearInterval(timerIdRef);
@@ -64,7 +228,11 @@ export default function ContactPage() {
     });
   });
 
+  // Progressive enhancement: JS-enhanced form submission
   const sendEmailTrigger = async (e: Event) => {
+    // Only intercept if JS is enabled
+    if (!jsEnabled()) return;
+
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
 
@@ -74,6 +242,9 @@ export default function ContactPage() {
 
     if (name && email && message) {
       setLoading(true);
+      setError("");
+      setEmailSent(false);
+
       try {
         const res = await api.misc.sendContactRequest.mutate({
           name,
@@ -84,6 +255,8 @@ export default function ContactPage() {
         if (res.message === "email sent") {
           setEmailSent(true);
           setError("");
+          (e.target as HTMLFormElement).reset();
+
           const timer = getClientCookie("contactRequestSent");
           if (timer) {
             if (timerIdRef !== null) {
@@ -205,7 +378,12 @@ export default function ContactPage() {
             </div>
           </Show>
           <LineageQuestionsDropDown />
-          <form onSubmit={sendEmailTrigger} class="w-full">
+          <form
+            onSubmit={sendEmailTrigger}
+            method="post"
+            action={sendContactEmail}
+            class="w-full"
+          >
             <div class="flex w-full flex-col justify-evenly">
               <div class="mx-auto w-full justify-evenly md:flex md:flex-row">
                 <div class="input-group md:mx-4">
@@ -244,6 +422,7 @@ export default function ContactPage() {
                     title="Please enter your message"
                     class="underlinedInput w-full bg-transparent"
                     rows={4}
+                    maxlength={500}
                   />
                   <span class="bar" />
                   <label class="underlinedInputLabel">Message</label>
@@ -251,7 +430,9 @@ export default function ContactPage() {
               </div>
               <div class="mx-auto flex w-full justify-end pt-4">
                 <Show
-                  when={countDown() > 0}
+                  when={
+                    countDown() > 0 || (contactData()?.remainingTime ?? 0) > 0
+                  }
                   fallback={
                     <button
                       type="submit"
@@ -268,16 +449,27 @@ export default function ContactPage() {
                     </button>
                   }
                 >
-                  <CountdownCircleTimer
-                    duration={60}
-                    initialRemainingTime={countDown()}
-                    size={48}
-                    strokeWidth={6}
-                    colors={"#60a5fa"}
-                    onComplete={() => setCountDown(0)}
+                  <Show
+                    when={jsEnabled()}
+                    fallback={
+                      <div class="flex items-center justify-center text-sm text-zinc-400">
+                        Please wait{" "}
+                        {Math.ceil(contactData()?.remainingTime ?? 0)}s before
+                        sending another message
+                      </div>
+                    }
                   >
-                    {renderTime}
-                  </CountdownCircleTimer>
+                    <CountdownCircleTimer
+                      duration={60}
+                      initialRemainingTime={countDown()}
+                      size={48}
+                      strokeWidth={6}
+                      colors={"#60a5fa"}
+                      onComplete={() => setCountDown(0)}
+                    >
+                      {renderTime}
+                    </CountdownCircleTimer>
+                  </Show>
                 </Show>
               </div>
             </div>
