@@ -14,7 +14,6 @@ import CommentIcon from "~/components/icons/CommentIcon";
 import CommentSectionWrapper from "~/components/blog/CommentSectionWrapper";
 import PostBodyClient from "~/components/blog/PostBodyClient";
 import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
-import { useBars } from "~/context/bars";
 import { TerminalSplash } from "~/components/TerminalSplash";
 
 // Server function to fetch post by title
@@ -222,7 +221,6 @@ const getPostByTitle = query(
 export default function PostPage() {
   const params = useParams();
   const [searchParams] = useSearchParams();
-  const { centerWidth, leftBarSize, barsInitialized } = useBars();
 
   const data = createAsync(
     () => {
@@ -278,29 +276,19 @@ export default function PostPage() {
                           src={p().banner_photo || "/blueprint.jpg"}
                           alt="post-cover"
                           class="blog-banner-image h-full object-cover select-none"
-                          style={
-                            barsInitialized()
-                              ? {
-                                  width: `${centerWidth()}px`,
-                                  "margin-left": `${leftBarSize()}px`,
-                                  "pointer-events": "none"
-                                }
-                              : {
-                                  "pointer-events": "none"
-                                }
-                          }
+                          style={{
+                            width: "calc(100vw - 500px)",
+                            "margin-left": "250px",
+                            "pointer-events": "none"
+                          }}
                         />
                       </div>
                       <div
                         class="text-shadow text-text blog-banner-text absolute top-1/3 z-10 my-auto px-4 text-center tracking-widest brightness-150 select-text"
-                        style={
-                          barsInitialized()
-                            ? {
-                                width: `${centerWidth()}px`,
-                                "margin-left": `${leftBarSize()}px`
-                              }
-                            : undefined
-                        }
+                        style={{
+                          width: "calc(100vw - 500px)",
+                          "margin-left": "250px"
+                        }}
                       >
                         <div class="text-3xl font-light tracking-widest">
                           {p().title.replaceAll("_", " ")}
@@ -374,7 +362,7 @@ export default function PostPage() {
                         <Show when={postData.privilegeLevel === "admin"}>
                           <div class="flex justify-center">
                             <A
-                              class="border-blue bg-blue z-100 h-fit rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
+                              class="border-blue bg-blue z-10 h-fit rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
                               href={`/blog/edit/${p().id}`}
                             >
                               Edit

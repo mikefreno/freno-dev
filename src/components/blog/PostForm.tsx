@@ -63,61 +63,6 @@ export default function PostForm(props: PostFormProps) {
     }
   });
 
-  const autoSave = async () => {
-    const titleVal = title();
-
-    if (titleVal) {
-      try {
-        let bannerImageKey = "";
-        const bannerFile = bannerImageFile();
-        if (bannerFile) {
-          bannerImageKey = (await AddImageToS3(
-            bannerFile,
-            titleVal,
-            "blog"
-          )) as string;
-        }
-
-        if (props.mode === "edit" || createdPostId()) {
-          // Update existing post (either in edit mode or if already created)
-          await api.database.updatePost.mutate({
-            id: createdPostId() || props.postId!,
-            title: titleVal.replaceAll(" ", "_"),
-            subtitle: subtitle() || "",
-            body: body() || "Hello, World!",
-            banner_photo:
-              bannerImageKey !== ""
-                ? bannerImageKey
-                : requestedDeleteImage()
-                  ? "_DELETE_IMAGE_"
-                  : null,
-            published: published(),
-            tags: tags().length > 0 ? tags() : null,
-            author_id: props.userID
-          });
-        } else {
-          // Create mode: only save once (first autosave)
-          const result = await api.database.createPost.mutate({
-            category: "blog",
-            title: titleVal.replaceAll(" ", "_"),
-            subtitle: subtitle() || null,
-            body: body() || "Hello, World!",
-            banner_photo: bannerImageKey !== "" ? bannerImageKey : null,
-            published: published(),
-            tags: tags().length > 0 ? tags() : null,
-            author_id: props.userID
-          });
-          setCreatedPostId(result.data as number);
-          setHasSaved(true);
-        }
-
-        showAutoSaveTrigger();
-      } catch (err) {
-        console.error("Autosave failed:", err);
-      }
-    }
-  };
-
   const showAutoSaveTrigger = () => {
     setShowAutoSaveMessage(true);
     setTimeout(() => {
@@ -125,27 +70,247 @@ export default function PostForm(props: PostFormProps) {
     }, 5000);
   };
 
-  // Debounced auto-save (1 second after last change)
-  const debouncedAutoSave = debounce(autoSave, 1000);
+  // Helper to ensure post exists (create if needed)
+  const ensurePostExists = async (): Promise<number> => {
+    const existingId = createdPostId() || props.postId;
+    if (existingId) return existingId;
 
-  // Track changes to trigger auto-save
+    // Create minimal post if it doesn't exist yet
+    const result = await api.database.createPost.mutate({
+      category: "blog",
+      title: title().replaceAll(" ", "_") || "Untitled",
+      subtitle: null,
+      body: "Hello, World!",
+      banner_photo: null,
+      published: false,
+      tags: null,
+      author_id: props.userID
+    });
+    const newId = result.data as number;
+    setCreatedPostId(newId);
+    setHasSaved(true);
+    return newId;
+  };
+
+  // Individual autosave functions for each field
+  const autoSaveTitle = async () => {
+    const currentTitle = title();
+    if (!currentTitle || currentTitle === props.initialData?.title) return;
+
+    try {
+      const postId = await ensurePostExists();
+      await api.database.updatePost.mutate({
+        id: postId,
+        title: currentTitle.replaceAll(" ", "_"),
+        subtitle: subtitle() || null,
+        body: body() || "Hello, World!",
+        banner_photo: null,
+        published: published(),
+        tags: tags().length > 0 ? tags() : null,
+        author_id: props.userID
+      });
+      showAutoSaveTrigger();
+    } catch (err) {
+      console.error("Title autosave failed:", err);
+    }
+  };
+
+  const autoSaveSubtitle = async () => {
+    const currentSubtitle = subtitle();
+    if (currentSubtitle === props.initialData?.subtitle) return;
+    if (!title()) return; // Need title to save
+
+    try {
+      const postId = await ensurePostExists();
+      await api.database.updatePost.mutate({
+        id: postId,
+        title: title().replaceAll(" ", "_"),
+        subtitle: currentSubtitle || null,
+        body: body() || "Hello, World!",
+        banner_photo: null,
+        published: published(),
+        tags: tags().length > 0 ? tags() : null,
+        author_id: props.userID
+      });
+      showAutoSaveTrigger();
+    } catch (err) {
+      console.error("Subtitle autosave failed:", err);
+    }
+  };
+
+  const autoSaveBody = async () => {
+    const currentBody = body();
+    if (currentBody === props.initialData?.body) return;
+    if (!title()) return;
+
+    try {
+      const postId = await ensurePostExists();
+      await api.database.updatePost.mutate({
+        id: postId,
+        title: title().replaceAll(" ", "_"),
+        subtitle: subtitle() || null,
+        body: currentBody || "Hello, World!",
+        banner_photo: null,
+        published: published(),
+        tags: tags().length > 0 ? tags() : null,
+        author_id: props.userID
+      });
+      showAutoSaveTrigger();
+    } catch (err) {
+      console.error("Body autosave failed:", err);
+    }
+  };
+
+  const autoSaveTags = async () => {
+    const currentTags = tags();
+    const initialTags = props.initialData?.tags || [];
+    if (JSON.stringify(currentTags) === JSON.stringify(initialTags)) return;
+    if (!title()) return;
+
+    try {
+      const postId = await ensurePostExists();
+      await api.database.updatePost.mutate({
+        id: postId,
+        title: title().replaceAll(" ", "_"),
+        subtitle: subtitle() || null,
+        body: body() || "Hello, World!",
+        banner_photo: null,
+        published: published(),
+        tags: currentTags.length > 0 ? currentTags : null,
+        author_id: props.userID
+      });
+      showAutoSaveTrigger();
+    } catch (err) {
+      console.error("Tags autosave failed:", err);
+    }
+  };
+
+  const autoSavePublished = async () => {
+    const currentPublished = published();
+    if (currentPublished === props.initialData?.published) return;
+    if (!title()) return;
+
+    try {
+      const postId = await ensurePostExists();
+      await api.database.updatePost.mutate({
+        id: postId,
+        title: title().replaceAll(" ", "_"),
+        subtitle: subtitle() || null,
+        body: body() || "Hello, World!",
+        banner_photo: null,
+        published: currentPublished,
+        tags: tags().length > 0 ? tags() : null,
+        author_id: props.userID
+      });
+      showAutoSaveTrigger();
+    } catch (err) {
+      console.error("Published autosave failed:", err);
+    }
+  };
+
+  const autoSaveBanner = async () => {
+    const bannerFile = bannerImageFile();
+    if (!bannerFile && !requestedDeleteImage()) return;
+    if (!title()) return;
+
+    try {
+      let bannerImageKey = "";
+      if (bannerFile) {
+        bannerImageKey = (await AddImageToS3(
+          bannerFile,
+          title(),
+          "blog"
+        )) as string;
+      }
+
+      const postId = await ensurePostExists();
+      await api.database.updatePost.mutate({
+        id: postId,
+        title: title().replaceAll(" ", "_"),
+        subtitle: subtitle() || null,
+        body: body() || "Hello, World!",
+        banner_photo:
+          bannerImageKey !== ""
+            ? bannerImageKey
+            : requestedDeleteImage()
+              ? "_DELETE_IMAGE_"
+              : null,
+        published: published(),
+        tags: tags().length > 0 ? tags() : null,
+        author_id: props.userID
+      });
+      showAutoSaveTrigger();
+    } catch (err) {
+      console.error("Banner autosave failed:", err);
+    }
+  };
+
+  // Debounced versions
+  const debouncedAutoSaveTitle = debounce(autoSaveTitle, 2500);
+  const debouncedAutoSaveSubtitle = debounce(autoSaveSubtitle, 2500);
+  const debouncedAutoSaveBody = debounce(autoSaveBody, 2500);
+  const debouncedAutoSaveTags = debounce(autoSaveTags, 2500);
+  const debouncedAutoSavePublished = debounce(autoSavePublished, 1000);
+  const debouncedAutoSaveBanner = debounce(autoSaveBanner, 2500);
+
+  // Individual effects for each field
   createEffect(() => {
     const titleVal = title();
-    const subtitleVal = subtitle();
-    const bodyVal = body();
-    const tagsVal = tags();
-    const publishedVal = published();
+    if (isInitialLoad()) return;
+    if (titleVal && titleVal !== props.initialData?.title) {
+      debouncedAutoSaveTitle();
+    }
+  });
 
-    // Only trigger auto-save if conditions are met
-    if (props.mode === "edit" && !isInitialLoad() && titleVal) {
-      debouncedAutoSave();
-    } else if (props.mode === "create" && titleVal) {
-      debouncedAutoSave();
+  createEffect(() => {
+    const subtitleVal = subtitle();
+    if (isInitialLoad()) return;
+    if (subtitleVal !== props.initialData?.subtitle) {
+      debouncedAutoSaveSubtitle();
+    }
+  });
+
+  createEffect(() => {
+    const bodyVal = body();
+    if (isInitialLoad()) return;
+    if (bodyVal !== props.initialData?.body) {
+      debouncedAutoSaveBody();
+    }
+  });
+
+  createEffect(() => {
+    const tagsVal = tags();
+    if (isInitialLoad()) return;
+    const initialTags = props.initialData?.tags || [];
+    if (JSON.stringify(tagsVal) !== JSON.stringify(initialTags)) {
+      debouncedAutoSaveTags();
+    }
+  });
+
+  createEffect(() => {
+    const publishedVal = published();
+    if (isInitialLoad()) return;
+    if (publishedVal !== props.initialData?.published) {
+      debouncedAutoSavePublished();
+    }
+  });
+
+  createEffect(() => {
+    const bannerFile = bannerImageFile();
+    const deleteRequested = requestedDeleteImage();
+    if (isInitialLoad()) return;
+    if (bannerFile || deleteRequested) {
+      debouncedAutoSaveBanner();
     }
   });
 
   onCleanup(() => {
-    debouncedAutoSave.cancel();
+    debouncedAutoSaveTitle.cancel();
+    debouncedAutoSaveSubtitle.cancel();
+    debouncedAutoSaveBody.cancel();
+    debouncedAutoSaveTags.cancel();
+    debouncedAutoSavePublished.cancel();
+    debouncedAutoSaveBanner.cancel();
   });
 
   const handleBannerImageDrop = (acceptedFiles: File[]) => {

@@ -53,7 +53,7 @@ export default function Home() {
             <div class="pb-4">Some of my recent projects:</div>
             <div class="flex flex-col items-center gap-2 xl:flex-row xl:items-start xl:justify-center">
               {/* FlexLöve */}
-              <div class="border-surface0 flex w-full max-w-md flex-col rounded-md border-2 p-4 text-center">
+              <div class="border-surface0 flex w-full max-w-3/4 flex-col rounded-md border-2 p-4 text-center">
                 <div>My LÖVE UI library</div>
                 <a
                   href="https://github.com/mikefreno/flexlove"

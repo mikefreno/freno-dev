@@ -170,10 +170,8 @@ export function RightBarContent() {
 }
 
 export function LeftBar() {
-  const { setLeftBarSize, leftBarSize, leftBarVisible, setLeftBarVisible } =
-    useBars();
+  const { leftBarSize, leftBarVisible, setLeftBarVisible } = useBars();
   let ref: HTMLDivElement | undefined;
-  let actualWidth = 0;
 
   const [recentPosts, setRecentPosts] = createSignal<any[] | undefined>(
     undefined
@@ -208,21 +206,6 @@ export function LeftBar() {
     setIsMounted(true);
 
     if (ref) {
-      const updateSize = () => {
-        actualWidth = ref?.offsetWidth || 0;
-        setLeftBarSize(leftBarVisible() ? actualWidth : 0);
-      };
-
-      updateSize();
-
-      const resizeObserver = new ResizeObserver((entries) => {
-        requestAnimationFrame(() => {
-          actualWidth = ref?.offsetWidth || 0;
-          setLeftBarSize(leftBarVisible() ? actualWidth : 0);
-        });
-      });
-      resizeObserver.observe(ref);
-
       // Focus trap for accessibility on mobile
       const handleKeyDown = (e: KeyboardEvent) => {
         const isMobile = window.innerWidth < 768;
@@ -260,7 +243,6 @@ export function LeftBar() {
       ref.addEventListener("keydown", handleKeyDown);
 
       onCleanup(() => {
-        resizeObserver.disconnect();
         ref?.removeEventListener("keydown", handleKeyDown);
       });
     }
@@ -303,10 +285,6 @@ export function LeftBar() {
     }, 0);
   });
 
-  createEffect(() => {
-    setLeftBarSize(leftBarVisible() ? actualWidth : 0);
-  });
-
   return (
     <nav
       id="navigation"
@@ -320,7 +298,7 @@ export function LeftBar() {
       }}
       style={{
         "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
-        "min-width": leftBarSize() > 0 ? `${leftBarSize()}px` : undefined,
+        "min-width": "250px",
         "box-shadow": "inset -6px 0 16px -6px rgba(0, 0, 0, 0.1)",
         "padding-top": "env(safe-area-inset-top)",
         "padding-bottom": "env(safe-area-inset-bottom)"
@@ -484,36 +462,8 @@ export function LeftBar() {
 }
 
 export function RightBar() {
-  const { setRightBarSize, rightBarSize, rightBarVisible } = useBars();
+  const { rightBarSize, rightBarVisible } = useBars();
   let ref: HTMLDivElement | undefined;
-  let actualWidth = 0;
-
-  onMount(() => {
-    if (ref) {
-      const updateSize = () => {
-        actualWidth = ref?.offsetWidth || 0;
-        setRightBarSize(rightBarVisible() ? actualWidth : 0);
-      };
-
-      updateSize();
-
-      const resizeObserver = new ResizeObserver((entries) => {
-        requestAnimationFrame(() => {
-          actualWidth = ref?.offsetWidth || 0;
-          setRightBarSize(rightBarVisible() ? actualWidth : 0);
-        });
-      });
-      resizeObserver.observe(ref);
-
-      return () => {
-        resizeObserver.disconnect();
-      };
-    }
-  });
-
-  createEffect(() => {
-    setRightBarSize(rightBarVisible() ? actualWidth : 0);
-  });
 
   return (
     <aside
@@ -525,8 +475,8 @@ export function RightBar() {
         "translate-x-0": rightBarVisible()
       }}
       style={{
-        "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)", // Smooth for both revealing and hiding
-        "min-width": rightBarSize() > 0 ? `${rightBarSize()}px` : undefined,
+        "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "min-width": "250px",
         "box-shadow": "inset 6px 0 16px -6px rgba(0, 0, 0, 0.1)",
         "padding-top": "env(safe-area-inset-top)",
         "padding-bottom": "env(safe-area-inset-bottom)"

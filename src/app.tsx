@@ -5,9 +5,7 @@ import {
   ErrorBoundary,
   onMount,
   onCleanup,
-  Suspense,
-  Show,
-  createSignal
+  Suspense
 } from "solid-js";
 import "./app.css";
 import { LeftBar, RightBar } from "./components/Bars";
@@ -20,54 +18,28 @@ import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 
 function AppLayout(props: { children: any }) {
   const {
-    leftBarSize,
-    rightBarSize,
-    setCenterWidth,
-    centerWidth,
     leftBarVisible,
     rightBarVisible,
     setLeftBarVisible,
-    setRightBarVisible,
-    barsInitialized
+    setRightBarVisible
   } = useBars();
 
   let lastScrollY = 0;
   const SCROLL_THRESHOLD = 75;
 
-  // Track if we're on the client (hydrated) - starts false on server
-  const [isClient, setIsClient] = createSignal(false);
-
   // Use onMount to avoid hydration issues - window operations are client-only
   onMount(() => {
-    setIsClient(true);
     const windowWidth = createWindowWidth();
 
     createEffect(() => {
-      const handleResize = () => {
-        const currentIsMobile = isMobile(windowWidth());
+      const currentIsMobile = isMobile(windowWidth());
 
-        // Show bars when switching to desktop
-        if (!currentIsMobile) {
-          setLeftBarVisible(true);
-          setRightBarVisible(true);
-        }
-
-        // On mobile, leftBarSize() is always 0 (overlay mode)
-        const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
-        setCenterWidth(newWidth);
-      };
-
-      // Call immediately and whenever dependencies change
-      handleResize();
+      // Show bars when switching to desktop
+      if (!currentIsMobile) {
+        setLeftBarVisible(true);
+        setRightBarVisible(true);
+      }
     });
-  });
-
-  // Recalculate when bar sizes change (visibility or actual resize)
-  createEffect(() => {
-    if (typeof window === "undefined") return;
-    // On mobile, leftBarSize() is always 0 (overlay mode)
-    const newWidth = window.innerWidth - leftBarSize() - rightBarSize();
-    setCenterWidth(newWidth);
   });
 
   // Auto-hide on scroll (mobile only)
@@ -194,40 +166,20 @@ function AppLayout(props: { children: any }) {
     <>
       <div class="flex max-w-screen flex-row">
         <LeftBar />
-        <Show
-          when={!isClient() || barsInitialized()}
-          fallback={<TerminalSplash />}
-        >
-          <div
-            class="bg-base relative h-screen overflow-x-hidden overflow-y-scroll"
-            style={
-              barsInitialized()
-                ? {
-                    width: `${centerWidth() ?? "calc(100vw - 500px)"}px`,
-                    "margin-left": `${leftBarSize() ?? "250px"}px`
-                  }
-                : {
-                    width: "calc(100vw - 500px)",
-                    "margin-left": "250px"
-                  }
-            }
-          >
-            <noscript>
-              <div class="bg-yellow text-crust border-text fixed top-0 z-150 ml-16 border-b-2 p-4 text-center font-semibold md:ml-64">
-                JavaScript is disabled. Features will be limited.
-              </div>
-            </noscript>
-            <div
-              class="py-16"
-              onMouseUp={handleCenterTapRelease}
-              onTouchEnd={handleCenterTapRelease}
-            >
-              <Suspense fallback={<TerminalSplash />}>
-                {props.children}
-              </Suspense>
+        <div class="bg-base relative h-screen w-screen overflow-x-hidden overflow-y-scroll md:ml-62.5 md:w-[calc(100vw-500px)]">
+          <noscript>
+            <div class="bg-yellow text-crust border-text fixed top-0 z-150 ml-16 border-b-2 p-4 text-center font-semibold md:ml-64">
+              JavaScript is disabled. Features will be limited.
             </div>
+          </noscript>
+          <div
+            class="py-16"
+            onMouseUp={handleCenterTapRelease}
+            onTouchEnd={handleCenterTapRelease}
+          >
+            <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
           </div>
-        </Show>
+        </div>
         <RightBar />
       </div>
     </>
