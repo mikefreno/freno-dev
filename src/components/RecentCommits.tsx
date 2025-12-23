@@ -57,9 +57,9 @@ export const RecentCommits: Component<{
                     <div class="flex min-w-0 flex-col gap-1">
                       <SkeletonText class="h-3 w-full" />
                       <SkeletonText class="h-3 w-3/4" />
-                      <SkeletonText class="h-2 w-16" />
+                      <SkeletonText class="my-1 h-2 w-10" />
                       <div class="flex min-w-0 items-center gap-2 overflow-hidden">
-                        <SkeletonBox class="h-4 w-16" />
+                        <SkeletonBox class="h-5 w-16" />
                         <SkeletonText class="h-2 w-24" />
                       </div>
                     </div>
@@ -85,7 +85,7 @@ export const RecentCommits: Component<{
                   class="flex min-w-0 flex-col gap-1"
                 >
                   <div class="flex min-w-0 items-start justify-between gap-2">
-                    <span class="text-text line-clamp-2 min-w-0 flex-1 text-xs leading-tight font-medium break-words">
+                    <span class="text-text line-clamp-2 min-w-0 flex-1 text-xs leading-tight font-medium wrap-break-word">
                       {commit.message}
                     </span>
                   </div>

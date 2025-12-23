@@ -200,20 +200,11 @@ function AppLayout(props: { children: any }) {
         >
           <div
             class="bg-base relative h-screen overflow-x-hidden overflow-y-scroll"
-            style={
-              barsInitialized()
-                ? {
-                    width: `${centerWidth()}px`,
-                    "margin-left": `${leftBarSize()}px`
-                  }
-                : { width: "calc(100vw - 600px)", "margin-left": "300px" }
-            }
+            style={{
+              width: `${centerWidth()}px`,
+              "margin-left": `${leftBarSize()}px`
+            }}
           >
-            <noscript>
-              <div class="bg-yellow text-crust border-text fixed top-0 z-150 ml-16 border-b-2 p-4 text-center font-semibold md:ml-64">
-                JavaScript is disabled. Features will be limited.
-              </div>
-            </noscript>
             <div
               class="py-16"
               onMouseUp={handleCenterTapRelease}
