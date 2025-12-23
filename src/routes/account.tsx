@@ -18,7 +18,6 @@ import type { UserProfile } from "~/types/user";
 const getUserProfile = query(async (): Promise<UserProfile | null> => {
   "use server";
   const { getUserID, ConnectionFactory } = await import("~/server/utils");
-  const { toUserProfile } = await import("~/types/user");
   const event = getEvent()!;
 
   const userId = await getUserID(event);
@@ -38,7 +37,17 @@ const getUserProfile = query(async (): Promise<UserProfile | null> => {
     }
 
     const user = res.rows[0] as any;
-    return toUserProfile(user);
+
+    // Transform database User to UserProfile
+    return {
+      id: user.id,
+      email: user.email ?? undefined,
+      emailVerified: user.email_verified === 1,
+      displayName: user.display_name ?? undefined,
+      provider: user.provider ?? undefined,
+      image: user.image ?? undefined,
+      hasPassword: !!user.password_hash
+    };
   } catch (err) {
     console.error("Failed to fetch user profile:", err);
     throw redirect("/login");
