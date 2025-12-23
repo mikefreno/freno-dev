@@ -566,7 +566,7 @@ export default function PostForm(props: PostFormProps) {
         <div class="mt-2 flex justify-center">
           <a
             href={`/blog/${encodeURIComponent(title().replaceAll(" ", "_"))}`}
-            class="border-blue bg-blue hover:bg-blue rounded border px-4 py-2 shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
+            class="border-lavender bg-blue rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
           >
             Go to Post
           </a>

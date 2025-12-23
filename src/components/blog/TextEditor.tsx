@@ -1,5 +1,5 @@
 import { Show, untrack, createEffect, on, createSignal, For } from "solid-js";
-import { createTiptapEditor, useEditorHTML } from "solid-tiptap";
+import { createTiptapEditor } from "solid-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
@@ -397,6 +397,32 @@ export default function TextEditor(props: TextEditorProps) {
   const [keyboardVisible, setKeyboardVisible] = createSignal(false);
   const [keyboardHeight, setKeyboardHeight] = createSignal(0);
 
+  // Force reactive updates for button states
+  const [editorState, setEditorState] = createSignal(0);
+
+  // Helper to check editor active state reactively
+  const isActive = (type: string, attrs?: Record<string, any>) => {
+    editorState(); // Track reactive dependency
+    const instance = editor();
+    return instance ? instance.isActive(type, attrs) : false;
+  };
+
+  const isAlignActive = (alignment: string) => {
+    editorState();
+    const instance = editor();
+    if (!instance) return false;
+
+    const { $from } = instance.state.selection;
+    const node = $from.node($from.depth);
+    const currentAlign = node?.attrs?.textAlign;
+
+    if (currentAlign) {
+      return currentAlign === alignment;
+    }
+
+    return alignment === "left";
+  };
+
   const editor = createTiptapEditor(() => ({
     element: editorRef,
     extensions: [
@@ -498,6 +524,9 @@ export default function TextEditor(props: TextEditorProps) {
       });
     },
     onSelectionUpdate: ({ editor }) => {
+      // Force reactive update for button states
+      setEditorState((prev) => prev + 1);
+
       const { from, to } = editor.state.selection;
       const hasSelection = from !== to;
 
@@ -1411,7 +1440,7 @@ export default function TextEditor(props: TextEditorProps) {
       ref={containerRef}
       class="border-surface2 text-text w-full max-w-full overflow-hidden rounded-md border px-4 py-2"
       classList={{
-        "fixed inset-0 z-[100] m-0 h-screen max-h-screen rounded-none flex flex-col":
+        "fixed inset-0 z-100 m-0 h-screen max-h-screen rounded-none flex flex-col":
           isFullscreen(),
         "bg-base": isFullscreen()
       }}
@@ -1423,7 +1452,7 @@ export default function TextEditor(props: TextEditorProps) {
             <Show when={showBubbleMenu()}>
               <div
                 ref={bubbleMenuRef}
-                class="bg-mantle text-text fixed z-[110] w-fit rounded p-2 text-sm whitespace-nowrap shadow-lg"
+                class="bg-crust text-text absolute z-110 w-fit rounded p-2 text-sm whitespace-nowrap shadow-xl"
                 style={{
                   top: `${bubbleMenuPosition().top}px`,
                   left: `${bubbleMenuPosition().left}px`,
@@ -1431,7 +1460,7 @@ export default function TextEditor(props: TextEditorProps) {
                   "margin-top": "-8px"
                 }}
               >
-                <div class="flex flex-wrap gap-1">
+                <div class="flex scale-105 flex-wrap gap-1">
                   <button
                     type="button"
                     onClick={() =>
@@ -1442,10 +1471,10 @@ export default function TextEditor(props: TextEditorProps) {
                         .run()
                     }
                     class={`${
-                      instance().isActive("heading", { level: 1 })
+                      isActive("heading", { level: 1 })
                         ? "bg-surface2"
                         : "hover:bg-surface1"
-                    } rounded px-2 py-1`}
+                    } touch-manipulation rounded px-2 py-1 select-none`}
                   >
                     H1
                   </button>
@@ -1459,10 +1488,10 @@ export default function TextEditor(props: TextEditorProps) {
                         .run()
                     }
                     class={`${
-                      instance().isActive("heading", { level: 2 })
+                      isActive("heading", { level: 2 })
                         ? "bg-surface2"
                         : "hover:bg-surface1"
-                    } rounded px-2 py-1`}
+                    } touch-manipulation rounded px-2 py-1 select-none`}
                   >
                     H2
                   </button>
@@ -1476,10 +1505,10 @@ export default function TextEditor(props: TextEditorProps) {
                         .run()
                     }
                     class={`${
-                      instance().isActive("heading", { level: 3 })
+                      isActive("heading", { level: 3 })
                         ? "bg-surface2"
                         : "hover:bg-surface1"
-                    } rounded px-2 py-1`}
+                    } touch-manipulation rounded px-2 py-1 select-none`}
                   >
                     H3
                   </button>
@@ -1489,10 +1518,8 @@ export default function TextEditor(props: TextEditorProps) {
                       instance().chain().focus().toggleBold().run()
                     }
                     class={`${
-                      instance().isActive("bold")
-                        ? "bg-crust"
-                        : "hover:bg-crust"
-                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                      isActive("bold") && "bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none`}
                   >
                     <strong>B</strong>
                   </button>
@@ -1502,10 +1529,8 @@ export default function TextEditor(props: TextEditorProps) {
                       instance().chain().focus().toggleItalic().run()
                     }
                     class={`${
-                      instance().isActive("italic")
-                        ? "bg-crust"
-                        : "hover:bg-crust"
-                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                      isActive("italic") && "bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none`}
                   >
                     <em>I</em>
                   </button>
@@ -1515,10 +1540,8 @@ export default function TextEditor(props: TextEditorProps) {
                       instance().chain().focus().toggleStrike().run()
                     }
                     class={`${
-                      instance().isActive("strike")
-                        ? "bg-crust"
-                        : "hover:bg-crust"
-                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                      isActive("strike") && "bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none`}
                   >
                     <s>S</s>
                   </button>
@@ -1526,25 +1549,10 @@ export default function TextEditor(props: TextEditorProps) {
                     type="button"
                     onClick={setLink}
                     class={`${
-                      instance().isActive("link")
-                        ? "bg-crust"
-                        : "hover:bg-crust"
-                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                      isActive("link") && "bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none`}
                   >
                     Link
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      instance().chain().focus().toggleCode().run()
-                    }
-                    class={`${
-                      instance().isActive("code")
-                        ? "bg-crust"
-                        : "hover:bg-crust"
-                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
-                  >
-                    Code
                   </button>
                   <button
                     type="button"
@@ -1552,10 +1560,8 @@ export default function TextEditor(props: TextEditorProps) {
                       instance().chain().focus().toggleSuperscript().run()
                     }
                     class={`${
-                      instance().isActive("superscript")
-                        ? "bg-crust"
-                        : "hover:bg-crust"
-                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                      isActive("superscript") && "bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none`}
                     title="Superscript (Reference)"
                   >
                     X<sup>n</sup>
@@ -1566,31 +1572,14 @@ export default function TextEditor(props: TextEditorProps) {
                       instance().chain().focus().toggleSubscript().run()
                     }
                     class={`${
-                      instance().isActive("subscript")
-                        ? "bg-crust"
-                        : "hover:bg-crust"
-                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
+                      isActive("subscript") && "bg-crust"
+                    } bg-opacity-30 hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none`}
                     title="Subscript"
                   >
                     X<sub>n</sub>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      instance().chain().focus().toggleTaskList().run()
-                    }
-                    class={`${
-                      instance().isActive("taskList")
-                        ? "bg-crust"
-                        : "hover:bg-crust"
-                    } bg-opacity-30 hover:bg-opacity-30 rounded px-2 py-1`}
-                    title="Task List"
-                  >
-                    ☑
-                  </button>
-
                   {/* Table controls in bubble menu */}
-                  <Show when={instance().isActive("table")}>
+                  <Show when={isActive("table")}>
                     <div class="border-crust mx-1 border-l opacity-30"></div>
 
                     <button
@@ -1598,7 +1587,7 @@ export default function TextEditor(props: TextEditorProps) {
                       onClick={() =>
                         instance().chain().focus().addRowBefore().run()
                       }
-                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-crust hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Add Row Before"
                     >
                       ↑ Row
@@ -1609,7 +1598,7 @@ export default function TextEditor(props: TextEditorProps) {
                       onClick={() =>
                         instance().chain().focus().addRowAfter().run()
                       }
-                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-crust hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Add Row After"
                     >
                       Row ↓
@@ -1618,7 +1607,7 @@ export default function TextEditor(props: TextEditorProps) {
                     <button
                       type="button"
                       onClick={deleteRowWithConfirmation}
-                      class="hover:bg-red hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-red hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Delete Row"
                     >
                       ✕ Row
@@ -1631,7 +1620,7 @@ export default function TextEditor(props: TextEditorProps) {
                       onClick={() =>
                         instance().chain().focus().addColumnBefore().run()
                       }
-                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-crust hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Add Column Before"
                     >
                       ← Col
@@ -1642,7 +1631,7 @@ export default function TextEditor(props: TextEditorProps) {
                       onClick={() =>
                         instance().chain().focus().addColumnAfter().run()
                       }
-                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-crust hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Add Column After"
                     >
                       Col →
@@ -1651,7 +1640,7 @@ export default function TextEditor(props: TextEditorProps) {
                     <button
                       type="button"
                       onClick={deleteColumnWithConfirmation}
-                      class="hover:bg-red hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-red hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Delete Column"
                     >
                       ✕ Col
@@ -1664,7 +1653,7 @@ export default function TextEditor(props: TextEditorProps) {
                       onClick={() =>
                         instance().chain().focus().mergeCells().run()
                       }
-                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-crust hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Merge Cells"
                     >
                       ⊡
@@ -1675,7 +1664,7 @@ export default function TextEditor(props: TextEditorProps) {
                       onClick={() =>
                         instance().chain().focus().splitCell().run()
                       }
-                      class="hover:bg-crust hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-crust hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Split Cell"
                     >
                       ⊞
@@ -1684,7 +1673,7 @@ export default function TextEditor(props: TextEditorProps) {
                     <button
                       type="button"
                       onClick={deleteTableWithConfirmation}
-                      class="hover:bg-red hover:bg-opacity-30 rounded px-2 py-1"
+                      class="hover:bg-red hover:bg-opacity-30 touch-manipulation rounded px-2 py-1 select-none"
                       title="Delete Table"
                     >
                       ✕ Table
@@ -1785,10 +1774,10 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleHeading({ level: 1 }).run()
                   }
                   class={`${
-                    instance().isActive("heading", { level: 1 })
+                    isActive("heading", { level: 1 })
                       ? "bg-surface2"
                       : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Heading 1"
                 >
                   H1
@@ -1799,10 +1788,10 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleHeading({ level: 2 }).run()
                   }
                   class={`${
-                    instance().isActive("heading", { level: 2 })
+                    isActive("heading", { level: 2 })
                       ? "bg-surface2"
                       : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Heading 2"
                 >
                   H2
@@ -1813,10 +1802,10 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleHeading({ level: 3 }).run()
                   }
                   class={`${
-                    instance().isActive("heading", { level: 3 })
+                    isActive("heading", { level: 3 })
                       ? "bg-surface2"
                       : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Heading 3"
                 >
                   H3
@@ -1826,10 +1815,8 @@ export default function TextEditor(props: TextEditorProps) {
                   type="button"
                   onClick={() => instance().chain().focus().toggleBold().run()}
                   class={`${
-                    instance().isActive("bold")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isActive("bold") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Bold"
                 >
                   <strong>B</strong>
@@ -1840,10 +1827,8 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleItalic().run()
                   }
                   class={`${
-                    instance().isActive("italic")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isActive("italic") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Italic"
                 >
                   <em>I</em>
@@ -1854,10 +1839,8 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleStrike().run()
                   }
                   class={`${
-                    instance().isActive("strike")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isActive("strike") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Strikethrough"
                 >
                   <s>S</s>
@@ -1868,10 +1851,10 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleSuperscript().run()
                   }
                   class={`${
-                    instance().isActive("superscript")
+                    isActive("superscript")
                       ? "bg-surface2"
                       : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Superscript (for references)"
                 >
                   X<sup class="text-[0.6em]">n</sup>
@@ -1882,10 +1865,8 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleSubscript().run()
                   }
                   class={`${
-                    instance().isActive("subscript")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isActive("subscript") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Subscript"
                 >
                   X<sub class="text-[0.6em]">n</sub>
@@ -1897,10 +1878,8 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleBulletList().run()
                   }
                   class={`${
-                    instance().isActive("bulletList")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isActive("bulletList") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Bullet List"
                 >
                   • List
@@ -1911,10 +1890,10 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleOrderedList().run()
                   }
                   class={`${
-                    instance().isActive("orderedList")
+                    isActive("orderedList")
                       ? "bg-surface2"
                       : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Ordered List"
                 >
                   1. List
@@ -1925,10 +1904,8 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleTaskList().run()
                   }
                   class={`${
-                    instance().isActive("taskList")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isActive("taskList") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Task List"
                 >
                   ☑ Tasks
@@ -1939,10 +1916,8 @@ export default function TextEditor(props: TextEditorProps) {
                     instance().chain().focus().toggleBlockquote().run()
                   }
                   class={`${
-                    instance().isActive("blockquote")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isActive("blockquote") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Blockquote"
                 >
                   " Quote
@@ -1950,7 +1925,7 @@ export default function TextEditor(props: TextEditorProps) {
                 <button
                   type="button"
                   onClick={insertCollapsibleSection}
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                   title="Insert Collapsible Section"
                 >
                   ▼ Details
@@ -1960,59 +1935,55 @@ export default function TextEditor(props: TextEditorProps) {
                 {/* Text Alignment */}
                 <button
                   type="button"
-                  onClick={() =>
-                    instance().chain().focus().setTextAlign("left").run()
-                  }
+                  onClick={() => {
+                    instance().chain().focus().setTextAlign("left").run();
+                    setEditorState((prev) => prev + 1);
+                  }}
                   class={`${
-                    instance().isActive({ textAlign: "left" })
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isAlignActive("left") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Align Left"
                 >
-                  ⬅
+                  ←
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    instance().chain().focus().setTextAlign("center").run()
-                  }
+                  onClick={() => {
+                    instance().chain().focus().setTextAlign("center").run();
+                    setEditorState((prev) => prev + 1);
+                  }}
                   class={`${
-                    instance().isActive({ textAlign: "center" })
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isAlignActive("center") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Align Center"
                 >
                   ↔
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    instance().chain().focus().setTextAlign("right").run()
-                  }
+                  onClick={() => {
+                    instance().chain().focus().setTextAlign("right").run();
+                    setEditorState((prev) => prev + 1);
+                  }}
                   class={`${
-                    instance().isActive({ textAlign: "right" })
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isAlignActive("right") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Align Right"
                 >
-                  ➡
+                  →
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    instance().chain().focus().setTextAlign("justify").run()
-                  }
+                  onClick={() => {
+                    instance().chain().focus().setTextAlign("justify").run();
+                    setEditorState((prev) => prev + 1);
+                  }}
                   class={`${
-                    instance().isActive({ textAlign: "justify" })
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isAlignActive("justify") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Justify"
                 >
-                  ⬌
+                  ⇄
                 </button>
                 <div class="border-surface2 mx-1 border-l"></div>
                 <button
@@ -2020,10 +1991,9 @@ export default function TextEditor(props: TextEditorProps) {
                   onClick={showLanguagePicker}
                   data-language-picker-trigger
                   class={`${
-                    instance().isActive("codeBlock")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    (showLanguageSelector() || isActive("codeBlock")) &&
+                    "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Code Block"
                 >
                   {"</>"}
@@ -2032,10 +2002,8 @@ export default function TextEditor(props: TextEditorProps) {
                   type="button"
                   onClick={setLink}
                   class={`${
-                    instance().isActive("link")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    isActive("link") && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Add Link"
                 >
                   🔗 Link
@@ -2043,7 +2011,7 @@ export default function TextEditor(props: TextEditorProps) {
                 <button
                   type="button"
                   onClick={addImage}
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  class="touch-manipulation rounded px-2 py-1 text-xs select-none"
                   title="Add Image"
                 >
                   🖼 Image
@@ -2051,7 +2019,7 @@ export default function TextEditor(props: TextEditorProps) {
                 <button
                   type="button"
                   onClick={addIframe}
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  class="touch-manipulation rounded px-2 py-1 text-xs select-none"
                   title="Add Iframe"
                 >
                   📺 Iframe
@@ -2061,10 +2029,8 @@ export default function TextEditor(props: TextEditorProps) {
                   onClick={showTableInserter}
                   data-table-trigger
                   class={`${
-                    instance().isActive("table")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    (showTableMenu() || isActive("table")) && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Insert Table"
                 >
                   ⊞ Table
@@ -2073,7 +2039,9 @@ export default function TextEditor(props: TextEditorProps) {
                   type="button"
                   onClick={showMermaidSelector}
                   data-mermaid-trigger
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  class={`${
+                    showMermaidTemplates() && "bg-surface2"
+                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                   title="Insert Diagram"
                 >
                   📊 Diagram
@@ -2083,10 +2051,9 @@ export default function TextEditor(props: TextEditorProps) {
                   onClick={showConditionalConfigurator}
                   data-conditional-trigger
                   class={`${
-                    instance().isActive("conditionalBlock")
-                      ? "bg-surface2"
-                      : "hover:bg-surface1"
-                  } rounded px-2 py-1 text-xs`}
+                    (showConditionalConfig() || isActive("conditionalBlock")) &&
+                    "bg-surface2"
+                  } rounded px-2 py-1 text-xs select-none`}
                   title="Insert Conditional Block"
                 >
                   🔒 Conditional
@@ -2097,7 +2064,7 @@ export default function TextEditor(props: TextEditorProps) {
                   onClick={() =>
                     instance().chain().focus().setHorizontalRule().run()
                   }
-                  class="bg-surface0 hover:bg-surface1 rounded px-3 py-1 text-xs"
+                  class="hover:bg-surface1 rounded px-3 py-1 text-xs"
                   title="Horizontal Rule"
                 >
                   ━━ HR
@@ -2106,7 +2073,7 @@ export default function TextEditor(props: TextEditorProps) {
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                   title={
                     isFullscreen()
                       ? "Exit Fullscreen (ESC)"
@@ -2118,14 +2085,14 @@ export default function TextEditor(props: TextEditorProps) {
                 <button
                   type="button"
                   onClick={() => setShowKeyboardHelp(!showKeyboardHelp())}
-                  class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                   title="Keyboard Shortcuts"
                 >
                   ⌨ Help
                 </button>
 
                 {/* Table controls - shown when cursor is in a table */}
-                <Show when={instance().isActive("table")}>
+                <Show when={isActive("table")}>
                   <div class="border-surface2 mx-1 border-l"></div>
 
                   <button
@@ -2133,7 +2100,7 @@ export default function TextEditor(props: TextEditorProps) {
                     onClick={() =>
                       instance().chain().focus().addColumnBefore().run()
                     }
-                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Add Column Before"
                   >
                     ← Col
@@ -2144,7 +2111,7 @@ export default function TextEditor(props: TextEditorProps) {
                     onClick={() =>
                       instance().chain().focus().addColumnAfter().run()
                     }
-                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Add Column After"
                   >
                     Col →
@@ -2153,7 +2120,7 @@ export default function TextEditor(props: TextEditorProps) {
                   <button
                     type="button"
                     onClick={deleteColumnWithConfirmation}
-                    class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
+                    class="hover:bg-red bg-opacity-20 touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Delete Column"
                   >
                     ✕ Col
@@ -2166,7 +2133,7 @@ export default function TextEditor(props: TextEditorProps) {
                     onClick={() =>
                       instance().chain().focus().addRowBefore().run()
                     }
-                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Add Row Before"
                   >
                     ↑ Row
@@ -2177,7 +2144,7 @@ export default function TextEditor(props: TextEditorProps) {
                     onClick={() =>
                       instance().chain().focus().addRowAfter().run()
                     }
-                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Add Row After"
                   >
                     Row ↓
@@ -2186,7 +2153,7 @@ export default function TextEditor(props: TextEditorProps) {
                   <button
                     type="button"
                     onClick={deleteRowWithConfirmation}
-                    class="hover:bg-red bg-opacity-20 rounded px-2 py-1 text-xs"
+                    class="hover:bg-red bg-opacity-20 touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Delete Row"
                   >
                     ✕ Row
@@ -2197,7 +2164,7 @@ export default function TextEditor(props: TextEditorProps) {
                   <button
                     type="button"
                     onClick={deleteTableWithConfirmation}
-                    class="hover:bg-red rounded px-2 py-1 text-xs"
+                    class="hover:bg-red touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Delete Table"
                   >
                     ✕ Table
@@ -2209,10 +2176,10 @@ export default function TextEditor(props: TextEditorProps) {
                       instance().chain().focus().toggleHeaderRow().run()
                     }
                     class={`${
-                      instance().isActive("tableHeader")
+                      isActive("tableHeader")
                         ? "bg-surface2"
                         : "hover:bg-surface1"
-                    } rounded px-2 py-1 text-xs`}
+                    } touch-manipulation rounded px-2 py-1 text-xs select-none`}
                     title="Toggle Header Row"
                   >
                     ≡ Header
@@ -2223,7 +2190,7 @@ export default function TextEditor(props: TextEditorProps) {
                     onClick={() =>
                       instance().chain().focus().mergeCells().run()
                     }
-                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Merge Cells"
                   >
                     ⊡ Merge
@@ -2232,7 +2199,7 @@ export default function TextEditor(props: TextEditorProps) {
                   <button
                     type="button"
                     onClick={() => instance().chain().focus().splitCell().run()}
-                    class="hover:bg-surface1 rounded px-2 py-1 text-xs"
+                    class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
                     title="Split Cell"
                   >
                     ⊞ Split
