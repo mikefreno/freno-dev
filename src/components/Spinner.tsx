@@ -47,7 +47,7 @@ export function Spinner(props: SpinnerProps) {
 
   return (
     <span
-      class={`font-mono ${sizeClass()} ${props.class || ""}`}
+      class={`text-overlay2 font-mono ${sizeClass()} ${props.class || ""}`}
       style={style()}
       aria-label={props["aria-label"] || "Loading..."}
       role="status"

@@ -229,61 +229,12 @@ body {
   color: var(--color-text);
   transition: background-color 500ms ease-in-out;
 }
-
 [data-typewriter="animated"] [data-char-index] {
   opacity: 0;
 }
 
 [data-typewriter-ready="true"] [data-char-index] {
   transition: opacity 0.05s ease-in;
-}
-
-.bg-base.relative.h-screen {
-  width: 100vw;
-  margin-left: 0;
-}
-
-@media (min-width: 768px) {
-  .bg-base.relative.h-screen {
-    width: calc(100vw - 600px);
-    margin-left: 300px;
-  }
-}
-
-@media (max-width: 767px) {
-  nav.fixed.z-50[class*="border-r-2"] {
-    /* Left sidebar starts off-screen on mobile */
-    transform: translateX(-100%);
-  }
-}
-
-/* Note: JS will add inline styles and reactive classList that override these defaults */
-
-/* Blog banner fallbacks - similar to main layout */
-.blog-banner-image {
-  /* Full width by default on mobile */
-  width: 100vw;
-  margin-left: 0;
-}
-
-.blog-banner-text {
-  /* Full width by default on mobile */
-  width: 100vw;
-  margin-left: 0;
-}
-
-@media (min-width: 768px) {
-  .blog-banner-image {
-    /* Account for sidebars on desktop */
-    width: calc(100vw - 600px);
-    margin-left: 300px;
-  }
-
-  .blog-banner-text {
-    /* Account for sidebars on desktop */
-    width: calc(100vw - 600px);
-    margin-left: 300px;
-  }
 }
 
 .cursor-typing {
@@ -302,6 +253,13 @@ body {
   vertical-align: text-bottom;
   animation: blink 1s infinite;
   margin-left: 2px;
+  position: absolute;
+}
+
+@media (max-width: 767px) {
+  .cursor-block {
+    position: relative;
+  }
 }
 
 @keyframes blink {

@@ -319,7 +319,7 @@ export function LeftBar() {
         "translate-x-0": leftBarVisible()
       }}
       style={{
-        "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)", // Smooth for both revealing and hiding
+        "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
         "min-width": leftBarSize() > 0 ? `${leftBarSize()}px` : undefined,
         "box-shadow": "inset -6px 0 16px -6px rgba(0, 0, 0, 0.1)",
         "padding-top": "env(safe-area-inset-top)",
@@ -371,15 +371,15 @@ export function LeftBar() {
                 fallback={
                   <For each={[1, 2, 3]}>
                     {() => (
-                      <div class="flex flex-col">
-                        <div class="flex items-start gap-2">
-                          <div class="flex flex-1 flex-col gap-2">
+                      <div class="flex w-52 flex-col">
+                        <div class="relative overflow-hidden">
+                          <SkeletonBox class="float-right ml-2 h-12 w-16" />
+                          <div class="flex flex-col">
                             <SkeletonText class="h-6 w-full" />
-                            <SkeletonText class="h-6 w-full" />
+                            <SkeletonText class="mt-1.5 h-6 w-2/3" />
                           </div>
-                          <SkeletonBox class="h-14 w-16 shrink-0" />
                         </div>
-                        <SkeletonText class="mt-2 h-6 w-full" />
+                        <SkeletonText class="mt-1.5 h-6 w-1/2" />
                       </div>
                     )}
                   </For>
@@ -390,7 +390,7 @@ export function LeftBar() {
                     <a
                       href={`/blog/${post.title}`}
                       onClick={handleLinkClick}
-                      class="hover:text-subtext0 block transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
+                      class="hover:text-subtext0 block w-52 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
                     >
                       <Typewriter class="flex flex-col" keepAlive={false}>
                         <div class="relative overflow-hidden">

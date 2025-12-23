@@ -35,7 +35,10 @@ export default function Home() {
             >
               LÖVE
             </a>{" "}
-            (an open source game engine for Lua). You can see some of my work{" "}
+            (an open source game engine for Lua).{" "}
+          </Typewriter>{" "}
+          <Typewriter speed={100} keepAlive={2000}>
+            You can see some of my work{" "}
             <a
               href="https://github.com/mikefreno"
               class="text-blue hover-underline-animation"

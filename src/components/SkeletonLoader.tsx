@@ -1,4 +1,3 @@
-import { JSX } from "solid-js";
 import { Spinner } from "~/components/Spinner";
 
 interface SkeletonProps {
@@ -8,7 +7,7 @@ interface SkeletonProps {
 export function SkeletonBox(props: SkeletonProps) {
   return (
     <div
-      class={`bg-surface0 text-overlay0 flex items-center justify-center rounded ${props.class || ""}`}
+      class={`bg-surface0 flex items-center justify-center rounded ${props.class || ""}`}
       aria-label="Loading..."
       role="status"
     >
@@ -20,7 +19,7 @@ export function SkeletonBox(props: SkeletonProps) {
 export function SkeletonText(props: SkeletonProps) {
   return (
     <div
-      class={`bg-surface0 text-overlay0 inline-flex h-4 items-center rounded px-2 ${props.class || ""}`}
+      class={`bg-surface0 inline-flex items-center rounded px-2 pt-1 ${props.class || ""}`}
       aria-label="Loading..."
       role="status"
     >
@@ -32,7 +31,7 @@ export function SkeletonText(props: SkeletonProps) {
 export function SkeletonCircle(props: SkeletonProps) {
   return (
     <div
-      class={`bg-surface0 text-overlay0 flex items-center justify-center rounded-full ${props.class || ""}`}
+      class={`bg-surface0 flex items-center justify-center rounded-full ${props.class || ""}`}
       aria-label="Loading..."
       role="status"
     >
