@@ -1,6 +1,7 @@
 import { Show } from "solid-js";
 import CardLinks from "./CardLinks";
 import DeletePostButton from "./DeletePostButton";
+import { Fire } from "~/components/icons/Fire";
 
 export interface Post {
   id: number;
@@ -43,7 +44,7 @@ export default function Card(props: CardProps) {
         alt={props.post.title.replaceAll("_", " ") + " banner"}
         class="h-full w-full object-cover"
       />
-      <div class="border-opacity-20 bg-opacity-40 bg-base border-text absolute bottom-0 w-full border-t px-2 py-4 backdrop-blur-md md:px-6">
+      <div class="border-opacity-20 bg-opacity-40 bg-crust border-text absolute bottom-0 w-full border-t px-2 py-4 backdrop-blur-md md:px-6">
         <div class="flex flex-col items-center justify-between md:flex-row">
           <div class="text-center lg:text-left">
             <div class="text-2xl md:text-3xl">
@@ -53,6 +54,10 @@ export default function Card(props: CardProps) {
           </div>
           <div class="flex w-full flex-col justify-around pt-2 lg:w-1/2 lg:flex-row lg:justify-between lg:pt-0 lg:pl-2">
             <div class="m-auto md:h-full md:pr-2">
+              <div class="flex items-center gap-1 text-sm whitespace-nowrap">
+                <Fire height={16} width={16} />
+                <span>{props.post.reads || 0} Hits</span>
+              </div>
               <p class="text-sm whitespace-nowrap">
                 {props.post.total_comments || 0} Comments
               </p>
