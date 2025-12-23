@@ -46,7 +46,6 @@ const sendContactEmail = action(async (formData: FormData) => {
   const email = formData.get("email") as string;
   const message = formData.get("message") as string;
 
-  // Validate inputs
   const schema = z.object({
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Valid email is required"),

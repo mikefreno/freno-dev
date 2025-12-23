@@ -136,7 +136,6 @@ export default function LoginPage() {
         const password = passwordRef.value;
         const passwordConf = passwordConfRef.value;
 
-        // Validate inputs
         if (!isValidEmail(email)) {
           setError("Invalid email address");
           setLoading(false);

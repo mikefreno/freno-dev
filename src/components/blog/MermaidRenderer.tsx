@@ -1,7 +1,6 @@
 import { onMount } from "solid-js";
 import mermaid from "mermaid";
 
-// Initialize mermaid once
 mermaid.initialize({
   startOnLoad: false,
   theme: "dark",
