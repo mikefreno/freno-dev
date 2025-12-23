@@ -313,7 +313,7 @@ export function LeftBar() {
       tabindex="-1"
       ref={ref}
       aria-label="Main navigation"
-      class="border-r-overlay2 bg-base fixed z-50 h-dvh w-min border-r-2 transition-transform duration-500 ease-out md:max-w-[20%]"
+      class="border-r-overlay2 bg-base fixed z-50 h-dvh w-min border-r-2 transition-transform duration-500 ease-out"
       classList={{
         "-translate-x-full": !leftBarVisible(),
         "translate-x-0": leftBarVisible()

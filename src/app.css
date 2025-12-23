@@ -229,6 +229,7 @@ body {
   color: var(--color-text);
   transition: background-color 500ms ease-in-out;
 }
+
 [data-typewriter="animated"] [data-char-index] {
   opacity: 0;
 }
@@ -254,12 +255,6 @@ body {
   animation: blink 1s infinite;
   margin-left: 2px;
   position: absolute;
-}
-
-@media (max-width: 767px) {
-  .cursor-block {
-    position: relative;
-  }
 }
 
 @keyframes blink {
