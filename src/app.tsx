@@ -173,7 +173,6 @@ function AppLayout(props: { children: any }) {
             </div>
           </noscript>
           <div
-            class="py-16"
             onMouseUp={handleCenterTapRelease}
             onTouchEnd={handleCenterTapRelease}
           >

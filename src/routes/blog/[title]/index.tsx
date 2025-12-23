@@ -317,11 +317,17 @@ export default function PostPage() {
                             </div>
                             <div class="flex max-w-105 flex-wrap justify-center italic md:justify-start md:pl-24">
                               <For each={postData.tags as any[]}>
-                                {(tag) => (
-                                  <div class="group relative m-1 h-fit w-fit rounded-xl bg-purple-600 px-2 py-1 text-sm">
-                                    <div class="text-white">{tag.value}</div>
-                                  </div>
-                                )}
+                                {(tag) => {
+                                  const tagValue = tag.value;
+                                  return tagValue ? (
+                                    <A
+                                      href={`/blog?include=${encodeURIComponent(tagValue.split("#")[1])}`}
+                                      class="group bg-rosewater relative m-1 h-fit w-fit rounded-xl px-2 py-1 text-sm transition-all duration-200 hover:brightness-110 active:scale-95"
+                                    >
+                                      <div class="text-white">{tagValue}</div>
+                                    </A>
+                                  ) : null;
+                                }}
                               </For>
                             </div>
                           </div>
@@ -333,7 +339,7 @@ export default function PostPage() {
                                   <Fire
                                     height={32}
                                     width={32}
-                                    color="var(--color-text)"
+                                    color="var(--color-red)"
                                   />
                                 </div>
                                 <div class="text-text my-auto pt-0.5 pl-2 text-sm">
@@ -344,7 +350,14 @@ export default function PostPage() {
                             </div>
 
                             <a href="#comments" class="mx-2">
-                              <div class="tooltip flex flex-col">
+                              <button
+                                onClick={() => {
+                                  document
+                                    .getElementById("comments")
+                                    ?.scrollIntoView({ behavior: "smooth" });
+                                }}
+                                class="tooltip flex flex-col"
+                              >
                                 <div class="mx-auto hover:brightness-125">
                                   <CommentIcon
                                     strokeWidth={1}
@@ -358,7 +371,7 @@ export default function PostPage() {
                                     ? "Comment"
                                     : "Comments"}
                                 </div>
-                              </div>
+                              </button>
                             </a>
 
                             <div class="mx-2">

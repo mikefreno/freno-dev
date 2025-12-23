@@ -77,6 +77,7 @@ export default function BlogIndex() {
 
   const sort = () => searchParams.sort || "newest";
   const filters = () => searchParams.filter || "";
+  const include = () => searchParams.include || "";
 
   const data = createAsync(() => getPosts(), { deferStream: true });
 
@@ -84,7 +85,7 @@ export default function BlogIndex() {
     <>
       <Title>Blog | Michael Freno</Title>
 
-      <div class="mx-auto pt-8 pb-24">
+      <div class="mx-auto py-16 pb-24">
         <Show when={data()} fallback={<TerminalSplash />}>
           {(loadedData) => (
             <>
@@ -118,6 +119,7 @@ export default function BlogIndex() {
                     privilegeLevel={loadedData().privilegeLevel}
                     filters={filters()}
                     sort={sort()}
+                    include={include()}
                   />
                 </div>
               </Show>

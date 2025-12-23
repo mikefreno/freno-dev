@@ -11,7 +11,7 @@ export default function Home() {
         content="Michael Freno - Software Engineer based in Brooklyn, NY"
       />
 
-      <main class="flex h-full flex-col gap-8 px-4 text-xl">
+      <main class="flex h-full flex-col gap-8 px-4 py-16 text-xl">
         <div class="flex-1">
           <Typewriter speed={30} keepAlive={2000}>
             <div class="text-4xl">Hey!</div>
@@ -153,39 +153,40 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <Typewriter speed={120} class="mx-auto max-w-3/4 pt-8 md:max-w-1/2">
-            And if you love the color schemes of this site
-            <div class="mx-auto w-fit">
-              <DarkModeToggle />
+          <div class="flex justify-between">
+            <Typewriter speed={120} class="mx-auto max-w-3/4 pt-8 md:max-w-1/2">
+              And if you love the color schemes of this site
+              <div class="mx-auto w-fit">
+                <DarkModeToggle />
+              </div>
+              (which of course you do), you can see{" "}
+              <a
+                href="https://github.com/mikefreno/dots/blob/master/mac/nvim/lua/colors.lua"
+                class="text-blue hover-underline-animation"
+              >
+                here
+              </a>{" "}
+              - and also see the rest of my various dot files idk. There's a
+              macos and arch linux rice in there if you're into that kinda thing
+              and a home server setup too. Which I will write about soon™.
+            </Typewriter>
+            <div class="flex flex-col items-end justify-center gap-4 pr-4">
+              <Typewriter speed={30} keepAlive={false}>
+                <div>
+                  My Collection of
+                  <br />
+                  By-the-ways:
+                </div>
+              </Typewriter>
+              <Typewriter speed={30} keepAlive={false}>
+                <ul class="list-disc">
+                  <li>I use Neovim</li>
+                  <li>I use Arch Linux</li>
+                  <li>I use Rust</li>
+                </ul>
+              </Typewriter>
             </div>
-            (which of course you do), you can see{" "}
-            <a
-              href="https://github.com/mikefreno/dots/blob/master/mac/nvim/lua/colors.lua"
-              class="text-blue hover-underline-animation"
-            >
-              here
-            </a>{" "}
-            - and also see the rest of my various dot files idk. There's a macos
-            and arch linux rice in there if you're into that kinda thing and a
-            home server setup too. Which I will write about soon™.
-          </Typewriter>
-        </div>
-
-        <div class="flex flex-col items-end gap-4 pr-4">
-          <Typewriter speed={50} keepAlive={false}>
-            <div>
-              My Collection of
-              <br />
-              By-the-ways:
-            </div>
-          </Typewriter>
-          <Typewriter speed={50} keepAlive={false}>
-            <ul class="list-disc">
-              <li>I use Neovim</li>
-              <li>I use Arch Linux</li>
-              <li>I use Rust</li>
-            </ul>
-          </Typewriter>
+          </div>
         </div>
       </main>
     </>

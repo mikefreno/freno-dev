@@ -21,11 +21,15 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
   const [searchParams] = useSearchParams();
 
   const currentFilters = () => searchParams.filter || null;
+  const currentInclude = () => searchParams.include || null;
 
   createEffect(() => {
     let newRoute = location.pathname + "?sort=" + selected().val;
     if (currentFilters()) {
       newRoute += "&filter=" + currentFilters();
+    }
+    if (currentInclude()) {
+      newRoute += "&include=" + currentInclude();
     }
     navigate(newRoute);
   });

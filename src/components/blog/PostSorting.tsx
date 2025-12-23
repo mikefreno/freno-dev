@@ -12,11 +12,19 @@ export interface PostSortingProps {
   privilegeLevel: "anonymous" | "admin" | "user";
   filters?: string;
   sort?: string;
+  include?: string;
 }
 
 export default function PostSorting(props: PostSortingProps) {
-  // Build set of tags that are ALLOWED (not filtered out)
+  // Build set of tags that are ALLOWED
   const allowedTags = createMemo(() => {
+    // WHITELIST MODE: If 'include' param is present, only show posts with those tags
+    if (props.include) {
+      const includeList = props.include.split("|").filter(Boolean);
+      return new Set(includeList);
+    }
+
+    // BLACKLIST MODE: Filter out tags in 'filter' param
     const filterList = props.filters?.split("|").filter(Boolean) || [];
 
     // If no filters set, all tags are allowed
@@ -42,7 +50,33 @@ export default function PostSorting(props: PostSortingProps) {
   const filteredPosts = createMemo(() => {
     const allowed = allowedTags();
 
-    // If all tags are allowed, show all posts
+    // In whitelist mode, only show posts with allowed tags
+    if (props.include) {
+      // Build map of post_id -> tags for that post
+      const postTags = new Map<number, Set<string>>();
+      props.tags.forEach((tag) => {
+        if (!postTags.has(tag.post_id)) {
+          postTags.set(tag.post_id, new Set());
+        }
+        postTags.get(tag.post_id)!.add(tag.value.slice(1));
+      });
+
+      // Keep posts that have at least one allowed tag
+      return props.posts.filter((post) => {
+        const tags = postTags.get(post.id);
+        if (!tags) return false; // Post has no tags
+
+        // Check if post has at least one allowed tag
+        for (const tag of tags) {
+          if (allowed.has(tag)) {
+            return true;
+          }
+        }
+        return false;
+      });
+    }
+
+    // In blacklist mode, show all posts if all tags are allowed
     if (
       allowed.size ===
       props.tags

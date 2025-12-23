@@ -1,8 +1,6 @@
 import { Title, Meta } from "@solidjs/meta";
 import { A } from "@solidjs/router";
 import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
-import GitHub from "~/components/icons/GitHub";
-import LinkedIn from "~/components/icons/LinkedIn";
 
 export default function DownloadsPage() {
   const download = (assetName: string) => {
@@ -13,12 +11,6 @@ export default function DownloadsPage() {
         window.location.href = url;
       })
       .catch((error) => console.error(error));
-  };
-
-  const joinBetaPrompt = () => {
-    window.alert(
-      "This isn't released yet, if you would like to help test, please go the contact page and include the game and platform you would like to help test in the message. Otherwise the apk is available for direct install. Thanks!"
-    );
   };
 
   return (
@@ -40,12 +32,12 @@ export default function DownloadsPage() {
             <br />
           </div>
 
-          <div class="flex justify-evenly md:mx-[25vw]">
+          <div class="flex justify-evenly">
             <div class="flex w-1/3 flex-col">
-              <div class="text-center text-lg">Android (apk only)</div>
+              <div class="text-center text-lg">Android</div>
               <button
                 onClick={() => download("lineage")}
-                class="bg-blue mt-2 rounded-md px-4 py-2 text-base shadow-lg transition-all duration-200 ease-out hover:brightness-125 active:scale-95"
+                class="bg-blue mx-auto mt-2 rounded-md px-4 py-2 text-base shadow-lg transition-all duration-200 ease-out hover:brightness-125 active:scale-95"
               >
                 Download APK
               </button>
@@ -53,20 +45,6 @@ export default function DownloadsPage() {
                 Note the android version is not well tested, and has performance
                 issues.
               </div>
-              <div class="rule-around">Or</div>
-
-              <div class="mx-auto italic">(Coming soon)</div>
-              <button
-                onClick={joinBetaPrompt}
-                class="mx-auto transition-all duration-200 ease-out active:scale-95"
-              >
-                <img
-                  src="/google-play-badge.png"
-                  alt="google-play"
-                  width={180}
-                  height={60}
-                />
-              </button>
             </div>
 
             <div class="flex flex-col">
@@ -88,27 +66,14 @@ export default function DownloadsPage() {
             (apk and iOS)
           </div>
 
-          <div class="flex justify-evenly md:mx-[25vw]">
+          <div class="flex justify-evenly">
             <div class="flex flex-col">
               <div class="text-center text-lg">Android</div>
               <button
                 onClick={() => download("shapes-with-abigail")}
-                class="bg-blue mt-2 rounded-md px-4 py-2 text-base shadow-lg transition-all duration-200 ease-out hover:brightness-125 active:scale-95"
+                class="bg-blue mx-auto mt-2 rounded-md px-4 py-2 text-base shadow-lg transition-all duration-200 ease-out hover:brightness-125 active:scale-95"
               >
                 Download APK
-              </button>
-              <div class="rule-around">Or</div>
-              <div class="mx-auto italic">(Coming soon)</div>
-              <button
-                onClick={joinBetaPrompt}
-                class="transition-all duration-200 ease-out active:scale-95"
-              >
-                <img
-                  src="/google-play-badge.png"
-                  alt="google-play"
-                  width={180}
-                  height={60}
-                />
               </button>
             </div>
 
@@ -142,33 +107,6 @@ export default function DownloadsPage() {
               Just unzip and drag into 'Applications' folder
             </div>
           </div>
-
-          <ul class="icons flex justify-center gap-4 pt-24 pb-6">
-            <li>
-              <A
-                href="https://github.com/MikeFreno/"
-                target="_blank"
-                rel="noreferrer"
-                class="shaker border-text inline-block rounded-full border transition-transform hover:scale-110"
-              >
-                <span class="m-auto block p-2">
-                  <GitHub height={24} width={24} fill={undefined} />
-                </span>
-              </A>
-            </li>
-            <li>
-              <A
-                href="https://www.linkedin.com/in/michael-freno-176001256/"
-                target="_blank"
-                rel="noreferrer"
-                class="shaker border-text inline-block rounded-full border transition-transform hover:scale-110"
-              >
-                <span class="m-auto block rounded-md p-2">
-                  <LinkedIn height={24} width={24} fill={undefined} />
-                </span>
-              </A>
-            </li>
-          </ul>
         </div>
       </div>
     </>
