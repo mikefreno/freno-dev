@@ -19,7 +19,7 @@ export default function CardLinks(props: CardLinksProps) {
         onClick={() => setReadLoading(true)}
         class={`${
           readLoading() ? "bg-zinc-400" : "bg-lavender hover:brightness-125"
-        } mb-1 ml-2 flex rounded px-4 py-2 text-base font-light shadow transition-all duration-300 ease-out active:scale-90`}
+        } mx-auto mb-1 flex rounded px-4 py-2 text-base font-light shadow transition-all duration-300 ease-out active:scale-90`}
       >
         <Show when={readLoading()} fallback="Read">
           <LoadingSpinner height={24} width={24} />
@@ -31,7 +31,7 @@ export default function CardLinks(props: CardLinksProps) {
           onClick={() => setEditLoading(true)}
           class={`${
             editLoading() ? "bg-zinc-400" : "bg-green-400 hover:bg-green-500"
-          } ml-2 flex rounded px-4 py-2 font-light text-white shadow transition-all duration-300 ease-out active:scale-90`}
+          } mx-auto flex rounded px-4 py-2 text-base font-light shadow transition-all duration-300 ease-out active:scale-90`}
         >
           <Show when={editLoading()} fallback="Edit">
             <LoadingSpinner height={24} width={24} />

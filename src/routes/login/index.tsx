@@ -443,7 +443,7 @@ export default function LoginPage() {
                         height={24}
                         width={24}
                         strokeWidth={1}
-                        class="stroke-zinc-900 dark:stroke-white"
+                        class="stroke-text"
                       />
                     }
                   >
@@ -451,7 +451,7 @@ export default function LoginPage() {
                       height={24}
                       width={24}
                       strokeWidth={1}
-                      class="stroke-zinc-900 dark:stroke-white"
+                      class="stroke-text"
                     />
                   </Show>
                 </button>
@@ -459,7 +459,7 @@ export default function LoginPage() {
               <div
                 class={`${
                   showPasswordLengthWarning() ? "" : "opacity-0 select-none"
-                } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
+                } text-red text-center transition-opacity duration-200 ease-in-out`}
               >
                 Password too short! Min Length: 8
               </div>
@@ -497,7 +497,7 @@ export default function LoginPage() {
                         height={24}
                         width={24}
                         strokeWidth={1}
-                        class="stroke-zinc-900 dark:stroke-white"
+                        class="stroke-text"
                       />
                     }
                   >
@@ -505,7 +505,7 @@ export default function LoginPage() {
                       height={24}
                       width={24}
                       strokeWidth={1}
-                      class="stroke-zinc-900 dark:stroke-white"
+                      class="stroke-text"
                     />
                   </Show>
                 </button>

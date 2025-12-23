@@ -156,15 +156,9 @@ export default function PasswordResetPage() {
     }
     return (
       <div class="timer text-center">
-        <div class="text-sm text-slate-700 dark:text-slate-300">
-          Change Successful!
-        </div>
-        <div class="value py-1 text-3xl text-blue-500 dark:text-blue-400">
-          {timeRemaining}
-        </div>
-        <div class="text-sm text-slate-700 dark:text-slate-300">
-          Redirecting...
-        </div>
+        <div class="text-green text-sm">Change Successful!</div>
+        <div class="value text-blue py-1 text-3xl">{timeRemaining}</div>
+        <div class="text-blue text-sm">Redirecting...</div>
       </div>
     );
   };
@@ -219,7 +213,7 @@ export default function PasswordResetPage() {
                       height={24}
                       width={24}
                       strokeWidth={1}
-                      class="stroke-zinc-900 dark:stroke-white"
+                      class="stroke-text"
                     />
                   }
                 >
@@ -227,7 +221,7 @@ export default function PasswordResetPage() {
                     height={24}
                     width={24}
                     strokeWidth={1}
-                    class="stroke-zinc-900 dark:stroke-white"
+                    class="stroke-text"
                   />
                 </Show>
               </button>
@@ -237,7 +231,7 @@ export default function PasswordResetPage() {
             <div
               class={`${
                 showPasswordLengthWarning() ? "" : "opacity-0 select-none"
-              } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
+              } text-red text-center transition-opacity duration-200 ease-in-out`}
             >
               Password too short! Min Length: 8
             </div>
@@ -275,7 +269,7 @@ export default function PasswordResetPage() {
                       height={24}
                       width={24}
                       strokeWidth={1}
-                      class="stroke-zinc-900 dark:stroke-white"
+                      class="stroke-text"
                     />
                   }
                 >
@@ -283,7 +277,7 @@ export default function PasswordResetPage() {
                     height={24}
                     width={24}
                     strokeWidth={1}
-                    class="stroke-zinc-900 dark:stroke-white"
+                    class="stroke-text"
                   />
                 </Show>
               </button>
@@ -298,7 +292,7 @@ export default function PasswordResetPage() {
                 newPasswordConfRef.value.length >= 6
                   ? ""
                   : "opacity-0 select-none"
-              } text-center text-red-500 transition-opacity duration-200 ease-in-out`}
+              } text-red text-center transition-opacity duration-200 ease-in-out`}
             >
               Passwords do not match!
             </div>

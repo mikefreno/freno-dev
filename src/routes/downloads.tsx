@@ -82,7 +82,7 @@ export default function DownloadsPage() {
         </div>
 
         <div class="pt-12">
-          <div class="text-center text-xl tracking-wide dark:text-white">
+          <div class="text-center text-xl tracking-wide">
             Shapes with Abigail!
             <br />
             (apk and iOS)

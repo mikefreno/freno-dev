@@ -548,7 +548,7 @@ export default function AccountPage() {
                         !userProfile().email
                       }
                     >
-                      <div class="mt-3 rounded bg-yellow-500/10 px-3 py-2 text-center text-sm text-yellow-600 dark:text-yellow-400">
+                      <div class="bg-yellow mt-3 rounded px-3 py-2 text-center text-base text-sm">
                         ⚠️ Add an email address for account recovery
                       </div>
                     </Show>
@@ -558,7 +558,7 @@ export default function AccountPage() {
                         !userProfile().hasPassword
                       }
                     >
-                      <div class="mt-3 rounded bg-blue-500/10 px-3 py-2 text-center text-sm text-blue-600 dark:text-blue-400">
+                      <div class="bg-blue mt-3 rounded px-3 py-2 text-center text-base text-sm">
                         💡 Add a password to enable email/password login
                       </div>
                     </Show>

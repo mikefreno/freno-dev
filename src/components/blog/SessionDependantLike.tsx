@@ -72,7 +72,7 @@ export default function SessionDependantLike(props: SessionDependantLikeProps) {
               width={32}
             />
           </div>
-          <div class="my-auto pt-0.5 pl-2 text-sm text-black dark:text-white">
+          <div class="my-auto pt-0.5 pl-2 text-sm">
             {likes().length} {likes().length === 1 ? "Like" : "Likes"}
           </div>
           <div class="tooltip-text -ml-12 w-12">Must be logged in</div>

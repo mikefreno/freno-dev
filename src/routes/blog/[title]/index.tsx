@@ -268,28 +268,18 @@ export default function PostPage() {
                     }
                   />
 
-                  <div class="relative overflow-x-hidden">
+                  <div class="relative -mt-16 overflow-x-hidden">
                     {/* Fixed banner image background */}
-                    <div class="fixed top-0 left-0 z-0 h-80 w-full sm:h-96 md:h-[50vh]">
-                      <div class="absolute inset-0 h-full w-full overflow-hidden brightness-75">
-                        <img
-                          src={p().banner_photo || "/blueprint.jpg"}
-                          alt="post-cover"
-                          class="blog-banner-image h-full object-cover select-none"
-                          style={{
-                            width: "calc(100vw - 500px)",
-                            "margin-left": "250px",
-                            "pointer-events": "none"
-                          }}
-                        />
-                      </div>
-                      <div
-                        class="text-shadow text-text blog-banner-text absolute top-1/3 z-10 my-auto px-4 text-center tracking-widest brightness-150 select-text"
+                    <div class="fixed inset-0 top-0 left-0 z-0 h-full w-full overflow-hidden brightness-75 sm:h-96 md:ml-62.5 md:h-[50vh] md:w-[calc(100vw-500px)]">
+                      <img
+                        src={p().banner_photo || "/blueprint.jpg"}
+                        alt="post-cover"
+                        class="h-full w-full object-cover select-none"
                         style={{
-                          width: "calc(100vw - 500px)",
-                          "margin-left": "250px"
+                          "pointer-events": "none"
                         }}
-                      >
+                      />
+                      <div class="text-text fixed top-1/3 z-50 m-auto w-full px-4 text-center tracking-widest backdrop-blur-xs select-text md:w-[calc(100vw-500px)]">
                         <div class="text-3xl font-light tracking-widest">
                           {p().title.replaceAll("_", " ")}
                           <div class="py-8 text-xl font-light tracking-widest">
@@ -299,8 +289,7 @@ export default function PostPage() {
                       </div>
                     </div>
 
-                    {/* Spacer to push content down */}
-                    <div class="z-10: pt-80 sm:pt-96 md:pt-[50vh]">
+                    <div class="z-10 pt-80 backdrop-blur-[0.01px] sm:pt-96 md:pt-[50vh]">
                       {/* Content that slides over the fixed image */}
                       <div class="bg-base relative pb-24">
                         <div class="top-4 flex w-full flex-col justify-center md:absolute md:flex-row md:justify-between">

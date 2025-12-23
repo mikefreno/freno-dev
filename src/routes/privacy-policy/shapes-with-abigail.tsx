@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
         name="description"
         content="Privacy policy for Shapes with Abigail app, explaining our commitment to child safety and non-collection of personal data."
       />
-      <div class="bg-zinc-100 dark:bg-zinc-900">
+      <div class="bg-base">
         <div class="min-h-screen px-[8vw] py-[8vh]">
           <div class="py-4 text-xl">
             Shapes with Abigail!&apos;s Privacy Policy

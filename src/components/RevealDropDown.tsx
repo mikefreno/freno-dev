@@ -11,15 +11,31 @@ export default function RevealDropDown(props: {
   };
 
   return (
-    <div class="border-surface0 relative mb-4 overflow-visible rounded-lg border">
+    <div class="relative mb-4 overflow-visible">
       {/* Button Header */}
       <div
-        class="bg-mantle flex cursor-pointer items-center justify-between p-3"
+        class="bg-mantle border-surface0 flex cursor-pointer items-center justify-between rounded-t p-3"
+        style={
+          isRevealed()
+            ? {
+                "border-top-style": "var(--tw-border-style)",
+                "border-inline-style": "var(--tw-border-style)",
+                "border-top-width": "1px",
+                "border-inline-width": "1px",
+                "border-top-left-radius": "var(--radius-xl)",
+                "border-top-right-radius": "var(--radius-xl)"
+              }
+            : {
+                "border-style": "var(--tw-border-style)",
+                "border-width": "1px",
+                "border-radius": "var(--radius-xl)"
+              }
+        }
         onClick={toggleReveal}
       >
         <div class="flex items-center space-x-2">
-          <span class="text-gray-600 dark:text-gray-300">
-            {/* Life and lineage icon */}
+          <span class="h-12 w-12">
+            <img src={"/LineageIcon.png"} />
           </span>
           <span class="font-medium">{props.title}</span>
         </div>
@@ -46,15 +62,13 @@ export default function RevealDropDown(props: {
 
       {/* Reveal Content */}
       <div
-        class={`absolute right-0 left-0 z-10 overflow-scroll transition-all duration-300 ease-in-out ${
+        class={`bg-mantle border-surface0 absolute right-0 left-0 z-10 overflow-scroll rounded-b-xl border-x border-b p-4 shadow-lg transition-all duration-300 ease-in-out ${
           isRevealed()
             ? "mx-h-[75dvh] opacity-100 md:max-h-[60vh]"
             : "max-h-0 opacity-0"
         }`}
       >
-        <div class="bg-mantle p-4 shadow-lg dark:bg-gray-900">
-          {props.children}
-        </div>
+        {props.children}
       </div>
     </div>
   );
