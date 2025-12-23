@@ -1,11 +1,7 @@
-/**
- * User type definitions matching database schema
- */
-
 export interface User {
   id: string;
   email: string | null;
-  email_verified: number; // SQLite boolean (0 or 1)
+  email_verified: number;
   password_hash: string | null;
   display_name: string | null;
   provider: "email" | "google" | "github" | null;
@@ -19,9 +15,6 @@ export interface User {
   updated_at: string;
 }
 
-/**
- * Client-safe user data (excludes sensitive fields)
- */
 export interface UserProfile {
   id: string;
   email?: string;
@@ -32,9 +25,6 @@ export interface UserProfile {
   hasPassword: boolean;
 }
 
-/**
- * Convert database User to client-safe UserProfile
- */
 export function toUserProfile(user: User): UserProfile {
   return {
     id: user.id,
@@ -47,24 +37,15 @@ export function toUserProfile(user: User): UserProfile {
   };
 }
 
-/**
- * JWT payload for session tokens
- */
 export interface SessionPayload {
-  id: string; // user ID
+  id: string;
   email?: string;
 }
 
-/**
- * JWT payload for email verification
- */
 export interface EmailVerificationPayload {
   email: string;
 }
 
-/**
- * JWT payload for password reset
- */
 export interface PasswordResetPayload {
   email: string;
 }

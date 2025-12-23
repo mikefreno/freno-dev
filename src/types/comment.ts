@@ -1,7 +1,6 @@
 /**
  * Comment System Type Definitions
  *
- * Types for the blog comment system including:
  * - Comment and CommentReaction models
  * - WebSocket message types
  * - User data structures

@@ -16,7 +16,6 @@ import {
   APIError
 } from "~/server/fetch-utils";
 
-// Helper to create JWT token
 async function createJWT(
   userId: string,
   expiresIn: string = "14d"
@@ -29,7 +28,6 @@ async function createJWT(
   return token;
 }
 
-// Helper to send email via Brevo/SendInBlue with retry logic
 async function sendEmail(to: string, subject: string, htmlContent: string) {
   const apiKey = env.SENDINBLUE_KEY;
   const apiUrl = "https://api.sendinblue.com/v3/smtp/email";
@@ -68,14 +66,12 @@ async function sendEmail(to: string, subject: string, htmlContent: string) {
 }
 
 export const authRouter = createTRPCRouter({
-  // GitHub callback route
   githubCallback: publicProcedure
     .input(z.object({ code: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const { code } = input;
 
       try {
-        // Exchange code for access token with timeout
         const tokenResponse = await fetchWithTimeout(
           "https://github.com/login/oauth/access_token",
           {
@@ -103,7 +99,6 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Fetch user info from GitHub with timeout
         const userResponse = await fetchWithTimeout(
           "https://api.github.com/user",
           {
@@ -119,7 +114,6 @@ export const authRouter = createTRPCRouter({
         const login = user.login;
         const icon = user.avatar_url;
 
-        // Fetch primary email from GitHub emails endpoint
         const emailsResponse = await fetchWithTimeout(
           "https://api.github.com/user/emails",
           {
@@ -133,7 +127,6 @@ export const authRouter = createTRPCRouter({
         await checkResponse(emailsResponse);
         const emails = await emailsResponse.json();
 
-        // Find primary verified email
         const primaryEmail = emails.find(
           (e: { primary: boolean; verified: boolean; email: string }) =>
             e.primary && e.verified
@@ -143,7 +136,6 @@ export const authRouter = createTRPCRouter({
 
         const conn = ConnectionFactory();
 
-        // Check if user exists
         const query = `SELECT * FROM User WHERE provider = ? AND display_name = ?`;
         const params = ["github", login];
         const res = await conn.execute({ sql: query, args: params });
@@ -151,7 +143,6 @@ export const authRouter = createTRPCRouter({
         let userId: string;
 
         if (res.rows[0]) {
-          // User exists - update email and image if changed
           userId = (res.rows[0] as unknown as User).id;
 
           try {
@@ -160,7 +151,6 @@ export const authRouter = createTRPCRouter({
               args: [email, emailVerified ? 1 : 0, icon, userId]
             });
           } catch (updateError: any) {
-            // Handle unique constraint error on email
             if (
               updateError.code === "SQLITE_CONSTRAINT" &&
               updateError.message?.includes("User.email")
@@ -174,7 +164,6 @@ export const authRouter = createTRPCRouter({
             throw updateError;
           }
         } else {
-          // Create new user
           userId = uuidV4();
 
           const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
@@ -190,7 +179,6 @@ export const authRouter = createTRPCRouter({
           try {
             await conn.execute({ sql: insertQuery, args: insertParams });
           } catch (insertError: any) {
-            // Handle unique constraint error on email
             if (
               insertError.code === "SQLITE_CONSTRAINT" &&
               insertError.message?.includes("User.email")
@@ -205,10 +193,8 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        // Create JWT token
         const token = await createJWT(userId);
 
-        // Set cookie
         setCookie(ctx.event.nativeEvent, "userIDToken", token, {
           maxAge: 60 * 60 * 24 * 14, // 14 days
           path: "/",
@@ -226,7 +212,6 @@ export const authRouter = createTRPCRouter({
           throw error;
         }
 
-        // Provide specific error messages for different failure types
         if (error instanceof TimeoutError) {
           console.error("GitHub API timeout:", error.message);
           throw new TRPCError({
@@ -255,14 +240,12 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Google callback route
   googleCallback: publicProcedure
     .input(z.object({ code: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const { code } = input;
 
       try {
-        // Exchange code for access token with timeout
         const tokenResponse = await fetchWithTimeout(
           "https://oauth2.googleapis.com/token",
           {
@@ -291,7 +274,6 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Fetch user info from Google with timeout
         const userResponse = await fetchWithTimeout(
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
@@ -311,7 +293,6 @@ export const authRouter = createTRPCRouter({
 
         const conn = ConnectionFactory();
 
-        // Check if user exists
         const query = `SELECT * FROM User WHERE provider = ? AND email = ?`;
         const params = ["google", email];
         const res = await conn.execute({ sql: query, args: params });
@@ -319,16 +300,13 @@ export const authRouter = createTRPCRouter({
         let userId: string;
 
         if (res.rows[0]) {
-          // User exists - update email, email_verified, display_name, and image if changed
           userId = (res.rows[0] as unknown as User).id;
 
-          // No need to catch constraint error here since we're updating the same user's record
           await conn.execute({
             sql: `UPDATE User SET email = ?, email_verified = ?, display_name = ?, image = ? WHERE id = ?`,
             args: [email, email_verified ? 1 : 0, name, image, userId]
           });
         } else {
-          // Create new user
           userId = uuidV4();
 
           const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
@@ -347,7 +325,6 @@ export const authRouter = createTRPCRouter({
               args: insertParams
             });
           } catch (insertError: any) {
-            // Handle unique constraint error on email
             if (
               insertError.code === "SQLITE_CONSTRAINT" &&
               insertError.message?.includes("User.email")
@@ -362,10 +339,8 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        // Create JWT token
         const token = await createJWT(userId);
 
-        // Set cookie
         setCookie(ctx.event.nativeEvent, "userIDToken", token, {
           maxAge: 60 * 60 * 24 * 14, // 14 days
           path: "/",
@@ -383,7 +358,6 @@ export const authRouter = createTRPCRouter({
           throw error;
         }
 
-        // Provide specific error messages for different failure types
         if (error instanceof TimeoutError) {
           console.error("Google API timeout:", error.message);
           throw new TRPCError({
@@ -412,7 +386,6 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Email login route
   emailLogin: publicProcedure
     .input(
       z.object({
@@ -425,11 +398,9 @@ export const authRouter = createTRPCRouter({
       const { email, token, rememberMe } = input;
 
       try {
-        // Verify JWT token
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const { payload } = await jwtVerify(token, secret);
 
-        // Check if email matches
         if (payload.email !== email) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
@@ -451,10 +422,8 @@ export const authRouter = createTRPCRouter({
 
         const userId = (res.rows[0] as unknown as User).id;
 
-        // Create JWT token
         const userToken = await createJWT(userId);
 
-        // Set cookie based on rememberMe flag
         const cookieOptions: any = {
           path: "/",
           httpOnly: true,
@@ -490,7 +459,6 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Email verification route
   emailVerification: publicProcedure
     .input(
       z.object({
@@ -502,11 +470,9 @@ export const authRouter = createTRPCRouter({
       const { email, token } = input;
 
       try {
-        // Verify JWT token
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const { payload } = await jwtVerify(token, secret);
 
-        // Check if email matches
         if (payload.email !== email) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
@@ -535,7 +501,6 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Email/password registration
   emailRegistration: publicProcedure
     .input(
       z.object({
@@ -564,10 +529,8 @@ export const authRouter = createTRPCRouter({
           args: [userId, email, passwordHash, "email"]
         });
 
-        // Create JWT token
         const token = await createJWT(userId);
 
-        // Set cookie
         setCookie(ctx.event.nativeEvent, "userIDToken", token, {
           maxAge: 60 * 60 * 24 * 14, // 14 days
           path: "/",
@@ -586,7 +549,6 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Email/password login
   emailPasswordLogin: publicProcedure
     .input(
       z.object({
@@ -640,11 +602,9 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Create JWT token with appropriate expiry
       const expiresIn = rememberMe ? "14d" : "12h";
       const token = await createJWT(user.id, expiresIn);
 
-      // Set cookie
       const cookieOptions: any = {
         path: "/",
         httpOnly: true,
@@ -661,7 +621,6 @@ export const authRouter = createTRPCRouter({
       return { success: true, message: "success" };
     }),
 
-  // Request email login link
   requestEmailLinkLogin: publicProcedure
     .input(
       z.object({
@@ -673,7 +632,6 @@ export const authRouter = createTRPCRouter({
       const { email, rememberMe } = input;
 
       try {
-        // Check rate limiting
         const requested = getCookie(
           ctx.event.nativeEvent,
           "emailLoginLinkRequested"
@@ -702,7 +660,6 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Create JWT token for email link (15min expiry)
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({
           email,
@@ -754,7 +711,6 @@ export const authRouter = createTRPCRouter({
 
         await sendEmail(email, "freno.me login link", htmlContent);
 
-        // Set rate limit cookie (2 minutes)
         const exp = new Date(Date.now() + 2 * 60 * 1000);
         setCookie(
           ctx.event.nativeEvent,
@@ -772,7 +728,6 @@ export const authRouter = createTRPCRouter({
           throw error;
         }
 
-        // Handle email sending failures gracefully
         if (
           error instanceof TimeoutError ||
           error instanceof NetworkError ||
@@ -793,7 +748,6 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Request password reset
   requestPasswordReset: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
@@ -896,7 +850,6 @@ export const authRouter = createTRPCRouter({
           throw error;
         }
 
-        // Handle email sending failures gracefully
         if (
           error instanceof TimeoutError ||
           error instanceof NetworkError ||
@@ -1108,7 +1061,6 @@ export const authRouter = createTRPCRouter({
           throw error;
         }
 
-        // Handle email sending failures gracefully
         if (
           error instanceof TimeoutError ||
           error instanceof NetworkError ||

@@ -1,17 +1,7 @@
-/**
- * Server-side conditional parser for blog content
- * Evaluates conditional blocks and returns processed HTML
- */
-
-/**
- * Get safe environment variables for conditional evaluation
- * Only exposes non-sensitive variables that are safe to use in content conditionals
- */
 export function getSafeEnvVariables(): Record<string, string | undefined> {
   return {
     NODE_ENV: process.env.NODE_ENV,
     VERCEL_ENV: process.env.VERCEL_ENV
-    // Add other safe, non-sensitive env vars here as needed
     // DO NOT expose API keys, secrets, database URLs, etc.
   };
 }
@@ -33,12 +23,6 @@ interface ConditionalBlock {
   content: string;
 }
 
-/**
- * Parse HTML and evaluate conditional blocks (both block and inline)
- * @param html - Raw HTML from database
- * @param context - Evaluation context (user, date, features)
- * @returns Processed HTML with conditionals evaluated
- */
 export function parseConditionals(
   html: string,
   context: ConditionalContext
@@ -47,40 +31,29 @@ export function parseConditionals(
 
   let processedHtml = html;
 
-  // First, process block-level conditionals (div elements)
   processedHtml = processBlockConditionals(processedHtml, context);
-
-  // Then, process inline conditionals (span elements)
   processedHtml = processInlineConditionals(processedHtml, context);
 
   return processedHtml;
 }
 
-/**
- * Process block-level conditional divs
- */
 function processBlockConditionals(
   html: string,
   context: ConditionalContext
 ): string {
-  // More flexible regex that handles attributes in any order
-  // Match div with class="conditional-block" and capture the full tag
   const divRegex =
     /<div\s+([^>]*class="[^"]*conditional-block[^"]*"[^>]*)>([\s\S]*?)<\/div>/gi;
 
   let processedHtml = html;
   let match: RegExpExecArray | null;
 
-  // Reset regex lastIndex
   divRegex.lastIndex = 0;
 
-  // Collect all matches first to avoid regex state issues
   const matches: ConditionalBlock[] = [];
   while ((match = divRegex.exec(html)) !== null) {
     const attributes = match[1];
     const content = match[2];
 
-    // Extract individual attributes
     const typeMatch = /data-condition-type="([^"]+)"/.exec(attributes);
     const valueMatch = /data-condition-value="([^"]+)"/.exec(attributes);
     const showWhenMatch = /data-show-when="(true|false)"/.exec(attributes);
@@ -96,7 +69,6 @@ function processBlockConditionals(
     }
   }
 
-  // Process each conditional block
   for (const block of matches) {
     const shouldShow = evaluateCondition(
       block.conditionType,
@@ -106,8 +78,6 @@ function processBlockConditionals(
     );
 
     if (shouldShow) {
-      // Keep content, but remove conditional wrapper
-      // Extract content from inner <div class="conditional-content">
       const innerContentRegex =
         /<div\s+class="conditional-content">([\s\S]*?)<\/div>/i;
       const innerMatch = block.fullMatch.match(innerContentRegex);
@@ -115,7 +85,6 @@ function processBlockConditionals(
 
       processedHtml = processedHtml.replace(block.fullMatch, innerContent);
     } else {
-      // Remove entire block
       processedHtml = processedHtml.replace(block.fullMatch, "");
     }
   }
@@ -123,31 +92,23 @@ function processBlockConditionals(
   return processedHtml;
 }
 
-/**
- * Process inline conditional spans
- */
 function processInlineConditionals(
   html: string,
   context: ConditionalContext
 ): string {
-  // More flexible regex that handles attributes in any order
-  // Match span with class="conditional-inline" and capture the full tag
   const spanRegex =
     /<span\s+([^>]*class="[^"]*conditional-inline[^"]*"[^>]*)>([\s\S]*?)<\/span>/gi;
 
   let processedHtml = html;
   let match: RegExpExecArray | null;
 
-  // Reset regex lastIndex
   spanRegex.lastIndex = 0;
 
-  // Collect all matches first
   const matches: ConditionalBlock[] = [];
   while ((match = spanRegex.exec(html)) !== null) {
     const attributes = match[1];
     const content = match[2];
 
-    // Extract individual attributes
     const typeMatch = /data-condition-type="([^"]+)"/.exec(attributes);
     const valueMatch = /data-condition-value="([^"]+)"/.exec(attributes);
     const showWhenMatch = /data-show-when="(true|false)"/.exec(attributes);
@@ -163,7 +124,6 @@ function processInlineConditionals(
     }
   }
 
-  // Process each inline conditional
   for (const inline of matches) {
     const shouldShow = evaluateCondition(
       inline.conditionType,
@@ -173,10 +133,8 @@ function processInlineConditionals(
     );
 
     if (shouldShow) {
-      // Keep content, remove span wrapper
       processedHtml = processedHtml.replace(inline.fullMatch, inline.content);
     } else {
-      // Remove entire inline span
       processedHtml = processedHtml.replace(inline.fullMatch, "");
     }
   }
@@ -184,9 +142,6 @@ function processInlineConditionals(
   return processedHtml;
 }
 
-/**
- * Evaluate a single condition
- */
 function evaluateCondition(
   conditionType: string,
   conditionValue: string,
@@ -212,18 +167,12 @@ function evaluateCondition(
       conditionMet = evaluateEnvCondition(conditionValue, context);
       break;
     default:
-      // Unknown condition type - default to hiding content for safety
       conditionMet = false;
   }
 
-  // Apply showWhen logic: if showWhen is true, show when condition is met
-  // If showWhen is false, show when condition is NOT met
   return showWhen ? conditionMet : !conditionMet;
 }
 
-/**
- * Evaluate authentication condition
- */
 function evaluateAuthCondition(
   value: string,
   context: ConditionalContext
@@ -238,9 +187,6 @@ function evaluateAuthCondition(
   }
 }
 
-/**
- * Evaluate privilege level condition
- */
 function evaluatePrivilegeCondition(
   value: string,
   context: ConditionalContext
@@ -249,7 +195,6 @@ function evaluatePrivilegeCondition(
 }
 
 /**
- * Evaluate date-based condition
  * Supports: "before:YYYY-MM-DD", "after:YYYY-MM-DD", "between:YYYY-MM-DD,YYYY-MM-DD"
  */
 function evaluateDateCondition(
@@ -287,9 +232,6 @@ function evaluateDateCondition(
   }
 }
 
-/**
- * Evaluate feature flag condition
- */
 function evaluateFeatureCondition(
   value: string,
   context: ConditionalContext
@@ -298,7 +240,6 @@ function evaluateFeatureCondition(
 }
 
 /**
- * Evaluate environment variable condition
  * Format: "ENV_VAR_NAME:expected_value" or "ENV_VAR_NAME:*" for any truthy value
  */
 function evaluateEnvCondition(
@@ -306,7 +247,6 @@ function evaluateEnvCondition(
   context: ConditionalContext
 ): boolean {
   try {
-    // Parse format: "VAR_NAME:expected_value"
     const colonIndex = value.indexOf(":");
     if (colonIndex === -1) return false;
 
@@ -315,12 +255,10 @@ function evaluateEnvCondition(
 
     const actualValue = context.env[varName];
 
-    // If expected value is "*", check if variable exists and is truthy
     if (expectedValue === "*") {
       return !!actualValue;
     }
 
-    // Otherwise, check for exact match
     return actualValue === expectedValue;
   } catch (error) {
     console.error("Error parsing env condition:", error);

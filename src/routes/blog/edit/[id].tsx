@@ -48,7 +48,7 @@ export default function EditPost() {
       subtitle: p.subtitle || "",
       body: p.body || "",
       banner_photo: p.banner_photo || "",
-      published: p.published || false,
+      published: Boolean(p.published),
       tags: tagValues,
       attachments: p.attachments
     };

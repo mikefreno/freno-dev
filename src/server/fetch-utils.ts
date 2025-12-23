@@ -1,4 +1,3 @@
-// Error types for better error classification
 export class NetworkError extends Error {
   constructor(
     message: string,
@@ -34,9 +33,6 @@ interface FetchWithTimeoutOptions extends RequestInit {
   timeout?: number;
 }
 
-/**
- * Fetch wrapper with timeout support and proper error classification
- */
 export async function fetchWithTimeout(
   url: string,
   options: FetchWithTimeoutOptions = {}
@@ -57,9 +53,7 @@ export async function fetchWithTimeout(
   } catch (error: unknown) {
     clearTimeout(timeoutId);
 
-    // Classify the error for better handling
     if (error instanceof Error) {
-      // Check for abort/timeout
       if (error.name === "AbortError") {
         throw new TimeoutError(
           `Request to ${url} timed out after ${timeout}ms`,
@@ -67,7 +61,6 @@ export async function fetchWithTimeout(
         );
       }
 
-      // Check for connection errors (various runtime-specific errors)
       if (
         error.message.includes("fetch failed") ||
         error.message.includes("ECONNREFUSED") ||
@@ -84,14 +77,10 @@ export async function fetchWithTimeout(
       }
     }
 
-    // Re-throw unknown errors
     throw error;
   }
 }
 
-/**
- * Helper to check response status and throw APIError if not ok
- */
 export async function checkResponse(response: Response): Promise<Response> {
   if (!response.ok) {
     throw new APIError(
@@ -103,9 +92,6 @@ export async function checkResponse(response: Response): Promise<Response> {
   return response;
 }
 
-/**
- * Safe JSON parse that handles errors gracefully
- */
 export async function safeJsonParse<T>(response: Response): Promise<T | null> {
   try {
     return await response.json();
@@ -115,9 +101,6 @@ export async function safeJsonParse<T>(response: Response): Promise<T | null> {
   }
 }
 
-/**
- * Retry logic with exponential backoff
- */
 export async function fetchWithRetry<T>(
   fn: () => Promise<T>,
   options: {
@@ -141,12 +124,10 @@ export async function fetchWithRetry<T>(
     } catch (error) {
       lastError = error;
 
-      // Don't retry if it's the last attempt or error is not retryable
       if (attempt === maxRetries || !retryableErrors(error)) {
         throw error;
       }
 
-      // Exponential backoff
       const delay = retryDelay * Math.pow(2, attempt);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }

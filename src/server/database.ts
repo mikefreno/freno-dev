@@ -92,7 +92,6 @@ export async function dumpAndSendDB({
   reason?: string;
 }> {
   try {
-    // Fetch database dump with timeout
     const res = await fetchWithTimeout(
       `https://${dbName}-mikefreno.turso.io/dump`,
       {
@@ -100,7 +99,7 @@ export async function dumpAndSendDB({
         headers: {
           Authorization: `Bearer ${dbToken}`
         },
-        timeout: 30000 // 30s for database dump
+        timeout: 30000
       }
     );
 
@@ -132,7 +131,6 @@ export async function dumpAndSendDB({
       ]
     };
 
-    // Send email with retry logic
     await fetchWithRetry(
       async () => {
         const sendRes = await fetchWithTimeout(apiUrl, {
@@ -143,7 +141,7 @@ export async function dumpAndSendDB({
             "content-type": "application/json"
           },
           body: JSON.stringify(emailPayload),
-          timeout: 20000 // 20s for email with attachment
+          timeout: 20000
         });
 
         await checkResponse(sendRes);
@@ -157,7 +155,6 @@ export async function dumpAndSendDB({
 
     return { success: true };
   } catch (error) {
-    // Log specific error types for debugging
     if (error instanceof TimeoutError) {
       console.error("Database dump timeout:", error.message);
       return { success: false, reason: "Database dump timed out" };

@@ -1,8 +1,3 @@
-/**
- * Feature flag system for conditional content
- * Centralized configuration for feature toggles
- */
-
 export interface FeatureFlags {
   [key: string]: boolean;
 }

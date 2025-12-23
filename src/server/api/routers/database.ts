@@ -12,10 +12,6 @@ import { cache, withCacheAndStale } from "~/server/cache";
 const BLOG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export const databaseRouter = createTRPCRouter({
-  // ============================================================
-  // Comment Reactions Routes
-  // ============================================================
-
   getCommentReactions: publicProcedure
     .input(z.object({ commentID: z.string() }))
     .query(async ({ input }) => {
@@ -105,14 +101,9 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  // ============================================================
-  // Comments Routes
-  // ============================================================
-
   getAllComments: publicProcedure.query(async () => {
     try {
       const conn = ConnectionFactory();
-      // Join with Post table to get post titles along with comments
       const query = `
           SELECT c.*, p.title as post_title 
           FROM Comment c 
@@ -148,7 +139,6 @@ export const databaseRouter = createTRPCRouter({
           privilegeLevel: ctx.privilegeLevel
         });
 
-        // Get the comment to check ownership
         const commentQuery = await conn.execute({
           sql: "SELECT * FROM Comment WHERE id = ?",
           args: [input.commentID]
@@ -162,7 +152,6 @@ export const databaseRouter = createTRPCRouter({
           });
         }
 
-        // Authorization checks
         const isOwner = comment.commenter_id === ctx.userId;
         const isAdmin = ctx.privilegeLevel === "admin";
 

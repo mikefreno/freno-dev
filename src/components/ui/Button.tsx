@@ -7,9 +7,6 @@ export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement>
   fullWidth?: boolean;
 }
 
-/**
- * Reusable button component with variants and loading state
- */
 export default function Button(props: ButtonProps) {
   const [local, others] = splitProps(props, [
     "variant",
@@ -18,13 +15,14 @@ export default function Button(props: ButtonProps) {
     "fullWidth",
     "class",
     "children",
-    "disabled",
+    "disabled"
   ]);
 
   const variant = () => local.variant || "primary";
   const size = () => local.size || "md";
 
-  const baseClasses = "flex justify-center items-center rounded font-semibold transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseClasses =
+    "flex justify-center items-center rounded font-semibold transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variantClasses = () => {
     switch (variant()) {
@@ -64,7 +62,7 @@ export default function Button(props: ButtonProps) {
     >
       <Show when={local.loading} fallback={local.children}>
         <svg
-          class="animate-spin h-5 w-5 mr-2"
+          class="mr-2 h-5 w-5 animate-spin"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
