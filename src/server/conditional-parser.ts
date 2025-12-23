@@ -1,8 +1,11 @@
 export function getSafeEnvVariables(): Record<string, string | undefined> {
   return {
     NODE_ENV: process.env.NODE_ENV,
-    VERCEL_ENV: process.env.VERCEL_ENV
-    // DO NOT expose API keys, secrets, database URLs, etc.
+    VITE_DOMAIN: process.env.VITE_DOMAIN,
+    VITE_AWS_BUCKET_STRING: process.env.VITE_AWS_BUCKET_STRING,
+    VITE_GOOGLE_CLIENT_ID: process.env.VITE_GOOGLE_CLIENT_ID,
+    VITE_GITHUB_CLIENT_ID: process.env.VITE_GITHUB_CLIENT_ID,
+    VITE_WEBSOCKET: process.env.VITE_WEBSOCKET
   };
 }
 
