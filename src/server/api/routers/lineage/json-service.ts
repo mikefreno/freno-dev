@@ -47,7 +47,6 @@ import potions from "~/lineage-json/item-route/potions.json";
 import poison from "~/lineage-json/item-route/poison.json";
 import staves from "~/lineage-json/item-route/staves.json";
 
-// Misc data imports
 import activities from "~/lineage-json/misc-route/activities.json";
 import investments from "~/lineage-json/misc-route/investments.json";
 import jobs from "~/lineage-json/misc-route/jobs.json";

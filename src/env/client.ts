@@ -70,7 +70,6 @@ export const validateClientEnv = (
 };
 
 // Validate and export environment variables directly
-// This happens once at module load time on the client
 const validateAndExportEnv = (): ClientEnv => {
   try {
     const validated = validateClientEnv(import.meta.env);
@@ -84,12 +83,10 @@ const validateAndExportEnv = (): ClientEnv => {
 
 export const env = validateAndExportEnv();
 
-// Helper function to check if a variable is missing
 export const isMissingEnvVar = (varName: string): boolean => {
   return !import.meta.env[varName] || import.meta.env[varName]?.trim() === "";
 };
 
-// Helper function to get all missing client environment variables
 export const getMissingEnvVars = (): string[] => {
   const requiredClientVars = [
     "VITE_DOMAIN",

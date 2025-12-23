@@ -44,10 +44,8 @@ import swift from "highlight.js/lib/languages/swift";
 import kotlin from "highlight.js/lib/languages/kotlin";
 import dockerfile from "highlight.js/lib/languages/dockerfile";
 
-// Create lowlight instance with common languages
 const lowlight = createLowlight(common);
 
-// Register existing languages
 lowlight.register("css", css);
 lowlight.register("js", js);
 lowlight.register("javascript", js);
@@ -56,7 +54,6 @@ lowlight.register("typescript", ts);
 lowlight.register("ocaml", ocaml);
 lowlight.register("rust", rust);
 
-// Register new languages
 lowlight.register("python", python);
 lowlight.register("py", python);
 lowlight.register("java", java);
@@ -87,7 +84,6 @@ lowlight.register("kt", kotlin);
 lowlight.register("dockerfile", dockerfile);
 lowlight.register("docker", dockerfile);
 
-// Available languages for selector
 const AVAILABLE_LANGUAGES = [
   { value: null, label: "Plain Text" },
   { value: "bash", label: "Bash/Shell" },
@@ -115,7 +111,6 @@ const AVAILABLE_LANGUAGES = [
   { value: "yaml", label: "YAML" }
 ] as const;
 
-// Mermaid diagram templates
 const MERMAID_TEMPLATES = [
   {
     name: "Flowchart",
@@ -183,7 +178,6 @@ const MERMAID_TEMPLATES = [
   }
 ];
 
-// Keyboard shortcuts data
 interface ShortcutCategory {
   name: string;
   shortcuts: Array<{
@@ -271,7 +265,6 @@ const isMac = () => {
   );
 };
 
-// IFrame extension
 interface IframeOptions {
   allowFullscreen: boolean;
   HTMLAttributes: {
@@ -472,19 +465,16 @@ export default function TextEditor(props: TextEditorProps) {
       handleClickOn(view, pos, node, nodePos, event) {
         const target = event.target as HTMLElement;
 
-        // Check if click is on a summary element inside details
         const summary = target.closest("summary");
         if (summary) {
           const details = summary.closest('[data-type="details"]');
           if (details) {
-            // Toggle the open attribute
             const isOpen = details.hasAttribute("open");
             if (isOpen) {
               details.removeAttribute("open");
             } else {
               details.setAttribute("open", "");
             }
-            // Also toggle hidden attribute on details content
             const content = details.querySelector(
               '[data-type="detailsContent"]'
             );
@@ -504,7 +494,6 @@ export default function TextEditor(props: TextEditorProps) {
     onUpdate: ({ editor }) => {
       untrack(() => {
         props.updateContent(editor.getHTML());
-        // Auto-manage references section
         setTimeout(() => updateReferencesSection(editor), 100);
       });
     },
@@ -515,7 +504,6 @@ export default function TextEditor(props: TextEditorProps) {
       if (hasSelection && !editor.state.selection.empty) {
         setShowBubbleMenu(true);
 
-        // Position the bubble menu
         const { view } = editor;
         const start = view.coordsAtPos(from);
         const end = view.coordsAtPos(to);
@@ -530,7 +518,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
   }));
 
-  // Update editor content when preSet changes (e.g., when data loads), but only if editor exists and content is different
   createEffect(
     on(
       () => props.preSet,
@@ -544,14 +531,12 @@ export default function TextEditor(props: TextEditorProps) {
     )
   );
 
-  // Auto-manage references section
   const updateReferencesSection = (editorInstance: any) => {
     if (!editorInstance) return;
 
     const doc = editorInstance.state.doc;
     const foundRefs = new Set<string>();
 
-    // Scan document for superscript marks containing [n] patterns
     doc.descendants((node: any) => {
       if (node.isText && node.marks) {
         const hasSuperscript = node.marks.some(
@@ -567,7 +552,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     });
 
-    // If no references found, remove references section if it exists
     if (foundRefs.size === 0) {
       let hasReferencesSection = false;
       let hrPos = -1;
@@ -581,7 +565,6 @@ export default function TextEditor(props: TextEditorProps) {
       });
 
       if (hasReferencesSection && sectionStartPos > 0) {
-        // Find the HR before References heading
         doc.nodesBetween(
           Math.max(0, sectionStartPos - 50),
           sectionStartPos,
@@ -592,7 +575,6 @@ export default function TextEditor(props: TextEditorProps) {
           }
         );
 
-        // Delete from HR to end of document
         if (hrPos >= 0) {
           const tr = editorInstance.state.tr;
           tr.delete(hrPos, doc.content.size);
@@ -602,7 +584,6 @@ export default function TextEditor(props: TextEditorProps) {
       return;
     }
 
-    // Convert Set to sorted array
     const refNumbers = Array.from(foundRefs).sort((a, b) => {
       const numA = parseInt(a);
       const numB = parseInt(b);
@@ -612,7 +593,6 @@ export default function TextEditor(props: TextEditorProps) {
       return a.localeCompare(b);
     });
 
-    // Check if References section already exists
     let referencesHeadingPos = -1;
     let existingRefs = new Set<string>();
 
@@ -620,7 +600,6 @@ export default function TextEditor(props: TextEditorProps) {
       if (node.type.name === "heading" && node.textContent === "References") {
         referencesHeadingPos = pos;
       }
-      // Check for existing reference list items
       if (referencesHeadingPos >= 0 && node.type.name === "paragraph") {
         const match = node.textContent.match(/^\[(.+?)\]/);
         if (match) {
@@ -629,7 +608,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     });
 
-    // If references section doesn't exist, create it
     if (referencesHeadingPos === -1) {
       const content: any[] = [
         { type: "horizontalRule" },
@@ -640,7 +618,6 @@ export default function TextEditor(props: TextEditorProps) {
         }
       ];
 
-      // Add each reference as a paragraph
       refNumbers.forEach((refNum) => {
         content.push({
           type: "paragraph",
@@ -658,7 +635,6 @@ export default function TextEditor(props: TextEditorProps) {
         });
       });
 
-      // Insert at the end
       const tr = editorInstance.state.tr;
       tr.insert(
         doc.content.size,
@@ -666,11 +642,9 @@ export default function TextEditor(props: TextEditorProps) {
       );
       editorInstance.view.dispatch(tr);
     } else {
-      // Update existing references section - add missing refs
       const newRefs = refNumbers.filter((ref) => !existingRefs.has(ref));
 
       if (newRefs.length > 0) {
-        // Find position after References heading to insert new refs
         let insertPos = referencesHeadingPos;
         doc.nodesBetween(
           referencesHeadingPos,
@@ -781,17 +755,12 @@ export default function TextEditor(props: TextEditorProps) {
       const { from } = instance.state.selection;
       instance.chain().focus().insertContent(content).run();
 
-      // Move cursor to the paragraph inside detailsContent
-      // Structure: details (from+1) > detailsSummary > detailsContent > paragraph
-      // We need to position inside the paragraph which is roughly from + title.length + 3 nodes deep
       setTimeout(() => {
         const { state } = instance;
         let targetPos = from;
 
-        // Navigate through the document to find the paragraph inside detailsContent
         state.doc.nodesBetween(from, from + 200, (node, pos) => {
           if (node.type.name === "detailsContent") {
-            // Position cursor at the start of the first child (paragraph)
             targetPos = pos + 1;
             return false; // Stop iteration
           }
@@ -811,7 +780,6 @@ export default function TextEditor(props: TextEditorProps) {
 
     instance.chain().focus().toggleCodeBlock().run();
 
-    // If language specified, update the node attributes
     if (language) {
       instance.chain().updateAttributes("codeBlock", { language }).run();
     }
@@ -869,7 +837,6 @@ export default function TextEditor(props: TextEditorProps) {
     const { state } = instance;
     const { selection } = state;
 
-    // Find the row node
     let rowNode = null;
     let depth = 0;
     for (let d = selection.$anchor.depth; d > 0; d--) {
@@ -908,10 +875,8 @@ export default function TextEditor(props: TextEditorProps) {
     const { state } = instance;
     const { selection } = state;
 
-    // Get the current cell position
     const cellPos = selection.$anchor;
 
-    // Find table and column index
     let tableNode = null;
     let tableDepth = 0;
     for (let d = cellPos.depth; d > 0; d--) {
@@ -924,7 +889,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
 
     if (tableNode) {
-      // Find which column we're in
       let colIndex = 0;
       const cellNode = cellPos.node(cellPos.depth);
       const rowNode = cellPos.node(cellPos.depth - 1);
@@ -939,7 +903,6 @@ export default function TextEditor(props: TextEditorProps) {
         }
       });
 
-      // Check if this column has content
       let hasContent = false;
       tableNode.descendants((node, pos, parent) => {
         if (parent && parent.type.name === "tableRow") {
@@ -964,7 +927,6 @@ export default function TextEditor(props: TextEditorProps) {
     instance.chain().focus().deleteColumn().run();
   };
 
-  // Close language selector on outside click
   createEffect(() => {
     if (showLanguageSelector()) {
       const handleClickOutside = (e: MouseEvent) => {
@@ -985,7 +947,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
-  // Close table menu on outside click
   createEffect(() => {
     if (showTableMenu()) {
       const handleClickOutside = (e: MouseEvent) => {
@@ -1006,7 +967,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
-  // Close mermaid menu on outside click
   createEffect(() => {
     if (showMermaidTemplates()) {
       const handleClickOutside = (e: MouseEvent) => {
@@ -1027,7 +987,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
-  // Close conditional config on outside click
   createEffect(() => {
     if (showConditionalConfig()) {
       const handleClickOutside = (e: MouseEvent) => {
@@ -1065,7 +1024,6 @@ export default function TextEditor(props: TextEditorProps) {
     setShowMermaidTemplates(false);
   };
 
-  // Conditional block functions
   const showConditionalConfigurator = (e: MouseEvent) => {
     const buttonRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setConditionalConfigPosition({
@@ -1073,7 +1031,6 @@ export default function TextEditor(props: TextEditorProps) {
       left: buttonRect.left
     });
 
-    // If cursor is in existing conditional, load its values
     const instance = editor();
     if (instance?.isActive("conditionalBlock")) {
       const attrs = instance.getAttributes("conditionalBlock");
@@ -1092,7 +1049,6 @@ export default function TextEditor(props: TextEditorProps) {
         inline: true
       });
     } else {
-      // Reset to defaults for new conditional
       setConditionalForm({
         conditionType: "auth",
         conditionValue: "authenticated",
@@ -1112,9 +1068,7 @@ export default function TextEditor(props: TextEditorProps) {
       conditionalForm();
 
     if (inline) {
-      // Handle inline conditionals (Mark)
       if (instance.isActive("conditionalInline")) {
-        // Update existing inline conditional
         instance
           .chain()
           .focus()
@@ -1126,7 +1080,6 @@ export default function TextEditor(props: TextEditorProps) {
           })
           .run();
       } else {
-        // Apply inline conditional to selection
         instance
           .chain()
           .focus()
@@ -1138,9 +1091,7 @@ export default function TextEditor(props: TextEditorProps) {
           .run();
       }
     } else {
-      // Handle block conditionals (Node)
       if (instance.isActive("conditionalBlock")) {
-        // Update existing conditional
         instance
           .chain()
           .focus()
@@ -1151,7 +1102,6 @@ export default function TextEditor(props: TextEditorProps) {
           })
           .run();
       } else {
-        // Wrap selection in new conditional
         instance
           .chain()
           .focus()
@@ -1167,12 +1117,10 @@ export default function TextEditor(props: TextEditorProps) {
     setShowConditionalConfig(false);
   };
 
-  // Toggle fullscreen mode
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen());
   };
 
-  // ESC key to exit fullscreen
   createEffect(() => {
     if (isFullscreen()) {
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -1187,7 +1135,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
-  // Detect mobile keyboard visibility
   createEffect(() => {
     if (typeof window === "undefined" || !window.visualViewport) return;
 
@@ -1198,7 +1145,6 @@ export default function TextEditor(props: TextEditorProps) {
       const currentHeight = viewport.height;
       const heightDiff = initialHeight - currentHeight;
 
-      // If viewport height decreased by more than 150px, keyboard is likely open
       if (heightDiff > 150) {
         setKeyboardVisible(true);
         setKeyboardHeight(heightDiff);
@@ -1217,7 +1163,6 @@ export default function TextEditor(props: TextEditorProps) {
     };
   });
 
-  // Table Grid Selector Component
   const TableGridSelector = () => {
     const [hoverCell, setHoverCell] = createSignal({ row: 0, col: 0 });
     const maxRows = 10;
@@ -1268,7 +1213,6 @@ export default function TextEditor(props: TextEditorProps) {
     );
   };
 
-  // Conditional Configurator Component
   const ConditionalConfigurator = () => {
     return (
       <div class="bg-mantle border-surface2 w-80 rounded border p-4 shadow-lg">

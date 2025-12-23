@@ -10,7 +10,6 @@ import {
   APIError
 } from "~/server/fetch-utils";
 
-// Types for commits
 interface GitCommit {
   sha: string;
   message: string;
@@ -26,7 +25,6 @@ interface ContributionDay {
 }
 
 export const gitActivityRouter = createTRPCRouter({
-  // Get recent commits from GitHub
   getGitHubCommits: publicProcedure
     .input(z.object({ limit: z.number().default(3) }))
     .query(async ({ input }) => {
@@ -34,7 +32,6 @@ export const gitActivityRouter = createTRPCRouter({
         `github-commits-${input.limit}`,
         10 * 60 * 1000, // 10 minutes
         async () => {
-          // Get user's repositories sorted by most recently pushed
           const reposResponse = await fetchWithTimeout(
             `https://api.github.com/users/MikeFreno/repos?sort=pushed&per_page=10`,
             {
@@ -50,7 +47,6 @@ export const gitActivityRouter = createTRPCRouter({
           const repos = await reposResponse.json();
           const allCommits: GitCommit[] = [];
 
-          // Fetch recent commits from each repo
           for (const repo of repos) {
             if (allCommits.length >= input.limit * 3) break; // Get extra to sort later
 
@@ -69,7 +65,6 @@ export const gitActivityRouter = createTRPCRouter({
               if (commitsResponse.ok) {
                 const commits = await commitsResponse.json();
                 for (const commit of commits) {
-                  // Filter for commits by the authenticated user
                   if (
                     commit.author?.login === "MikeFreno" ||
                     commit.commit?.author?.email?.includes("mike")
@@ -91,7 +86,6 @@ export const gitActivityRouter = createTRPCRouter({
                 }
               }
             } catch (error) {
-              // Log individual repo failures but continue with others
               if (
                 error instanceof NetworkError ||
                 error instanceof TimeoutError
@@ -108,7 +102,6 @@ export const gitActivityRouter = createTRPCRouter({
             }
           }
 
-          // Sort by date and return the most recent
           allCommits.sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           );
@@ -117,7 +110,6 @@ export const gitActivityRouter = createTRPCRouter({
         },
         { maxStaleMs: 24 * 60 * 60 * 1000 } // Accept stale data up to 24 hours old
       ).catch((error) => {
-        // Final fallback - return empty array if everything fails
         if (error instanceof NetworkError) {
           console.error("GitHub API unavailable (network error)");
         } else if (error instanceof TimeoutError) {
@@ -133,7 +125,6 @@ export const gitActivityRouter = createTRPCRouter({
       });
     }),
 
-  // Get recent commits from Gitea
   getGiteaCommits: publicProcedure
     .input(z.object({ limit: z.number().default(3) }))
     .query(async ({ input }) => {
@@ -141,7 +132,6 @@ export const gitActivityRouter = createTRPCRouter({
         `gitea-commits-${input.limit}`,
         10 * 60 * 1000, // 10 minutes
         async () => {
-          // First, get user's repositories
           const reposResponse = await fetchWithTimeout(
             `${env.GITEA_URL}/api/v1/users/Mike/repos?limit=100`,
             {
@@ -157,7 +147,6 @@ export const gitActivityRouter = createTRPCRouter({
           const repos = await reposResponse.json();
           const allCommits: GitCommit[] = [];
 
-          // Fetch recent commits from each repo
           for (const repo of repos) {
             if (allCommits.length >= input.limit * 3) break; // Get extra to sort later
 
@@ -199,7 +188,6 @@ export const gitActivityRouter = createTRPCRouter({
                 }
               }
             } catch (error) {
-              // Log individual repo failures but continue with others
               if (
                 error instanceof NetworkError ||
                 error instanceof TimeoutError
@@ -216,7 +204,6 @@ export const gitActivityRouter = createTRPCRouter({
             }
           }
 
-          // Sort by date and return the most recent
           allCommits.sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           );
@@ -225,7 +212,6 @@ export const gitActivityRouter = createTRPCRouter({
         },
         { maxStaleMs: 24 * 60 * 60 * 1000 }
       ).catch((error) => {
-        // Final fallback - return empty array if everything fails
         if (error instanceof NetworkError) {
           console.error("Gitea API unavailable (network error)");
         } else if (error instanceof TimeoutError) {
@@ -245,7 +231,6 @@ export const gitActivityRouter = createTRPCRouter({
       "github-activity",
       10 * 60 * 1000,
       async () => {
-        // Use GitHub GraphQL API for contribution data
         const query = `
         query($userName: String!) {
           user(login: $userName) {
@@ -287,7 +272,6 @@ export const gitActivityRouter = createTRPCRouter({
           throw new APIError("GraphQL query failed", 500, "GraphQL Error");
         }
 
-        // Extract contribution days from the response
         const contributions: ContributionDay[] = [];
         const weeks =
           data.data?.user?.contributionsCollection?.contributionCalendar
@@ -327,7 +311,6 @@ export const gitActivityRouter = createTRPCRouter({
       "gitea-activity",
       10 * 60 * 1000,
       async () => {
-        // Get user's repositories
         const reposResponse = await fetchWithTimeout(
           `${env.GITEA_URL}/api/v1/user/repos?limit=100`,
           {
@@ -343,7 +326,6 @@ export const gitActivityRouter = createTRPCRouter({
         const repos = await reposResponse.json();
         const contributionsByDay = new Map<string, number>();
 
-        // Get commits from each repo (last 3 months to avoid too many API calls)
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
@@ -373,7 +355,6 @@ export const gitActivityRouter = createTRPCRouter({
               }
             }
           } catch (error) {
-            // Log individual repo failures but continue with others
             if (
               error instanceof NetworkError ||
               error instanceof TimeoutError
@@ -387,7 +368,6 @@ export const gitActivityRouter = createTRPCRouter({
           }
         }
 
-        // Convert to array format
         const contributions: ContributionDay[] = Array.from(
           contributionsByDay.entries()
         ).map(([date, count]) => ({ date, count }));

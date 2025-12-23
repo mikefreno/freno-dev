@@ -15,7 +15,6 @@ export async function POST() {
     expires: new Date(0) // Set expiry to past date
   });
 
-  // Redirect to home page
   return new Response(null, {
     status: 302,
     headers: {

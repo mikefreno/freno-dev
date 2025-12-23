@@ -42,7 +42,6 @@ export default function LoginPage() {
   const register = () => searchParams.mode === "register";
   const usePassword = () => searchParams.auth === "password";
 
-  // State management
   const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
   const [countDown, setCountDown] = createSignal(0);
@@ -58,7 +57,6 @@ export default function LoginPage() {
     createSignal(false);
   const [passwordBlurred, setPasswordBlurred] = createSignal(false);
 
-  // Form refs
   let emailRef: HTMLInputElement | undefined;
   let passwordRef: HTMLInputElement | undefined;
   let passwordConfRef: HTMLInputElement | undefined;
@@ -70,7 +68,6 @@ export default function LoginPage() {
   const githubClientId = env.VITE_GITHUB_CLIENT_ID;
   const domain = env.VITE_DOMAIN || "https://www.freno.me";
 
-  // Calculate remaining time from cookie
   const calcRemainder = (timer: string) => {
     const expires = new Date(timer);
     const remaining = expires.getTime() - Date.now();
@@ -86,7 +83,6 @@ export default function LoginPage() {
     }
   };
 
-  // Check for existing timer on mount
   createEffect(() => {
     const timer = getClientCookie("emailLoginLinkRequested");
     if (timer) {
@@ -103,7 +99,6 @@ export default function LoginPage() {
     });
   });
 
-  // Check for OAuth/callback errors in URL
   createEffect(() => {
     const errorParam = searchParams.error;
     if (errorParam) {
@@ -121,7 +116,6 @@ export default function LoginPage() {
     }
   });
 
-  // Form submission handler
   const formHandler = async (e: Event) => {
     e.preventDefault();
     setLoading(true);
@@ -273,7 +267,6 @@ export default function LoginPage() {
     }
   };
 
-  // Countdown timer render function
   const renderTime = ({ remainingTime }: { remainingTime: number }) => {
     return (
       <div class="timer">
@@ -282,7 +275,6 @@ export default function LoginPage() {
     );
   };
 
-  // Password validation helpers
   const checkForMatch = (newPassword: string, newPasswordConf: string) => {
     setPasswordsMatch(newPassword === newPasswordConf);
   };

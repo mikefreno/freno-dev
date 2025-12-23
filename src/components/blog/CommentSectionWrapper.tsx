@@ -22,7 +22,6 @@ const RETRY_INTERVAL = 5000;
 export default function CommentSectionWrapper(
   props: CommentSectionWrapperProps
 ) {
-  // State signals
   const [allComments, setAllComments] = createSignal<Comment[]>(
     props.allComments
   );
@@ -57,14 +56,12 @@ export default function CommentSectionWrapper(
   const [commentBodyForModification, setCommentBodyForModification] =
     createSignal<string>("");
 
-  // Non-reactive refs (store without triggering reactivity)
   let userCommentMap: Map<UserPublicData, number[]> = props.userCommentMap;
   let deletePromptRef: HTMLDivElement | undefined;
   let modificationPromptRef: HTMLDivElement | undefined;
   let retryCount = 0;
   let socket: WebSocket | undefined;
 
-  // WebSocket connection effect
   createEffect(() => {
     const connect = () => {
       if (socket) return;
@@ -121,7 +118,6 @@ export default function CommentSectionWrapper(
 
     connect();
 
-    // Cleanup on unmount
     onCleanup(() => {
       if (socket?.readyState === WebSocket.OPEN) {
         socket.close();
@@ -130,7 +126,6 @@ export default function CommentSectionWrapper(
     });
   });
 
-  // Helper functions
   const updateChannel = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       return;
@@ -155,7 +150,6 @@ export default function CommentSectionWrapper(
     }
   };
 
-  // Comment creation
   const newComment = async (commentBody: string, parentCommentID?: number) => {
     setCommentSubmitLoading(true);
 
@@ -179,11 +173,9 @@ export default function CommentSectionWrapper(
         );
       } catch (error) {
         console.error("Error sending comment creation:", error);
-        // Fallback to HTTP API on WebSocket error
         await fallbackCommentCreation(commentBody, parentCommentID);
       }
     } else {
-      // Fallback to HTTP API if WebSocket unavailable
       await fallbackCommentCreation(commentBody, parentCommentID);
     }
   };
@@ -254,7 +246,6 @@ export default function CommentSectionWrapper(
       }
       setAllComments((prevComments) => [...(prevComments || []), newComment]);
 
-      // Update user comment map
       const existingIDs = Array.from(userCommentMap.entries()).find(
         ([key, _]) =>
           key.email === userData.email &&
@@ -272,7 +263,6 @@ export default function CommentSectionWrapper(
     setCommentSubmitLoading(false);
   };
 
-  // Comment updating
   const editComment = async (body: string, comment_id: number) => {
     setCommentEditLoading(true);
 
@@ -375,14 +365,12 @@ export default function CommentSectionWrapper(
           "[deleteComment] WebSocket error, falling back to HTTP:",
           error
         );
-        // Fallback to HTTP API on WebSocket error
         await fallbackCommentDeletion(commentID, commenterID, deletionType);
       }
     } else {
       console.log(
         "[deleteComment] WebSocket not available, using HTTP fallback"
       );
-      // Fallback to HTTP API if WebSocket unavailable
       await fallbackCommentDeletion(commentID, commenterID, deletionType);
     }
   };
@@ -407,7 +395,6 @@ export default function CommentSectionWrapper(
 
       console.log("[fallbackCommentDeletion] Success:", result);
 
-      // Handle the deletion response
       deleteCommentHandler({
         action: "commentDeletionBroadcast",
         commentID: commentID,

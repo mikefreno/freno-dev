@@ -40,7 +40,6 @@ const getContactData = query(async () => {
   return { remainingTime };
 }, "contact-data");
 
-// Server action for form submission
 const sendContactEmail = action(async (formData: FormData) => {
   "use server";
   const name = formData.get("name") as string;
@@ -65,7 +64,6 @@ const sendContactEmail = action(async (formData: FormData) => {
     );
   }
 
-  // Check rate limit
   const contactExp = getCookie("contactRequestSent");
   if (contactExp) {
     const expires = new Date(contactExp);
@@ -189,7 +187,6 @@ export default function ContactPage() {
       setCountDown(serverData.remainingTime);
     }
 
-    // Check for existing timer
     const timer = getClientCookie("contactRequestSent");
     if (timer) {
       timerIdRef = setInterval(() => calcRemainder(timer), 1000);

@@ -1,5 +1,4 @@
 // Manual test file for fetch-utils error handling
-// Run with: bun run src/server/fetch-utils.test.ts
 
 import {
   fetchWithTimeout,

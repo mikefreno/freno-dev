@@ -7,7 +7,6 @@ export async function GET(event: APIEvent) {
   const email = url.searchParams.get("email");
   const token = url.searchParams.get("token");
 
-  // Missing required parameters
   if (!email || !token) {
     return new Response(
       `

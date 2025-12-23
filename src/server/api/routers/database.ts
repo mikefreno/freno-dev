@@ -162,7 +162,6 @@ export const databaseRouter = createTRPCRouter({
           requestingUser: ctx.userId
         });
 
-        // User can only delete their own comments with "user" type
         if (input.deletionType === "user" && !isOwner && !isAdmin) {
           throw new TRPCError({
             code: "FORBIDDEN",
@@ -170,7 +169,6 @@ export const databaseRouter = createTRPCRouter({
           });
         }
 
-        // Only admins can do admin or database deletion
         if (
           (input.deletionType === "admin" ||
             input.deletionType === "database") &&
@@ -184,14 +182,11 @@ export const databaseRouter = createTRPCRouter({
 
         if (input.deletionType === "database") {
           console.log("[deleteComment] Performing database deletion");
-          // Full deletion - remove from database
-          // First delete reactions
           await conn.execute({
             sql: "DELETE FROM CommentReaction WHERE comment_id = ?",
             args: [input.commentID]
           });
 
-          // Then delete the comment
           await conn.execute({
             sql: "DELETE FROM Comment WHERE id = ?",
             args: [input.commentID]
@@ -205,7 +200,6 @@ export const databaseRouter = createTRPCRouter({
           };
         } else if (input.deletionType === "admin") {
           console.log("[deleteComment] Performing admin deletion");
-          // Admin delete - replace body with admin message
           await conn.execute({
             sql: "UPDATE Comment SET body = ?, commenter_id = ? WHERE id = ?",
             args: ["[deleted by admin]", "", input.commentID]
@@ -219,7 +213,6 @@ export const databaseRouter = createTRPCRouter({
           };
         } else {
           console.log("[deleteComment] Performing user deletion");
-          // User delete - replace body with user message
           await conn.execute({
             sql: "UPDATE Comment SET body = ?, commenter_id = ? WHERE id = ?",
             args: ["[deleted]", "", input.commentID]
@@ -249,7 +242,6 @@ export const databaseRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
-        // Join with Post table to get post titles along with comments
         const query = `
            SELECT c.*, p.title as post_title 
            FROM Comment c 
@@ -270,10 +262,6 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  // ============================================================
-  // Post Routes
-  // ============================================================
-
   getPostById: publicProcedure
     .input(
       z.object({
@@ -288,7 +276,6 @@ export const databaseRouter = createTRPCRouter({
         async () => {
           try {
             const conn = ConnectionFactory();
-            // Single query with JOIN to get post and tags in one go
             const query = `
                SELECT p.*, t.value as tag_value 
                FROM Post p 
@@ -301,7 +288,6 @@ export const databaseRouter = createTRPCRouter({
             });
 
             if (results.rows[0]) {
-              // Group tags by post ID
               const post = results.rows[0];
               const tags = results.rows
                 .filter((row) => row.tag_value)
@@ -339,7 +325,6 @@ export const databaseRouter = createTRPCRouter({
           try {
             const conn = ConnectionFactory();
 
-            // Get post by title with JOINs to get all related data in one query
             const postQuery = `
                SELECT 
                  p.*,
@@ -364,7 +349,6 @@ export const databaseRouter = createTRPCRouter({
 
             const postRow = postResults.rows[0];
 
-            // Return structured data with proper formatting
             return {
               post: postRow,
               comments: [], // Comments are not included in this optimized query - would need separate call if needed
@@ -426,7 +410,6 @@ export const databaseRouter = createTRPCRouter({
           await conn.execute(tagQuery);
         }
 
-        // Invalidate blog cache
         cache.deleteByPrefix("blog-");
 
         return { data: results.lastInsertRowid };
@@ -502,7 +485,6 @@ export const databaseRouter = createTRPCRouter({
 
         const results = await conn.execute({ sql: query, args: params });
 
-        // Handle tags
         const deleteTagsQuery = `DELETE FROM Tag WHERE post_id = ?`;
         await conn.execute({
           sql: deleteTagsQuery,
@@ -516,7 +498,6 @@ export const databaseRouter = createTRPCRouter({
           await conn.execute(tagQuery);
         }
 
-        // Invalidate blog cache
         cache.deleteByPrefix("blog-");
 
         return { data: results.lastInsertRowid };
@@ -535,31 +516,26 @@ export const databaseRouter = createTRPCRouter({
       try {
         const conn = ConnectionFactory();
 
-        // Delete associated tags first
         await conn.execute({
           sql: "DELETE FROM Tag WHERE post_id = ?",
           args: [input.id.toString()]
         });
 
-        // Delete associated likes
         await conn.execute({
           sql: "DELETE FROM PostLike WHERE post_id = ?",
           args: [input.id.toString()]
         });
 
-        // Delete associated comments
         await conn.execute({
           sql: "DELETE FROM Comment WHERE post_id = ?",
           args: [input.id]
         });
 
-        // Finally delete the post
         await conn.execute({
           sql: "DELETE FROM Post WHERE id = ?",
           args: [input.id]
         });
 
-        // Invalidate blog cache
         cache.deleteByPrefix("blog-");
 
         return { success: true };

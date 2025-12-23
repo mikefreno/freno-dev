@@ -96,7 +96,6 @@ export const miscRouter = createTRPCRouter({
           credentials: credentials
         });
 
-        // Sanitize the title and filename for S3 key (replace spaces with hyphens, remove special chars)
         const sanitizeForS3 = (str: string) => {
           return str
             .replace(/\s+/g, "-") // Replace spaces with hyphens
@@ -262,7 +261,6 @@ export const miscRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
-      // Check if contact request was recently sent
       const contactExp = getCookie("contactRequestSent");
       let remaining = 0;
 
@@ -314,7 +312,6 @@ export const miscRouter = createTRPCRouter({
           }
         );
 
-        // Set cookie to prevent spam (60 second cooldown)
         const exp = new Date(Date.now() + 1 * 60 * 1000);
         setCookie("contactRequestSent", exp.toUTCString(), {
           expires: exp,
@@ -365,7 +362,6 @@ export const miscRouter = createTRPCRouter({
   sendDeletionRequestEmail: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
-      // Check if deletion request was recently sent
       const deletionExp = getCookie("deletionRequestSent");
       let remaining = 0;
 
@@ -445,7 +441,6 @@ export const miscRouter = createTRPCRouter({
           )
         ]);
 
-        // Set cookie to prevent spam (60 second cooldown)
         const exp = new Date(Date.now() + 1 * 60 * 1000);
         setCookie("deletionRequestSent", exp.toUTCString(), {
           expires: exp,

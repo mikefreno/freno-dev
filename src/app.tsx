@@ -114,7 +114,6 @@ function AppLayout(props: { children: any }) {
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
         // Mobile: Only left bar
         if (currentIsMobile) {
-          // Swipe right anywhere - reveal left bar
           if (deltaX > SWIPE_THRESHOLD) {
             setLeftBarVisible(true);
           }
@@ -124,7 +123,6 @@ function AppLayout(props: { children: any }) {
           }
         } else {
           // Desktop: Both bars
-          // Swipe right anywhere - reveal left bar
           if (deltaX > SWIPE_THRESHOLD) {
             setLeftBarVisible(true);
           }

@@ -7,7 +7,6 @@ export async function GET(event: APIEvent) {
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
 
-  // Handle OAuth error (user denied access, etc.)
   if (error) {
     return new Response(null, {
       status: 302,
@@ -15,7 +14,6 @@ export async function GET(event: APIEvent) {
     });
   }
 
-  // Missing authorization code
   if (!code) {
     return new Response(null, {
       status: 302,
@@ -32,13 +30,11 @@ export async function GET(event: APIEvent) {
     const result = await caller.auth.githubCallback({ code });
 
     if (result.success) {
-      // Redirect to account page on success
       return new Response(null, {
         status: 302,
         headers: { Location: result.redirectTo || "/account" }
       });
     } else {
-      // Redirect to login with error
       return new Response(null, {
         status: 302,
         headers: { Location: "/login?error=auth_failed" }
@@ -47,7 +43,6 @@ export async function GET(event: APIEvent) {
   } catch (error) {
     console.error("GitHub OAuth callback error:", error);
 
-    // Handle specific TRPC errors
     if (error && typeof error === "object" && "code" in error) {
       const trpcError = error as { code: string; message?: string };
 

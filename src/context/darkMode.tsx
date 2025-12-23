@@ -30,7 +30,6 @@ export const DarkModeProvider: ParentComponent = (props) => {
   const [isDark, setIsDark] = createSignal(false);
 
   onMount(() => {
-    // Check system preference
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     setIsDark(mediaQuery.matches);
 

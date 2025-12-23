@@ -13,7 +13,6 @@ import type { User } from "~/types/user";
 import { toUserProfile } from "~/types/user";
 
 export const userRouter = createTRPCRouter({
-  // Get current user profile
   getProfile: publicProcedure.query(async ({ ctx }) => {
     const userId = await getUserID(ctx.event.nativeEvent);
 
@@ -41,7 +40,6 @@ export const userRouter = createTRPCRouter({
     return toUserProfile(user);
   }),
 
-  // Update email
   updateEmail: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
@@ -62,7 +60,6 @@ export const userRouter = createTRPCRouter({
         args: [email, 0, userId]
       });
 
-      // Fetch updated user
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
         args: [userId]
@@ -70,7 +67,6 @@ export const userRouter = createTRPCRouter({
 
       const user = res.rows[0] as unknown as User;
 
-      // Set email cookie for verification flow
       setCookie(ctx.event.nativeEvent, "emailToken", email, {
         path: "/"
       });
@@ -78,7 +74,6 @@ export const userRouter = createTRPCRouter({
       return toUserProfile(user);
     }),
 
-  // Update display name
   updateDisplayName: publicProcedure
     .input(z.object({ displayName: z.string().min(1).max(50) }))
     .mutation(async ({ input, ctx }) => {
@@ -99,7 +94,6 @@ export const userRouter = createTRPCRouter({
         args: [displayName, userId]
       });
 
-      // Fetch updated user
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
         args: [userId]
@@ -109,7 +103,6 @@ export const userRouter = createTRPCRouter({
       return toUserProfile(user);
     }),
 
-  // Update profile image
   updateProfileImage: publicProcedure
     .input(z.object({ imageUrl: z.string() }))
     .mutation(async ({ input, ctx }) => {
@@ -130,7 +123,6 @@ export const userRouter = createTRPCRouter({
         args: [imageUrl, userId]
       });
 
-      // Fetch updated user
       const res = await conn.execute({
         sql: "SELECT * FROM User WHERE id = ?",
         args: [userId]
@@ -140,7 +132,6 @@ export const userRouter = createTRPCRouter({
       return toUserProfile(user);
     }),
 
-  // Change password (requires old password)
   changePassword: publicProcedure
     .input(
       z.object({
@@ -202,14 +193,12 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Update password
       const newPasswordHash = await hashPassword(newPassword);
       await conn.execute({
         sql: "UPDATE User SET password_hash = ? WHERE id = ?",
         args: [newPasswordHash, userId]
       });
 
-      // Clear session cookies (force re-login)
       setCookie(ctx.event.nativeEvent, "emailToken", "", {
         maxAge: 0,
         path: "/"
@@ -222,7 +211,6 @@ export const userRouter = createTRPCRouter({
       return { success: true, message: "success" };
     }),
 
-  // Set password (for OAuth users who don't have password)
   setPassword: publicProcedure
     .input(
       z.object({
@@ -271,14 +259,12 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Set password
       const passwordHash = await hashPassword(newPassword);
       await conn.execute({
         sql: "UPDATE User SET password_hash = ? WHERE id = ?",
         args: [passwordHash, userId]
       });
 
-      // Clear session cookies (force re-login)
       setCookie(ctx.event.nativeEvent, "emailToken", "", {
         maxAge: 0,
         path: "/"
@@ -291,7 +277,6 @@ export const userRouter = createTRPCRouter({
       return { success: true, message: "success" };
     }),
 
-  // Delete account (anonymize data)
   deleteAccount: publicProcedure
     .input(z.object({ password: z.string() }))
     .mutation(async ({ input, ctx }) => {
@@ -337,7 +322,6 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      // Anonymize user data (don't hard delete)
       await conn.execute({
         sql: `UPDATE User SET 
           email = ?, 
@@ -350,7 +334,6 @@ export const userRouter = createTRPCRouter({
         args: [null, 0, null, "user deleted", null, null, userId]
       });
 
-      // Clear session cookies
       setCookie(ctx.event.nativeEvent, "emailToken", "", {
         maxAge: 0,
         path: "/"

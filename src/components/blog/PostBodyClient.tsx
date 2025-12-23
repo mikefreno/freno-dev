@@ -84,7 +84,6 @@ async function loadHighlightJS(): Promise<HLJSApi> {
   hljs.registerLanguage("diff", diff.default);
   hljs.registerLanguage("toml", toml.default);
 
-  // Also register common aliases
   hljs.registerLanguage("js", javascript.default);
   hljs.registerLanguage("ts", typescript.default);
   hljs.registerLanguage("jsx", javascript.default);
@@ -97,18 +96,15 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   let contentRef: HTMLDivElement | undefined;
   const [hljs, setHljs] = createSignal<HLJSApi | null>(null);
 
-  // Process superscript references and enhance the References section
   const processReferences = () => {
     if (!contentRef) return;
 
     const foundRefs = new Map<string, HTMLElement>();
 
-    // Find all <sup> elements with [n] pattern
     const supElements = contentRef.querySelectorAll("sup");
 
     supElements.forEach((sup) => {
       const text = sup.textContent?.trim() || "";
-      // Match patterns like [1], [2], [a], [*], etc.
       const match = text.match(/^\[(.+?)\]$/);
 
       if (match) {
@@ -116,10 +112,8 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         const refId = `ref-${refNumber}`;
         const refBackId = `ref-${refNumber}-back`;
 
-        // Add ID to the sup element itself for back navigation
         sup.id = refBackId;
 
-        // Replace sup content with a clickable link
         sup.innerHTML = "";
         const link = document.createElement("a");
         link.href = `#${refId}`;
@@ -129,13 +123,11 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         link.style.cssText =
           "text-decoration: none; font-size: 0.75em; vertical-align: super;";
 
-        // Add smooth scroll behavior
         link.onclick = (e) => {
           e.preventDefault();
           const target = document.getElementById(refId);
           if (target) {
             target.scrollIntoView({ behavior: "smooth", block: "center" });
-            // Highlight the reference briefly
             target.style.backgroundColor = "rgba(137, 180, 250, 0.2)";
             setTimeout(() => {
               target.style.backgroundColor = "";
@@ -147,7 +139,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       }
     });
 
-    // Find and enhance the References section
     const headings = contentRef.querySelectorAll("h2");
     let referencesSection: HTMLElement | null = null;
 
@@ -158,7 +149,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     });
 
     if (referencesSection) {
-      // Style the References heading
       referencesSection.className = "text-2xl font-bold mb-4 text-text";
 
       // Find the parent container and add styling

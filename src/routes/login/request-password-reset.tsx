@@ -8,17 +8,14 @@ import { getClientCookie } from "~/lib/cookies.client";
 export default function RequestPasswordResetPage() {
   const navigate = useNavigate();
 
-  // State management
   const [loading, setLoading] = createSignal(false);
   const [countDown, setCountDown] = createSignal(0);
   const [showSuccessMessage, setShowSuccessMessage] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  // Form refs
   let emailRef: HTMLInputElement | undefined;
   let timerInterval: number | undefined;
 
-  // Calculate remaining time from cookie
   const calcRemainder = (timer: string) => {
     const expires = new Date(timer);
     const remaining = expires.getTime() - Date.now();
@@ -34,7 +31,6 @@ export default function RequestPasswordResetPage() {
     }
   };
 
-  // Check for existing timer on mount
   createEffect(() => {
     const timer = getClientCookie("passwordResetRequested");
     if (timer) {
@@ -51,7 +47,6 @@ export default function RequestPasswordResetPage() {
     });
   });
 
-  // Form submission handler
   const requestPasswordResetTrigger = async (e: Event) => {
     e.preventDefault();
     setError("");

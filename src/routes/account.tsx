@@ -38,7 +38,6 @@ const getUserProfile = query(async (): Promise<UserProfile | null> => {
 
     const user = res.rows[0] as any;
 
-    // Transform database User to UserProfile
     return {
       id: user.id,
       email: user.email ?? undefined,
@@ -63,10 +62,8 @@ export default function AccountPage() {
 
   const userData = createAsync(() => getUserProfile(), { deferStream: true });
 
-  // Local user state for client-side updates
   const [user, setUser] = createSignal<UserProfile | null>(null);
 
-  // Form loading states
   const [emailButtonLoading, setEmailButtonLoading] = createSignal(false);
   const [displayNameButtonLoading, setDisplayNameButtonLoading] =
     createSignal(false);
@@ -76,7 +73,6 @@ export default function AccountPage() {
   const [profileImageSetLoading, setProfileImageSetLoading] =
     createSignal(false);
 
-  // Password state
   const [passwordsMatch, setPasswordsMatch] = createSignal(false);
   const [showPasswordLengthWarning, setShowPasswordLengthWarning] =
     createSignal(false);
@@ -86,19 +82,16 @@ export default function AccountPage() {
   const [passwordError, setPasswordError] = createSignal(false);
   const [passwordDeletionError, setPasswordDeletionError] = createSignal(false);
 
-  // Show/hide password toggles
   const [showOldPasswordInput, setShowOldPasswordInput] = createSignal(false);
   const [showPasswordInput, setShowPasswordInput] = createSignal(false);
   const [showPasswordConfInput, setShowPasswordConfInput] = createSignal(false);
 
-  // Success messages
   const [showImageSuccess, setShowImageSuccess] = createSignal(false);
   const [showEmailSuccess, setShowEmailSuccess] = createSignal(false);
   const [showDisplayNameSuccess, setShowDisplayNameSuccess] =
     createSignal(false);
   const [showPasswordSuccess, setShowPasswordSuccess] = createSignal(false);
 
-  // Profile image state
   const [profileImage, setProfileImage] = createSignal<Blob | undefined>(
     undefined
   );
@@ -109,7 +102,6 @@ export default function AccountPage() {
     createSignal(false);
   const [preSetHolder, setPreSetHolder] = createSignal<string | null>(null);
 
-  // Form refs
   let oldPasswordRef: HTMLInputElement | undefined;
   let newPasswordRef: HTMLInputElement | undefined;
   let newPasswordConfRef: HTMLInputElement | undefined;
@@ -117,10 +109,8 @@ export default function AccountPage() {
   let displayNameRef: HTMLInputElement | undefined;
   let deleteAccountPasswordRef: HTMLInputElement | undefined;
 
-  // Helper to get current user (from SSR data or local state)
   const currentUser = () => user() || userData();
 
-  // Initialize preSetHolder when userData loads
   createEffect(() => {
     const userProfile = userData();
     if (userProfile?.image && !preSetHolder()) {
@@ -308,7 +298,6 @@ export default function AccountPage() {
         if (response.ok && result.result?.data?.success) {
           setShowPasswordSuccess(true);
           setTimeout(() => setShowPasswordSuccess(false), 3000);
-          // Clear form
           if (oldPasswordRef) oldPasswordRef.value = "";
           if (newPasswordRef) newPasswordRef.value = "";
           if (newPasswordConfRef) newPasswordConfRef.value = "";
@@ -362,7 +351,6 @@ export default function AccountPage() {
           }
           setShowPasswordSuccess(true);
           setTimeout(() => setShowPasswordSuccess(false), 3000);
-          // Clear form
           if (newPasswordRef) newPasswordRef.value = "";
           if (newPasswordConfRef) newPasswordConfRef.value = "";
         } else {
@@ -395,7 +383,6 @@ export default function AccountPage() {
 
       const result = await response.json();
       if (response.ok && result.result?.data?.success) {
-        // Redirect to login
         navigate("/login");
       } else {
         setPasswordDeletionError(true);
@@ -425,7 +412,6 @@ export default function AccountPage() {
     }
   };
 
-  // Password validation helpers
   const checkPasswordLength = (password: string) => {
     if (password.length >= 8) {
       setPasswordLengthSufficient(true);

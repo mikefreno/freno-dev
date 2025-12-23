@@ -50,7 +50,6 @@ export const t = initTRPC.context<Context>().create();
 export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure;
 
-// Middleware to enforce authentication
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.userId || ctx.privilegeLevel === "anonymous") {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "Not authenticated" });
@@ -63,7 +62,6 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   });
 });
 
-// Middleware to enforce admin access
 const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
   if (ctx.privilegeLevel !== "admin") {
     throw new TRPCError({

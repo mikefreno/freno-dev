@@ -432,9 +432,8 @@ export const authRouter = createTRPCRouter({
         };
 
         if (rememberMe) {
-          cookieOptions.maxAge = 60 * 60 * 24 * 14; // 14 days
+          cookieOptions.maxAge = 60 * 60 * 24 * 14;
         }
-        // If rememberMe is false, cookie will be session-only (no maxAge)
 
         setCookie(
           ctx.event.nativeEvent,
@@ -591,7 +590,6 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // If provider is unknown/null, update it to "email" since they're logging in with password
       if (
         !user.provider ||
         !["email", "google", "github", "apple"].includes(user.provider)
@@ -669,7 +667,6 @@ export const authRouter = createTRPCRouter({
           .setExpirationTime("15m")
           .sign(secret);
 
-        // Send email
         const domain = env.VITE_DOMAIN || "https://freno.me";
         const htmlContent = `<html>
 <head>
@@ -754,7 +751,6 @@ export const authRouter = createTRPCRouter({
       const { email } = input;
 
       try {
-        // Check rate limiting
         const requested = getCookie(
           ctx.event.nativeEvent,
           "passwordResetRequested"
@@ -777,20 +773,16 @@ export const authRouter = createTRPCRouter({
         });
 
         if (res.rows.length === 0) {
-          // Don't reveal if user exists
           return { success: true, message: "email sent" };
         }
 
         const user = res.rows[0] as unknown as User;
 
-        // Create JWT token with user ID (15min expiry)
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({ id: user.id })
           .setProtectedHeader({ alg: "HS256" })
           .setExpirationTime("15m")
           .sign(secret);
-
-        // Send email
         const domain = env.VITE_DOMAIN || "https://freno.me";
         const htmlContent = `<html>
 <head>
@@ -832,7 +824,6 @@ export const authRouter = createTRPCRouter({
 
         await sendEmail(email, "password reset", htmlContent);
 
-        // Set rate limit cookie (5 minutes)
         const exp = new Date(Date.now() + 5 * 60 * 1000);
         setCookie(
           ctx.event.nativeEvent,
@@ -870,7 +861,6 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Reset password with token
   resetPassword: publicProcedure
     .input(
       z.object({
@@ -890,7 +880,6 @@ export const authRouter = createTRPCRouter({
       }
 
       try {
-        // Verify JWT token
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const { payload } = await jwtVerify(token, secret);
 
@@ -904,7 +893,6 @@ export const authRouter = createTRPCRouter({
         const conn = ConnectionFactory();
         const passwordHash = await hashPassword(newPassword);
 
-        // Get user to check current provider
         const userRes = await conn.execute({
           sql: "SELECT provider FROM User WHERE id = ?",
           args: [payload.id]
@@ -919,7 +907,6 @@ export const authRouter = createTRPCRouter({
 
         const currentProvider = (userRes.rows[0] as any).provider;
 
-        // Only update provider to "email" if it's null, undefined, or not a known OAuth provider
         if (
           !currentProvider ||
           !["google", "github", "apple"].includes(currentProvider)
@@ -929,14 +916,12 @@ export const authRouter = createTRPCRouter({
             args: [passwordHash, "email", payload.id]
           });
         } else {
-          // Keep existing OAuth provider, just update password
           await conn.execute({
             sql: "UPDATE User SET password_hash = ? WHERE id = ?",
             args: [passwordHash, payload.id]
           });
         }
 
-        // Clear any session cookies
         setCookie(ctx.event.nativeEvent, "emailToken", "", {
           maxAge: 0,
           path: "/"
@@ -959,14 +944,12 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Resend email verification
   resendEmailVerification: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
       try {
-        // Check rate limiting
         const requested = getCookie(
           ctx.event.nativeEvent,
           "emailVerificationRequested"
@@ -998,14 +981,12 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Create JWT token (15min expiry)
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({ email })
           .setProtectedHeader({ alg: "HS256" })
           .setExpirationTime("15m")
           .sign(secret);
 
-        // Send email
         const domain = env.VITE_DOMAIN || "https://freno.me";
         const htmlContent = `<html>
 <head>
@@ -1044,7 +1025,6 @@ export const authRouter = createTRPCRouter({
 
         await sendEmail(email, "freno.me email verification", htmlContent);
 
-        // Set rate limit cookie
         setCookie(
           ctx.event.nativeEvent,
           "emailVerificationRequested",
@@ -1081,7 +1061,6 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  // Sign out
   signOut: publicProcedure.mutation(async ({ ctx }) => {
     setCookie(ctx.event.nativeEvent, "userIDToken", "", {
       maxAge: 0,

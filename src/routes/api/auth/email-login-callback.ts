@@ -11,7 +11,6 @@ export async function GET(event: APIEvent) {
   // Parse rememberMe parameter
   const rememberMe = rememberMeParam === "true";
 
-  // Missing required parameters
   if (!email || !token) {
     return new Response(null, {
       status: 302,
@@ -32,13 +31,11 @@ export async function GET(event: APIEvent) {
     });
 
     if (result.success) {
-      // Redirect to account page on success
       return new Response(null, {
         status: 302,
         headers: { Location: result.redirectTo || "/account" },
       });
     } else {
-      // Redirect to login with error
       return new Response(null, {
         status: 302,
         headers: { Location: "/login?error=auth_failed" },

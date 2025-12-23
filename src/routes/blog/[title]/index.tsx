@@ -18,7 +18,6 @@ import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
 import { TerminalSplash } from "~/components/TerminalSplash";
 import { api } from "~/lib/api";
 
-// Server function to fetch post by title
 const getPostByTitle = query(
   async (
     title: string,
@@ -48,7 +47,6 @@ const getPostByTitle = query(
     const post = postResults.rows[0] as any;
 
     if (!post) {
-      // Check if post exists but is unpublished
       const existQuery = "SELECT id FROM Post WHERE title = ?";
       const existRes = await conn.execute({
         sql: existQuery,

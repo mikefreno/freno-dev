@@ -8,7 +8,6 @@ import TagSelector from "~/components/blog/TagSelector";
 import PostSorting from "~/components/blog/PostSorting";
 import { TerminalSplash } from "~/components/TerminalSplash";
 
-// Server function to fetch all posts
 const getPosts = query(async () => {
   "use server";
   const { ConnectionFactory, getPrivilegeLevel } =

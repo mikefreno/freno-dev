@@ -4,7 +4,6 @@ import LoadingSpinner from "~/components/LoadingSpinner";
 import { getClientCookie } from "~/lib/cookies.client";
 
 export default function DeletionForm() {
-  // State management
   const [countDown, setCountDown] = createSignal(0);
   const [emailSent, setEmailSent] = createSignal(false);
   const [error, setError] = createSignal("");
@@ -30,7 +29,6 @@ export default function DeletionForm() {
     }
   };
 
-  // Check for existing timer on mount
   createEffect(() => {
     const timer = getClientCookie("deletionRequestSent");
     if (timer) {
@@ -46,7 +44,6 @@ export default function DeletionForm() {
     }
   });
 
-  // Form submission handler
   const sendEmailTrigger = async (e: Event) => {
     e.preventDefault();
     setLoading(true);

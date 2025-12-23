@@ -90,7 +90,6 @@ export const validateServerEnv = (
 };
 
 // Validate and export environment variables directly
-// This happens once at module load time on the server
 const validateAndExportEnv = (): ServerEnv => {
   try {
     const validated = validateServerEnv(process.env);
@@ -104,12 +103,10 @@ const validateAndExportEnv = (): ServerEnv => {
 
 export const env = validateAndExportEnv();
 
-// Helper function to check if a variable is missing
 export const isMissingEnvVar = (varName: string): boolean => {
   return !process.env[varName] || process.env[varName]?.trim() === "";
 };
 
-// Helper function to get all missing server environment variables
 export const getMissingEnvVars = (): string[] => {
   const requiredServerVars = [
     "NODE_ENV",

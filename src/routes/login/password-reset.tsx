@@ -11,7 +11,6 @@ export default function PasswordResetPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // State management
   const [passwordBlurred, setPasswordBlurred] = createSignal(false);
   const [passwordChangeLoading, setPasswordChangeLoading] = createSignal(false);
   const [passwordsMatch, setPasswordsMatch] = createSignal(false);
@@ -25,21 +24,18 @@ export default function PasswordResetPage() {
   const [showPasswordInput, setShowPasswordInput] = createSignal(false);
   const [showPasswordConfInput, setShowPasswordConfInput] = createSignal(false);
 
-  // Form refs
   let newPasswordRef: HTMLInputElement | undefined;
   let newPasswordConfRef: HTMLInputElement | undefined;
 
   // Get token from URL
   const token = searchParams.token;
 
-  // Redirect to request page if no token
   createEffect(() => {
     if (!token) {
       navigate("/login/request-password-reset");
     }
   });
 
-  // Form submission handler
   const setNewPasswordTrigger = async (e: Event) => {
     e.preventDefault();
     setShowRequestNewEmail(false);
@@ -93,7 +89,6 @@ export default function PasswordResetPage() {
     }
   };
 
-  // Check if passwords match
   const checkForMatch = (newPassword: string, newPasswordConf: string) => {
     if (newPassword === newPasswordConf) {
       setPasswordsMatch(true);
@@ -102,7 +97,6 @@ export default function PasswordResetPage() {
     }
   };
 
-  // Check password length
   const checkPasswordLength = (password: string) => {
     if (password.length >= 8) {
       setPasswordLengthSufficient(true);
@@ -115,7 +109,6 @@ export default function PasswordResetPage() {
     }
   };
 
-  // Handle password blur
   const passwordLengthBlurCheck = () => {
     if (
       !passwordLengthSufficient() &&
@@ -127,7 +120,6 @@ export default function PasswordResetPage() {
     setPasswordBlurred(true);
   };
 
-  // Handle new password change
   const handleNewPasswordChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     checkPasswordLength(target.value);
@@ -136,7 +128,6 @@ export default function PasswordResetPage() {
     }
   };
 
-  // Handle password confirmation change
   const handlePasswordConfChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     if (newPasswordRef) {
@@ -144,7 +135,6 @@ export default function PasswordResetPage() {
     }
   };
 
-  // Handle password blur
   const handlePasswordBlur = () => {
     passwordLengthBlurCheck();
   };

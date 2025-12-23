@@ -25,7 +25,6 @@ import ReactionBar from "./ReactionBar";
 export default function CommentBlock(props: CommentBlockProps) {
   const location = useLocation();
 
-  // State signals
   const [commentCollapsed, setCommentCollapsed] = createSignal(false);
   const [showingReactionOptions, setShowingReactionOptions] =
     createSignal(false);
