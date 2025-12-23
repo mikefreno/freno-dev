@@ -16,59 +16,38 @@ export interface PostSortingProps {
 }
 
 export default function PostSorting(props: PostSortingProps) {
-  // Build set of tags that are ALLOWED
-  const allowedTags = createMemo(() => {
-    // WHITELIST MODE: If 'include' param is present, only show posts with those tags
-    if (props.include) {
-      const includeList = props.include.split("|").filter(Boolean);
-      return new Set(includeList);
-    }
-
-    // BLACKLIST MODE: Filter out tags in 'filter' param
-    const filterList = props.filters?.split("|").filter(Boolean) || [];
-
-    // If no filters set, all tags are allowed
-    if (filterList.length === 0) {
-      return new Set(props.tags.map((t) => t.value.slice(1)));
-    }
-
-    // Build set of tags that are checked (allowed to show)
-    const allTags = new Set(props.tags.map((t) => t.value.slice(1)));
-    const filteredOutTags = new Set(filterList);
-
-    const allowed = new Set<string>();
-    allTags.forEach((tag) => {
-      if (!filteredOutTags.has(tag)) {
-        allowed.add(tag);
+  const filteredPosts = createMemo(() => {
+    // Build map of post_id -> tags for that post
+    const postTags = new Map<number, Set<string>>();
+    props.tags.forEach((tag) => {
+      if (!postTags.has(tag.post_id)) {
+        postTags.set(tag.post_id, new Set());
       }
+      // Tag values in DB have # prefix, remove it for comparison
+      const tagWithoutHash = tag.value.startsWith("#")
+        ? tag.value.slice(1)
+        : tag.value;
+      postTags.get(tag.post_id)!.add(tagWithoutHash);
     });
 
-    return allowed;
-  });
+    // WHITELIST MODE: Only show posts that have at least one of the included tags
+    if (props.include !== undefined) {
+      const includeList = props.include.split("|").filter(Boolean);
 
-  // Get posts that have at least one allowed tag
-  const filteredPosts = createMemo(() => {
-    const allowed = allowedTags();
+      // Empty whitelist means show nothing
+      if (includeList.length === 0) {
+        return [];
+      }
 
-    // In whitelist mode, only show posts with allowed tags
-    if (props.include) {
-      // Build map of post_id -> tags for that post
-      const postTags = new Map<number, Set<string>>();
-      props.tags.forEach((tag) => {
-        if (!postTags.has(tag.post_id)) {
-          postTags.set(tag.post_id, new Set());
-        }
-        postTags.get(tag.post_id)!.add(tag.value.slice(1));
-      });
+      const includeSet = new Set(includeList);
 
-      // Keep posts that have at least one allowed tag
       return props.posts.filter((post) => {
         const tags = postTags.get(post.id);
-        if (!tags) return false; // Post has no tags
+        if (!tags || tags.size === 0) return false;
 
-        // Check if post has at least one allowed tag
+        // Post must have at least one tag from the include list
         for (const tag of tags) {
-          if (allowed.has(tag)) {
+          if (includeSet.has(tag)) {
             return true;
           }
         }
@@ -76,38 +55,33 @@ export default function PostSorting(props: PostSortingProps) {
       });
     }
 
-    // In blacklist mode, show all posts if all tags are allowed
-    if (
-      allowed.size ===
-      props.tags
-        .map((t) => t.value.slice(1))
-        .filter((v, i, a) => a.indexOf(v) === i).length
-    ) {
-      return props.posts;
+    // BLACKLIST MODE: Hide posts that have ANY of the filtered tags
+    if (props.filters !== undefined) {
+      const filterList = props.filters.split("|").filter(Boolean);
+
+      // Empty blacklist means show everything
+      if (filterList.length === 0) {
+        return props.posts;
+      }
+
+      const filterSet = new Set(filterList);
+
+      return props.posts.filter((post) => {
+        const tags = postTags.get(post.id);
+        if (!tags || tags.size === 0) return true; // Show posts with no tags
+
+        // Post must NOT have any blacklisted tags
+        for (const tag of tags) {
+          if (filterSet.has(tag)) {
+            return false; // Hide this post
+          }
+        }
+        return true; // Show this post
+      });
     }
 
-    // Build map of post_id -> tags for that post
-    const postTags = new Map<number, Set<string>>();
-    props.tags.forEach((tag) => {
-      if (!postTags.has(tag.post_id)) {
-        postTags.set(tag.post_id, new Set());
-      }
-      postTags.get(tag.post_id)!.add(tag.value.slice(1));
-    });
-
-    // Keep posts that have at least one allowed tag
-    return props.posts.filter((post) => {
-      const tags = postTags.get(post.id);
-      if (!tags) return false; // Post has no tags
-
-      // Check if post has at least one allowed tag
-      for (const tag of tags) {
-        if (allowed.has(tag)) {
-          return true;
-        }
-      }
-      return false;
-    });
+    // No filters: show all posts
+    return props.posts;
   });
 
   const sortedPosts = createMemo(() => {

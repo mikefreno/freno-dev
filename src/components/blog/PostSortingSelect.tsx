@@ -1,4 +1,4 @@
-import { createSignal, createEffect, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { useNavigate, useLocation, useSearchParams } from "@solidjs/router";
 import Check from "~/components/icons/Check";
 import UpDownArrows from "~/components/icons/UpDownArrows";
@@ -14,29 +14,25 @@ const sorting = [
 export interface PostSortingSelectProps {}
 
 export default function PostSortingSelect(props: PostSortingSelectProps) {
-  const [selected, setSelected] = createSignal(sorting[0]);
   const [isOpen, setIsOpen] = createSignal(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const currentFilters = () => searchParams.filter || null;
-  const currentInclude = () => searchParams.include || null;
-
-  createEffect(() => {
-    let newRoute = location.pathname + "?sort=" + selected().val;
-    if (currentFilters()) {
-      newRoute += "&filter=" + currentFilters();
-    }
-    if (currentInclude()) {
-      newRoute += "&include=" + currentInclude();
-    }
-    navigate(newRoute);
-  });
+  // Derive selected from URL params instead of local state
+  const selected = () => {
+    const sortParam = searchParams.sort || "newest";
+    return sorting.find((s) => s.val === sortParam) || sorting[0];
+  };
 
   const handleSelect = (sort: { val: string; label: string }) => {
-    setSelected(sort);
     setIsOpen(false);
+
+    // Build new URL preserving all existing params
+    const params = new URLSearchParams(searchParams as Record<string, string>);
+    params.set("sort", sort.val);
+
+    navigate(`${location.pathname}?${params.toString()}`);
   };
 
   return (

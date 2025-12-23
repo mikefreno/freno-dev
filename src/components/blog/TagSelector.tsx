@@ -24,18 +24,33 @@ export default function TagSelector(props: TagSelectorProps) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const currentSort = () => searchParams.sort || "";
   const currentFilters = () =>
     searchParams.filter?.split("|").filter(Boolean) || [];
   const currentInclude = () =>
     searchParams.include?.split("|").filter(Boolean) || [];
 
-  // Sync filter mode with URL params
+  // Get currently selected tags based on mode
+  const selectedTags = () => {
+    if (filterMode() === "whitelist") {
+      return currentInclude();
+    } else {
+      return currentFilters();
+    }
+  };
+
+  // Sync filter mode with URL params and ensure one is always present
   createEffect(() => {
-    if (searchParams.include) {
+    if ("include" in searchParams) {
       setFilterMode("whitelist");
-    } else if (searchParams.filter) {
+    } else if ("filter" in searchParams) {
       setFilterMode("blacklist");
+    } else {
+      // No filter param exists, default to blacklist mode with empty filter
+      const params = new URLSearchParams(
+        searchParams as Record<string, string>
+      );
+      params.set("filter", "");
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
     }
   });
 
@@ -51,22 +66,15 @@ export default function TagSelector(props: TagSelectorProps) {
     Object.keys(props.tagMap).map((key) => key.slice(1))
   );
 
-  // In blacklist mode: checked = not filtered out
-  // In whitelist mode: checked = included in whitelist
+  // Check if a tag is currently selected
   const isTagChecked = (tag: string) => {
-    if (filterMode() === "whitelist") {
-      return currentInclude().includes(tag);
-    } else {
-      return !currentFilters().includes(tag);
-    }
+    return selectedTags().includes(tag);
   };
 
   const allChecked = createMemo(() => {
-    if (filterMode() === "whitelist") {
-      return currentInclude().length === allTagKeys().length;
-    } else {
-      return allTagKeys().every((tag) => !currentFilters().includes(tag));
-    }
+    return (
+      selectedTags().length === allTagKeys().length && allTagKeys().length > 0
+    );
   });
 
   const handleClickOutside = (e: MouseEvent) => {
@@ -94,84 +102,80 @@ export default function TagSelector(props: TagSelectorProps) {
   };
 
   const handleCheck = (tag: string, isChecked: boolean) => {
-    if (filterMode() === "whitelist") {
-      // Whitelist mode: manage include param
-      let newInclude: string[];
-      if (isChecked) {
-        // Add to whitelist
-        newInclude = [...currentInclude(), tag];
-      } else {
-        // Remove from whitelist
-        newInclude = currentInclude().filter((t) => t !== tag);
-      }
+    const currentSelected = selectedTags();
+    let newSelected: string[];
 
-      if (newInclude.length > 0) {
-        const includeStr = newInclude.map((t) => `#${t}`).join("|");
-        navigate(
-          `${location.pathname}?sort=${currentSort()}&include=${includeStr}`
-        );
-      } else {
-        // If no tags selected, clear whitelist
-        navigate(`${location.pathname}?sort=${currentSort()}`);
-      }
+    if (isChecked) {
+      // Add tag to selection
+      newSelected = [...currentSelected, tag];
     } else {
-      // Blacklist mode: manage filter param
-      if (isChecked) {
-        const newFilters = searchParams.filter?.replace(tag + "|", "");
-        if (newFilters && newFilters.length >= 1) {
-          navigate(
-            `${location.pathname}?sort=${currentSort()}&filter=${newFilters}`
-          );
-        } else {
-          navigate(`${location.pathname}?sort=${currentSort()}`);
-        }
-      } else {
-        const currentFiltersStr = searchParams.filter;
-        if (currentFiltersStr) {
-          const newFilters = currentFiltersStr + tag + "|";
-          navigate(
-            `${location.pathname}?sort=${currentSort()}&filter=${newFilters}`
-          );
-        } else {
-          navigate(`${location.pathname}?sort=${currentSort()}&filter=${tag}|`);
-        }
-      }
+      // Remove tag from selection
+      newSelected = currentSelected.filter((t) => t !== tag);
     }
+
+    // Build URL preserving all existing params
+    const params = new URLSearchParams(searchParams as Record<string, string>);
+    const paramName = filterMode() === "whitelist" ? "include" : "filter";
+    const otherParamName = filterMode() === "whitelist" ? "filter" : "include";
+
+    // Remove the other mode's param
+    params.delete(otherParamName);
+
+    if (newSelected.length > 0) {
+      const paramValue = newSelected.join("|");
+      params.set(paramName, paramValue);
+    } else {
+      // Keep empty param to preserve mode (especially important for whitelist)
+      params.set(paramName, "");
+    }
+
+    navigate(`${location.pathname}?${params.toString()}`);
   };
 
   const handleToggleAll = () => {
-    if (filterMode() === "whitelist") {
-      if (allChecked()) {
-        // Uncheck all: clear whitelist
-        navigate(`${location.pathname}?sort=${currentSort()}`);
-      } else {
-        // Check all: add all tags to whitelist
-        const allTags = allTagKeys()
-          .map((t) => `#${t}`)
-          .join("|");
-        navigate(
-          `${location.pathname}?sort=${currentSort()}&include=${allTags}`
-        );
-      }
+    const params = new URLSearchParams(searchParams as Record<string, string>);
+    const paramName = filterMode() === "whitelist" ? "include" : "filter";
+    const otherParamName = filterMode() === "whitelist" ? "filter" : "include";
+
+    // Remove the other mode's param
+    params.delete(otherParamName);
+
+    if (allChecked()) {
+      // Uncheck all: keep empty param to preserve mode
+      params.set(paramName, "");
     } else {
-      if (allChecked()) {
-        // Uncheck all: Build filter string with all tags
-        const allTags = allTagKeys().join("|") + "|";
-        navigate(
-          `${location.pathname}?sort=${currentSort()}&filter=${allTags}`
-        );
-      } else {
-        // Check all: Remove filter param
-        navigate(`${location.pathname}?sort=${currentSort()}`);
-      }
+      // Check all: select all tags
+      const allTags = allTagKeys().join("|");
+      params.set(paramName, allTags);
     }
+
+    navigate(`${location.pathname}?${params.toString()}`);
   };
 
   const toggleFilterMode = () => {
+    // Get current tags BEFORE changing mode
+    const currentSelected = selectedTags();
+
     const newMode = filterMode() === "whitelist" ? "blacklist" : "whitelist";
     setFilterMode(newMode);
-    // Clear all filters when switching modes
-    navigate(`${location.pathname}?sort=${currentSort()}`);
+
+    // Keep the same selected tags, just change the param name
+    const params = new URLSearchParams(searchParams as Record<string, string>);
+    const newParamName = newMode === "whitelist" ? "include" : "filter";
+    const oldParamName = newMode === "whitelist" ? "filter" : "include";
+
+    // Remove old param and set new one
+    params.delete(oldParamName);
+
+    if (currentSelected.length > 0) {
+      const paramValue = currentSelected.join("|");
+      params.set(newParamName, paramValue);
+    } else {
+      // Always keep the param, even if empty
+      params.set(newParamName, "");
+    }
+
+    navigate(`${location.pathname}?${params.toString()}`);
   };
 
   return (
@@ -209,8 +213,8 @@ export default function TagSelector(props: TagSelectorProps) {
             </div>
             <div class="text-subtext1 text-xs italic">
               {filterMode() === "whitelist"
-                ? "Check tags to show ONLY those posts"
-                : "Uncheck tags to HIDE those posts"}
+                ? "Check tags to show ONLY posts with those tags"
+                : "Check tags to HIDE posts with those tags"}
             </div>
           </div>
 

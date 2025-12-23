@@ -76,8 +76,10 @@ export default function BlogIndex() {
   const [searchParams] = useSearchParams();
 
   const sort = () => searchParams.sort || "newest";
-  const filters = () => searchParams.filter || "";
-  const include = () => searchParams.include || "";
+  const filters = () =>
+    "filter" in searchParams ? searchParams.filter : undefined;
+  const include = () =>
+    "include" in searchParams ? searchParams.include : undefined;
 
   const data = createAsync(() => getPosts(), { deferStream: true });
 
