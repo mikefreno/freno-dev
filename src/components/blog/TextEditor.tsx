@@ -1452,7 +1452,7 @@ export default function TextEditor(props: TextEditorProps) {
             <Show when={showBubbleMenu()}>
               <div
                 ref={bubbleMenuRef}
-                class="bg-crust text-text absolute z-110 w-fit rounded p-2 text-sm whitespace-nowrap shadow-xl"
+                class="bg-crust text-text fixed z-110 w-fit rounded p-2 text-sm whitespace-nowrap shadow-xl"
                 style={{
                   top: `${bubbleMenuPosition().top}px`,
                   left: `${bubbleMenuPosition().left}px`,
