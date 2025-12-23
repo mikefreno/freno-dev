@@ -13,19 +13,12 @@ import AddImageToS3 from "~/lib/s3upload";
 import { validatePassword, isValidEmail } from "~/lib/validation";
 import { TerminalSplash } from "~/components/TerminalSplash";
 
-type UserProfile = {
-  id: string;
-  email: string | null;
-  emailVerified: boolean;
-  displayName: string | null;
-  image: string | null;
-  provider: "email" | "google" | "github" | null;
-  hasPassword: boolean;
-};
+import type { UserProfile } from "~/types/user";
 
 const getUserProfile = query(async (): Promise<UserProfile | null> => {
   "use server";
   const { getUserID, ConnectionFactory } = await import("~/server/utils");
+  const { toUserProfile } = await import("~/types/user");
   const event = getEvent()!;
 
   const userId = await getUserID(event);
@@ -45,17 +38,7 @@ const getUserProfile = query(async (): Promise<UserProfile | null> => {
     }
 
     const user = res.rows[0] as any;
-
-    // Transform to UserProfile type
-    return {
-      id: user.id,
-      email: user.email || null,
-      emailVerified: Boolean(user.emailVerified),
-      displayName: user.displayName || null,
-      image: user.image || null,
-      provider: user.provider || null,
-      hasPassword: Boolean(user.password)
-    };
+    return toUserProfile(user);
   } catch (err) {
     console.error("Failed to fetch user profile:", err);
     throw redirect("/login");
@@ -305,7 +288,11 @@ export default function AccountPage() {
         const response = await fetch("/api/trpc/user.changePassword", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ oldPassword, newPassword })
+          body: JSON.stringify({
+            oldPassword,
+            newPassword,
+            newPasswordConfirmation: newPasswordConf
+          })
         });
 
         const result = await response.json();
@@ -350,7 +337,10 @@ export default function AccountPage() {
         const response = await fetch("/api/trpc/user.setPassword", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: newPassword })
+          body: JSON.stringify({
+            newPassword,
+            newPasswordConfirmation: newPasswordConf
+          })
         });
 
         const result = await response.json();
