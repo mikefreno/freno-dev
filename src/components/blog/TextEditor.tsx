@@ -423,6 +423,18 @@ export default function TextEditor(props: TextEditorProps) {
     return alignment === "left";
   };
 
+  // Helper for mobile-optimized button classes
+  const getButtonClasses = (
+    isActive: boolean,
+    includeHover: boolean = false
+  ) => {
+    const baseClasses =
+      "rounded px-2 py-1 text-xs select-none touch-manipulation active:scale-95 transition-transform";
+    const activeClass = isActive ? "bg-surface2" : "";
+    const hoverClass = includeHover && !isActive ? "hover:bg-surface1" : "";
+    return `${baseClasses} ${activeClass} ${hoverClass}`.trim();
+  };
+
   const editor = createTiptapEditor(() => ({
     element: editorRef,
     extensions: [
@@ -1762,6 +1774,7 @@ export default function TextEditor(props: TextEditorProps) {
 
             {/* Main Toolbar - Pinned at top in fullscreen */}
             <div
+              id="main-toolbar"
               class="border-surface2 bg-base border-b"
               classList={{
                 "sticky top-0 z-[105]": isFullscreen()
@@ -1814,9 +1827,7 @@ export default function TextEditor(props: TextEditorProps) {
                 <button
                   type="button"
                   onClick={() => instance().chain().focus().toggleBold().run()}
-                  class={`${
-                    isActive("bold") && "bg-surface2"
-                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
+                  class={getButtonClasses(isActive("bold"))}
                   title="Bold"
                 >
                   <strong>B</strong>
@@ -1826,9 +1837,7 @@ export default function TextEditor(props: TextEditorProps) {
                   onClick={() =>
                     instance().chain().focus().toggleItalic().run()
                   }
-                  class={`${
-                    isActive("italic") && "bg-surface2"
-                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
+                  class={getButtonClasses(isActive("italic"))}
                   title="Italic"
                 >
                   <em>I</em>
@@ -1838,9 +1847,7 @@ export default function TextEditor(props: TextEditorProps) {
                   onClick={() =>
                     instance().chain().focus().toggleStrike().run()
                   }
-                  class={`${
-                    isActive("strike") && "bg-surface2"
-                  } touch-manipulation rounded px-2 py-1 text-xs select-none`}
+                  class={getButtonClasses(isActive("strike"))}
                   title="Strikethrough"
                 >
                   <s>S</s>

@@ -17,6 +17,7 @@ import PostBodyClient from "~/components/blog/PostBodyClient";
 import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
 import { TerminalSplash } from "~/components/TerminalSplash";
 import { api } from "~/lib/api";
+import "../post.css";
 
 const getPostByTitle = query(
   async (

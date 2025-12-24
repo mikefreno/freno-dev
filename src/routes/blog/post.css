@@ -1,0 +1,729 @@
+.prose {
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-text);
+  --tw-prose-lead: var(--color-text);
+  --tw-prose-links: var(--color-blue);
+  --tw-prose-bold: var(--color-text);
+  --tw-prose-counters: var(--color-subtext1);
+  --tw-prose-bullets: var(--color-subtext1);
+  --tw-prose-hr: var(--color-surface2);
+  --tw-prose-quotes: var(--color-text);
+  --tw-prose-quote-borders: var(--color-surface2);
+  --tw-prose-captions: var(--color-subtext1);
+  --tw-prose-code: var(--color-text);
+  --tw-prose-pre-code: var(--color-text);
+  --tw-prose-pre-bg: var(--color-surface0);
+  --tw-prose-th-borders: var(--color-surface2);
+  --tw-prose-td-borders: var(--color-surface1);
+}
+
+.prose-invert {
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-text);
+  --tw-prose-lead: var(--color-text);
+  --tw-prose-links: var(--color-blue);
+  --tw-prose-bold: var(--color-text);
+  --tw-prose-counters: var(--color-subtext1);
+  --tw-prose-bullets: var(--color-subtext1);
+  --tw-prose-hr: var(--color-surface2);
+  --tw-prose-quotes: var(--color-text);
+  --tw-prose-quote-borders: var(--color-surface2);
+  --tw-prose-captions: var(--color-subtext1);
+  --tw-prose-code: var(--color-text);
+  --tw-prose-pre-code: var(--color-text);
+  --tw-prose-pre-bg: var(--color-surface0);
+  --tw-prose-th-borders: var(--color-surface2);
+  --tw-prose-td-borders: var(--color-surface1);
+}
+.code-block {
+  position: relative;
+
+  select {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+  }
+}
+.ProseMirror {
+  > * + * {
+    margin-top: 0.75em;
+  }
+
+  ul,
+  ol {
+    padding: 0 1rem;
+    margin-left: 2rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: 1.1;
+  }
+  a {
+    color: #70cff8;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  blockquote {
+    padding-left: 1rem;
+    border-left: 2px solid rgba(#0d0d0d, 0.1);
+  }
+
+  hr {
+    border: none;
+    border-top: 2px solid var(--color-text);
+    margin: 2rem 0;
+  }
+
+  pre {
+    background: #0d0d0d;
+    color: #fff;
+    font-family: "JetBrainsMono", monospace;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+
+    code {
+      color: inherit;
+      padding: 0;
+      background: none;
+      font-size: 0.8rem;
+    }
+
+    .hljs-comment,
+    .hljs-quote {
+      color: #616161;
+    }
+
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-attribute,
+    .hljs-tag,
+    .hljs-name,
+    .hljs-regexp,
+    .hljs-link,
+    .hljs-name,
+    .hljs-selector-id,
+    .hljs-selector-class {
+      color: #f98181;
+    }
+
+    .hljs-number,
+    .hljs-meta,
+    .hljs-built_in,
+    .hljs-builtin-name,
+    .hljs-literal,
+    .hljs-type,
+    .hljs-params {
+      color: #fbbc88;
+    }
+
+    .hljs-string,
+    .hljs-symbol,
+    .hljs-bullet {
+      color: #b9f18d;
+    }
+
+    .hljs-title,
+    .hljs-section {
+      color: #faf594;
+    }
+
+    .hljs-keyword,
+    .hljs-selector-tag {
+      color: #70cff8;
+    }
+
+    .hljs-emphasis {
+      font-style: italic;
+    }
+
+    .hljs-strong {
+      font-weight: 700;
+    }
+  }
+}
+
+/* Table styles for TipTap editor */
+.tiptap-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  max-width: 100%;
+  margin: 1rem 0;
+  overflow: auto;
+  display: block;
+}
+
+.tiptap-table td,
+.tiptap-table th {
+  min-width: 1em;
+  border: 2px solid var(--color-surface2);
+  padding: 0.5rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tiptap-table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: var(--color-surface0);
+}
+
+.tiptap-table .selectedCell {
+  background-color: var(--color-surface1);
+}
+
+.tiptap-table p {
+  margin: 0;
+}
+
+/* Additional table styles for ProseMirror */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  max-width: 100%;
+  margin: 1rem 0;
+  overflow: auto;
+  display: block;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  min-width: 3em;
+  border: 2px solid var(--color-text);
+  padding: 0.5rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  background-color: var(--color-mantle);
+}
+
+.ProseMirror table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: var(--color-surface0);
+}
+
+.ProseMirror table .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: var(--color-blue);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.ProseMirror table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 20;
+  background-color: var(--color-blue);
+  pointer-events: none;
+}
+
+ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+ul[data-type="taskList"] li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 0;
+}
+
+/* Collapsible section (details/summary) styles */
+details {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid var(--color-surface2);
+  border-radius: 0.5rem;
+  background-color: var(--color-surface0);
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  user-select: none;
+  padding: 0.5rem;
+  margin: -1rem -1rem 0 -1rem;
+  background-color: var(--color-surface1);
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: background-color 0.2s;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::before {
+  content: "▶ ";
+  color: var(--color-blue);
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+  color: var(--color-green);
+}
+
+summary:hover {
+  background-color: var(--color-surface2);
+}
+
+details[open] summary {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-surface2);
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* Content inside details */
+details div[data-type="details-content"] {
+  padding: 0.5rem;
+}
+
+/* Nested details */
+details details {
+  margin: 1rem 0;
+  border-color: var(--color-surface1);
+}
+
+/* Animation */
+details[open] div[data-type="details-content"] {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* TipTap Details/Summary nodes - using data-type attributes */
+.ProseMirror [data-type="details"] {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid var(--color-surface2);
+  border-radius: 0.5rem;
+  background-color: var(--color-surface0);
+  position: relative;
+}
+
+/* Hide the empty button that TipTap creates */
+.ProseMirror [data-type="details"] > button {
+  display: none;
+}
+
+.ProseMirror [data-type="details"] summary {
+  cursor: pointer;
+  font-weight: 600;
+  user-select: none;
+  padding: 0.5rem;
+  margin: -1rem -1rem 0 -1rem;
+  background-color: var(--color-surface1);
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: background-color 0.2s;
+  list-style: none;
+}
+
+.ProseMirror [data-type="details"] summary::-webkit-details-marker {
+  display: none;
+}
+
+.ProseMirror [data-type="details"] summary::before {
+  content: "▶ ";
+  color: var(--color-blue);
+  display: inline-block;
+  transition: transform 0.2s;
+  margin-right: 0.25rem;
+}
+
+.ProseMirror [data-type="details"][open] summary::before {
+  transform: rotate(90deg);
+  color: var(--color-green);
+}
+
+.ProseMirror [data-type="details"] summary:hover {
+  background-color: var(--color-surface2);
+}
+
+.ProseMirror [data-type="details"][open] summary {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-surface2);
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.ProseMirror [data-type="detailsContent"] {
+  padding: 0.5rem;
+}
+
+.ProseMirror [data-type="detailsContent"][hidden] {
+  display: none;
+}
+
+.ProseMirror
+  [data-type="details"][open]
+  [data-type="detailsContent"]:not([hidden]) {
+  display: block;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mermaid diagram styles */
+.mermaid-diagram,
+pre[data-type="mermaid"] {
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: var(--color-surface0);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-surface2);
+  overflow: visible;
+}
+
+.mermaid-diagram code,
+pre[data-type="mermaid"] code {
+  display: block;
+  white-space: pre;
+  font-family: "JetBrainsMono", monospace;
+  color: var(--color-text);
+  background: transparent;
+}
+
+/* Rendered mermaid SVG container */
+.mermaid-rendered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+}
+
+.mermaid-rendered svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Mermaid theme adjustments */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node polygon,
+.mermaid .node ellipse,
+.mermaid .node path {
+  fill: var(--color-surface1) !important;
+  stroke: var(--color-blue) !important;
+  stroke-width: 2px;
+}
+
+.mermaid .node .label,
+.mermaid .nodeLabel {
+  color: var(--color-text) !important;
+  fill: var(--color-text) !important;
+}
+
+.mermaid .edgePath .path,
+.mermaid .flowchart-link {
+  stroke: var(--color-blue) !important;
+  stroke-width: 2px;
+}
+
+.mermaid .edgeLabel,
+.mermaid .edgeLabel rect {
+  background-color: var(--color-surface0) !important;
+  fill: var(--color-surface0) !important;
+}
+
+.mermaid .edgeLabel span {
+  color: var(--color-text) !important;
+}
+
+.mermaid .cluster rect {
+  fill: var(--color-surface0) !important;
+  stroke: var(--color-surface2) !important;
+}
+
+.mermaid .cluster-label {
+  fill: var(--color-text) !important;
+}
+
+/* Class diagram styles */
+.mermaid .classGroup rect,
+.mermaid .classGroup line {
+  stroke: var(--color-blue) !important;
+  fill: var(--color-surface1) !important;
+}
+
+.mermaid .classLabel {
+  fill: var(--color-text) !important;
+}
+
+/* State diagram styles */
+.mermaid .statediagram-state rect {
+  fill: var(--color-surface1) !important;
+  stroke: var(--color-blue) !important;
+}
+
+.mermaid .statediagram-state text {
+  fill: var(--color-text) !important;
+}
+
+/* Sequence diagram styles */
+.mermaid .actor {
+  fill: var(--color-surface1) !important;
+  stroke: var(--color-blue) !important;
+}
+
+.mermaid .actor text,
+.mermaid .messageText {
+  fill: var(--color-text) !important;
+  stroke: none !important;
+}
+
+.mermaid .activation0,
+.mermaid .activation1,
+.mermaid .activation2 {
+  fill: var(--color-surface2) !important;
+  stroke: var(--color-blue) !important;
+}
+
+/* ER diagram styles */
+.mermaid .er.entityBox {
+  fill: var(--color-surface1) !important;
+  stroke: var(--color-blue) !important;
+}
+
+.mermaid .er.entityLabel {
+  fill: var(--color-text) !important;
+}
+
+.mermaid .er.relationshipLabel {
+  fill: var(--color-text) !important;
+}
+
+/* Gantt chart styles */
+.mermaid .grid .tick line {
+  stroke: var(--color-surface2) !important;
+}
+
+.mermaid .grid .tick text {
+  fill: var(--color-text) !important;
+}
+
+.mermaid .task {
+  fill: var(--color-blue) !important;
+  stroke: var(--color-blue) !important;
+}
+
+.mermaid .taskText {
+  fill: var(--color-text) !important;
+}
+
+.mermaid .taskTextOutsideRight,
+.mermaid .taskTextOutsideLeft {
+  fill: var(--color-text) !important;
+}
+
+/* Pie chart styles */
+.mermaid .pieCircle {
+  stroke: var(--color-surface2) !important;
+}
+
+.mermaid .pieTitleText {
+  fill: var(--color-text) !important;
+}
+
+.mermaid .slice {
+  stroke-width: 2px;
+  stroke: var(--color-surface0) !important;
+}
+
+.mermaid .legend rect {
+  fill: var(--color-blue) !important;
+  stroke: var(--color-blue) !important;
+}
+
+/* Override all text elements in mermaid SVG for high contrast */
+.mermaid-rendered svg text,
+.mermaid svg text,
+svg.mermaid text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  stroke: #000000 !important;
+  stroke-width: 0.25px !important;
+}
+
+/* Ensure percentage labels in pie charts are visible */
+.mermaid text.slice,
+.mermaid .slice {
+  fill: #ffffff !important;
+  font-weight: bold !important;
+  font-size: 14px !important;
+  stroke: #000000 !important;
+  stroke-width: 0.75px !important;
+  paint-order: stroke fill !important;
+}
+
+/* Text alignment styles */
+.ProseMirror [style*="text-align: left"],
+.ProseMirror p[style*="text-align: left"],
+.ProseMirror h1[style*="text-align: left"],
+.ProseMirror h2[style*="text-align: left"],
+.ProseMirror h3[style*="text-align: left"],
+.ProseMirror h4[style*="text-align: left"],
+.ProseMirror h5[style*="text-align: left"],
+.ProseMirror h6[style*="text-align: left"] {
+  text-align: left;
+}
+
+.ProseMirror [style*="text-align: center"],
+.ProseMirror p[style*="text-align: center"],
+.ProseMirror h1[style*="text-align: center"],
+.ProseMirror h2[style*="text-align: center"],
+.ProseMirror h3[style*="text-align: center"],
+.ProseMirror h4[style*="text-align: center"],
+.ProseMirror h5[style*="text-align: center"],
+.ProseMirror h6[style*="text-align: center"] {
+  text-align: center;
+}
+
+.ProseMirror [style*="text-align: right"],
+.ProseMirror p[style*="text-align: right"],
+.ProseMirror h1[style*="text-align: right"],
+.ProseMirror h2[style*="text-align: right"],
+.ProseMirror h3[style*="text-align: right"],
+.ProseMirror h4[style*="text-align: right"],
+.ProseMirror h5[style*="text-align: right"],
+.ProseMirror h6[style*="text-align: right"] {
+  text-align: right;
+}
+
+.ProseMirror [style*="text-align: justify"],
+.ProseMirror p[style*="text-align: justify"],
+.ProseMirror h1[style*="text-align: justify"],
+.ProseMirror h2[style*="text-align: justify"],
+.ProseMirror h3[style*="text-align: justify"],
+.ProseMirror h4[style*="text-align: justify"],
+.ProseMirror h5[style*="text-align: justify"],
+.ProseMirror h6[style*="text-align: justify"] {
+  text-align: justify;
+}
+
+/* Image alignment */
+.ProseMirror img[style*="text-align: center"] {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ProseMirror img[style*="text-align: right"] {
+  display: block;
+  margin-left: auto;
+}
+
+.ProseMirror img[style*="text-align: left"] {
+  display: block;
+  margin-right: auto;
+}
+.reference-item > span.ml-2 {
+  font-style: italic;
+}
+
+/* Conditional Block Styling in Editor */
+.ProseMirror .conditional-block {
+  border: 2px dashed rgba(69, 112, 122, 0.5);
+  border-radius: 4px;
+  padding: 12px;
+  margin: 8px 0;
+  position: relative;
+  background: rgba(69, 112, 122, 0.05);
+}
+
+.ProseMirror .conditional-block::before {
+  content: "🔒 " attr(data-condition-type) ": " attr(data-condition-value);
+  position: absolute;
+  top: -12px;
+  left: 8px;
+  background: var(--color-blue);
+  color: var(--color-base);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.ProseMirror .conditional-block[data-show-when="false"]::before {
+  content: "🔒 NOT " attr(data-condition-type) ": " attr(data-condition-value);
+}
+
+.ProseMirror .conditional-content {
+  position: relative;
+}
+
+/* Inline conditional styling */
+.ProseMirror .conditional-inline {
+  display: inline;
+  background: rgba(69, 112, 122, 0.15);
+  border-bottom: 2px dotted rgba(69, 112, 122, 0.6);
+  padding: 2px 4px;
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+}
+
+.ProseMirror .conditional-inline::after {
+  content: "🔒";
+  font-size: 10px;
+  margin-left: 2px;
+  opacity: 0.7;
+}
+
+.ProseMirror .conditional-inline[data-show-when="false"] {
+  background: rgba(193, 74, 74, 0.15);
+  border-bottom-color: rgba(193, 74, 74, 0.6);
+}
+
+.ProseMirror .conditional-inline[data-show-when="false"]::after {
+  content: "🔒❌";
+}
+
+#main-toolbar button,
+[role="button"] {
+  z-index: 150;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent double-tap zoom on buttons */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Ensure active states work properly on mobile */
+button:active,
+[role="button"]:active {
+  opacity: 0.8;
+}

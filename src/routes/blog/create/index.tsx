@@ -4,6 +4,7 @@ import { Title, Meta } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import PostForm from "~/components/blog/PostForm";
+import "../post.css";
 
 const getAuthState = query(async () => {
   "use server";
