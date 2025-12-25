@@ -27,7 +27,7 @@ export default function EditCommentModal(props: EditCommentModalProps) {
           id="edit_prompt"
           class="fade-in bg-surface1 z-50 rounded-md px-8 py-4 shadow-lg"
         >
-          <button class="absolute right-4" onClick={() => {}}>
+          <button class="absolute right-4" onClick={() => props.onClose()}>
             <Xmark
               strokeWidth={0.5}
               color="var(--color-text)"

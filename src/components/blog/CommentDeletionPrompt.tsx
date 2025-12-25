@@ -37,11 +37,6 @@ export default function CommentDeletionPrompt(
     } else if (fullDeleteChecked()) {
       deleteType = "database";
     }
-    console.log("[CommentDeletionPrompt] Calling deleteComment:", {
-      commentID: props.commentID,
-      commenterID: props.commenterID,
-      deleteType
-    });
     props.deleteComment(props.commentID, props.commenterID, deleteType);
   };
 
@@ -55,7 +50,7 @@ export default function CommentDeletionPrompt(
           id="delete_prompt"
           class="fade-in bg-red rounded-md px-8 py-4 shadow-lg brightness-110"
         >
-          <button class="absolute right-4" onClick={() => {}}>
+          <button class="fixed right-4" onClick={() => props.onClose()}>
             <Xmark strokeWidth={0.5} color="white" height={50} width={50} />
           </button>
           <div class="py-4 text-center text-3xl tracking-wide">

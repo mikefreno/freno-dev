@@ -645,6 +645,10 @@ export default function CommentSectionWrapper(
             privilegeLevel={props.privilegeLevel}
             commentDeletionLoading={commentDeletionLoading()}
             deleteComment={deleteComment}
+            onClose={() => {
+              setShowingDeletionPrompt(false);
+              clearModificationPrompt();
+            }}
           />
         </div>
       </Show>
@@ -659,6 +663,10 @@ export default function CommentSectionWrapper(
             commenterDisplayName={commenterDisplayNameForModification()}
             editCommentLoading={editCommentLoading()}
             editComment={editComment}
+            onClose={() => {
+              setShowingCommentEdit(false);
+              clearModificationPrompt();
+            }}
           />
         </div>
       </Show>

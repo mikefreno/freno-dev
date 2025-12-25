@@ -171,7 +171,7 @@ export function RightBarContent() {
 }
 
 export function LeftBar() {
-  const { leftBarSize, leftBarVisible, setLeftBarVisible } = useBars();
+  const { leftBarVisible, setLeftBarVisible } = useBars();
   let ref: HTMLDivElement | undefined;
 
   const [recentPosts, setRecentPosts] = createSignal<any[] | undefined>(
@@ -293,14 +293,14 @@ export function LeftBar() {
       tabindex="-1"
       ref={ref}
       aria-label="Main navigation"
-      class="border-r-overlay2 bg-base fixed z-50 h-dvh w-min border-r-2 transition-transform duration-500 ease-out"
+      class="border-r-overlay2 bg-base fixed z-50 h-dvh border-r-2 transition-transform duration-500 ease-out"
       classList={{
         "-translate-x-full": !leftBarVisible(),
         "translate-x-0": leftBarVisible()
       }}
       style={{
         "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
-        "min-width": "250px",
+        width: "250px",
         "box-shadow": "inset -6px 0 16px -6px rgba(0, 0, 0, 0.1)",
         "padding-top": "env(safe-area-inset-top)",
         "padding-bottom": "env(safe-area-inset-bottom)"
@@ -477,14 +477,14 @@ export function RightBar() {
     <aside
       ref={ref}
       aria-label="Links and activity"
-      class="border-l-overlay2 bg-base fixed right-0 z-50 hidden h-dvh w-fit border-l-2 transition-transform duration-500 ease-out md:block md:max-w-[20%]"
+      class="border-l-overlay2 bg-base fixed right-0 z-50 hidden h-dvh w-fit border-l-2 transition-transform duration-500 ease-out md:block"
       classList={{
         "translate-x-full": !rightBarVisible(),
         "translate-x-0": rightBarVisible()
       }}
       style={{
         "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
-        "min-width": "250px",
+        width: "250px",
         "box-shadow": "inset 6px 0 16px -6px rgba(0, 0, 0, 0.1)",
         "padding-top": "env(safe-area-inset-top)",
         "padding-bottom": "env(safe-area-inset-bottom)"

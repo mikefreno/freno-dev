@@ -210,6 +210,7 @@ export interface CommentDeletionPromptProps {
     deletionType: DeletionType
   ) => void;
   commentDeletionLoading: boolean;
+  onClose: () => void;
   commenterImage?: string;
   commenterEmail?: string;
   commenterDisplayName?: string;
@@ -220,6 +221,7 @@ export interface EditCommentModalProps {
   commentBody: string;
   editComment: (body: string, comment_id: number) => Promise<void>;
   editCommentLoading: boolean;
+  onClose: () => void;
   commenterImage?: string;
   commenterEmail?: string;
   commenterDisplayName?: string;

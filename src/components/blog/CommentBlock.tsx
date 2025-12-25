@@ -1,12 +1,4 @@
-import {
-  createSignal,
-  createEffect,
-  For,
-  Show,
-  onMount,
-  onCleanup
-} from "solid-js";
-import { useLocation } from "@solidjs/router";
+import { createSignal, createEffect, For, Show } from "solid-js";
 import type {
   CommentBlockProps,
   CommentReaction,
@@ -23,8 +15,6 @@ import CommentInputBlock from "./CommentInputBlock";
 import ReactionBar from "./ReactionBar";
 
 export default function CommentBlock(props: CommentBlockProps) {
-  const location = useLocation();
-
   const [commentCollapsed, setCommentCollapsed] = createSignal(false);
   const [showingReactionOptions, setShowingReactionOptions] =
     createSignal(false);
@@ -92,6 +82,8 @@ export default function CommentBlock(props: CommentBlockProps) {
 
   const deleteCommentTrigger = async (e: MouseEvent) => {
     e.stopPropagation();
+    console.log("Delete comment");
+
     setDeletionLoading(true);
     const user = userData();
     props.toggleModification(
@@ -270,7 +262,7 @@ export default function CommentBlock(props: CommentBlockProps) {
 
                 {/* Delete button */}
                 <Show when={canDelete()}>
-                  <button onClick={deleteCommentTrigger}>
+                  <button class="z-100" onClick={deleteCommentTrigger}>
                     <Show
                       when={!deletionLoading()}
                       fallback={<LoadingSpinner height={24} width={24} />}

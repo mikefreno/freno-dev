@@ -321,7 +321,7 @@ export default function PostPage() {
                                   return tagValue ? (
                                     <A
                                       href={`/blog?include=${encodeURIComponent(tagValue.split("#")[1])}`}
-                                      class="group bg-rosewater relative m-1 h-fit w-fit rounded-xl px-2 py-1 text-sm transition-all duration-200 hover:brightness-110 active:scale-95"
+                                      class="group bg-teal relative m-1 h-fit w-fit rounded-xl px-2 py-1 text-sm transition-all duration-200 hover:brightness-110 active:scale-95"
                                     >
                                       <div class="text-white">{tagValue}</div>
                                     </A>

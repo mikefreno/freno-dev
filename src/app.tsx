@@ -164,7 +164,7 @@ function AppLayout(props: { children: any }) {
     <>
       <div class="flex max-w-screen flex-row">
         <LeftBar />
-        <div class="bg-base relative h-screen w-screen overflow-x-hidden overflow-y-scroll md:ml-62.5 md:w-[calc(100vw-500px)]">
+        <div class="bg-base relative h-screen w-screen overflow-x-hidden overflow-y-auto md:ml-62.5 md:w-[calc(100vw-500px)]">
           <noscript>
             <div class="bg-yellow text-crust border-text fixed top-0 z-150 border-b-2 p-4 text-center font-semibold md:w-[calc(100vw-500px)]">
               JavaScript is disabled. Features will be limited.

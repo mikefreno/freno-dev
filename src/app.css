@@ -209,6 +209,7 @@
   transition-duration: 500ms;
   syntax: "*";
   inherits: false;
+  scrollbar-gutter: stable;
 }
 
 ::selection {
