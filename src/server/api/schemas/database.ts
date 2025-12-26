@@ -278,6 +278,85 @@ export const paginationSchema = z.object({
 });
 
 // ============================================================================
+// Additional Database Router Schemas
+// ============================================================================
+
+/**
+ * Get post by ID or title
+ */
+export const getPostByIdSchema = z.object({
+  category: z.literal("blog"),
+  id: z.number()
+});
+
+export const getPostByTitleSchema = z.object({
+  category: z.literal("blog"),
+  title: z.string()
+});
+
+/**
+ * Get comments by post ID
+ */
+export const getCommentsByPostIdSchema = z.object({
+  post_id: z.number()
+});
+
+/**
+ * Toggle post like (add/remove)
+ */
+export const togglePostLikeMutationSchema = z.object({
+  user_id: z.string(),
+  post_id: z.number()
+});
+
+/**
+ * Toggle comment reaction (add/remove)
+ */
+export const toggleCommentReactionMutationSchema = z.object({
+  type: reactionTypeSchema,
+  comment_id: z.number(),
+  user_id: z.string()
+});
+
+/**
+ * Get comment reactions
+ */
+export const getCommentReactionsQuerySchema = z.object({
+  commentID: z.number()
+});
+
+/**
+ * Delete comment with deletion type
+ */
+export const deleteCommentWithTypeSchema = z.object({
+  commentID: z.number(),
+  commenterID: z.string(),
+  deletionType: z.enum(["user", "admin", "database"])
+});
+
+/**
+ * User query schemas
+ */
+export const getUserByIdSchema = z.object({
+  id: z.string()
+});
+
+export const getUserPublicDataSchema = z.object({
+  id: z.string()
+});
+
+export const updateUserImageSchema = z.object({
+  id: z.string(),
+  imageURL: z.string()
+});
+
+export const updateUserEmailSchema = z.object({
+  id: z.string(),
+  newEmail: z.string().email(),
+  oldEmail: z.string().email()
+});
+
+// ============================================================================
 // Type Exports
 // ============================================================================
 
@@ -293,3 +372,23 @@ export type CreatePostLikeInput = z.infer<typeof createPostLikeSchema>;
 export type CreateTagInput = z.infer<typeof createTagSchema>;
 export type CreateConnectionInput = z.infer<typeof createConnectionSchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;
+export type GetPostByIdInput = z.infer<typeof getPostByIdSchema>;
+export type GetPostByTitleInput = z.infer<typeof getPostByTitleSchema>;
+export type GetCommentsByPostIdInput = z.infer<
+  typeof getCommentsByPostIdSchema
+>;
+export type TogglePostLikeMutationInput = z.infer<
+  typeof togglePostLikeMutationSchema
+>;
+export type ToggleCommentReactionMutationInput = z.infer<
+  typeof toggleCommentReactionMutationSchema
+>;
+export type GetCommentReactionsQueryInput = z.infer<
+  typeof getCommentReactionsQuerySchema
+>;
+export type DeleteCommentWithTypeInput = z.infer<
+  typeof deleteCommentWithTypeSchema
+>;
+export type GetUserByIdInput = z.infer<typeof getUserByIdSchema>;
+export type UpdateUserImageInput = z.infer<typeof updateUserImageSchema>;
+export type UpdateUserEmailInput = z.infer<typeof updateUserEmailSchema>;

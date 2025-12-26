@@ -8,12 +8,35 @@ import { ConnectionFactory } from "~/server/utils";
 import { TRPCError } from "@trpc/server";
 import { env } from "~/env/server";
 import { cache, withCacheAndStale } from "~/server/cache";
+import type {
+  Comment,
+  CommentReaction,
+  Post,
+  PostLike,
+  User,
+  Tag
+} from "~/db/types";
+import {
+  getCommentReactionsQuerySchema,
+  toggleCommentReactionMutationSchema,
+  deleteCommentWithTypeSchema,
+  getCommentsByPostIdSchema,
+  getPostByIdSchema,
+  getPostByTitleSchema,
+  createPostSchema,
+  updatePostSchema,
+  idSchema,
+  togglePostLikeMutationSchema,
+  getUserByIdSchema,
+  updateUserImageSchema,
+  updateUserEmailSchema
+} from "../schemas/database";
 
 const BLOG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export const databaseRouter = createTRPCRouter({
   getCommentReactions: publicProcedure
-    .input(z.object({ commentID: z.string() }))
+    .input(getCommentReactionsQuerySchema)
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -22,7 +45,9 @@ export const databaseRouter = createTRPCRouter({
           sql: query,
           args: [input.commentID]
         });
-        return { commentReactions: results.rows };
+        return {
+          commentReactions: results.rows as unknown as CommentReaction[]
+        };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -32,13 +57,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   addCommentReaction: publicProcedure
-    .input(
-      z.object({
-        type: z.string(),
-        comment_id: z.string(),
-        user_id: z.string()
-      })
-    )
+    .input(toggleCommentReactionMutationSchema)
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -57,7 +76,7 @@ export const databaseRouter = createTRPCRouter({
           args: [input.comment_id]
         });
 
-        return { commentReactions: res.rows };
+        return { commentReactions: res.rows as unknown as CommentReaction[] };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -67,13 +86,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   removeCommentReaction: publicProcedure
-    .input(
-      z.object({
-        type: z.string(),
-        comment_id: z.string(),
-        user_id: z.string()
-      })
-    )
+    .input(toggleCommentReactionMutationSchema)
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -92,7 +105,7 @@ export const databaseRouter = createTRPCRouter({
           args: [input.comment_id]
         });
 
-        return { commentReactions: res.rows };
+        return { commentReactions: res.rows as unknown as CommentReaction[] };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -121,13 +134,7 @@ export const databaseRouter = createTRPCRouter({
   }),
 
   deleteComment: protectedProcedure
-    .input(
-      z.object({
-        commentID: z.number(),
-        commenterID: z.string(),
-        deletionType: z.enum(["user", "admin", "database"])
-      })
-    )
+    .input(deleteCommentWithTypeSchema)
     .mutation(async ({ input, ctx }) => {
       try {
         const conn = ConnectionFactory();
@@ -238,7 +245,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   getCommentsByPostId: publicProcedure
-    .input(z.object({ post_id: z.string() }))
+    .input(getCommentsByPostIdSchema)
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -253,7 +260,7 @@ export const databaseRouter = createTRPCRouter({
           sql: query,
           args: [input.post_id]
         });
-        return { comments: res.rows };
+        return { comments: res.rows as unknown as Comment[] };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -263,12 +270,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   getPostById: publicProcedure
-    .input(
-      z.object({
-        category: z.literal("blog"),
-        id: z.number()
-      })
-    )
+    .input(getPostByIdSchema)
     .query(async ({ input }) => {
       return withCacheAndStale(
         `blog-post-id-${input.id}`,
@@ -311,12 +313,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   getPostByTitle: publicProcedure
-    .input(
-      z.object({
-        category: z.literal("blog"),
-        title: z.string()
-      })
-    )
+    .input(getPostByTitleSchema)
     .query(async ({ input, ctx }) => {
       return withCacheAndStale(
         `blog-post-title-${input.title}`,
@@ -510,55 +507,48 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  deletePost: publicProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      try {
-        const conn = ConnectionFactory();
+  deletePost: publicProcedure.input(idSchema).mutation(async ({ input }) => {
+    try {
+      const conn = ConnectionFactory();
 
-        await conn.execute({
-          sql: "DELETE FROM Tag WHERE post_id = ?",
-          args: [input.id.toString()]
-        });
+      await conn.execute({
+        sql: "DELETE FROM Tag WHERE post_id = ?",
+        args: [input.id.toString()]
+      });
 
-        await conn.execute({
-          sql: "DELETE FROM PostLike WHERE post_id = ?",
-          args: [input.id.toString()]
-        });
+      await conn.execute({
+        sql: "DELETE FROM PostLike WHERE post_id = ?",
+        args: [input.id.toString()]
+      });
 
-        await conn.execute({
-          sql: "DELETE FROM Comment WHERE post_id = ?",
-          args: [input.id]
-        });
+      await conn.execute({
+        sql: "DELETE FROM Comment WHERE post_id = ?",
+        args: [input.id]
+      });
 
-        await conn.execute({
-          sql: "DELETE FROM Post WHERE id = ?",
-          args: [input.id]
-        });
+      await conn.execute({
+        sql: "DELETE FROM Post WHERE id = ?",
+        args: [input.id]
+      });
 
-        cache.deleteByPrefix("blog-");
+      cache.deleteByPrefix("blog-");
 
-        return { success: true };
-      } catch (error) {
-        console.error(error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete post"
-        });
-      }
-    }),
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to delete post"
+      });
+    }
+  }),
 
   // ============================================================
   // Post Likes Routes
   // ============================================================
 
   addPostLike: publicProcedure
-    .input(
-      z.object({
-        user_id: z.string(),
-        post_id: z.string()
-      })
-    )
+    .input(togglePostLikeMutationSchema)
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -574,7 +564,7 @@ export const databaseRouter = createTRPCRouter({
           args: [input.post_id]
         });
 
-        return { newLikes: res.rows };
+        return { newLikes: res.rows as unknown as PostLike[] };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -584,12 +574,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   removePostLike: publicProcedure
-    .input(
-      z.object({
-        user_id: z.string(),
-        post_id: z.string()
-      })
-    )
+    .input(togglePostLikeMutationSchema)
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -608,7 +593,7 @@ export const databaseRouter = createTRPCRouter({
           args: [input.post_id]
         });
 
-        return { newLikes: res.rows };
+        return { newLikes: res.rows as unknown as PostLike[] };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -622,7 +607,7 @@ export const databaseRouter = createTRPCRouter({
   // ============================================================
 
   getUserById: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(getUserByIdSchema)
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -654,7 +639,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   getUserPublicData: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(getUserByIdSchema)
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -683,7 +668,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   getUserImage: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(getUserByIdSchema)
     .query(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -702,12 +687,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   updateUserImage: publicProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        imageURL: z.string()
-      })
-    )
+    .input(updateUserImageSchema)
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();
@@ -729,13 +709,7 @@ export const databaseRouter = createTRPCRouter({
     }),
 
   updateUserEmail: publicProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        newEmail: z.string().email(),
-        oldEmail: z.string().email()
-      })
-    )
+    .input(updateUserEmailSchema)
     .mutation(async ({ input }) => {
       try {
         const conn = ConnectionFactory();

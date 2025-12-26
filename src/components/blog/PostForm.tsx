@@ -47,7 +47,7 @@ export default function PostForm(props: PostFormProps) {
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal("");
   const [showAutoSaveMessage, setShowAutoSaveMessage] = createSignal(false);
-  const [isInitialLoad, setIsInitialLoad] = createSignal(props.mode === "edit");
+  const [isInitialLoad, setIsInitialLoad] = createSignal(true);
   const [initialBody, setInitialBody] = createSignal<string | undefined>(
     props.initialData?.body
   );
@@ -57,9 +57,10 @@ export default function PostForm(props: PostFormProps) {
   );
 
   // Mark initial load as complete after data is loaded (for edit mode)
+  // Use setTimeout to ensure this runs after all signals are initialized
   createEffect(() => {
     if (props.mode === "edit" && props.initialData) {
-      setIsInitialLoad(false);
+      setTimeout(() => setIsInitialLoad(false), 0);
     }
   });
 

@@ -6,7 +6,7 @@ import { env } from "~/env/server";
 import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
 import { SignJWT, jwtVerify } from "jose";
 import { setCookie, getCookie } from "vinxi/http";
-import type { User } from "~/types/user";
+import type { User } from "~/db/types";
 import {
   fetchWithTimeout,
   checkResponse,
@@ -15,6 +15,12 @@ import {
   TimeoutError,
   APIError
 } from "~/server/fetch-utils";
+import {
+  registerUserSchema,
+  loginUserSchema,
+  resetPasswordSchema,
+  requestPasswordResetSchema
+} from "../schemas/user";
 
 async function createJWT(
   userId: string,
@@ -501,16 +507,11 @@ export const authRouter = createTRPCRouter({
     }),
 
   emailRegistration: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        password: z.string().min(8),
-        passwordConfirmation: z.string().min(8)
-      })
-    )
+    .input(registerUserSchema)
     .mutation(async ({ input, ctx }) => {
       const { email, password, passwordConfirmation } = input;
 
+      // Schema already validates password match, but double check
       if (password !== passwordConfirmation) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -549,13 +550,7 @@ export const authRouter = createTRPCRouter({
     }),
 
   emailPasswordLogin: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        password: z.string(),
-        rememberMe: z.boolean().optional()
-      })
-    )
+    .input(loginUserSchema)
     .mutation(async ({ input, ctx }) => {
       const { email, password, rememberMe } = input;
 
@@ -746,7 +741,7 @@ export const authRouter = createTRPCRouter({
     }),
 
   requestPasswordReset: publicProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(requestPasswordResetSchema)
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
@@ -862,16 +857,11 @@ export const authRouter = createTRPCRouter({
     }),
 
   resetPassword: publicProcedure
-    .input(
-      z.object({
-        token: z.string(),
-        newPassword: z.string().min(8),
-        newPasswordConfirmation: z.string().min(8)
-      })
-    )
+    .input(resetPasswordSchema)
     .mutation(async ({ input, ctx }) => {
       const { token, newPassword, newPasswordConfirmation } = input;
 
+      // Schema already validates password match, but double check
       if (newPassword !== newPasswordConfirmation) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -945,7 +935,7 @@ export const authRouter = createTRPCRouter({
     }),
 
   resendEmailVerification: publicProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(requestPasswordResetSchema)
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
