@@ -1,4 +1,5 @@
 import { Show, untrack, createEffect, on, createSignal, For } from "solid-js";
+import { useSearchParams, useNavigate } from "@solidjs/router";
 import { createTiptapEditor } from "solid-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -612,7 +613,14 @@ export default function TextEditor(props: TextEditorProps) {
     inline: false
   });
 
-  const [isFullscreen, setIsFullscreen] = createSignal(false);
+  // Search params and navigation for fullscreen persistence
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Initialize fullscreen from URL search param
+  const [isFullscreen, setIsFullscreen] = createSignal(
+    searchParams.fullscreen === "true"
+  );
   const [keyboardVisible, setKeyboardVisible] = createSignal(false);
   const [keyboardHeight, setKeyboardHeight] = createSignal(0);
 
@@ -1952,7 +1960,11 @@ export default function TextEditor(props: TextEditorProps) {
   };
 
   const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen());
+    const newFullscreenState = !isFullscreen();
+    setIsFullscreen(newFullscreenState);
+    
+    // Update URL search param to persist state
+    setSearchParams({ fullscreen: newFullscreenState ? "true" : undefined });
   };
 
   createEffect(() => {
@@ -1960,6 +1972,7 @@ export default function TextEditor(props: TextEditorProps) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           setIsFullscreen(false);
+          setSearchParams({ fullscreen: undefined });
         }
       };
 
