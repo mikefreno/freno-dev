@@ -19,7 +19,6 @@ mermaid.initialize({
 
 export default function MermaidRenderer() {
   onMount(() => {
-    // Find all mermaid diagrams and render them
     const mermaidPres = document.querySelectorAll('pre[data-type="mermaid"]');
 
     mermaidPres.forEach(async (pre, index) => {

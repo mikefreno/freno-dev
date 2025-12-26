@@ -727,3 +727,8 @@ button:active,
 [role="button"]:active {
   opacity: 0.8;
 }
+
+/* Hide reference section marker in published posts (only show in editor) */
+#post-content-body span#references-section-start {
+  display: none !important;
+}

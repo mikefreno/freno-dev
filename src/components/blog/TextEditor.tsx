@@ -349,6 +349,9 @@ declare module "@tiptap/core" {
       setReference: (options: { refId: string; refNum: number }) => ReturnType;
       updateReferenceNumber: (refId: string, newNum: number) => ReturnType;
     };
+    referenceSectionMarker: {
+      setReferenceSectionMarker: (heading: string) => ReturnType;
+    };
   }
 }
 
@@ -422,47 +425,6 @@ const Reference = Mark.create({
     ];
   },
 
-  addAttributes() {
-    return {
-      refId: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-ref-id"),
-        renderHTML: (attributes) => {
-          if (!attributes.refId) {
-            return {};
-          }
-          return {
-            "data-ref-id": attributes.refId
-          };
-        }
-      },
-      refNum: {
-        default: 1,
-        parseHTML: (element) => {
-          const text = element.textContent || "";
-          const match = text.match(/^\[(\d+)\]$/);
-          return match ? parseInt(match[1]) : 1;
-        }
-      }
-    };
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: "sup[data-ref-id]"
-      }
-    ];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      "sup",
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-      0
-    ];
-  },
-
   addCommands() {
     return {
       setReference:
@@ -523,6 +485,65 @@ const Reference = Mark.create({
   }
 });
 
+// Custom ReferenceSectionMarker node - invisible marker to identify references section
+const ReferenceSectionMarker = Node.create({
+  name: "referenceSectionMarker",
+  group: "inline",
+  inline: true,
+  atom: true,
+  selectable: false,
+  draggable: false,
+
+  addAttributes() {
+    return {
+      heading: {
+        default: "References",
+        parseHTML: (element) =>
+          element.getAttribute("data-heading") || "References",
+        renderHTML: (attributes) => {
+          return {
+            "data-heading": attributes.heading
+          };
+        }
+      }
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "span[id='references-section-start']"
+      }
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "span",
+      mergeAttributes(HTMLAttributes, {
+        id: "references-section-start",
+        style:
+          "display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; margin: 0 0.25rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; font-family: system-ui, -apple-system, sans-serif; user-select: none; cursor: default; vertical-align: middle;",
+        contenteditable: "false"
+      }),
+      "📌 References Section"
+    ];
+  },
+
+  addCommands() {
+    return {
+      setReferenceSectionMarker:
+        (heading: string) =>
+        ({ commands }) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: { heading }
+          });
+        }
+    };
+  }
+});
+
 export interface TextEditorProps {
   updateContent: (content: string) => void;
   preSet?: string;
@@ -558,6 +579,20 @@ export default function TextEditor(props: TextEditorProps) {
   });
 
   const [showKeyboardHelp, setShowKeyboardHelp] = createSignal(false);
+
+  // References section heading customization
+  const [referencesHeading, setReferencesHeading] = createSignal(
+    typeof window !== "undefined"
+      ? localStorage.getItem("editor-references-heading") || "References"
+      : "References"
+  );
+
+  // Persist heading changes to localStorage
+  createEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("editor-references-heading", referencesHeading());
+    }
+  });
 
   const [showConditionalConfig, setShowConditionalConfig] = createSignal(false);
   const [conditionalConfigPosition, setConditionalConfigPosition] =
@@ -622,7 +657,10 @@ export default function TextEditor(props: TextEditorProps) {
   const editor = createTiptapEditor(() => ({
     element: editorRef,
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Disable these since we're adding them separately with custom config
+        codeBlock: false
+      }),
       CodeBlockLowlight.configure({ lowlight }),
       Link.configure({
         openOnClick: true
@@ -678,14 +716,14 @@ export default function TextEditor(props: TextEditorProps) {
       }),
       Superscript,
       Subscript,
-      Reference
+      Reference,
+      ReferenceSectionMarker
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
     onCreate: ({ editor }) => {
       // Migrate legacy references on initial load
       if (props.preSet) {
         setTimeout(() => {
-          console.log("Running migration on initial load");
           const doc = editor.state.doc;
           let refCount = 0;
           let legacyCount = 0;
@@ -697,9 +735,6 @@ export default function TextEditor(props: TextEditorProps) {
               );
               if (refMark) {
                 refCount++;
-                console.log(
-                  `Found Reference mark: [${refMark.attrs.refNum}] with ID: ${refMark.attrs.refId}`
-                );
               }
               const superMark = node.marks.find(
                 (mark: any) => mark.type.name === "superscript"
@@ -708,15 +743,10 @@ export default function TextEditor(props: TextEditorProps) {
                 const match = node.text?.match(/^\[(\d+)\]$/);
                 if (match) {
                   legacyCount++;
-                  console.log(`Found legacy superscript: ${node.text}`);
                 }
               }
             }
           });
-
-          console.log(
-            `Total Reference marks: ${refCount}, Legacy superscript: ${legacyCount}`
-          );
 
           if (legacyCount > 0) {
             migrateLegacyReferences(editor);
@@ -850,11 +880,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     });
 
-    console.log(
-      "All superscript nodes:",
-      allSuperscriptNodes.map((n) => `"${n.text}" at ${n.pos}`)
-    );
-
     // Second pass: identify complete references (might be split)
     let i = 0;
     while (i < allSuperscriptNodes.length) {
@@ -867,9 +892,6 @@ export default function TextEditor(props: TextEditorProps) {
         const hasOtherMarks = node.marks.some(
           (mark: any) =>
             mark.type.name !== "superscript" && mark.type.name !== "reference"
-        );
-        console.log(
-          `Found complete legacy ref [${completeMatch[1]}] at pos ${node.pos}, hasOtherMarks: ${hasOtherMarks}, text: "${text}"`
         );
         legacyRefs.push({
           pos: node.pos,
@@ -892,10 +914,6 @@ export default function TextEditor(props: TextEditorProps) {
           const totalLength =
             text.length + nextNode.text.length + afterNode.text.length;
 
-          console.log(
-            `Found split reference [${refNum}] starting at pos ${node.pos} (split into "${text}", "${nextNode.text}", "${afterNode.text}")`
-          );
-
           // We need to handle split references differently - remove all three nodes and create one
           legacyRefs.push({
             pos: node.pos,
@@ -913,31 +931,21 @@ export default function TextEditor(props: TextEditorProps) {
     }
 
     if (legacyRefs.length === 0) {
-      console.log("No legacy references found to migrate");
       return;
     }
 
-    console.log(
-      `Migrating ${legacyRefs.length} legacy references to Reference marks`
-    );
-
-    // Sort by position (process from end to start to avoid position shifts)
     legacyRefs.sort((a, b) => b.pos - a.pos);
 
-    // Build a single transaction to convert all legacy refs
     const tr = editorInstance.state.tr;
 
     legacyRefs.forEach((ref) => {
-      // Generate unique ID for this reference
       const refId = `ref-migrated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Create Reference mark (only the reference mark, no other marks)
       const newMark = editorInstance.schema.marks.reference.create({
         refId: refId,
         refNum: ref.num
       });
 
-      // Replace with Reference mark (preserve only the reference mark, remove other marks like links)
       tr.replaceWith(
         ref.pos,
         ref.pos + ref.textLength,
@@ -945,10 +953,7 @@ export default function TextEditor(props: TextEditorProps) {
       );
     });
 
-    // Dispatch the transaction
     editorInstance.view.dispatch(tr);
-
-    console.log("Migration complete");
   };
 
   const renumberAllReferences = (editorInstance: any) => {
@@ -1050,33 +1055,48 @@ export default function TextEditor(props: TextEditorProps) {
     });
 
     if (foundRefs.size === 0) {
-      let hasReferencesSection = false;
+      // No references found - remove the entire section if it exists
+      let markerPos = -1;
       let hrPos = -1;
-      let sectionStartPos = -1;
+      let sectionEndPos = -1;
 
       doc.descendants((node: any, pos: number) => {
-        if (node.type.name === "heading" && node.textContent === "References") {
-          hasReferencesSection = true;
-          sectionStartPos = pos;
+        // Find marker first
+        if (node.type.name === "referenceSectionMarker") {
+          markerPos = pos;
+        }
+        // Find HR before marker
+        if (markerPos === -1 && node.type.name === "horizontalRule") {
+          hrPos = pos;
         }
       });
 
-      if (hasReferencesSection && sectionStartPos > 0) {
-        doc.nodesBetween(
-          Math.max(0, sectionStartPos - 50),
-          sectionStartPos,
-          (node: any, pos: number) => {
-            if (node.type.name === "horizontalRule") {
-              hrPos = pos;
-            }
-          }
-        );
+      // Find the end of the references section
+      if (markerPos >= 0) {
+        let foundEnd = false;
+        doc.descendants((node: any, pos: number) => {
+          if (foundEnd || pos <= markerPos) return;
 
-        if (hrPos >= 0) {
-          const tr = editorInstance.state.tr;
-          tr.delete(hrPos, doc.content.size);
-          editorInstance.view.dispatch(tr);
+          // Section ends at next HR or H2 heading
+          if (
+            node.type.name === "horizontalRule" ||
+            (node.type.name === "heading" && node.attrs.level <= 2)
+          ) {
+            sectionEndPos = pos;
+            foundEnd = true;
+          }
+        });
+
+        // If no end found, section goes to end of document
+        if (!foundEnd) {
+          sectionEndPos = doc.content.size;
         }
+      }
+
+      if (hrPos >= 0 && sectionEndPos > hrPos) {
+        const tr = editorInstance.state.tr;
+        tr.delete(hrPos, sectionEndPos);
+        editorInstance.view.dispatch(tr);
       }
       return;
     }
@@ -1090,31 +1110,117 @@ export default function TextEditor(props: TextEditorProps) {
       return a.localeCompare(b);
     });
 
+    let markerPos = -1;
+    let markerHeading = "";
     let referencesHeadingPos = -1;
-    let existingRefs = new Set<string>();
+    let sectionEndPos = -1;
+    let existingRefs = new Map<
+      string,
+      { pos: number; isPlaceholder: boolean }
+    >();
 
+    // Look for the marker first
     doc.descendants((node: any, pos: number) => {
-      if (node.type.name === "heading" && node.textContent === "References") {
+      if (node.type.name === "referenceSectionMarker") {
+        markerPos = pos;
+        markerHeading = node.attrs.heading || referencesHeading();
+      }
+      // If marker found, look for heading after it
+      if (
+        markerPos >= 0 &&
+        referencesHeadingPos === -1 &&
+        node.type.name === "heading" &&
+        pos > markerPos &&
+        pos < markerPos + 50
+      ) {
         referencesHeadingPos = pos;
       }
-      if (referencesHeadingPos >= 0 && node.type.name === "paragraph") {
-        const match = node.textContent.match(/^\[(.+?)\]/);
+      // Find section end (next HR or H2)
+      if (
+        referencesHeadingPos >= 0 &&
+        sectionEndPos === -1 &&
+        pos > referencesHeadingPos &&
+        (node.type.name === "horizontalRule" ||
+          (node.type.name === "heading" && node.attrs.level <= 2))
+      ) {
+        sectionEndPos = pos;
+      }
+      // Collect existing reference numbers within the section
+      if (
+        referencesHeadingPos >= 0 &&
+        pos > referencesHeadingPos &&
+        (sectionEndPos === -1 || pos < sectionEndPos) &&
+        node.type.name === "paragraph"
+      ) {
+        const text = node.textContent;
+        const match = text.match(/^\[(.+?)\]/);
         if (match) {
-          existingRefs.add(match[1]);
+          const isPlaceholder = text.includes("Add your reference text here");
+          existingRefs.set(match[1], { pos, isPlaceholder });
         }
       }
     });
 
-    if (referencesHeadingPos === -1) {
+    // If no section end found, it goes to document end
+    if (referencesHeadingPos >= 0 && sectionEndPos === -1) {
+      sectionEndPos = doc.content.size;
+    }
+
+    // Update marker heading if it changed
+    if (markerPos >= 0 && markerHeading !== referencesHeading()) {
+      const tr = editorInstance.state.tr;
+      const markerNode = doc.nodeAt(markerPos);
+      if (markerNode) {
+        tr.replaceWith(
+          markerPos,
+          markerPos + markerNode.nodeSize,
+          editorInstance.schema.nodes.referenceSectionMarker.create({
+            heading: referencesHeading()
+          })
+        );
+        editorInstance.view.dispatch(tr);
+      }
+    }
+
+    // Update heading text if it changed
+    if (referencesHeadingPos >= 0 && markerHeading !== referencesHeading()) {
+      const tr = editorInstance.state.tr;
+      const headingNode = doc.nodeAt(referencesHeadingPos);
+      if (headingNode) {
+        tr.replaceWith(
+          referencesHeadingPos,
+          referencesHeadingPos + headingNode.nodeSize,
+          editorInstance.schema.nodes.heading.create(
+            { level: 2 },
+            editorInstance.schema.text(referencesHeading())
+          )
+        );
+        editorInstance.view.dispatch(tr);
+        return;
+      }
+    }
+
+    // Create section if marker not found
+    if (markerPos === -1) {
       const content: any[] = [
         { type: "horizontalRule" },
         {
+          type: "paragraph",
+          content: [
+            {
+              type: "referenceSectionMarker",
+              attrs: { heading: referencesHeading() }
+            }
+          ]
+        },
+        {
           type: "heading",
           attrs: { level: 2 },
-          content: [{ type: "text", text: "References" }]
+          content: [{ type: "text", text: referencesHeading() }]
         }
       ];
 
+      // Add placeholder paragraphs for each reference
       refNumbers.forEach((refNum) => {
         content.push({
           type: "paragraph",
@@ -1123,7 +1229,7 @@ export default function TextEditor(props: TextEditorProps) {
               type: "text",
               text: `[${refNum}] `,
               marks: [{ type: "bold" }]
-            } as any,
+            },
             {
               type: "text",
               text: "Add your reference text here"
@@ -1138,46 +1244,74 @@ export default function TextEditor(props: TextEditorProps) {
         editorInstance.schema.nodeFromJSON({ type: "doc", content }).content
       );
       editorInstance.view.dispatch(tr);
-    } else {
-      const newRefs = refNumbers.filter((ref) => !existingRefs.has(ref));
+      return;
+    }
 
-      if (newRefs.length > 0) {
-        let insertPos = referencesHeadingPos;
-        doc.nodesBetween(
-          referencesHeadingPos,
-          doc.content.size,
-          (node: any, pos: number) => {
-            if (pos > insertPos) {
-              insertPos = pos + node.nodeSize;
-            }
-          }
-        );
+    // Section exists - manage placeholders
+    const tr = editorInstance.state.tr;
+    let hasChanges = false;
 
-        const content: any[] = [];
-        newRefs.forEach((refNum) => {
-          content.push({
+    // Step 1: Remove placeholders for references that no longer exist
+    const toDelete: Array<{ pos: number; nodeSize: number }> = [];
+    existingRefs.forEach((info, refNum) => {
+      if (info.isPlaceholder && !refNumbers.includes(refNum)) {
+        const node = doc.nodeAt(info.pos);
+        if (node) {
+          toDelete.push({ pos: info.pos, nodeSize: node.nodeSize });
+        }
+      }
+    });
+
+    // Delete in reverse order to maintain positions
+    toDelete
+      .sort((a, b) => b.pos - a.pos)
+      .forEach(({ pos, nodeSize }) => {
+        tr.delete(pos, pos + nodeSize);
+        hasChanges = true;
+      });
+
+    // Step 2: Add placeholders for new references
+    if (referencesHeadingPos >= 0) {
+      // Find insertion point (after heading, before any content or at section end)
+      let insertPos = referencesHeadingPos;
+      const headingNode = doc.nodeAt(referencesHeadingPos);
+      if (headingNode) {
+        insertPos = referencesHeadingPos + headingNode.nodeSize;
+      }
+
+      // Add missing references in order
+      const nodesToInsert: any[] = [];
+      refNumbers.forEach((refNum) => {
+        if (!existingRefs.has(refNum)) {
+          nodesToInsert.push({
             type: "paragraph",
             content: [
               {
                 type: "text",
                 text: `[${refNum}] `,
                 marks: [{ type: "bold" }]
-              } as any,
+              },
               {
                 type: "text",
                 text: "Add your reference text here"
               }
             ]
           });
-        });
+        }
+      });
 
-        const tr = editorInstance.state.tr;
-        content.forEach((item) => {
-          tr.insert(insertPos, editorInstance.schema.nodeFromJSON(item));
-          insertPos += editorInstance.schema.nodeFromJSON(item).nodeSize;
+      if (nodesToInsert.length > 0) {
+        nodesToInsert.forEach((nodeData) => {
+          const node = editorInstance.schema.nodeFromJSON(nodeData);
+          tr.insert(insertPos, node);
+          insertPos += node.nodeSize;
         });
-        editorInstance.view.dispatch(tr);
+        hasChanges = true;
       }
+    }
+
+    if (hasChanges) {
+      editorInstance.view.dispatch(tr);
     }
   };
 
@@ -1627,11 +1761,14 @@ export default function TextEditor(props: TextEditorProps) {
         }
       };
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         document.addEventListener("click", handleClickOutside);
       }, 0);
 
-      return () => document.removeEventListener("click", handleClickOutside);
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener("click", handleClickOutside);
+      };
     }
   });
 
@@ -1647,11 +1784,14 @@ export default function TextEditor(props: TextEditorProps) {
         }
       };
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         document.addEventListener("click", handleClickOutside);
       }, 0);
 
-      return () => document.removeEventListener("click", handleClickOutside);
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener("click", handleClickOutside);
+      };
     }
   });
 
@@ -1667,11 +1807,14 @@ export default function TextEditor(props: TextEditorProps) {
         }
       };
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         document.addEventListener("click", handleClickOutside);
       }, 0);
 
-      return () => document.removeEventListener("click", handleClickOutside);
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener("click", handleClickOutside);
+      };
     }
   });
 
@@ -1687,11 +1830,14 @@ export default function TextEditor(props: TextEditorProps) {
         }
       };
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         document.addEventListener("click", handleClickOutside);
       }, 0);
 
-      return () => document.removeEventListener("click", handleClickOutside);
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener("click", handleClickOutside);
+      };
     }
   });
 
@@ -2111,7 +2257,7 @@ export default function TextEditor(props: TextEditorProps) {
             <Show when={showBubbleMenu()}>
               <div
                 ref={bubbleMenuRef}
-                class="bg-crust text-text fixed z-110 w-fit rounded p-2 text-sm whitespace-nowrap shadow-xl"
+                class="bg-crust text-text fixed z-[120] w-fit rounded p-2 text-sm whitespace-nowrap shadow-xl"
                 style={{
                   top: `${bubbleMenuPosition().top}px`,
                   left: `${bubbleMenuPosition().left}px`,
@@ -2345,7 +2491,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Language Selector Dropdown */}
             <Show when={showLanguageSelector()}>
               <div
-                class="language-selector bg-mantle text-text border-surface2 fixed z-110 max-h-64 w-48 overflow-y-auto rounded border shadow-lg"
+                class="language-selector bg-mantle text-text border-surface2 fixed z-[120] max-h-64 w-48 overflow-y-auto rounded border shadow-lg"
                 style={{
                   top: `${languageSelectorPosition().top}px`,
                   left: `${languageSelectorPosition().left}px`
@@ -2368,7 +2514,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Table Grid Selector */}
             <Show when={showTableMenu()}>
               <div
-                class="table-menu fixed z-110"
+                class="table-menu fixed z-[120]"
                 style={{
                   top: `${tableMenuPosition().top}px`,
                   left: `${tableMenuPosition().left}px`
@@ -2381,7 +2527,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Mermaid Template Selector */}
             <Show when={showMermaidTemplates()}>
               <div
-                class="mermaid-menu bg-mantle text-text border-surface2 fixed z-110 max-h-96 w-56 overflow-y-auto rounded border shadow-lg"
+                class="mermaid-menu bg-mantle text-text border-surface2 fixed z-[120] max-h-96 w-56 overflow-y-auto rounded border shadow-lg"
                 style={{
                   top: `${mermaidMenuPosition().top}px`,
                   left: `${mermaidMenuPosition().left}px`
@@ -2409,7 +2555,7 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Conditional Configurator */}
             <Show when={showConditionalConfig()}>
               <div
-                class="conditional-config fixed z-110"
+                class="conditional-config fixed z-[120]"
                 style={{
                   top: `${conditionalConfigPosition().top}px`,
                   left: `${conditionalConfigPosition().left}px`
@@ -2532,6 +2678,27 @@ export default function TextEditor(props: TextEditorProps) {
                   title="Insert Reference [n] (Cmd/Ctrl+R)"
                 >
                   [n]
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newHeading = window.prompt(
+                      "Enter heading for references section:",
+                      referencesHeading()
+                    );
+                    if (newHeading && newHeading.trim()) {
+                      setReferencesHeading(newHeading.trim());
+                      // Update existing section if it exists
+                      const instance = editor();
+                      if (instance) {
+                        updateReferencesSection(instance);
+                      }
+                    }
+                  }}
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
+                  title={`Change references heading (current: "${referencesHeading()}")`}
+                >
+                  📑
                 </button>
                 <div class="border-surface2 mx-1 border-l"></div>
                 <button
@@ -2896,7 +3063,7 @@ export default function TextEditor(props: TextEditorProps) {
 
       <div
         ref={editorRef}
-        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto max-w-full transition-all duration-300 focus:outline-none"
+        class="prose prose-sm prose-invert sm:prose-base md:prose-lg mx-auto max-w-full transition-all duration-300 focus:outline-none md:px-8"
         classList={{
           "h-[80dvh] overflow-scroll": !isFullscreen(),
           "flex-1 h-full overflow-y-auto": isFullscreen()
@@ -2909,7 +3076,7 @@ export default function TextEditor(props: TextEditorProps) {
       {/* Keyboard Help Modal */}
       <Show when={showKeyboardHelp()}>
         <div
-          class="bg-opacity-50 fixed inset-0 z-110 flex items-center justify-center bg-black"
+          class="bg-opacity-50 fixed inset-0 z-150 flex items-center justify-center bg-black"
           onClick={() => setShowKeyboardHelp(false)}
         >
           <div

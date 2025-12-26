@@ -99,8 +99,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   const processReferences = () => {
     if (!contentRef) return;
 
-    const foundRefs = new Map<string, HTMLElement>();
-
     const supElements = contentRef.querySelectorAll("sup");
 
     supElements.forEach((sup) => {
@@ -278,6 +276,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   return (
     <div class="mx-auto max-w-4xl px-4 pt-32 md:pt-40">
       <div
+        id="post-content-body"
         ref={contentRef}
         class="text-text prose dark:prose-invert max-w-none"
         innerHTML={props.body}

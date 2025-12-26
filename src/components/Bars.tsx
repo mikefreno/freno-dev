@@ -309,7 +309,7 @@ export function LeftBar() {
       {/* Hamburger menu button - positioned at right edge of navbar */}
       <button
         onClick={() => setLeftBarVisible(!leftBarVisible())}
-        class="hamburger-menu-btn absolute top-4 -right-14 z-10 rounded-md p-2 shadow-md backdrop-blur-2xl transition-transform duration-600 ease-in-out hover:scale-110"
+        class="hamburger-menu-btn absolute top-4 -right-14 z-200 rounded-md p-2 shadow-md backdrop-blur-2xl transition-transform duration-600 ease-in-out hover:scale-110"
         classList={{
           hidden: leftBarVisible()
         }}
