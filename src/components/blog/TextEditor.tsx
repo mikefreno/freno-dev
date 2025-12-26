@@ -386,6 +386,67 @@ const Reference = Mark.create({
     };
   },
 
+  // Exclude other marks (like links) from being applied to references
+  excludes: "_",
+
+  parseHTML() {
+    return [
+      {
+        tag: "sup[data-ref-id]"
+      },
+      // Also parse legacy superscript references during HTML parsing
+      {
+        tag: "sup",
+        getAttrs: (element) => {
+          if (typeof element === "string") return false;
+          const text = element.textContent || "";
+          const match = text.match(/^\[(\d+)\]$/);
+          if (match && !element.getAttribute("data-ref-id")) {
+            // This is a legacy reference - convert it
+            return {
+              refId: `ref-legacy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              refNum: parseInt(match[1])
+            };
+          }
+          return false;
+        }
+      }
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "sup",
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      0
+    ];
+  },
+
+  addAttributes() {
+    return {
+      refId: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-ref-id"),
+        renderHTML: (attributes) => {
+          if (!attributes.refId) {
+            return {};
+          }
+          return {
+            "data-ref-id": attributes.refId
+          };
+        }
+      },
+      refNum: {
+        default: 1,
+        parseHTML: (element) => {
+          const text = element.textContent || "";
+          const match = text.match(/^\[(\d+)\]$/);
+          return match ? parseInt(match[1]) : 1;
+        }
+      }
+    };
+  },
+
   parseHTML() {
     return [
       {
@@ -437,14 +498,18 @@ const Reference = Mark.create({
                 if (dispatch) {
                   // Update both the mark attributes and the text content
                   const from = pos;
-                  const to = pos + node.nodeSize;
+                  const to = pos + node.text.length;
                   const newMark = refMark.type.create({
                     refId: refId,
                     refNum: newNum
                   });
-                  tr.removeMark(from, to, refMark.type);
-                  tr.addMark(from, to, newMark);
-                  tr.insertText(`[${newNum}]`, from, to);
+
+                  // Replace text and marks together
+                  tr.replaceWith(
+                    from,
+                    to,
+                    state.schema.text(`[${newNum}]`, [newMark])
+                  );
                 }
                 found = true;
                 return false;
@@ -616,6 +681,49 @@ export default function TextEditor(props: TextEditorProps) {
       Reference
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
+    onCreate: ({ editor }) => {
+      // Migrate legacy references on initial load
+      if (props.preSet) {
+        setTimeout(() => {
+          console.log("Running migration on initial load");
+          const doc = editor.state.doc;
+          let refCount = 0;
+          let legacyCount = 0;
+
+          doc.descendants((node: any) => {
+            if (node.isText && node.marks) {
+              const refMark = node.marks.find(
+                (mark: any) => mark.type.name === "reference"
+              );
+              if (refMark) {
+                refCount++;
+                console.log(
+                  `Found Reference mark: [${refMark.attrs.refNum}] with ID: ${refMark.attrs.refId}`
+                );
+              }
+              const superMark = node.marks.find(
+                (mark: any) => mark.type.name === "superscript"
+              );
+              if (superMark && !refMark) {
+                const match = node.text?.match(/^\[(\d+)\]$/);
+                if (match) {
+                  legacyCount++;
+                  console.log(`Found legacy superscript: ${node.text}`);
+                }
+              }
+            }
+          });
+
+          console.log(
+            `Total Reference marks: ${refCount}, Legacy superscript: ${legacyCount}`
+          );
+
+          if (legacyCount > 0) {
+            migrateLegacyReferences(editor);
+          }
+        }, 100);
+      }
+    },
     editorProps: {
       attributes: {
         class: "focus:outline-none"
@@ -661,7 +769,10 @@ export default function TextEditor(props: TextEditorProps) {
     onUpdate: ({ editor }) => {
       untrack(() => {
         props.updateContent(editor.getHTML());
-        setTimeout(() => updateReferencesSection(editor), 100);
+        setTimeout(() => {
+          renumberAllReferences(editor);
+          updateReferencesSection(editor);
+        }, 100);
       });
     },
     onSelectionUpdate: ({ editor }) => {
@@ -695,11 +806,218 @@ export default function TextEditor(props: TextEditorProps) {
         const instance = editor();
         if (instance && newContent && instance.getHTML() !== newContent) {
           instance.commands.setContent(newContent, { emitUpdate: false });
+          // Migrate legacy superscript references to Reference marks
+          setTimeout(() => migrateLegacyReferences(instance), 50);
         }
       },
       { defer: true }
     )
   );
+
+  const migrateLegacyReferences = (editorInstance: any) => {
+    if (!editorInstance) return;
+
+    const doc = editorInstance.state.doc;
+    const legacyRefs: Array<{
+      pos: number;
+      num: number;
+      textLength: number;
+      hasOtherMarks: boolean;
+    }> = [];
+    const allSuperscriptNodes: Array<{
+      pos: number;
+      text: string;
+      marks: any[];
+    }> = [];
+
+    // First pass: collect all text nodes with superscript
+    doc.descendants((node: any, pos: number) => {
+      if (node.isText && node.marks) {
+        const hasReference = node.marks.some(
+          (mark: any) => mark.type.name === "reference"
+        );
+        const hasSuperscript = node.marks.some(
+          (mark: any) => mark.type.name === "superscript"
+        );
+
+        if (!hasReference && hasSuperscript) {
+          allSuperscriptNodes.push({
+            pos,
+            text: node.text || "",
+            marks: node.marks
+          });
+        }
+      }
+    });
+
+    console.log(
+      "All superscript nodes:",
+      allSuperscriptNodes.map((n) => `"${n.text}" at ${n.pos}`)
+    );
+
+    // Second pass: identify complete references (might be split)
+    let i = 0;
+    while (i < allSuperscriptNodes.length) {
+      const node = allSuperscriptNodes[i];
+      const text = node.text;
+
+      // Check if this is a complete reference (with optional whitespace)
+      const completeMatch = text.match(/^\s*\[(\d+)\]\s*$/);
+      if (completeMatch) {
+        const hasOtherMarks = node.marks.some(
+          (mark: any) =>
+            mark.type.name !== "superscript" && mark.type.name !== "reference"
+        );
+        console.log(
+          `Found complete legacy ref [${completeMatch[1]}] at pos ${node.pos}, hasOtherMarks: ${hasOtherMarks}, text: "${text}"`
+        );
+        legacyRefs.push({
+          pos: node.pos,
+          num: parseInt(completeMatch[1]),
+          textLength: text.length,
+          hasOtherMarks
+        });
+        i++;
+        continue;
+      }
+
+      // Check if this might be the start of a split reference
+      if (text === "[" && i + 2 < allSuperscriptNodes.length) {
+        const nextNode = allSuperscriptNodes[i + 1];
+        const afterNode = allSuperscriptNodes[i + 2];
+
+        // Check if next nodes form [n]
+        if (nextNode.text.match(/^\d+$/) && afterNode.text === "]") {
+          const refNum = parseInt(nextNode.text);
+          const totalLength =
+            text.length + nextNode.text.length + afterNode.text.length;
+
+          console.log(
+            `Found split reference [${refNum}] starting at pos ${node.pos} (split into "${text}", "${nextNode.text}", "${afterNode.text}")`
+          );
+
+          // We need to handle split references differently - remove all three nodes and create one
+          legacyRefs.push({
+            pos: node.pos,
+            num: refNum,
+            textLength: totalLength,
+            hasOtherMarks: true // Treat split refs as having other marks
+          });
+
+          i += 3; // Skip the next two nodes
+          continue;
+        }
+      }
+
+      i++;
+    }
+
+    if (legacyRefs.length === 0) {
+      console.log("No legacy references found to migrate");
+      return;
+    }
+
+    console.log(
+      `Migrating ${legacyRefs.length} legacy references to Reference marks`
+    );
+
+    // Sort by position (process from end to start to avoid position shifts)
+    legacyRefs.sort((a, b) => b.pos - a.pos);
+
+    // Build a single transaction to convert all legacy refs
+    const tr = editorInstance.state.tr;
+
+    legacyRefs.forEach((ref) => {
+      // Generate unique ID for this reference
+      const refId = `ref-migrated-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Create Reference mark (only the reference mark, no other marks)
+      const newMark = editorInstance.schema.marks.reference.create({
+        refId: refId,
+        refNum: ref.num
+      });
+
+      // Replace with Reference mark (preserve only the reference mark, remove other marks like links)
+      tr.replaceWith(
+        ref.pos,
+        ref.pos + ref.textLength,
+        editorInstance.schema.text(`[${ref.num}]`, [newMark])
+      );
+    });
+
+    // Dispatch the transaction
+    editorInstance.view.dispatch(tr);
+
+    console.log("Migration complete");
+  };
+
+  const renumberAllReferences = (editorInstance: any) => {
+    if (!editorInstance) return;
+
+    const doc = editorInstance.state.doc;
+    const allRefs: Array<{
+      pos: number;
+      refId: string;
+      refNum: number;
+      textLength: number;
+    }> = [];
+
+    doc.descendants((node: any, pos: number) => {
+      if (node.isText && node.marks) {
+        const refMark = node.marks.find(
+          (mark: any) => mark.type.name === "reference"
+        );
+        if (refMark) {
+          allRefs.push({
+            pos,
+            refId: refMark.attrs.refId,
+            refNum: refMark.attrs.refNum,
+            textLength: node.text.length
+          });
+        }
+      }
+    });
+
+    // Sort by position
+    allRefs.sort((a, b) => a.pos - b.pos);
+
+    // Check if renumbering is needed (if any ref doesn't match its expected number)
+    let needsRenumbering = false;
+    for (let i = 0; i < allRefs.length; i++) {
+      if (allRefs[i].refNum !== i + 1) {
+        needsRenumbering = true;
+        break;
+      }
+    }
+
+    if (!needsRenumbering) return;
+
+    // Build a single transaction with all updates (from end to start to avoid position shifts)
+    const tr = editorInstance.state.tr;
+
+    for (let i = allRefs.length - 1; i >= 0; i--) {
+      const correctNum = i + 1;
+      const ref = allRefs[i];
+
+      if (ref.refNum !== correctNum) {
+        // Create updated mark
+        const newMark = editorInstance.schema.marks.reference.create({
+          refId: ref.refId,
+          refNum: correctNum
+        });
+
+        // Replace the node with updated text and mark
+        tr.replaceWith(
+          ref.pos,
+          ref.pos + ref.textLength,
+          editorInstance.schema.text(`[${correctNum}]`, [newMark])
+        );
+      }
+    }
+
+    // Dispatch the single transaction with all changes
+    editorInstance.view.dispatch(tr);
+  };
 
   const updateReferencesSection = (editorInstance: any) => {
     if (!editorInstance) return;
@@ -893,10 +1211,17 @@ export default function TextEditor(props: TextEditorProps) {
     const { from } = instance.state.selection;
 
     // Collect all existing references with their IDs and positions
-    const refs: Array<{ pos: number; refId: string; refNum: number }> = [];
+    const refs: Array<{
+      pos: number;
+      refId: string;
+      refNum: number;
+      textLength: number;
+      isLegacy: boolean;
+    }> = [];
 
     doc.descendants((node: any, pos: number) => {
       if (node.isText && node.marks) {
+        // Check for new Reference marks
         const refMark = node.marks.find(
           (mark: any) => mark.type.name === "reference"
         );
@@ -904,8 +1229,28 @@ export default function TextEditor(props: TextEditorProps) {
           refs.push({
             pos,
             refId: refMark.attrs.refId,
-            refNum: refMark.attrs.refNum
+            refNum: refMark.attrs.refNum,
+            textLength: node.text.length,
+            isLegacy: false
           });
+        } else {
+          // Check for legacy superscript references
+          const hasSuperscript = node.marks.some(
+            (mark: any) => mark.type.name === "superscript"
+          );
+          if (hasSuperscript) {
+            const text = node.text || "";
+            const match = text.match(/^\[(\d+)\]$/);
+            if (match) {
+              refs.push({
+                pos,
+                refId: `ref-legacy-${pos}`, // Temporary ID for legacy refs
+                refNum: parseInt(match[1]),
+                textLength: text.length,
+                isLegacy: true
+              });
+            }
+          }
         }
       }
     });
@@ -915,11 +1260,17 @@ export default function TextEditor(props: TextEditorProps) {
 
     // Find where to insert (what number should this be?)
     let newRefNum = 1;
+    let insertIndex = refs.length; // Default to end
+
     for (let i = 0; i < refs.length; i++) {
       if (from <= refs[i].pos) {
         newRefNum = i + 1;
+        insertIndex = i;
         break;
       }
+    }
+
+    if (insertIndex === refs.length) {
       newRefNum = refs.length + 1;
     }
 
@@ -932,13 +1283,20 @@ export default function TextEditor(props: TextEditorProps) {
       refNum: newRefNum
     });
 
-    // Now renumber ALL references that come after this one
+    // Now renumber ALL references that come after the insertion point
     setTimeout(() => {
       const currentDoc = instance.state.doc;
-      const allRefs: Array<{ pos: number; refId: string; refNum: number }> = [];
+      const allRefs: Array<{
+        pos: number;
+        refId: string;
+        refNum: number;
+        textLength: number;
+        isLegacy: boolean;
+      }> = [];
 
       currentDoc.descendants((node: any, pos: number) => {
         if (node.isText && node.marks) {
+          // Check for new Reference marks
           const refMark = node.marks.find(
             (mark: any) => mark.type.name === "reference"
           );
@@ -946,8 +1304,28 @@ export default function TextEditor(props: TextEditorProps) {
             allRefs.push({
               pos,
               refId: refMark.attrs.refId,
-              refNum: refMark.attrs.refNum
+              refNum: refMark.attrs.refNum,
+              textLength: node.text.length,
+              isLegacy: false
             });
+          } else {
+            // Check for legacy superscript references
+            const hasSuperscript = node.marks.some(
+              (mark: any) => mark.type.name === "superscript"
+            );
+            if (hasSuperscript) {
+              const text = node.text || "";
+              const match = text.match(/^\[(\d+)\]$/);
+              if (match) {
+                allRefs.push({
+                  pos,
+                  refId: `ref-legacy-${pos}`,
+                  refNum: parseInt(match[1]),
+                  textLength: text.length,
+                  isLegacy: true
+                });
+              }
+            }
           }
         }
       });
@@ -955,13 +1333,61 @@ export default function TextEditor(props: TextEditorProps) {
       // Sort by position
       allRefs.sort((a, b) => a.pos - b.pos);
 
-      // Renumber all references to match their position
-      allRefs.forEach((ref, index) => {
-        const correctNum = index + 1;
+      // Build a single transaction with all updates (from end to start to avoid position shifts)
+      const tr = instance.state.tr;
+      let hasChanges = false;
+
+      for (let i = allRefs.length - 1; i >= 0; i--) {
+        const correctNum = i + 1;
+        const ref = allRefs[i];
+
         if (ref.refNum !== correctNum) {
-          instance.commands.updateReferenceNumber(ref.refId, correctNum);
+          if (ref.isLegacy) {
+            // Convert legacy to Reference mark while renumbering
+            const newRefId = `ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${i}`;
+            const newMark = instance.schema.marks.reference.create({
+              refId: newRefId,
+              refNum: correctNum
+            });
+            tr.replaceWith(
+              ref.pos,
+              ref.pos + ref.textLength,
+              instance.schema.text(`[${correctNum}]`, [newMark])
+            );
+          } else {
+            // Update existing Reference mark
+            const newMark = instance.schema.marks.reference.create({
+              refId: ref.refId,
+              refNum: correctNum
+            });
+            tr.replaceWith(
+              ref.pos,
+              ref.pos + ref.textLength,
+              instance.schema.text(`[${correctNum}]`, [newMark])
+            );
+          }
+
+          hasChanges = true;
+        } else if (ref.isLegacy) {
+          // Even if number is correct, convert legacy to Reference mark
+          const newRefId = `ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${i}`;
+          const newMark = instance.schema.marks.reference.create({
+            refId: newRefId,
+            refNum: correctNum
+          });
+          tr.replaceWith(
+            ref.pos,
+            ref.pos + ref.textLength,
+            instance.schema.text(`[${correctNum}]`, [newMark])
+          );
+          hasChanges = true;
         }
-      });
+      }
+
+      // Dispatch the single transaction with all changes
+      if (hasChanges) {
+        instance.view.dispatch(tr);
+      }
 
       // Update references section
       updateReferencesSection(instance);
