@@ -1452,7 +1452,7 @@ export default function TextEditor(props: TextEditorProps) {
       ref={containerRef}
       class="border-surface2 text-text w-full max-w-full overflow-hidden rounded-md border px-4 py-2"
       classList={{
-        "fixed inset-0 z-100 m-0 h-screen max-h-screen rounded-none flex flex-col":
+        "fixed inset-0 z-100 m-0 h-screen max-h-screen rounded-none flex flex-col overflow-hidden!":
           isFullscreen(),
         "bg-base": isFullscreen()
       }}
@@ -1772,15 +1772,36 @@ export default function TextEditor(props: TextEditorProps) {
               </div>
             </Show>
 
-            {/* Main Toolbar - Pinned at top in fullscreen */}
+            {/* Main Toolbar - Fixed at top always */}
             <div
               id="main-toolbar"
-              class="border-surface2 bg-base border-b"
+              class="border-surface2 bg-base sticky top-0 z-[105] border-b"
               classList={{
-                "sticky top-0 z-[105]": isFullscreen()
+                "flex-none": isFullscreen()
               }}
             >
               <div class="flex flex-wrap gap-1 pb-2">
+                {/* Undo/Redo buttons - critical for mobile */}
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().undo().run()}
+                  disabled={!instance().can().undo()}
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none disabled:cursor-not-allowed disabled:opacity-30"
+                  title="Undo (Cmd/Ctrl+Z)"
+                >
+                  ↶
+                </button>
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().redo().run()}
+                  disabled={!instance().can().redo()}
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none disabled:cursor-not-allowed disabled:opacity-30"
+                  title="Redo (Cmd/Ctrl+Shift+Z)"
+                >
+                  ↷
+                </button>
+                <div class="border-surface2 mx-1 border-l"></div>
+
                 <button
                   type="button"
                   onClick={() =>
@@ -2220,10 +2241,10 @@ export default function TextEditor(props: TextEditorProps) {
 
       <div
         ref={editorRef}
-        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto max-w-full overflow-scroll transition-all duration-300 focus:outline-none"
+        class="prose prose-sm prose-invert sm:prose-base md:prose-xl lg:prose-xl xl:prose-2xl mx-auto max-w-full transition-all duration-300 focus:outline-none"
         classList={{
-          "h-[80dvh]": !isFullscreen(),
-          "flex-1 h-full": isFullscreen()
+          "h-[80dvh] overflow-scroll": !isFullscreen(),
+          "flex-1 h-full overflow-y-auto": isFullscreen()
         }}
         style={{
           "padding-bottom": keyboardVisible() ? `${keyboardHeight()}px` : "1rem"
