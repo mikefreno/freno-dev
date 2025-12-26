@@ -355,7 +355,7 @@ const IframeEmbed = Node.create<IframeOptions>({
     };
   }
 });
-const CONTEXT_SIZE = 128;
+const CONTEXT_SIZE = 256;
 
 // Custom Reference mark extension
 import { Extension } from "@tiptap/core";
