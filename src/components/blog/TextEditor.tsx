@@ -1,5 +1,6 @@
 import { Show, untrack, createEffect, on, createSignal, For } from "solid-js";
 import { useSearchParams, useNavigate } from "@solidjs/router";
+import { api } from "~/lib/api";
 import { createTiptapEditor } from "solid-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -548,6 +549,7 @@ const ReferenceSectionMarker = Node.create({
 export interface TextEditorProps {
   updateContent: (content: string) => void;
   preSet?: string;
+  postId?: number; // Optional: for persisting history to database
 }
 
 export default function TextEditor(props: TextEditorProps) {
@@ -624,6 +626,24 @@ export default function TextEditor(props: TextEditorProps) {
   const [keyboardVisible, setKeyboardVisible] = createSignal(false);
   const [keyboardHeight, setKeyboardHeight] = createSignal(0);
 
+  // Undo Tree History (MVP - In-Memory + Database)
+  interface HistoryNode {
+    id: string; // Local UUID
+    dbId?: number; // Database ID from PostHistory table
+    content: string;
+    timestamp: Date;
+  }
+
+  const [history, setHistory] = createSignal<HistoryNode[]>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] =
+    createSignal<number>(-1);
+  const [showHistoryModal, setShowHistoryModal] = createSignal(false);
+  const [isLoadingHistory, setIsLoadingHistory] = createSignal(false);
+  const MAX_HISTORY_SIZE = 100; // Match database pruning limit
+  let historyDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let isInitialLoad = true; // Flag to prevent capturing history on initial load
+  let hasAttemptedHistoryLoad = false; // Flag to prevent repeated load attempts
+
   // Force reactive updates for button states
   const [editorState, setEditorState] = createSignal(0);
 
@@ -660,6 +680,169 @@ export default function TextEditor(props: TextEditorProps) {
     const activeClass = isActive ? "bg-surface2" : "";
     const hoverClass = includeHover && !isActive ? "hover:bg-surface1" : "";
     return `${baseClasses} ${activeClass} ${hoverClass}`.trim();
+  };
+
+  // Capture history snapshot
+  const captureHistory = async (editorInstance: any) => {
+    // Skip if initial load
+    if (isInitialLoad) {
+      return;
+    }
+
+    const content = editorInstance.getHTML();
+    const currentHistory = history();
+    const currentIndex = currentHistoryIndex();
+
+    // Get previous content for diff creation
+    const previousContent =
+      currentIndex >= 0 ? currentHistory[currentIndex].content : "";
+
+    // Skip if content hasn't changed
+    if (content === previousContent) {
+      return;
+    }
+
+    // Create new history node
+    const newNode: HistoryNode = {
+      id: crypto.randomUUID(),
+      content,
+      timestamp: new Date()
+    };
+
+    // If we're not at the end of history, truncate future history (linear history for MVP)
+    const updatedHistory =
+      currentIndex === currentHistory.length - 1
+        ? [...currentHistory, newNode]
+        : [...currentHistory.slice(0, currentIndex + 1), newNode];
+
+    // Limit history size
+    const limitedHistory =
+      updatedHistory.length > MAX_HISTORY_SIZE
+        ? updatedHistory.slice(updatedHistory.length - MAX_HISTORY_SIZE)
+        : updatedHistory;
+
+    setHistory(limitedHistory);
+    setCurrentHistoryIndex(limitedHistory.length - 1);
+
+    // Persist to database if postId is provided
+    if (props.postId) {
+      try {
+        const parentHistoryId =
+          currentIndex >= 0 && currentHistory[currentIndex]?.dbId
+            ? currentHistory[currentIndex].dbId
+            : null;
+
+        const result = await api.postHistory.save.mutate({
+          postId: props.postId,
+          content,
+          previousContent,
+          parentHistoryId,
+          isSaved: false
+        });
+
+        // Update the node with database ID
+        if (result.success && result.historyId) {
+          newNode.dbId = result.historyId;
+          // Update history with dbId
+          setHistory((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = newNode;
+            return updated;
+          });
+        }
+      } catch (error) {
+        console.error("Failed to persist history to database:", error);
+        // Continue anyway - we have in-memory history
+      }
+    }
+  };
+
+  // Format relative time for history display
+  const formatRelativeTime = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+
+    if (diffSec < 60) return `${diffSec} seconds ago`;
+    if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
+    if (diffHour < 24)
+      return `${diffHour} hour${diffHour === 1 ? "" : "s"} ago`;
+    return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+  };
+
+  // Restore history to a specific point
+  const restoreHistory = (index: number) => {
+    const instance = editor();
+    if (!instance) return;
+
+    const node = history()[index];
+    if (!node) return;
+
+    // Set content without triggering history capture
+    instance.commands.setContent(node.content, { emitUpdate: false });
+
+    // Update current index
+    setCurrentHistoryIndex(index);
+
+    // Update parent content
+    props.updateContent(node.content);
+
+    // Close modal
+    setShowHistoryModal(false);
+
+    // Force UI update
+    setEditorState((prev) => prev + 1);
+  };
+
+  // Load history from database
+  const loadHistoryFromDB = async () => {
+    if (!props.postId) return;
+
+    setIsLoadingHistory(true);
+    hasAttemptedHistoryLoad = true; // Mark that we've attempted to load
+    try {
+      console.log("[History] Loading from DB for postId:", props.postId);
+      const dbHistory = await api.postHistory.getHistory.query({
+        postId: props.postId
+      });
+
+      console.log("[History] DB returned entries:", dbHistory.length);
+      if (dbHistory && dbHistory.length > 0) {
+        console.log(
+          "[History] First entry content length:",
+          dbHistory[0].content.length
+        );
+        console.log(
+          "[History] Last entry content length:",
+          dbHistory[dbHistory.length - 1].content.length
+        );
+
+        // Convert database history to HistoryNode format with reconstructed content
+        const historyNodes: HistoryNode[] = dbHistory.map((entry) => ({
+          id: `db-${entry.id}`,
+          dbId: entry.id,
+          content: entry.content, // Full reconstructed content from diffs
+          timestamp: new Date(entry.created_at)
+        }));
+
+        setHistory(historyNodes);
+        setCurrentHistoryIndex(historyNodes.length - 1);
+        console.log(
+          "[History] Loaded",
+          historyNodes.length,
+          "entries into memory"
+        );
+      } else {
+        console.log("[History] No history found in DB");
+      }
+    } catch (error) {
+      console.error("Failed to load history from database:", error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
   };
 
   const editor = createTiptapEditor(() => ({
@@ -811,6 +994,17 @@ export default function TextEditor(props: TextEditorProps) {
           renumberAllReferences(editor);
           updateReferencesSection(editor);
         }, 100);
+
+        // Debounced history capture (capture after 2 seconds of inactivity)
+        // Skip during initial load
+        if (!isInitialLoad) {
+          if (historyDebounceTimer) {
+            clearTimeout(historyDebounceTimer);
+          }
+          historyDebounceTimer = setTimeout(() => {
+            captureHistory(editor);
+          }, 2000);
+        }
       });
     },
     onSelectionUpdate: ({ editor }) => {
@@ -840,17 +1034,67 @@ export default function TextEditor(props: TextEditorProps) {
   createEffect(
     on(
       () => props.preSet,
-      (newContent) => {
+      async (newContent) => {
         const instance = editor();
         if (instance && newContent && instance.getHTML() !== newContent) {
+          console.log("[History] Initial content load, postId:", props.postId);
           instance.commands.setContent(newContent, { emitUpdate: false });
+
+          // Reset the load attempt flag when content changes
+          hasAttemptedHistoryLoad = false;
+
+          // Load history from database if postId is provided
+          if (props.postId) {
+            await loadHistoryFromDB();
+            console.log(
+              "[History] After load, history length:",
+              history().length
+            );
+          }
+
           // Migrate legacy superscript references to Reference marks
           setTimeout(() => migrateLegacyReferences(instance), 50);
+
+          // Capture initial state in history only if no history was loaded
+          setTimeout(() => {
+            if (history().length === 0) {
+              console.log(
+                "[History] No history found, capturing initial state"
+              );
+              captureHistory(instance);
+            } else {
+              console.log(
+                "[History] Skipping initial capture, have",
+                history().length,
+                "entries"
+              );
+            }
+            // Mark initial load as complete - now edits will be captured
+            isInitialLoad = false;
+          }, 200);
         }
       },
       { defer: true }
     )
   );
+
+  // Load history when editor is ready (for edit mode)
+  createEffect(() => {
+    const instance = editor();
+    if (
+      instance &&
+      props.postId &&
+      history().length === 0 &&
+      !isLoadingHistory() &&
+      !hasAttemptedHistoryLoad // Only attempt once
+    ) {
+      console.log(
+        "[History] Editor ready, loading history for postId:",
+        props.postId
+      );
+      loadHistoryFromDB();
+    }
+  });
 
   const migrateLegacyReferences = (editorInstance: any) => {
     if (!editorInstance) return;
@@ -1278,20 +1522,63 @@ export default function TextEditor(props: TextEditorProps) {
         hasChanges = true;
       });
 
-    // Step 2: Add placeholders for new references
+    // Step 2: Add placeholders for new references in correct order
     if (referencesHeadingPos >= 0) {
-      // Find insertion point (after heading, before any content or at section end)
-      let insertPos = referencesHeadingPos;
-      const headingNode = doc.nodeAt(referencesHeadingPos);
-      if (headingNode) {
-        insertPos = referencesHeadingPos + headingNode.nodeSize;
-      }
-
-      // Add missing references in order
-      const nodesToInsert: any[] = [];
+      // For each missing reference, find the correct insertion position
       refNumbers.forEach((refNum) => {
         if (!existingRefs.has(refNum)) {
-          nodesToInsert.push({
+          const refNumInt = parseInt(refNum);
+          let insertPos = referencesHeadingPos;
+          const headingNode = doc.nodeAt(referencesHeadingPos);
+          if (headingNode) {
+            insertPos = referencesHeadingPos + headingNode.nodeSize;
+          }
+
+          // Find the last existing reference that comes before this one
+          let foundInsertPos = false;
+          existingRefs.forEach((info, existingRefNum) => {
+            const existingRefNumInt = parseInt(existingRefNum);
+            if (
+              !isNaN(existingRefNumInt) &&
+              !isNaN(refNumInt) &&
+              existingRefNumInt < refNumInt
+            ) {
+              // This existing ref comes before the new one, insert after it
+              const existingNode = doc.nodeAt(info.pos);
+              if (
+                existingNode &&
+                info.pos + existingNode.nodeSize > insertPos
+              ) {
+                insertPos = info.pos + existingNode.nodeSize;
+                foundInsertPos = true;
+              }
+            }
+          });
+
+          // If no existing reference comes before this one, but there are references after,
+          // we've already set insertPos to right after heading which is correct
+          // If this is larger than all existing refs, find the last one
+          if (!foundInsertPos && existingRefs.size > 0) {
+            let maxRefNum = -1;
+            let maxRefPos = insertPos;
+            existingRefs.forEach((info, existingRefNum) => {
+              const existingRefNumInt = parseInt(existingRefNum);
+              if (!isNaN(existingRefNumInt) && existingRefNumInt > maxRefNum) {
+                maxRefNum = existingRefNumInt;
+                maxRefPos = info.pos;
+              }
+            });
+
+            if (maxRefNum >= 0 && refNumInt > maxRefNum) {
+              // This new ref comes after all existing refs
+              const maxNode = doc.nodeAt(maxRefPos);
+              if (maxNode) {
+                insertPos = maxRefPos + maxNode.nodeSize;
+              }
+            }
+          }
+
+          const nodeData = {
             type: "paragraph",
             content: [
               {
@@ -1304,18 +1591,17 @@ export default function TextEditor(props: TextEditorProps) {
                 text: "Add your reference text here"
               }
             ]
-          });
-        }
-      });
+          };
 
-      if (nodesToInsert.length > 0) {
-        nodesToInsert.forEach((nodeData) => {
           const node = editorInstance.schema.nodeFromJSON(nodeData);
           tr.insert(insertPos, node);
-          insertPos += node.nodeSize;
-        });
-        hasChanges = true;
-      }
+
+          // Update existingRefs map so subsequent inserts know about this one
+          existingRefs.set(refNum, { pos: insertPos, isPlaceholder: true });
+
+          hasChanges = true;
+        }
+      });
     }
 
     if (hasChanges) {
@@ -1962,7 +2248,7 @@ export default function TextEditor(props: TextEditorProps) {
   const toggleFullscreen = () => {
     const newFullscreenState = !isFullscreen();
     setIsFullscreen(newFullscreenState);
-    
+
     // Update URL search param to persist state
     setSearchParams({ fullscreen: newFullscreenState ? "true" : undefined });
   };
@@ -2713,6 +2999,14 @@ export default function TextEditor(props: TextEditorProps) {
                 >
                   📑
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowHistoryModal(true)}
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
+                  title={`View Document History (${history().length} snapshots)`}
+                >
+                  🕐
+                </button>
                 <div class="border-surface2 mx-1 border-l"></div>
                 <button
                   type="button"
@@ -3141,6 +3435,84 @@ export default function TextEditor(props: TextEditorProps) {
             <div class="text-subtext0 border-surface2 mt-6 border-t pt-4 text-center text-sm">
               Press <span class="text-text font-semibold">⌨ Help</span> button
               to toggle this help
+            </div>
+          </div>
+        </div>
+      </Show>
+
+      {/* History Modal */}
+      <Show when={showHistoryModal()}>
+        <div
+          class="bg-opacity-50 fixed inset-0 z-150 flex items-center justify-center bg-black"
+          onClick={() => setShowHistoryModal(false)}
+        >
+          <div
+            class="bg-base border-surface2 max-h-[80dvh] w-full max-w-2xl overflow-y-auto rounded-lg border p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div class="mb-6 flex items-center justify-between">
+              <h2 class="text-text text-2xl font-bold">Document History</h2>
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(false)}
+                class="hover:bg-surface1 text-subtext0 rounded p-2 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* History List */}
+            <Show
+              when={history().length > 0}
+              fallback={
+                <div class="text-subtext0 py-8 text-center">
+                  No history available yet. Start editing to capture history.
+                </div>
+              }
+            >
+              <div class="space-y-2">
+                <For each={history()}>
+                  {(node, index) => {
+                    const isCurrent = index() === currentHistoryIndex();
+                    return (
+                      <div
+                        class={`hover:bg-surface1 flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors ${
+                          isCurrent
+                            ? "border-blue bg-surface1"
+                            : "border-surface2"
+                        }`}
+                        onClick={() => restoreHistory(index())}
+                      >
+                        <div class="flex items-center gap-3">
+                          <span
+                            class={`font-mono text-sm ${
+                              isCurrent
+                                ? "text-blue font-bold"
+                                : "text-subtext0"
+                            }`}
+                          >
+                            {isCurrent ? `>${index() + 1}<` : index() + 1}
+                          </span>
+                          <span class="text-text text-sm">
+                            {formatRelativeTime(node.timestamp)}
+                          </span>
+                        </div>
+                        <Show when={isCurrent}>
+                          <span class="text-blue text-xs font-semibold">
+                            CURRENT
+                          </span>
+                        </Show>
+                      </div>
+                    );
+                  }}
+                </For>
+              </div>
+            </Show>
+
+            {/* Footer */}
+            <div class="text-subtext0 border-surface2 mt-6 border-t pt-4 text-center text-sm">
+              Click on any history item to restore that version
             </div>
           </div>
         </div>

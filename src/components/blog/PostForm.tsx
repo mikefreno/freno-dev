@@ -503,7 +503,11 @@ export default function PostForm(props: PostFormProps) {
 
           {/* Text Editor */}
           <div class="w-full max-w-full overflow-hidden">
-            <TextEditor updateContent={setBody} preSet={initialBody()} />
+            <TextEditor
+              updateContent={setBody}
+              preSet={initialBody()}
+              postId={props.postId}
+            />
           </div>
 
           {/* Tags */}

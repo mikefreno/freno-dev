@@ -1,7 +1,8 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { ConnectionFactory } from "~/server/utils";
 import { withCacheAndStale } from "~/server/cache";
-import { z } from "zod";
+import { incrementPostReadSchema } from "../schemas/blog";
+import type { Post, PostWithCommentsAndLikes } from "~/db/types";
 
 const BLOG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -35,7 +36,7 @@ export const blogRouter = createTRPCRouter({
     `;
 
       const results = await conn.execute(query);
-      return results.rows;
+      return results.rows as unknown as PostWithCommentsAndLikes[];
     });
   }),
 
@@ -77,7 +78,7 @@ export const blogRouter = createTRPCRouter({
         postsQuery += ` ORDER BY p.date ASC;`;
 
         const postsResult = await conn.execute(postsQuery);
-        const posts = postsResult.rows;
+        const posts = postsResult.rows as unknown as PostWithCommentsAndLikes[];
 
         const tagsQuery = `
         SELECT t.value, t.post_id
@@ -88,10 +89,13 @@ export const blogRouter = createTRPCRouter({
       `;
 
         const tagsResult = await conn.execute(tagsQuery);
-        const tags = tagsResult.rows;
+        const tags = tagsResult.rows as unknown as {
+          value: string;
+          post_id: number;
+        }[];
 
         const tagMap: Record<string, number> = {};
-        tags.forEach((tag: any) => {
+        tags.forEach((tag) => {
           const key = `${tag.value}`;
           tagMap[key] = (tagMap[key] || 0) + 1;
         });
@@ -102,7 +106,7 @@ export const blogRouter = createTRPCRouter({
   }),
 
   incrementPostRead: publicProcedure
-    .input(z.object({ postId: z.number() }))
+    .input(incrementPostReadSchema)
     .mutation(async ({ input }) => {
       const conn = ConnectionFactory();
 
