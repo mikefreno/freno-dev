@@ -644,6 +644,15 @@ export default function TextEditor(props: TextEditorProps) {
   let isInitialLoad = true; // Flag to prevent capturing history on initial load
   let hasAttemptedHistoryLoad = false; // Flag to prevent repeated load attempts
 
+  // LLM Infill state
+  const [currentSuggestion, setCurrentSuggestion] = createSignal<string>("");
+  const [isInfillLoading, setIsInfillLoading] = createSignal(false);
+  const [infillConfig, setInfillConfig] = createSignal<{
+    endpoint: string;
+    token: string;
+  } | null>(null);
+  let infillDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Force reactive updates for button states
   const [editorState, setEditorState] = createSignal(0);
 
@@ -680,6 +689,67 @@ export default function TextEditor(props: TextEditorProps) {
     const activeClass = isActive ? "bg-surface2" : "";
     const hoverClass = includeHover && !isActive ? "hover:bg-surface1" : "";
     return `${baseClasses} ${activeClass} ${hoverClass}`.trim();
+  };
+
+  // Fetch infill config on mount (admin-only, desktop-only)
+  createEffect(async () => {
+    try {
+      const config = await api.infill.getConfig.query();
+      if (config.endpoint && config.token) {
+        setInfillConfig({ endpoint: config.endpoint, token: config.token });
+        console.log("✅ Infill enabled for admin");
+      }
+    } catch (error) {
+      console.error("Failed to fetch infill config:", error);
+    }
+  });
+
+  // Request LLM infill suggestion
+  const requestInfill = async (): Promise<void> => {
+    const config = infillConfig();
+    if (!config) return;
+
+    const context = getEditorContext();
+    if (!context) return;
+
+    setIsInfillLoading(true);
+    try {
+      const response = await fetch(config.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${config.token}`
+        },
+        body: JSON.stringify({
+          model: "default",
+          messages: [
+            {
+              role: "user",
+              content: `Continue writing from this context:\n\nBefore cursor: ${context.prefix}\n\nAfter cursor: ${context.suffix}`
+            }
+          ],
+          max_tokens: 100,
+          temperature: 0.3,
+          stop: ["\n\n"]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Infill request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const suggestion = data.choices?.[0]?.message?.content || "";
+
+      if (suggestion.trim()) {
+        setCurrentSuggestion(suggestion.trim());
+      }
+    } catch (error) {
+      console.error("Infill request failed:", error);
+      setCurrentSuggestion("");
+    } finally {
+      setIsInfillLoading(false);
+    }
   };
 
   // Capture history snapshot
@@ -854,6 +924,34 @@ export default function TextEditor(props: TextEditorProps) {
     } finally {
       setIsLoadingHistory(false);
     }
+  };
+
+  // Extract editor context for LLM infill (512 chars before/after cursor)
+  const getEditorContext = (): {
+    prefix: string;
+    suffix: string;
+    cursorPos: number;
+  } | null => {
+    const instance = editor();
+    if (!instance) return null;
+
+    const { state } = instance;
+    const cursorPos = state.selection.$anchor.pos;
+    const text = state.doc.textContent;
+
+    if (text.length === 0) return null;
+
+    const prefix = text.slice(Math.max(0, cursorPos - 512), cursorPos);
+    const suffix = text.slice(
+      cursorPos,
+      Math.min(text.length, cursorPos + 512)
+    );
+
+    return {
+      prefix,
+      suffix,
+      cursorPos
+    };
   };
 
   const editor = createTiptapEditor(() => ({

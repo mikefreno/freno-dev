@@ -1,13 +1,6 @@
 import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
-import {
-  onMount,
-  createEffect,
-  createSignal,
-  Show,
-  For,
-  onCleanup
-} from "solid-js";
+import { onMount, createSignal, Show, For, onCleanup } from "solid-js";
 import { api } from "~/lib/api";
 import { insertSoftHyphens } from "~/lib/client-utils";
 import GitHub from "./icons/GitHub";

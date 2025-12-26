@@ -7,7 +7,8 @@ const clientEnvSchema = z.object({
   VITE_GOOGLE_CLIENT_ID: z.string().min(1),
   VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1),
   VITE_GITHUB_CLIENT_ID: z.string().min(1),
-  VITE_WEBSOCKET: z.string().min(1)
+  VITE_WEBSOCKET: z.string().min(1),
+  VITE_INFILL_ENDPOINT: z.string().min(1)
 });
 
 // Type inference
