@@ -286,7 +286,7 @@ export function LeftBar() {
       tabindex="-1"
       ref={ref}
       aria-label="Main navigation"
-      class="border-r-overlay2 bg-base fixed z-50 h-dvh border-r-2 transition-transform duration-500 ease-out"
+      class="border-r-overlay2 bg-base fixed z-9999 h-dvh border-r-2 transition-transform duration-500 ease-out"
       classList={{
         "-translate-x-full": !leftBarVisible(),
         "translate-x-0": leftBarVisible()
@@ -302,7 +302,7 @@ export function LeftBar() {
       {/* Hamburger menu button - positioned at right edge of navbar */}
       <button
         onClick={() => setLeftBarVisible(!leftBarVisible())}
-        class="hamburger-menu-btn absolute top-4 -right-14 z-200 rounded-md p-2 shadow-md backdrop-blur-2xl transition-transform duration-600 ease-in-out hover:scale-110"
+        class="hamburger-menu-btn absolute top-4 -right-14 z-9999 rounded-md p-2 shadow-md backdrop-blur-2xl transition-transform duration-600 ease-in-out hover:scale-110"
         classList={{
           hidden: leftBarVisible()
         }}
