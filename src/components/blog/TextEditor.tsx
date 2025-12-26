@@ -523,7 +523,7 @@ const ReferenceSectionMarker = Node.create({
       mergeAttributes(HTMLAttributes, {
         id: "references-section-start",
         style:
-          "display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; margin: 0 0.25rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; font-family: system-ui, -apple-system, sans-serif; user-select: none; cursor: default; vertical-align: middle;",
+          "display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; margin: 0 0.25rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; font-family: system-ui, -apple-system, sans-serif; user-select: none; cursor: default; vertical-align: middle;",
         contenteditable: "false"
       }),
       "📌 References Section"
@@ -2257,7 +2257,7 @@ export default function TextEditor(props: TextEditorProps) {
             <Show when={showBubbleMenu()}>
               <div
                 ref={bubbleMenuRef}
-                class="bg-crust text-text fixed z-[120] w-fit rounded p-2 text-sm whitespace-nowrap shadow-xl"
+                class="bg-crust text-text fixed z-120 w-fit rounded p-2 text-sm whitespace-nowrap shadow-xl"
                 style={{
                   top: `${bubbleMenuPosition().top}px`,
                   left: `${bubbleMenuPosition().left}px`,
