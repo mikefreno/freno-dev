@@ -231,6 +231,7 @@ const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
     name: "Insert",
     shortcuts: [
       { keys: "⌘ K", keysAlt: "Ctrl K", description: "Insert/Edit Link" },
+      { keys: "⌘ R", keysAlt: "Ctrl R", description: "Insert Reference [n]" },
       { keys: "⌘ ⇧ C", keysAlt: "Ctrl Shift C", description: "Code Block" },
       { keys: "⌘ Enter", keysAlt: "Ctrl Enter", description: "Hard Break" },
       { keys: "⌘ ⇧ -", keysAlt: "Ctrl Shift -", description: "Horizontal Rule" }
@@ -500,6 +501,15 @@ export default function TextEditor(props: TextEditorProps) {
       attributes: {
         class: "focus:outline-none"
       },
+      handleKeyDown(view, event) {
+        // Cmd/Ctrl+R for inserting reference
+        if ((event.metaKey || event.ctrlKey) && event.key === "r") {
+          event.preventDefault();
+          insertReference();
+          return true;
+        }
+        return false;
+      },
       handleClickOn(view, pos, node, nodePos, event) {
         const target = event.target as HTMLElement;
 
@@ -744,6 +754,50 @@ export default function TextEditor(props: TextEditorProps) {
       .focus()
       .extendMarkRange("link")
       .setLink({ href: url })
+      .run();
+  };
+
+  const insertReference = () => {
+    const instance = editor();
+    if (!instance) return;
+
+    // Get next reference number by scanning document
+    const doc = instance.state.doc;
+    const foundRefs = new Set<string>();
+
+    doc.descendants((node: any) => {
+      if (node.isText && node.marks) {
+        const hasSuperscript = node.marks.some(
+          (mark: any) => mark.type.name === "superscript"
+        );
+        if (hasSuperscript) {
+          const text = node.text || "";
+          const match = text.match(/^\[(.+?)\]$/);
+          if (match) {
+            foundRefs.add(match[1]);
+          }
+        }
+      }
+    });
+
+    // Calculate next number
+    const numericRefs = Array.from(foundRefs)
+      .map((ref) => parseInt(ref))
+      .filter((num) => !isNaN(num));
+    const nextNum = numericRefs.length > 0 ? Math.max(...numericRefs) + 1 : 1;
+
+    const refNum = window.prompt("Reference number:", nextNum.toString());
+    if (refNum === null || refNum.trim() === "") return;
+
+    // Insert [n] with superscript
+    instance
+      .chain()
+      .focus()
+      .insertContent({
+        type: "text",
+        text: `[${refNum.trim()}]`,
+        marks: [{ type: "superscript" }]
+      })
       .run();
   };
 
@@ -1781,27 +1835,6 @@ export default function TextEditor(props: TextEditorProps) {
               }}
             >
               <div class="flex flex-wrap gap-1 pb-2">
-                {/* Undo/Redo buttons - critical for mobile */}
-                <button
-                  type="button"
-                  onClick={() => instance().chain().focus().undo().run()}
-                  disabled={!instance().can().undo()}
-                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none disabled:cursor-not-allowed disabled:opacity-30"
-                  title="Undo (Cmd/Ctrl+Z)"
-                >
-                  ↶
-                </button>
-                <button
-                  type="button"
-                  onClick={() => instance().chain().focus().redo().run()}
-                  disabled={!instance().can().redo()}
-                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none disabled:cursor-not-allowed disabled:opacity-30"
-                  title="Redo (Cmd/Ctrl+Shift+Z)"
-                >
-                  ↷
-                </button>
-                <div class="border-surface2 mx-1 border-l"></div>
-
                 <button
                   type="button"
                   onClick={() =>
@@ -1898,6 +1931,14 @@ export default function TextEditor(props: TextEditorProps) {
                   title="Subscript"
                 >
                   X<sub class="text-[0.6em]">n</sub>
+                </button>
+                <button
+                  type="button"
+                  onClick={insertReference}
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none"
+                  title="Insert Reference [n] (Cmd/Ctrl+R)"
+                >
+                  [n]
                 </button>
                 <div class="border-surface2 mx-1 border-l"></div>
                 <button
@@ -2096,6 +2137,27 @@ export default function TextEditor(props: TextEditorProps) {
                   title="Horizontal Rule"
                 >
                   ━━ HR
+                </button>
+                <div class="border-surface2 mx-1 border-l"></div>
+
+                {/* Undo/Redo buttons - critical for mobile */}
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().undo().run()}
+                  disabled={!instance().can().undo()}
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Undo (Cmd/Ctrl+Z)"
+                >
+                  ↺
+                </button>
+                <button
+                  type="button"
+                  onClick={() => instance().chain().focus().redo().run()}
+                  disabled={!instance().can().redo()}
+                  class="hover:bg-surface1 touch-manipulation rounded px-2 py-1 text-xs select-none disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Redo (Cmd/Ctrl+Shift+Z)"
+                >
+                  ↻
                 </button>
                 <div class="border-surface2 mx-1 border-l"></div>
                 <button
