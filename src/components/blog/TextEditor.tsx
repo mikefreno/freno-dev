@@ -736,6 +736,7 @@ export default function TextEditor(props: TextEditorProps) {
     endpoint: string;
     token: string;
   } | null>(null);
+  const [infillEnabled, setInfillEnabled] = createSignal(true); // Toggle for auto-suggestions
   let infillDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Force reactive updates for button states
@@ -1351,8 +1352,8 @@ export default function TextEditor(props: TextEditorProps) {
           }, 2000);
         }
 
-        // Debounced infill trigger (250ms)
-        if (infillConfig() && !isInitialLoad) {
+        // Debounced infill trigger (250ms) - only if enabled
+        if (infillConfig() && !isInitialLoad && infillEnabled()) {
           if (infillDebounceTimer) {
             clearTimeout(infillDebounceTimer);
           }
@@ -3620,6 +3621,32 @@ export default function TextEditor(props: TextEditorProps) {
                 >
                   ⌨ Help
                 </button>
+
+                {/* AI Autocomplete Toggle - Desktop only, shown when config available */}
+                <Show when={infillConfig()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInfillEnabled(!infillEnabled());
+                      // Clear any existing suggestion when disabled
+                      if (!infillEnabled()) {
+                        setCurrentSuggestion("");
+                      }
+                    }}
+                    class={`${
+                      infillEnabled()
+                        ? "bg-blue text-base"
+                        : "bg-surface1 text-subtext0"
+                    } hidden touch-manipulation rounded px-2 py-1 text-xs font-semibold transition-colors select-none md:block`}
+                    title={
+                      infillEnabled()
+                        ? "AI Autocomplete: ON (Ctrl/Cmd+Space to trigger manually)"
+                        : "AI Autocomplete: OFF (Click to enable)"
+                    }
+                  >
+                    {infillEnabled() ? "🤖 AI" : "🤖"}
+                  </button>
+                </Show>
 
                 {/* Table controls - shown when cursor is in a table */}
                 <Show when={isActive("table")}>
