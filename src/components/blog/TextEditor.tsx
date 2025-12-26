@@ -3770,7 +3770,7 @@ export default function TextEditor(props: TextEditorProps) {
 
       <div
         ref={editorRef}
-        class="prose prose-sm prose-invert sm:prose-base md:prose-lg mx-auto max-w-full transition-all duration-300 focus:outline-none md:px-8"
+        class="prose prose-sm prose-invert sm:prose-base md:prose-lg max-w-full transition-all duration-300 focus:outline-none md:px-8"
         classList={{
           "h-[80dvh] overflow-scroll": !isFullscreen(),
           "flex-1 h-full overflow-y-auto": isFullscreen()
