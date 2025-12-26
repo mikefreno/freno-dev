@@ -258,6 +258,20 @@ const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
       },
       { keys: "ESC", keysAlt: "ESC", description: "Exit Fullscreen" }
     ]
+  },
+  {
+    name: "AI Autocomplete (Admin)",
+    shortcuts: [
+      {
+        keys: "⌘ Space",
+        keysAlt: "Ctrl Space",
+        description: "Trigger AI suggestion"
+      },
+      { keys: "→", keysAlt: "Right", description: "Accept word" },
+      { keys: "⌥ Tab", keysAlt: "Alt Tab", description: "Accept line" },
+      { keys: "⇧ Tab", keysAlt: "Shift Tab", description: "Accept full" },
+      { keys: "ESC", keysAlt: "ESC", description: "Cancel suggestion" }
+    ]
   }
 ];
 
@@ -338,6 +352,77 @@ const IframeEmbed = Node.create<IframeOptions>({
 
           return true;
         }
+    };
+  }
+});
+const CONTEXT_SIZE = 128;
+
+// Custom Reference mark extension
+import { Extension } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+
+// Suggestion decoration extension - shows inline AI suggestions
+const SuggestionDecoration = Extension.create({
+  name: "suggestionDecoration",
+
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+
+    return [
+      new Plugin({
+        key: new PluginKey("suggestionDecoration"),
+        state: {
+          init() {
+            return DecorationSet.empty;
+          },
+          apply(tr, oldSet, oldState, newState) {
+            // Get suggestion from editor storage
+            const suggestion =
+              (editor.storage as any).suggestionDecoration?.text || "";
+
+            if (!suggestion) {
+              return DecorationSet.empty;
+            }
+
+            const { selection } = newState;
+            const pos = selection.$anchor.pos;
+
+            // Create a widget decoration at cursor position
+            const decoration = Decoration.widget(
+              pos,
+              () => {
+                const span = document.createElement("span");
+                span.textContent = suggestion;
+                span.style.color = "rgb(239, 68, 68)"; // Tailwind red-500
+                span.style.opacity = "0.5";
+                span.style.fontStyle = "italic";
+                span.style.fontFamily = "monospace";
+                span.style.pointerEvents = "none";
+                span.style.whiteSpace = "pre-wrap";
+                span.style.wordWrap = "break-word";
+                return span;
+              },
+              {
+                side: 1 // Place after the cursor
+              }
+            );
+
+            return DecorationSet.create(newState.doc, [decoration]);
+          }
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state);
+          }
+        }
+      })
+    ];
+  },
+
+  addStorage() {
+    return {
+      text: ""
     };
   }
 });
@@ -697,14 +782,25 @@ export default function TextEditor(props: TextEditorProps) {
       const config = await api.infill.getConfig.query();
       if (config.endpoint && config.token) {
         setInfillConfig({ endpoint: config.endpoint, token: config.token });
-        console.log("✅ Infill enabled for admin");
       }
     } catch (error) {
       console.error("Failed to fetch infill config:", error);
     }
   });
 
-  // Request LLM infill suggestion
+  // Update suggestion: Store in editor and force view update
+  createEffect(() => {
+    const instance = editor();
+    const suggestion = currentSuggestion();
+
+    if (instance) {
+      // Store suggestion in editor storage (cast to any to avoid TS error)
+      (instance.storage as any).suggestionDecoration = { text: suggestion };
+      // Force view update to show/hide decoration
+      instance.view.dispatch(instance.state.tr);
+    }
+  });
+
   const requestInfill = async (): Promise<void> => {
     const config = infillConfig();
     if (!config) return;
@@ -713,25 +809,32 @@ export default function TextEditor(props: TextEditorProps) {
     if (!context) return;
 
     setIsInfillLoading(true);
+
     try {
+      // llama.cpp infill format
+      const requestBody = {
+        input_prefix: context.prefix,
+        input_suffix: context.suffix,
+        n_predict: 100,
+        temperature: 0.3,
+        stop: ["\n\n", "</s>", "<|endoftext|>"],
+        stream: false
+      };
+
+      console.log("[Infill] Request:", {
+        prefix: context.prefix,
+        suffix: context.suffix,
+        prefixLength: context.prefix.length,
+        suffixLength: context.suffix.length
+      });
+
       const response = await fetch(config.endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${config.token}`
         },
-        body: JSON.stringify({
-          model: "default",
-          messages: [
-            {
-              role: "user",
-              content: `Continue writing from this context:\n\nBefore cursor: ${context.prefix}\n\nAfter cursor: ${context.suffix}`
-            }
-          ],
-          max_tokens: 100,
-          temperature: 0.3,
-          stop: ["\n\n"]
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -739,7 +842,9 @@ export default function TextEditor(props: TextEditorProps) {
       }
 
       const data = await response.json();
-      const suggestion = data.choices?.[0]?.message?.content || "";
+
+      // llama.cpp infill format returns { content: "..." }
+      const suggestion = data.content || "";
 
       if (suggestion.trim()) {
         setCurrentSuggestion(suggestion.trim());
@@ -750,6 +855,60 @@ export default function TextEditor(props: TextEditorProps) {
     } finally {
       setIsInfillLoading(false);
     }
+  };
+
+  // Helper to check if suggestion is active
+  const hasSuggestion = () => currentSuggestion().length > 0;
+
+  // Accept next word from suggestion
+  const acceptWord = () => {
+    const suggestion = currentSuggestion();
+    if (!suggestion) return;
+
+    // Take first word (split on whitespace)
+    const words = suggestion.split(/\s+/);
+    const firstWord = words[0] || "";
+
+    const instance = editor();
+    if (instance) {
+      instance.commands.insertContent(firstWord + " ");
+    }
+
+    // Update suggestion to remaining text
+    const remaining = words.slice(1).join(" ");
+    setCurrentSuggestion(remaining);
+  };
+
+  // Accept current line from suggestion
+  const acceptLine = () => {
+    const suggestion = currentSuggestion();
+    if (!suggestion) return;
+
+    // Take up to first newline
+    const lines = suggestion.split("\n");
+    const firstLine = lines[0] || "";
+
+    const instance = editor();
+    if (instance) {
+      instance.commands.insertContent(firstLine);
+    }
+
+    // Update suggestion to remaining text
+    const remaining = lines.slice(1).join("\n");
+    setCurrentSuggestion(remaining);
+  };
+
+  // Accept full suggestion
+  const acceptFull = () => {
+    const suggestion = currentSuggestion();
+    if (!suggestion) return;
+
+    const instance = editor();
+    if (instance) {
+      instance.commands.insertContent(suggestion);
+    }
+
+    setCurrentSuggestion("");
   };
 
   // Capture history snapshot
@@ -926,7 +1085,7 @@ export default function TextEditor(props: TextEditorProps) {
     }
   };
 
-  // Extract editor context for LLM infill (512 chars before/after cursor)
+  // Extract editor context for LLM infill (CONTEXT_SIZE chars before/after cursor)
   const getEditorContext = (): {
     prefix: string;
     suffix: string;
@@ -937,20 +1096,43 @@ export default function TextEditor(props: TextEditorProps) {
 
     const { state } = instance;
     const cursorPos = state.selection.$anchor.pos;
-    const text = state.doc.textContent;
 
+    // Convert ProseMirror position to text offset
+    // We need to count actual text characters, not node positions
+    let textOffset = 0;
+    let reachedCursor = false;
+
+    state.doc.descendants((node, pos) => {
+      if (reachedCursor) return false; // Stop traversing
+
+      if (node.isText) {
+        const nodeEnd = pos + node.nodeSize;
+        if (cursorPos <= nodeEnd) {
+          // Cursor is within or right after this text node
+          textOffset += Math.min(cursorPos - pos, node.text?.length || 0);
+          reachedCursor = true;
+          return false;
+        }
+        textOffset += node.text?.length || 0;
+      }
+    });
+
+    const text = state.doc.textContent;
     if (text.length === 0) return null;
 
-    const prefix = text.slice(Math.max(0, cursorPos - 512), cursorPos);
+    const prefix = text.slice(
+      Math.max(0, textOffset - CONTEXT_SIZE),
+      textOffset
+    );
     const suffix = text.slice(
-      cursorPos,
-      Math.min(text.length, cursorPos + 512)
+      textOffset,
+      Math.min(text.length, textOffset + CONTEXT_SIZE)
     );
 
     return {
       prefix,
       suffix,
-      cursorPos
+      cursorPos: textOffset
     };
   };
 
@@ -1016,6 +1198,7 @@ export default function TextEditor(props: TextEditorProps) {
       }),
       Superscript,
       Subscript,
+      SuggestionDecoration,
       Reference,
       ReferenceSectionMarker
     ],
@@ -1053,18 +1236,71 @@ export default function TextEditor(props: TextEditorProps) {
           }
         }, 100);
       }
+
+      // CRITICAL FIX: Always set isInitialLoad to false after a delay
+      // This ensures infill works regardless of how content was loaded
+      setTimeout(() => {
+        isInitialLoad = false;
+      }, 1000);
     },
     editorProps: {
       attributes: {
         class: "focus:outline-none"
       },
       handleKeyDown(view, event) {
+        // Trigger infill: Ctrl+Space (or Cmd+Space)
+        if ((event.ctrlKey || event.metaKey) && event.key === " ") {
+          event.preventDefault();
+          requestInfill();
+          return true;
+        }
+
+        // Cancel suggestion: Escape
+        if (event.key === "Escape" && hasSuggestion()) {
+          event.preventDefault();
+          setCurrentSuggestion("");
+          return true;
+        }
+
+        // Accept word: Right Arrow (only when suggestion active)
+        if (
+          event.key === "ArrowRight" &&
+          hasSuggestion() &&
+          !event.shiftKey &&
+          !event.ctrlKey &&
+          !event.metaKey
+        ) {
+          event.preventDefault();
+          acceptWord();
+          return true;
+        }
+
+        // Accept line: Alt+Tab
+        if (event.altKey && event.key === "Tab" && hasSuggestion()) {
+          event.preventDefault();
+          acceptLine();
+          return true;
+        }
+
+        // Accept full: Shift+Tab
+        if (
+          event.shiftKey &&
+          event.key === "Tab" &&
+          hasSuggestion() &&
+          !event.altKey
+        ) {
+          event.preventDefault();
+          acceptFull();
+          return true;
+        }
+
         // Cmd/Ctrl+R for inserting reference
         if ((event.metaKey || event.ctrlKey) && event.key === "r") {
           event.preventDefault();
           insertReference();
           return true;
         }
+
         return false;
       },
       handleClickOn(view, pos, node, nodePos, event) {
@@ -1114,6 +1350,16 @@ export default function TextEditor(props: TextEditorProps) {
             captureHistory(editor);
           }, 2000);
         }
+
+        // Debounced infill trigger (250ms)
+        if (infillConfig() && !isInitialLoad) {
+          if (infillDebounceTimer) {
+            clearTimeout(infillDebounceTimer);
+          }
+          infillDebounceTimer = setTimeout(() => {
+            requestInfill();
+          }, 250);
+        }
       });
     },
     onSelectionUpdate: ({ editor }) => {
@@ -1145,42 +1391,55 @@ export default function TextEditor(props: TextEditorProps) {
       () => props.preSet,
       async (newContent) => {
         const instance = editor();
-        if (instance && newContent && instance.getHTML() !== newContent) {
-          console.log("[History] Initial content load, postId:", props.postId);
-          instance.commands.setContent(newContent, { emitUpdate: false });
 
-          // Reset the load attempt flag when content changes
-          hasAttemptedHistoryLoad = false;
+        if (instance && newContent) {
+          const currentHTML = instance.getHTML();
+          const contentMatches = currentHTML === newContent;
 
-          // Load history from database if postId is provided
-          if (props.postId) {
-            await loadHistoryFromDB();
+          if (!contentMatches) {
             console.log(
-              "[History] After load, history length:",
-              history().length
+              "[History] Initial content load, postId:",
+              props.postId
             );
-          }
+            instance.commands.setContent(newContent, { emitUpdate: false });
 
-          // Migrate legacy superscript references to Reference marks
-          setTimeout(() => migrateLegacyReferences(instance), 50);
+            // Reset the load attempt flag when content changes
+            hasAttemptedHistoryLoad = false;
 
-          // Capture initial state in history only if no history was loaded
-          setTimeout(() => {
-            if (history().length === 0) {
+            // Load history from database if postId is provided
+            if (props.postId) {
+              await loadHistoryFromDB();
               console.log(
-                "[History] No history found, capturing initial state"
-              );
-              captureHistory(instance);
-            } else {
-              console.log(
-                "[History] Skipping initial capture, have",
-                history().length,
-                "entries"
+                "[History] After load, history length:",
+                history().length
               );
             }
-            // Mark initial load as complete - now edits will be captured
-            isInitialLoad = false;
-          }, 200);
+
+            // Migrate legacy superscript references to Reference marks
+            setTimeout(() => migrateLegacyReferences(instance), 50);
+
+            // Capture initial state in history only if no history was loaded
+            setTimeout(() => {
+              if (history().length === 0) {
+                console.log(
+                  "[History] No history found, capturing initial state"
+                );
+                captureHistory(instance);
+              } else {
+                console.log(
+                  "[History] Skipping initial capture, have",
+                  history().length,
+                  "entries"
+                );
+              }
+              isInitialLoad = false;
+            }, 200);
+          } else {
+            // Content already matches - this is the initial load case
+            setTimeout(() => {
+              isInitialLoad = false;
+            }, 500);
+          }
         }
       },
       { defer: true }
@@ -3624,6 +3883,13 @@ export default function TextEditor(props: TextEditorProps) {
               Click on any history item to restore that version
             </div>
           </div>
+        </div>
+      </Show>
+
+      {/* Infill Loading Indicator */}
+      <Show when={isInfillLoading()}>
+        <div class="bg-surface0 border-surface2 text-subtext0 fixed right-4 bottom-4 z-50 animate-pulse rounded border px-3 py-2 text-xs shadow-lg">
+          AI thinking...
         </div>
       </Show>
     </div>
