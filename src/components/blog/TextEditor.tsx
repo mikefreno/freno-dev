@@ -757,6 +757,16 @@ export default function TextEditor(props: TextEditorProps) {
     }
   };
 
+  // Parse UTC datetime string from SQLite to JavaScript Date
+  // SQLite datetime('now') returns format: "YYYY-MM-DD HH:MM:SS" in UTC
+  const parseUTCDateTime = (utcDateString: string): Date => {
+    // SQLite returns datetime in format "YYYY-MM-DD HH:MM:SS"
+    // We need to append 'Z' to indicate UTC, or convert to ISO format
+    // Replace space with 'T' and append 'Z' for proper UTC parsing
+    const isoString = utcDateString.replace(" ", "T") + "Z";
+    return new Date(isoString);
+  };
+
   // Format relative time for history display
   const formatRelativeTime = (date: Date): string => {
     const now = new Date();
@@ -821,11 +831,12 @@ export default function TextEditor(props: TextEditorProps) {
         );
 
         // Convert database history to HistoryNode format with reconstructed content
+        // Database stores timestamps in UTC, so we need to parse them correctly
         const historyNodes: HistoryNode[] = dbHistory.map((entry) => ({
           id: `db-${entry.id}`,
           dbId: entry.id,
           content: entry.content, // Full reconstructed content from diffs
-          timestamp: new Date(entry.created_at)
+          timestamp: parseUTCDateTime(entry.created_at) // Parse UTC timestamp
         }));
 
         setHistory(historyNodes);
