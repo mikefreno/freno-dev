@@ -340,6 +340,124 @@ const IframeEmbed = Node.create<IframeOptions>({
   }
 });
 
+// Custom Reference mark extension
+import { Mark, mergeAttributes } from "@tiptap/core";
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    reference: {
+      setReference: (options: { refId: string; refNum: number }) => ReturnType;
+      updateReferenceNumber: (refId: string, newNum: number) => ReturnType;
+    };
+  }
+}
+
+const Reference = Mark.create({
+  name: "reference",
+
+  addOptions() {
+    return {
+      HTMLAttributes: {}
+    };
+  },
+
+  addAttributes() {
+    return {
+      refId: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-ref-id"),
+        renderHTML: (attributes) => {
+          if (!attributes.refId) {
+            return {};
+          }
+          return {
+            "data-ref-id": attributes.refId
+          };
+        }
+      },
+      refNum: {
+        default: 1,
+        parseHTML: (element) => {
+          const text = element.textContent || "";
+          const match = text.match(/^\[(\d+)\]$/);
+          return match ? parseInt(match[1]) : 1;
+        }
+      }
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "sup[data-ref-id]"
+      }
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "sup",
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      0
+    ];
+  },
+
+  addCommands() {
+    return {
+      setReference:
+        (options: { refId: string; refNum: number }) =>
+        ({ commands }) => {
+          return commands.insertContent({
+            type: "text",
+            text: `[${options.refNum}]`,
+            marks: [
+              {
+                type: this.name,
+                attrs: {
+                  refId: options.refId,
+                  refNum: options.refNum
+                }
+              }
+            ]
+          });
+        },
+      updateReferenceNumber:
+        (refId: string, newNum: number) =>
+        ({ tr, state, dispatch }) => {
+          const { doc } = state;
+          let found = false;
+
+          doc.descendants((node, pos) => {
+            if (node.isText && node.marks) {
+              const refMark = node.marks.find(
+                (mark) =>
+                  mark.type.name === "reference" && mark.attrs.refId === refId
+              );
+              if (refMark) {
+                if (dispatch) {
+                  // Update both the mark attributes and the text content
+                  const from = pos;
+                  const to = pos + node.nodeSize;
+                  const newMark = refMark.type.create({
+                    refId: refId,
+                    refNum: newNum
+                  });
+                  tr.removeMark(from, to, refMark.type);
+                  tr.addMark(from, to, newMark);
+                  tr.insertText(`[${newNum}]`, from, to);
+                }
+                found = true;
+                return false;
+              }
+            }
+          });
+
+          return found;
+        }
+    };
+  }
+});
+
 export interface TextEditorProps {
   updateContent: (content: string) => void;
   preSet?: string;
@@ -494,7 +612,8 @@ export default function TextEditor(props: TextEditorProps) {
         defaultAlignment: "left"
       }),
       Superscript,
-      Subscript
+      Subscript,
+      Reference
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
     editorProps: {
@@ -590,10 +709,19 @@ export default function TextEditor(props: TextEditorProps) {
 
     doc.descendants((node: any) => {
       if (node.isText && node.marks) {
+        // Look for both Reference marks (new) and superscript (legacy)
+        const refMark = node.marks.find(
+          (mark: any) => mark.type.name === "reference"
+        );
         const hasSuperscript = node.marks.some(
           (mark: any) => mark.type.name === "superscript"
         );
-        if (hasSuperscript) {
+
+        if (refMark) {
+          // Use refNum from Reference mark
+          foundRefs.add(refMark.attrs.refNum.toString());
+        } else if (hasSuperscript) {
+          // Fallback to legacy superscript pattern matching
           const text = node.text || "";
           const match = text.match(/^\[(.+?)\]$/);
           if (match) {
@@ -761,44 +889,83 @@ export default function TextEditor(props: TextEditorProps) {
     const instance = editor();
     if (!instance) return;
 
-    // Get next reference number by scanning document
     const doc = instance.state.doc;
-    const foundRefs = new Set<string>();
+    const { from } = instance.state.selection;
 
-    doc.descendants((node: any) => {
+    // Collect all existing references with their IDs and positions
+    const refs: Array<{ pos: number; refId: string; refNum: number }> = [];
+
+    doc.descendants((node: any, pos: number) => {
       if (node.isText && node.marks) {
-        const hasSuperscript = node.marks.some(
-          (mark: any) => mark.type.name === "superscript"
+        const refMark = node.marks.find(
+          (mark: any) => mark.type.name === "reference"
         );
-        if (hasSuperscript) {
-          const text = node.text || "";
-          const match = text.match(/^\[(.+?)\]$/);
-          if (match) {
-            foundRefs.add(match[1]);
-          }
+        if (refMark) {
+          refs.push({
+            pos,
+            refId: refMark.attrs.refId,
+            refNum: refMark.attrs.refNum
+          });
         }
       }
     });
 
-    // Calculate next number
-    const numericRefs = Array.from(foundRefs)
-      .map((ref) => parseInt(ref))
-      .filter((num) => !isNaN(num));
-    const nextNum = numericRefs.length > 0 ? Math.max(...numericRefs) + 1 : 1;
+    // Sort by position in document
+    refs.sort((a, b) => a.pos - b.pos);
 
-    const refNum = window.prompt("Reference number:", nextNum.toString());
-    if (refNum === null || refNum.trim() === "") return;
+    // Find where to insert (what number should this be?)
+    let newRefNum = 1;
+    for (let i = 0; i < refs.length; i++) {
+      if (from <= refs[i].pos) {
+        newRefNum = i + 1;
+        break;
+      }
+      newRefNum = refs.length + 1;
+    }
 
-    // Insert [n] with superscript
-    instance
-      .chain()
-      .focus()
-      .insertContent({
-        type: "text",
-        text: `[${refNum.trim()}]`,
-        marks: [{ type: "superscript" }]
-      })
-      .run();
+    // Generate unique ID for this reference
+    const newRefId = `ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Insert the new reference
+    instance.commands.setReference({
+      refId: newRefId,
+      refNum: newRefNum
+    });
+
+    // Now renumber ALL references that come after this one
+    setTimeout(() => {
+      const currentDoc = instance.state.doc;
+      const allRefs: Array<{ pos: number; refId: string; refNum: number }> = [];
+
+      currentDoc.descendants((node: any, pos: number) => {
+        if (node.isText && node.marks) {
+          const refMark = node.marks.find(
+            (mark: any) => mark.type.name === "reference"
+          );
+          if (refMark) {
+            allRefs.push({
+              pos,
+              refId: refMark.attrs.refId,
+              refNum: refMark.attrs.refNum
+            });
+          }
+        }
+      });
+
+      // Sort by position
+      allRefs.sort((a, b) => a.pos - b.pos);
+
+      // Renumber all references to match their position
+      allRefs.forEach((ref, index) => {
+        const correctNum = index + 1;
+        if (ref.refNum !== correctNum) {
+          instance.commands.updateReferenceNumber(ref.refId, correctNum);
+        }
+      });
+
+      // Update references section
+      updateReferencesSection(instance);
+    }, 10);
   };
 
   const addIframe = () => {
