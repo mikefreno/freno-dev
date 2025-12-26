@@ -355,7 +355,7 @@ const IframeEmbed = Node.create<IframeOptions>({
     };
   }
 });
-const CONTEXT_SIZE = 256;
+const CONTEXT_SIZE = 512; // Characters before/after cursor for context for llm infill
 
 // Custom Reference mark extension
 import { Extension } from "@tiptap/core";
