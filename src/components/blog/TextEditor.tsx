@@ -1363,6 +1363,11 @@ export default function TextEditor(props: TextEditorProps) {
       });
     },
     onSelectionUpdate: ({ editor }) => {
+      // Clear suggestion when cursor moves (click/arrow keys without suggestion)
+      if (currentSuggestion()) {
+        setCurrentSuggestion("");
+      }
+
       // Force reactive update for button states
       setEditorState((prev) => prev + 1);
 
