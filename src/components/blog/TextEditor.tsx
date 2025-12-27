@@ -3880,9 +3880,10 @@ export default function TextEditor(props: TextEditorProps) {
               }
             >
               <div class="space-y-2">
-                <For each={history()}>
+                <For each={[...history()].reverse()}>
                   {(node, index) => {
-                    const isCurrent = index() === currentHistoryIndex();
+                    const correctIndex = history().length - 1 - index(); // Reverse index
+                    const isCurrent = correctIndex === currentHistoryIndex();
                     return (
                       <div
                         class={`hover:bg-surface1 flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors ${
@@ -3890,7 +3891,7 @@ export default function TextEditor(props: TextEditorProps) {
                             ? "border-blue bg-surface1"
                             : "border-surface2"
                         }`}
-                        onClick={() => restoreHistory(index())}
+                        onClick={() => restoreHistory(correctIndex)}
                       >
                         <div class="flex items-center gap-3">
                           <span
