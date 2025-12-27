@@ -1021,6 +1021,9 @@ export default function TextEditor(props: TextEditorProps) {
     const node = history()[index];
     if (!node) return;
 
+    // Get current content before changing
+    const oldContent = instance.getHTML();
+
     // Set content without triggering history capture
     instance.commands.setContent(node.content, { emitUpdate: false });
 
@@ -1035,6 +1038,140 @@ export default function TextEditor(props: TextEditorProps) {
 
     // Force UI update
     setEditorState((prev) => prev + 1);
+
+    // Scroll to first change after a brief delay to allow content to render
+    setTimeout(() => {
+      scrollToFirstChange(instance, oldContent, node.content);
+    }, 100);
+  };
+
+  // Find and scroll to the first difference between old and new content
+  const scrollToFirstChange = (
+    editorInstance: any,
+    oldHTML: string,
+    newHTML: string
+  ) => {
+    if (oldHTML === newHTML) return;
+
+    // Convert HTML to plain text for comparison
+    const oldText = editorInstance.state.doc.textContent;
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = oldHTML;
+    const oldTextContent = tempDiv.textContent || "";
+
+    // Find first character difference
+    let firstDiffPos = 0;
+    const minLength = Math.min(oldTextContent.length, oldText.length);
+
+    for (let i = 0; i < minLength; i++) {
+      if (oldTextContent[i] !== oldText[i]) {
+        firstDiffPos = i;
+        break;
+      }
+    }
+
+    // If no character diff found but lengths differ, use the shorter length
+    if (firstDiffPos === 0 && oldTextContent.length !== oldText.length) {
+      firstDiffPos = minLength;
+    }
+
+    // Convert text position to ProseMirror position
+    let currentTextPos = 0;
+    let pmPos = 0;
+    let found = false;
+
+    editorInstance.state.doc.descendants((node: any, pos: number) => {
+      if (found) return false;
+
+      if (node.isText) {
+        const nodeTextLength = node.text?.length || 0;
+        if (currentTextPos + nodeTextLength >= firstDiffPos) {
+          // Found the node containing the first change
+          pmPos = pos + (firstDiffPos - currentTextPos);
+          found = true;
+          return false;
+        }
+        currentTextPos += nodeTextLength;
+      }
+    });
+
+    if (pmPos > 0) {
+      // Scroll to the position
+      const coords = editorInstance.view.coordsAtPos(pmPos);
+      const editorElement = editorInstance.view.dom as HTMLElement;
+      const container = editorElement.closest(".overflow-y-auto");
+
+      if (container && coords) {
+        // Calculate scroll position (center the change in viewport)
+        const containerRect = container.getBoundingClientRect();
+        const scrollOffset =
+          coords.top - containerRect.top - containerRect.height / 3;
+
+        container.scrollBy({
+          top: scrollOffset,
+          behavior: "smooth"
+        });
+      }
+
+      // Also set cursor to that position
+      editorInstance.commands.focus();
+      editorInstance.commands.setTextSelection(pmPos);
+
+      // Flash highlight at the change position
+      flashHighlight(editorInstance, pmPos);
+    }
+  };
+
+  // Flash a highlight at a specific position
+  const flashHighlight = (editorInstance: any, pos: number) => {
+    const coords = editorInstance.view.coordsAtPos(pos);
+    if (!coords) return;
+
+    const editorElement = editorInstance.view.dom as HTMLElement;
+    const container = editorElement.closest(".overflow-y-auto");
+    if (!container) return;
+
+    // Create highlight element
+    const highlight = document.createElement("div");
+    highlight.style.position = "absolute";
+    highlight.style.left = `${coords.left}px`;
+    highlight.style.top = `${coords.top}px`;
+    highlight.style.width = "300px"; // Cover a good amount of text
+    highlight.style.height = "1.5em";
+    highlight.style.backgroundColor = "rgba(239, 68, 68, 0.3)"; // red-500 with opacity
+    highlight.style.pointerEvents = "none";
+    highlight.style.borderRadius = "4px";
+    highlight.style.zIndex = "1000";
+    highlight.style.transition = "opacity 0.6s ease-out";
+    highlight.style.opacity = "1";
+
+    // Position relative to the container
+    const containerRect = container.getBoundingClientRect();
+    const relativeTop = coords.top - containerRect.top + container.scrollTop;
+    const relativeLeft =
+      coords.left - containerRect.left + container.scrollLeft;
+
+    highlight.style.left = `${relativeLeft}px`;
+    highlight.style.top = `${relativeTop}px`;
+
+    // Append to container
+    const positionedContainer = container as HTMLElement;
+    if (
+      positionedContainer.style.position !== "relative" &&
+      positionedContainer.style.position !== "absolute"
+    ) {
+      positionedContainer.style.position = "relative";
+    }
+    positionedContainer.appendChild(highlight);
+
+    // Fade out and remove
+    setTimeout(() => {
+      highlight.style.opacity = "0";
+    }, 100);
+
+    setTimeout(() => {
+      highlight.remove();
+    }, 700);
   };
 
   // Load history from database
