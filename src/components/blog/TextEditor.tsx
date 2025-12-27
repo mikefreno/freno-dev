@@ -2625,6 +2625,14 @@ export default function TextEditor(props: TextEditorProps) {
 
     // Update URL search param to persist state
     setSearchParams({ fullscreen: newFullscreenState ? "true" : undefined });
+    const navigationElement = document.getElementById("navigation");
+    if (navigationElement) {
+      if (newFullscreenState) {
+        navigationElement.classList.add("hidden");
+      } else {
+        navigationElement.classList.remove("hidden");
+      }
+    }
   };
 
   createEffect(() => {
