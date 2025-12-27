@@ -19,7 +19,7 @@ export function SkeletonBox(props: SkeletonProps) {
 export function SkeletonText(props: SkeletonProps) {
   return (
     <div
-      class={`bg-surface0 inline-flex items-center rounded px-2 pt-1 ${props.class || ""}`}
+      class={`bg-surface0 inline-flex items-center rounded px-2 ${props.class || ""}`}
       aria-label="Loading..."
       role="status"
     >
