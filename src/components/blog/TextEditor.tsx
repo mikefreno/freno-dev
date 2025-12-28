@@ -270,7 +270,10 @@ const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
       { keys: "→", keysAlt: "Right", description: "Accept word" },
       { keys: "⌥ Tab", keysAlt: "Alt Tab", description: "Accept line" },
       { keys: "⇧ Tab", keysAlt: "Shift Tab", description: "Accept full" },
-      { keys: "ESC", keysAlt: "ESC", description: "Cancel suggestion" }
+      { keys: "ESC", keysAlt: "ESC", description: "Cancel suggestion" },
+      { keys: "Swipe →", keysAlt: "Swipe →", description: "Accept full (mobile fullscreen)" }
+    ]
+  }
     ]
   }
 ];
@@ -356,6 +359,7 @@ const IframeEmbed = Node.create<IframeOptions>({
   }
 });
 const CONTEXT_SIZE = 512; // Characters before/after cursor for context for llm infill
+const SWIPE_THRESHOLD = 100; // Swipe distance threshold in pixels (matches app.tsx)
 
 // Custom Reference mark extension
 import { Extension } from "@tiptap/core";
@@ -429,6 +433,7 @@ const SuggestionDecoration = Extension.create({
 
 // Custom Reference mark extension
 import { Mark, mergeAttributes } from "@tiptap/core";
+import { Spinner } from "../Spinner";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -739,6 +744,10 @@ export default function TextEditor(props: TextEditorProps) {
   const [infillEnabled, setInfillEnabled] = createSignal(true); // Toggle for auto-suggestions
   let infillDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // Touch gesture state for mobile AI suggestion acceptance
+  let touchStartX = 0;
+  let touchStartY = 0;
+
   // Force reactive updates for button states
   const [editorState, setEditorState] = createSignal(0);
 
@@ -777,7 +786,7 @@ export default function TextEditor(props: TextEditorProps) {
     return `${baseClasses} ${activeClass} ${hoverClass}`.trim();
   };
 
-  // Fetch infill config on mount (admin-only, desktop-only)
+  // Fetch infill config on mount (admin-only)
   createEffect(async () => {
     try {
       const config = await api.infill.getConfig.query();
@@ -1441,6 +1450,51 @@ export default function TextEditor(props: TextEditorProps) {
 
         return false;
       },
+      handleDOMEvents: {
+        touchstart: (view, event) => {
+          // Only handle touch events on mobile in fullscreen with active suggestion
+          if (
+            !hasSuggestion() ||
+            !isFullscreen() ||
+            typeof window === "undefined" ||
+            window.innerWidth >= 768
+          ) {
+            return false;
+          }
+
+          touchStartX = event.touches[0].clientX;
+          touchStartY = event.touches[0].clientY;
+          return false;
+        },
+        touchend: (view, event) => {
+          // Only handle touch events on mobile in fullscreen with active suggestion
+          if (
+            !hasSuggestion() ||
+            !isFullscreen() ||
+            typeof window === "undefined" ||
+            window.innerWidth >= 768
+          ) {
+            return false;
+          }
+
+          const touchEndX = event.changedTouches[0].clientX;
+          const touchEndY = event.changedTouches[0].clientY;
+          const deltaX = touchEndX - touchStartX;
+          const deltaY = touchEndY - touchStartY;
+
+          // Check if horizontal swipe is dominant
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // Swipe right - accept full suggestion
+            if (deltaX > SWIPE_THRESHOLD) {
+              event.preventDefault();
+              acceptFull();
+              return true;
+            }
+          }
+
+          return false;
+        }
+      },
       handleClickOn(view, pos, node, nodePos, event) {
         const target = event.target as HTMLElement;
 
@@ -1489,14 +1543,22 @@ export default function TextEditor(props: TextEditorProps) {
           }, 2000);
         }
 
-        // Debounced infill trigger (250ms) - only if enabled
+        // Debounced infill trigger (250ms) - only if enabled and (desktop OR fullscreen mode)
         if (infillConfig() && !isInitialLoad && infillEnabled()) {
-          if (infillDebounceTimer) {
-            clearTimeout(infillDebounceTimer);
+          const isMobileNotFullscreen =
+            typeof window !== "undefined" &&
+            window.innerWidth < 768 &&
+            !isFullscreen();
+
+          // Skip auto-infill on mobile when not in fullscreen
+          if (!isMobileNotFullscreen) {
+            if (infillDebounceTimer) {
+              clearTimeout(infillDebounceTimer);
+            }
+            infillDebounceTimer = setTimeout(() => {
+              requestInfill();
+            }, 250);
           }
-          infillDebounceTimer = setTimeout(() => {
-            requestInfill();
-          }, 250);
         }
       });
     },
@@ -3767,7 +3829,7 @@ export default function TextEditor(props: TextEditorProps) {
                   ⌨ Help
                 </button>
 
-                {/* AI Autocomplete Toggle - Desktop only, shown when config available */}
+                {/* AI Autocomplete Toggle - shown when config available and (desktop OR fullscreen mode) */}
                 <Show when={infillConfig()}>
                   <button
                     type="button"
@@ -3782,10 +3844,13 @@ export default function TextEditor(props: TextEditorProps) {
                       infillEnabled()
                         ? "bg-blue text-base"
                         : "bg-surface1 text-subtext0"
-                    } hidden touch-manipulation rounded px-2 py-1 text-xs font-semibold transition-colors select-none md:block`}
+                    } touch-manipulation rounded px-2 py-1 text-xs font-semibold transition-colors select-none`}
                     title={
                       infillEnabled()
-                        ? "AI Autocomplete: ON (Ctrl/Cmd+Space to trigger manually)"
+                        ? typeof window !== "undefined" &&
+                          window.innerWidth < 768
+                          ? "AI Autocomplete: ON (swipe right to accept full)"
+                          : "AI Autocomplete: ON (Ctrl/Cmd+Space to trigger manually)"
                         : "AI Autocomplete: OFF (Click to enable)"
                     }
                   >
@@ -4067,6 +4132,9 @@ export default function TextEditor(props: TextEditorProps) {
       {/* Infill Loading Indicator */}
       <Show when={isInfillLoading()}>
         <div class="bg-surface0 border-surface2 text-subtext0 fixed right-4 bottom-4 z-50 animate-pulse rounded border px-3 py-2 text-xs shadow-lg">
+          <span>
+            <Spinner />
+          </span>
           AI thinking...
         </div>
       </Show>
