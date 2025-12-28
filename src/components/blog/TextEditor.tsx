@@ -271,9 +271,11 @@ const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
       { keys: "⌥ Tab", keysAlt: "Alt Tab", description: "Accept line" },
       { keys: "⇧ Tab", keysAlt: "Shift Tab", description: "Accept full" },
       { keys: "ESC", keysAlt: "ESC", description: "Cancel suggestion" },
-      { keys: "Swipe →", keysAlt: "Swipe →", description: "Accept full (mobile fullscreen)" }
-    ]
-  }
+      {
+        keys: "Swipe →",
+        keysAlt: "Swipe →",
+        description: "Accept full (mobile fullscreen)"
+      }
     ]
   }
 ];
