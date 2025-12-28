@@ -35,7 +35,16 @@ const getPostByTitle = query(
     const userID = await getUserID(event.nativeEvent);
     const conn = ConnectionFactory();
 
-    let query = "SELECT * FROM Post WHERE title = ?";
+    let query;
+    //TODO: get id from url param instead of title param
+    //
+    if (title == "by-id") {
+      const [searchParams, setSearchParams] = useSearchParams();
+
+      query = "SELECT * FROM Post WHERE id = ?";
+    } else {
+      query = "SELECT * FROM Post WHERE title = ?";
+    }
     if (privilegeLevel !== "admin") {
       query += ` AND published = TRUE`;
     }
