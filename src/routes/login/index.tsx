@@ -331,12 +331,12 @@ export default function LoginPage() {
           <Show when={error()}>
             <div class="border-maroon bg-red mb-4 w-full max-w-md rounded-lg border px-4 py-3 text-center">
               <Show when={error() === "passwordMismatch"}>
-                <div class="text-red text-lg font-semibold">
+                <div class="text-base text-lg font-semibold">
                   Passwords did not match!
                 </div>
               </Show>
               <Show when={error() === "duplicate"}>
-                <div class="text-red text-lg font-semibold">
+                <div class="text-base text-lg font-semibold">
                   Email Already Exists!
                 </div>
               </Show>
@@ -347,7 +347,7 @@ export default function LoginPage() {
                   error() !== "duplicate"
                 }
               >
-                <div class="text-red text-sm">{error()}</div>
+                <div class="text-base text-sm">{error()}</div>
               </Show>
             </div>
           </Show>

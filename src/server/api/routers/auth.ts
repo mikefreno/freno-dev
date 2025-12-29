@@ -851,19 +851,25 @@ export const authRouter = createTRPCRouter({
 
       // Check all conditions after password verification
       if (!user || !passwordHash || !passwordMatch) {
-        // Log failed login attempt
-        const { ipAddress, userAgent } = getAuditContext(ctx.event.nativeEvent);
-        await logAuditEvent({
-          eventType: "auth.login.failed",
-          eventData: {
-            email,
-            method: "password",
-            reason: "invalid_credentials"
-          },
-          ipAddress,
-          userAgent,
-          success: false
-        });
+        // Log failed login attempt (wrap in try-catch to ensure it never blocks auth flow)
+        try {
+          const { ipAddress, userAgent } = getAuditContext(
+            ctx.event.nativeEvent
+          );
+          await logAuditEvent({
+            eventType: "auth.login.failed",
+            eventData: {
+              email,
+              method: "password",
+              reason: "invalid_credentials"
+            },
+            ipAddress,
+            userAgent,
+            success: false
+          });
+        } catch (auditError) {
+          console.error("Audit logging failed:", auditError);
+        }
 
         throw new TRPCError({
           code: "UNAUTHORIZED",
@@ -911,15 +917,19 @@ export const authRouter = createTRPCRouter({
       // Set CSRF token for authenticated session
       setCSRFToken(ctx.event.nativeEvent);
 
-      // Log successful login
-      await logAuditEvent({
-        userId: user.id,
-        eventType: "auth.login.success",
-        eventData: { method: "password", rememberMe: rememberMe || false },
-        ipAddress: clientIP,
-        userAgent,
-        success: true
-      });
+      // Log successful login (wrap in try-catch to ensure it never blocks auth flow)
+      try {
+        await logAuditEvent({
+          userId: user.id,
+          eventType: "auth.login.success",
+          eventData: { method: "password", rememberMe: rememberMe || false },
+          ipAddress: clientIP,
+          userAgent,
+          success: true
+        });
+      } catch (auditError) {
+        console.error("Audit logging failed:", auditError);
+      }
 
       return { success: true, message: "success" };
     }),
