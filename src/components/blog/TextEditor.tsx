@@ -1,4 +1,12 @@
-import { Show, untrack, createEffect, on, createSignal, For } from "solid-js";
+import {
+  Show,
+  untrack,
+  createEffect,
+  on,
+  createSignal,
+  For,
+  onMount
+} from "solid-js";
 import { useSearchParams, useNavigate } from "@solidjs/router";
 import { api } from "~/lib/api";
 import { createTiptapEditor } from "solid-tiptap";
@@ -732,6 +740,13 @@ export default function TextEditor(props: TextEditorProps) {
 
   const [showKeyboardHelp, setShowKeyboardHelp] = createSignal(false);
 
+  // Mermaid editor modal state
+  const [showMermaidEditor, setShowMermaidEditor] = createSignal(false);
+  const [mermaidEditorContent, setMermaidEditorContent] = createSignal("");
+  const [mermaidEditorPos, setMermaidEditorPos] = createSignal<number | null>(
+    null
+  );
+
   // References section heading customization
   const [referencesHeading, setReferencesHeading] = createSignal(
     typeof window !== "undefined"
@@ -764,14 +779,20 @@ export default function TextEditor(props: TextEditorProps) {
     inline: false
   });
 
-  // Search params and navigation for fullscreen persistence
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Initialize fullscreen from URL search param
   const [isFullscreen, setIsFullscreen] = createSignal(
     searchParams.fullscreen === "true"
   );
+  onMount(() => {
+    if (isFullscreen()) {
+      const navigationElement = document.getElementById("navigation");
+      if (navigationElement) {
+        navigationElement.classList.add("hidden");
+      }
+    }
+  });
   const [keyboardVisible, setKeyboardVisible] = createSignal(false);
   const [keyboardHeight, setKeyboardHeight] = createSignal(0);
 
@@ -975,6 +996,39 @@ export default function TextEditor(props: TextEditorProps) {
     }
 
     setCurrentSuggestion("");
+  };
+
+  // Mermaid editor helpers
+  const saveMermaidEdit = () => {
+    const instance = editor();
+    const pos = mermaidEditorPos();
+    const content = mermaidEditorContent();
+
+    if (!instance || pos === null) return;
+
+    // Update the node at the stored position
+    const tr = instance.state.tr;
+    const node = instance.state.doc.nodeAt(pos);
+
+    if (node && node.type.name === "mermaid") {
+      tr.setNodeMarkup(pos, undefined, {
+        ...node.attrs,
+        content
+      });
+      instance.view.dispatch(tr);
+    }
+
+    setShowMermaidEditor(false);
+    setMermaidEditorContent("");
+    setMermaidEditorPos(null);
+  };
+
+  const insertMermaidFromTemplate = (templateCode: string) => {
+    const instance = editor();
+    if (!instance) return;
+
+    instance.commands.setMermaid(templateCode);
+    setShowMermaidTemplates(false);
   };
 
   // Capture history snapshot
@@ -1445,6 +1499,13 @@ export default function TextEditor(props: TextEditorProps) {
       setTimeout(() => {
         isInitialLoad = false;
       }, 1000);
+
+      // Listen for mermaid edit events
+      editor.view.dom.addEventListener("edit-mermaid", ((e: CustomEvent) => {
+        setMermaidEditorContent(e.detail.content);
+        setMermaidEditorPos(e.detail.pos);
+        setShowMermaidEditor(true);
+      }) as EventListener);
     },
     editorProps: {
       attributes: {
@@ -1676,7 +1737,10 @@ export default function TextEditor(props: TextEditorProps) {
             }
 
             // Migrate legacy superscript references to Reference marks
-            setTimeout(() => migrateLegacyReferences(instance), 50);
+            setTimeout(() => {
+              migrateLegacyReferences(instance);
+              migrateLegacyMermaidBlocks(instance);
+            }, 50);
 
             // Capture initial state in history only if no history was loaded
             setTimeout(() => {
@@ -1723,6 +1787,73 @@ export default function TextEditor(props: TextEditorProps) {
       loadHistoryFromDB();
     }
   });
+
+  const migrateLegacyMermaidBlocks = (editorInstance: any) => {
+    if (!editorInstance) return;
+
+    const doc = editorInstance.state.doc;
+    const blocksToMigrate: Array<{ pos: number; content: string }> = [];
+
+    // Mermaid diagram keywords to detect
+    const mermaidKeywords = [
+      "graph ",
+      "sequenceDiagram",
+      "classDiagram",
+      "stateDiagram",
+      "erDiagram",
+      "gantt",
+      "pie ",
+      "journey",
+      "gitGraph",
+      "flowchart ",
+      "mindmap",
+      "timeline",
+      "quadrantChart",
+      "requirementDiagram",
+      "C4Context"
+    ];
+
+    // Find code blocks that look like mermaid
+    doc.descendants((node: any, pos: number) => {
+      if (node.type.name === "codeBlock") {
+        const content = node.textContent || "";
+        const trimmedContent = content.trim();
+
+        // Check if this looks like a mermaid diagram
+        const isMermaid = mermaidKeywords.some((keyword) =>
+          trimmedContent.startsWith(keyword)
+        );
+
+        if (isMermaid) {
+          blocksToMigrate.push({ pos, content: trimmedContent });
+        }
+      }
+    });
+
+    if (blocksToMigrate.length === 0) {
+      return;
+    }
+
+    // Migrate from end to start to avoid position shifts
+    blocksToMigrate.sort((a, b) => b.pos - a.pos);
+
+    const tr = editorInstance.state.tr;
+
+    blocksToMigrate.forEach(({ pos, content }) => {
+      const node = editorInstance.state.doc.nodeAt(pos);
+      if (node) {
+        // Create new mermaid node
+        const mermaidNode = editorInstance.schema.nodes.mermaid.create({
+          content
+        });
+
+        // Replace the code block with mermaid node
+        tr.replaceWith(pos, pos + node.nodeSize, mermaidNode);
+      }
+    });
+
+    editorInstance.view.dispatch(tr);
+  };
 
   const migrateLegacyReferences = (editorInstance: any) => {
     if (!editorInstance) return;
@@ -4179,6 +4310,78 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Footer */}
             <div class="text-subtext0 border-surface2 mt-6 border-t pt-4 text-center text-sm">
               Click on any history item to restore that version
+            </div>
+          </div>
+        </div>
+      </Show>
+
+      {/* Mermaid Editor Modal */}
+      <Show when={showMermaidEditor()}>
+        <div
+          class="bg-opacity-50 fixed inset-0 z-150 flex items-center justify-center bg-black"
+          onClick={() => setShowMermaidEditor(false)}
+        >
+          <div
+            class="bg-base border-surface2 max-h-[80dvh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-text text-2xl font-bold">Edit Mermaid Diagram</h2>
+              <button
+                type="button"
+                onClick={() => setShowMermaidEditor(false)}
+                class="hover:bg-surface1 text-subtext0 rounded p-2 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Editor */}
+            <div class="space-y-4">
+              <div>
+                <label class="text-text mb-2 block text-sm font-semibold">
+                  Diagram Code
+                </label>
+                <textarea
+                  class="bg-surface0 border-surface2 text-text focus:border-blue w-full rounded border p-3 font-mono text-sm focus:outline-none"
+                  rows={15}
+                  value={mermaidEditorContent()}
+                  onInput={(e) =>
+                    setMermaidEditorContent(e.currentTarget.value)
+                  }
+                  placeholder="Enter your mermaid diagram code..."
+                />
+              </div>
+
+              {/* Preview Info */}
+              <div class="text-subtext0 border-yellow bg-yellow/10 rounded-lg border p-3 text-sm">
+                <strong>Note:</strong> The diagram will render when you view the
+                post. Make sure your syntax is correct to avoid rendering
+                errors.
+                <br />
+                <strong>Common issue:</strong> Use ASCII hyphens for arrows (
+                <code>--&gt;</code> not <code>—&gt;</code>). Smart punctuation
+                can break diagrams.
+              </div>
+
+              {/* Buttons */}
+              <div class="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowMermaidEditor(false)}
+                  class="hover:bg-surface1 border-surface2 rounded border px-4 py-2 text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveMermaidEdit}
+                  class="bg-blue rounded px-4 py-2 text-sm text-white transition-all hover:brightness-110 active:scale-95"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>

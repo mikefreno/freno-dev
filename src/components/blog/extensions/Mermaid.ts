@@ -1,14 +1,25 @@
 import { Node, mergeAttributes } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 
 export const Mermaid = Node.create({
   name: "mermaid",
   group: "block",
-  content: "text*",
-  marks: "",
-  code: true,
+  atom: true,
+  selectable: true,
+  draggable: true,
 
   addAttributes() {
     return {
+      content: {
+        default: "",
+        parseHTML: (element) => {
+          const code = element.querySelector("code");
+          return code?.textContent || "";
+        },
+        renderHTML: (attributes) => {
+          return {};
+        }
+      },
       language: {
         default: "mermaid",
         parseHTML: (element) => element.getAttribute("data-language"),
@@ -25,18 +36,78 @@ export const Mermaid = Node.create({
     return [
       {
         tag: 'pre[data-type="mermaid"]'
+      },
+      {
+        tag: "div.mermaid-node-wrapper",
+        getAttrs: (element) => {
+          if (typeof element === "string") return false;
+          const pre = element.querySelector('pre[data-type="mermaid"]');
+          if (!pre) return false;
+          const code = pre.querySelector("code");
+          return {
+            content: code?.textContent || ""
+          };
+        }
+      },
+      // Detect regular code blocks that contain mermaid syntax
+      {
+        tag: "pre",
+        getAttrs: (element) => {
+          if (typeof element === "string") return false;
+
+          // Skip if already has data-type attribute
+          if (element.hasAttribute("data-type")) return false;
+
+          const code = element.querySelector("code");
+          if (!code) return false;
+
+          const content = code.textContent || "";
+          const trimmedContent = content.trim();
+
+          // Check if this looks like a mermaid diagram
+          const mermaidKeywords = [
+            "graph ",
+            "sequenceDiagram",
+            "classDiagram",
+            "stateDiagram",
+            "erDiagram",
+            "gantt",
+            "pie ",
+            "journey",
+            "gitGraph",
+            "flowchart ",
+            "mindmap",
+            "timeline",
+            "quadrantChart",
+            "requirementDiagram",
+            "C4Context"
+          ];
+
+          const isMermaid = mermaidKeywords.some((keyword) =>
+            trimmedContent.startsWith(keyword)
+          );
+
+          if (isMermaid) {
+            return {
+              content: trimmedContent
+            };
+          }
+
+          return false;
+        },
+        priority: 51 // Higher priority than code block extension
       }
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node, HTMLAttributes }) {
     return [
       "pre",
       mergeAttributes(HTMLAttributes, {
         "data-type": "mermaid",
         class: "mermaid-diagram"
       }),
-      ["code", 0]
+      ["code", {}, node.attrs.content || ""]
     ];
   },
 
@@ -47,9 +118,75 @@ export const Mermaid = Node.create({
         ({ commands }) => {
           return commands.insertContent({
             type: this.name,
-            content: [{ type: "text", text: content }]
+            attrs: { content }
           });
+        },
+      updateMermaid:
+        (content: string) =>
+        ({ tr, state, dispatch }) => {
+          const { selection } = state;
+          const node = selection.$anchor.parent;
+
+          if (node.type.name === this.name) {
+            if (dispatch) {
+              tr.setNodeMarkup(selection.$anchor.before(), undefined, {
+                ...node.attrs,
+                content
+              });
+            }
+            return true;
+          }
+          return false;
         }
+    };
+  },
+
+  addNodeView() {
+    return ({ node, getPos, editor }) => {
+      const dom = document.createElement("div");
+      dom.className = "mermaid-node-wrapper relative group";
+
+      const pre = document.createElement("pre");
+      pre.setAttribute("data-type", "mermaid");
+      pre.className = "mermaid-diagram";
+
+      const code = document.createElement("code");
+      code.textContent = node.attrs.content || "";
+      pre.appendChild(code);
+
+      // Edit button overlay
+      const editBtn = document.createElement("button");
+      editBtn.className =
+        "absolute top-2 right-2 bg-blue text-white px-3 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10";
+      editBtn.textContent = "Edit Diagram";
+      editBtn.contentEditable = "false";
+
+      editBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Emit custom event to open modal
+        const pos = typeof getPos === "function" ? getPos() : 0;
+        const event = new CustomEvent("edit-mermaid", {
+          detail: { content: node.attrs.content, pos }
+        });
+        editor.view.dom.dispatchEvent(event);
+      });
+
+      dom.appendChild(pre);
+      dom.appendChild(editBtn);
+
+      return {
+        dom,
+        contentDOM: undefined,
+        update: (updatedNode) => {
+          if (updatedNode.type.name !== this.name) {
+            return false;
+          }
+          code.textContent = updatedNode.attrs.content || "";
+          return true;
+        }
+      };
     };
   }
 });
@@ -58,6 +195,7 @@ declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     mermaid: {
       setMermaid: (content: string) => ReturnType;
+      updateMermaid: (content: string) => ReturnType;
     };
   }
 }
