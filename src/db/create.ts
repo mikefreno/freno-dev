@@ -20,12 +20,13 @@ export const model: { [key: string]: string } = {
       subtitle TEXT,
       body TEXT NOT NULL,
       banner_photo TEXT,
-      date TEXT NOT NULL DEFAULT (datetime('now')),
+      date TEXT,
       published INTEGER NOT NULL,
       category TEXT,
       author_id TEXT NOT NULL,
       reads INTEGER NOT NULL DEFAULT 0,
-      attachments TEXT
+      attachments TEXT,
+      last_edited_date TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_posts_category ON Post (category);
   `,

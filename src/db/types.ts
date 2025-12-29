@@ -22,11 +22,12 @@ export interface Post {
   subtitle?: string;
   body: string;
   banner_photo?: string;
-  date: string;
+  date?: string | null;
   published: boolean;
   author_id: string;
   reads: number;
   attachments?: string;
+  last_edited_date?: string | null;
 }
 
 export interface PostLike {
@@ -72,13 +73,14 @@ export interface PostWithCommentsAndLikes {
   subtitle: string;
   body: string;
   banner_photo: string;
-  date: string;
+  date?: string | null;
   published: boolean;
   author_id: string;
   reads: number;
   attachments: string;
   total_likes: number;
   total_comments: number;
+  last_edited_date?: string | null;
 }
 export interface PostWithTags {
   id: number;
@@ -87,10 +89,11 @@ export interface PostWithTags {
   subtitle: string;
   body: string;
   banner_photo: string;
-  date: string;
+  date?: string | null;
   published: boolean;
   author_id: string;
   reads: number;
   attachments: string;
   tags: Tag[];
+  last_edited_date?: string | null;
 }

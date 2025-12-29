@@ -382,9 +382,12 @@ export const databaseRouter = createTRPCRouter({
           ? env.VITE_AWS_BUCKET_STRING + input.banner_photo
           : null;
 
+        const now = new Date().toISOString();
+        const publishDate = input.published ? now : null;
+
         const query = `
-          INSERT INTO Post (title, category, subtitle, body, banner_photo, published, author_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO Post (title, category, subtitle, body, banner_photo, date, published, author_id, last_edited_date)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const params = [
           input.title,
@@ -392,8 +395,10 @@ export const databaseRouter = createTRPCRouter({
           input.subtitle,
           input.body,
           fullURL,
+          publishDate,
           input.published,
-          input.author_id
+          input.author_id,
+          now
         ];
 
         const results = await conn.execute({ sql: query, args: params });
@@ -436,6 +441,26 @@ export const databaseRouter = createTRPCRouter({
       try {
         const conn = ConnectionFactory();
 
+        // Check if post is being published for the first time
+        let shouldSetPublishDate = false;
+        if (input.published !== undefined && input.published !== null) {
+          const currentPostQuery = await conn.execute({
+            sql: "SELECT published, date FROM Post WHERE id = ?",
+            args: [input.id]
+          });
+          const currentPost = currentPostQuery.rows[0] as any;
+
+          // Set publish date if transitioning from unpublished to published and date is null
+          if (
+            currentPost &&
+            !currentPost.published &&
+            input.published &&
+            !currentPost.date
+          ) {
+            shouldSetPublishDate = true;
+          }
+        }
+
         let query = "UPDATE Post SET ";
         let params: any[] = [];
         let first = true;
@@ -473,6 +498,18 @@ export const databaseRouter = createTRPCRouter({
           params.push(input.published);
           first = false;
         }
+
+        // Set date if publishing for the first time
+        if (shouldSetPublishDate) {
+          query += first ? "date = ?" : ", date = ?";
+          params.push(new Date().toISOString());
+          first = false;
+        }
+
+        // Always update last_edited_date
+        query += first ? "last_edited_date = ?" : ", last_edited_date = ?";
+        params.push(new Date().toISOString());
+        first = false;
 
         query += first ? "author_id = ?" : ", author_id = ?";
         params.push(input.author_id);
