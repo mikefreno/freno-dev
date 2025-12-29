@@ -3,6 +3,7 @@ import { getCookie, setCookie } from "vinxi/http";
 import type { H3Event } from "vinxi/http";
 import { t } from "~/server/api/utils";
 import { logAuditEvent } from "~/server/audit";
+import { env } from "~/env/server";
 
 /**
  * Extract cookie value from H3Event (works in both production and tests)
@@ -108,7 +109,7 @@ export function setCSRFToken(event: H3Event): string {
     maxAge: 60 * 60 * 24 * 14, // 14 days - same as session
     path: "/",
     httpOnly: false, // Must be readable by client JS
-    secure: true, // Always enforce secure
+    secure: env.NODE_ENV === "production",
     sameSite: "lax"
   });
   return token;
