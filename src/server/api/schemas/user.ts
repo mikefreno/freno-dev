@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validatePassword } from "~/lib/validation";
 
 /**
  * User API Validation Schemas
@@ -6,6 +7,31 @@ import { z } from "zod";
  * Zod schemas for user-related operations like authentication,
  * profile updates, and password management
  */
+
+// ============================================================================
+// Custom Password Validator
+// ============================================================================
+
+/**
+ * Secure password validation with strength requirements
+ * Minimum 12 characters, uppercase, lowercase, number, and special character
+ */
+const securePasswordSchema = z
+  .string()
+  .min(12, "Password must be at least 12 characters")
+  .refine(
+    (password) => {
+      const result = validatePassword(password);
+      return result.isValid;
+    },
+    (password) => {
+      const result = validatePassword(password);
+      return {
+        message:
+          result.errors.join(", ") || "Password does not meet requirements"
+      };
+    }
+  );
 
 // ============================================================================
 // Authentication Schemas
@@ -17,8 +43,8 @@ import { z } from "zod";
 export const registerUserSchema = z
   .object({
     email: z.string().email(),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    passwordConfirmation: z.string().min(8)
+    password: securePasswordSchema,
+    passwordConfirmation: z.string().min(12)
   })
   .refine((data) => data.password === data.passwordConfirmation, {
     message: "Passwords do not match",
@@ -73,10 +99,8 @@ export const updateProfileImageSchema = z.object({
 export const changePasswordSchema = z
   .object({
     oldPassword: z.string().min(1, "Current password is required"),
-    newPassword: z
-      .string()
-      .min(8, "New password must be at least 8 characters"),
-    newPasswordConfirmation: z.string().min(8)
+    newPassword: securePasswordSchema,
+    newPasswordConfirmation: z.string().min(12)
   })
   .refine((data) => data.newPassword === data.newPasswordConfirmation, {
     message: "Passwords do not match",
@@ -92,8 +116,8 @@ export const changePasswordSchema = z
  */
 export const setPasswordSchema = z
   .object({
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    newPasswordConfirmation: z.string().min(8)
+    newPassword: securePasswordSchema,
+    newPasswordConfirmation: z.string().min(12)
   })
   .refine((data) => data.newPassword === data.newPasswordConfirmation, {
     message: "Passwords do not match",
@@ -113,8 +137,8 @@ export const requestPasswordResetSchema = z.object({
 export const resetPasswordSchema = z
   .object({
     token: z.string().min(1),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    newPasswordConfirmation: z.string().min(8)
+    newPassword: securePasswordSchema,
+    newPasswordConfirmation: z.string().min(12)
   })
   .refine((data) => data.newPassword === data.newPasswordConfirmation, {
     message: "Passwords do not match",

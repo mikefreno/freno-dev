@@ -383,38 +383,69 @@ const SuggestionDecoration = Extension.create({
             return DecorationSet.empty;
           },
           apply(tr, oldSet, oldState, newState) {
-            // Get suggestion from editor storage
-            const suggestion =
-              (editor.storage as any).suggestionDecoration?.text || "";
-
-            if (!suggestion) {
-              return DecorationSet.empty;
-            }
+            // Get suggestion and loading state from editor storage
+            const storage = (editor.storage as any).suggestionDecoration || {};
+            const suggestion = storage.text || "";
+            const isLoading = storage.isLoading || false;
 
             const { selection } = newState;
             const pos = selection.$anchor.pos;
+            const decorations = [];
 
-            // Create a widget decoration at cursor position
-            const decoration = Decoration.widget(
-              pos,
-              () => {
-                const span = document.createElement("span");
-                span.textContent = suggestion;
-                span.style.color = "rgb(239, 68, 68)"; // Tailwind red-500
-                span.style.opacity = "0.5";
-                span.style.fontStyle = "italic";
-                span.style.fontFamily = "monospace";
-                span.style.pointerEvents = "none";
-                span.style.whiteSpace = "pre-wrap";
-                span.style.wordWrap = "break-word";
-                return span;
-              },
-              {
-                side: 1 // Place after the cursor
-              }
-            );
+            // Show loading spinner inline if loading
+            if (isLoading) {
+              const loadingDecoration = Decoration.widget(
+                pos,
+                () => {
+                  const span = document.createElement("span");
+                  span.className = "inline-flex items-center ml-1";
+                  span.style.pointerEvents = "none";
 
-            return DecorationSet.create(newState.doc, [decoration]);
+                  // Create a simple spinner using CSS animation
+                  const spinner = document.createElement("span");
+                  spinner.className =
+                    "inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin";
+                  spinner.style.color = "rgb(239, 68, 68)"; // Tailwind red-500
+                  spinner.style.opacity = "0.5";
+
+                  span.appendChild(spinner);
+                  return span;
+                },
+                {
+                  side: 1 // Place after the cursor
+                }
+              );
+              decorations.push(loadingDecoration);
+            }
+
+            // Show suggestion text if present
+            if (suggestion) {
+              const suggestionDecoration = Decoration.widget(
+                pos,
+                () => {
+                  const span = document.createElement("span");
+                  span.textContent = suggestion;
+                  span.style.color = "rgb(239, 68, 68)"; // Tailwind red-500
+                  span.style.opacity = "0.5";
+                  span.style.fontStyle = "italic";
+                  span.style.fontFamily = "monospace";
+                  span.style.pointerEvents = "none";
+                  span.style.whiteSpace = "pre-wrap";
+                  span.style.wordWrap = "break-word";
+                  return span;
+                },
+                {
+                  side: 1 // Place after the cursor
+                }
+              );
+              decorations.push(suggestionDecoration);
+            }
+
+            if (decorations.length === 0) {
+              return DecorationSet.empty;
+            }
+
+            return DecorationSet.create(newState.doc, decorations);
           }
         },
         props: {
@@ -428,7 +459,8 @@ const SuggestionDecoration = Extension.create({
 
   addStorage() {
     return {
-      text: ""
+      text: "",
+      isLoading: false
     };
   }
 });
@@ -804,10 +836,14 @@ export default function TextEditor(props: TextEditorProps) {
   createEffect(() => {
     const instance = editor();
     const suggestion = currentSuggestion();
+    const loading = isInfillLoading();
 
     if (instance) {
-      // Store suggestion in editor storage (cast to any to avoid TS error)
-      (instance.storage as any).suggestionDecoration = { text: suggestion };
+      // Store suggestion and loading state in editor storage (cast to any to avoid TS error)
+      (instance.storage as any).suggestionDecoration = {
+        text: suggestion,
+        isLoading: loading
+      };
       // Force view update to show/hide decoration
       instance.view.dispatch(instance.state.tr);
     }
@@ -832,13 +868,6 @@ export default function TextEditor(props: TextEditorProps) {
         stop: ["\n\n", "</s>", "<|endoftext|>"],
         stream: false
       };
-
-      console.log("[Infill] Request:", {
-        prefix: context.prefix,
-        suffix: context.suffix,
-        prefixLength: context.prefix.length,
-        suffixLength: context.suffix.length
-      });
 
       const response = await fetch(config.endpoint, {
         method: "POST",
@@ -4128,16 +4157,6 @@ export default function TextEditor(props: TextEditorProps) {
               Click on any history item to restore that version
             </div>
           </div>
-        </div>
-      </Show>
-
-      {/* Infill Loading Indicator */}
-      <Show when={isInfillLoading()}>
-        <div class="bg-surface0 border-surface2 text-subtext0 fixed right-4 bottom-4 z-50 animate-pulse rounded border px-3 py-2 text-xs shadow-lg">
-          <span>
-            <Spinner />
-          </span>
-          AI thinking...
         </div>
       </Show>
     </div>

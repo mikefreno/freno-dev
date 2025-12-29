@@ -6,37 +6,102 @@
  * Validate email format
  */
 export function isValidEmail(email: string): boolean {
+  // Basic email format check
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  if (!emailRegex.test(email)) {
+    return false;
+  }
+
+  // Additional checks for invalid patterns
+  // Reject consecutive dots
+  if (email.includes("..")) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
- * Validate password strength
+ * Password strength levels
+ */
+export type PasswordStrength = "weak" | "fair" | "good" | "strong";
+
+/**
+ * Validate password strength with comprehensive requirements
  */
 export function validatePassword(password: string): {
   isValid: boolean;
   errors: string[];
+  strength: PasswordStrength;
 } {
   const errors: string[] = [];
 
-  if (password.length < 8) {
-    errors.push("Password must be at least 8 characters long");
+  // Minimum length: 12 characters
+  if (password.length < 12) {
+    errors.push("Password must be at least 12 characters long");
   }
 
-  // Optional: Add more password requirements
-  // if (!/[A-Z]/.test(password)) {
-  //   errors.push("Password must contain at least one uppercase letter");
-  // }
-  // if (!/[a-z]/.test(password)) {
-  //   errors.push("Password must contain at least one lowercase letter");
-  // }
-  // if (!/[0-9]/.test(password)) {
-  //   errors.push("Password must contain at least one number");
-  // }
+  // Require uppercase letter
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+
+  // Require lowercase letter
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+
+  // Require number
+  if (!/[0-9]/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+
+  // Require special character
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    errors.push("Password must contain at least one special character");
+  }
+
+  // Check for common weak passwords
+  const commonPasswords = [
+    "password",
+    "12345678",
+    "qwerty",
+    "letmein",
+    "welcome",
+    "monkey",
+    "dragon",
+    "master",
+    "sunshine",
+    "princess",
+    "admin",
+    "login"
+  ];
+
+  const lowerPassword = password.toLowerCase();
+  for (const common of commonPasswords) {
+    if (lowerPassword.includes(common)) {
+      errors.push("Password contains common patterns and is not secure");
+      break;
+    }
+  }
+
+  // Calculate password strength
+  let strength: PasswordStrength = "weak";
+
+  if (errors.length === 0) {
+    if (password.length >= 20) {
+      strength = "strong";
+    } else if (password.length >= 16) {
+      strength = "good";
+    } else if (password.length >= 12) {
+      strength = "fair";
+    }
+  }
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
+    strength
   };
 }
 

@@ -5,7 +5,11 @@
     "dev": "vinxi dev",
     "dev-flush": "vinxi dev --env-file=.env",
     "build": "vinxi build",
-    "start": "vinxi start"
+    "start": "vinxi start",
+    "test": "bun test",
+    "test:security": "bun test src/server/security/",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.953.0",

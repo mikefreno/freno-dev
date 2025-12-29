@@ -14,6 +14,6 @@ export {
   getUserBasicInfo
 } from "./database";
 
-export { hashPassword, checkPassword } from "./password";
+export { hashPassword, checkPassword, checkPasswordSafe } from "./password";
 
 export { sendEmailVerification, LINEAGE_JWT_EXPIRY } from "./email";
