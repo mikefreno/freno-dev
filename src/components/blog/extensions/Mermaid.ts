@@ -13,8 +13,14 @@ export const Mermaid = Node.create({
       content: {
         default: "",
         parseHTML: (element) => {
+          // Try to get code element
           const code = element.querySelector("code");
-          return code?.textContent || "";
+          if (code) {
+            // Get text content, which strips out all HTML tags (including spans from syntax highlighting)
+            return code.textContent || "";
+          }
+          // Fallback to element's own text content
+          return element.textContent || "";
         },
         renderHTML: (attributes) => {
           return {};
@@ -34,11 +40,20 @@ export const Mermaid = Node.create({
 
   parseHTML() {
     return [
+      // Priority 1: Pre with explicit mermaid marker (from our own rendering)
       {
-        tag: 'pre[data-type="mermaid"]'
+        tag: 'pre[data-mermaid-diagram="true"]',
+        priority: 100
       },
+      // Priority 2: Pre with data-type="mermaid"
+      {
+        tag: 'pre[data-type="mermaid"]',
+        priority: 90
+      },
+      // Priority 3: Wrapper div (from NodeView)
       {
         tag: "div.mermaid-node-wrapper",
+        priority: 80,
         getAttrs: (element) => {
           if (typeof element === "string") return false;
           const pre = element.querySelector('pre[data-type="mermaid"]');
@@ -49,14 +64,20 @@ export const Mermaid = Node.create({
           };
         }
       },
-      // Detect regular code blocks that contain mermaid syntax
+      // Priority 4: Generic pre blocks that look like mermaid (fallback for legacy content)
       {
         tag: "pre",
+        priority: 51, // Higher than code block extension
         getAttrs: (element) => {
           if (typeof element === "string") return false;
 
-          // Skip if already has data-type attribute
-          if (element.hasAttribute("data-type")) return false;
+          // Skip if already has data-type or data-mermaid-diagram attribute
+          if (
+            element.hasAttribute("data-type") ||
+            element.hasAttribute("data-mermaid-diagram")
+          ) {
+            return false;
+          }
 
           const code = element.querySelector("code");
           if (!code) return false;
@@ -94,8 +115,7 @@ export const Mermaid = Node.create({
           }
 
           return false;
-        },
-        priority: 51 // Higher priority than code block extension
+        }
       }
     ];
   },
@@ -105,6 +125,7 @@ export const Mermaid = Node.create({
       "pre",
       mergeAttributes(HTMLAttributes, {
         "data-type": "mermaid",
+        "data-mermaid-diagram": "true", // Clear marker for parsing from DB
         class: "mermaid-diagram"
       }),
       ["code", {}, node.attrs.content || ""]
@@ -148,6 +169,7 @@ export const Mermaid = Node.create({
 
       const pre = document.createElement("pre");
       pre.setAttribute("data-type", "mermaid");
+      pre.setAttribute("data-mermaid-diagram", "true"); // Clear marker
       pre.className = "mermaid-diagram";
 
       const code = document.createElement("code");
