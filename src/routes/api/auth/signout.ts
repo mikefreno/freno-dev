@@ -9,7 +9,7 @@ export async function POST() {
   setCookie(event, "userIDToken", "", {
     path: "/",
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true, // Always enforce secure cookies
     sameSite: "lax",
     maxAge: 0, // Expire immediately
     expires: new Date(0) // Set expiry to past date

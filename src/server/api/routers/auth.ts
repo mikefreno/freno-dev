@@ -3,7 +3,12 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { v4 as uuidV4 } from "uuid";
 import { env } from "~/env/server";
-import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
+import {
+  ConnectionFactory,
+  hashPassword,
+  checkPassword,
+  checkPasswordSafe
+} from "~/server/utils";
 import { SignJWT, jwtVerify } from "jose";
 import { setCookie, getCookie } from "vinxi/http";
 import type { User } from "~/db/types";
@@ -21,17 +26,121 @@ import {
   resetPasswordSchema,
   requestPasswordResetSchema
 } from "../schemas/user";
+import {
+  setCSRFToken,
+  csrfProtection,
+  getClientIP,
+  getUserAgent,
+  getAuditContext,
+  rateLimitLogin,
+  rateLimitPasswordReset,
+  rateLimitRegistration,
+  rateLimitEmailVerification
+} from "~/server/security";
+import { logAuditEvent } from "~/server/audit";
+import type { H3Event } from "vinxi/http";
+import type { Context } from "../utils";
 
+/**
+ * Safely extract H3Event from Context
+ * In production: ctx.event is APIEvent, H3Event is at ctx.event.nativeEvent
+ * In development: ctx.event might be H3Event directly
+ */
+function getH3Event(ctx: Context): H3Event {
+  // Check if nativeEvent exists (production)
+  if (ctx.event && 'nativeEvent' in ctx.event && ctx.event.nativeEvent) {
+    return ctx.event.nativeEvent as H3Event;
+  }
+  // Otherwise, assume ctx.event is H3Event (development)
+  return ctx.event as unknown as H3Event;
+}
+
+/**
+ * Create JWT with session tracking
+ * @param userId - User ID
+ * @param sessionId - Session ID for revocation tracking
+ * @param expiresIn - Token expiration time (e.g., "14d", "12h")
+ */
 async function createJWT(
   userId: string,
+  sessionId: string,
   expiresIn: string = "14d"
 ): Promise<string> {
   const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-  const token = await new SignJWT({ id: userId })
+  const token = await new SignJWT({
+    id: userId,
+    sid: sessionId, // Session ID for revocation
+    iat: Math.floor(Date.now() / 1000)
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(expiresIn)
     .sign(secret);
   return token;
+}
+
+/**
+ * Create a new session in the database
+ * @param userId - User ID
+ * @param expiresIn - Session expiration (e.g., "14d", "12h")
+ * @param ipAddress - Client IP address
+ * @param userAgent - Client user agent string
+ * @returns Session ID
+ */
+async function createSession(
+  userId: string,
+  expiresIn: string,
+  ipAddress: string,
+  userAgent: string
+): Promise<string> {
+  const conn = ConnectionFactory();
+  const sessionId = uuidV4();
+
+  // Calculate expiration timestamp
+  const expiresAt = new Date();
+  if (expiresIn.endsWith("d")) {
+    const days = parseInt(expiresIn);
+    expiresAt.setDate(expiresAt.getDate() + days);
+  } else if (expiresIn.endsWith("h")) {
+    const hours = parseInt(expiresIn);
+    expiresAt.setHours(expiresAt.getHours() + hours);
+  }
+
+  await conn.execute({
+    sql: `INSERT INTO Session (id, user_id, token_family, expires_at, ip_address, user_agent)
+          VALUES (?, ?, ?, ?, ?, ?)`,
+    args: [
+      sessionId,
+      userId,
+      uuidV4(), // token_family for future refresh token rotation
+      expiresAt.toISOString(),
+      ipAddress,
+      userAgent
+    ]
+  });
+
+  return sessionId;
+}
+
+/**
+ * Helper to set authentication cookies including CSRF token
+ */
+function setAuthCookies(
+  event: any,
+  token: string,
+  options: { maxAge?: number } = {}
+) {
+  const cookieOptions: any = {
+    path: "/",
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: "lax",
+    ...options
+  };
+
+  setCookie(event, "userIDToken", token, cookieOptions);
+
+  // Set CSRF token for authenticated session
+  setCSRFToken(event);
 }
 
 async function sendEmail(to: string, subject: string, htmlContent: string) {
@@ -199,9 +308,20 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        const token = await createJWT(userId);
+        // Create session with client info
+        const clientIP = getClientIP(getH3Event(ctx));
+        const userAgent =
+          getUserAgent(getH3Event(ctx));
+        const sessionId = await createSession(
+          userId,
+          "14d",
+          clientIP,
+          userAgent
+        );
 
-        setCookie(ctx.event.nativeEvent, "userIDToken", token, {
+        const token = await createJWT(userId, sessionId);
+
+        setCookie(getH3Event(ctx), "userIDToken", token, {
           maxAge: 60 * 60 * 24 * 14, // 14 days
           path: "/",
           httpOnly: true,
@@ -209,11 +329,37 @@ export const authRouter = createTRPCRouter({
           sameSite: "lax"
         });
 
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
+
+        // Log successful OAuth login
+        await logAuditEvent({
+          userId,
+          eventType: "auth.login.success",
+          eventData: { method: "github", isNewUser: !res.rows[0] },
+          ipAddress: clientIP,
+          userAgent,
+          success: true
+        });
+
         return {
           success: true,
           redirectTo: "/account"
         };
       } catch (error) {
+        // Log failed OAuth login
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          eventType: "auth.login.failed",
+          eventData: {
+            method: "github",
+            reason: error instanceof TRPCError ? error.message : "unknown"
+          },
+          ipAddress,
+          userAgent,
+          success: false
+        });
+
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -345,9 +491,20 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        const token = await createJWT(userId);
+        // Create session with client info
+        const clientIP = getClientIP(getH3Event(ctx));
+        const userAgent =
+          getUserAgent(getH3Event(ctx));
+        const sessionId = await createSession(
+          userId,
+          "14d",
+          clientIP,
+          userAgent
+        );
 
-        setCookie(ctx.event.nativeEvent, "userIDToken", token, {
+        const token = await createJWT(userId, sessionId);
+
+        setCookie(getH3Event(ctx), "userIDToken", token, {
           maxAge: 60 * 60 * 24 * 14, // 14 days
           path: "/",
           httpOnly: true,
@@ -355,11 +512,37 @@ export const authRouter = createTRPCRouter({
           sameSite: "lax"
         });
 
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
+
+        // Log successful OAuth login
+        await logAuditEvent({
+          userId,
+          eventType: "auth.login.success",
+          eventData: { method: "google", isNewUser: !res.rows[0] },
+          ipAddress: clientIP,
+          userAgent,
+          success: true
+        });
+
         return {
           success: true,
           redirectTo: "/account"
         };
       } catch (error) {
+        // Log failed OAuth login
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          eventType: "auth.login.failed",
+          eventData: {
+            method: "google",
+            reason: error instanceof TRPCError ? error.message : "unknown"
+          },
+          ipAddress,
+          userAgent,
+          success: false
+        });
+
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -428,7 +611,19 @@ export const authRouter = createTRPCRouter({
 
         const userId = (res.rows[0] as unknown as User).id;
 
-        const userToken = await createJWT(userId);
+        // Create session with client info
+        const clientIP = getClientIP(getH3Event(ctx));
+        const userAgent =
+          getUserAgent(getH3Event(ctx));
+        const expiresIn = rememberMe ? "14d" : "12h";
+        const sessionId = await createSession(
+          userId,
+          expiresIn,
+          clientIP,
+          userAgent
+        );
+
+        const userToken = await createJWT(userId, sessionId, expiresIn);
 
         const cookieOptions: any = {
           path: "/",
@@ -442,17 +637,44 @@ export const authRouter = createTRPCRouter({
         }
 
         setCookie(
-          ctx.event.nativeEvent,
+          getH3Event(ctx),
           "userIDToken",
           userToken,
           cookieOptions
         );
+
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
+
+        // Log successful email link login
+        await logAuditEvent({
+          userId,
+          eventType: "auth.login.success",
+          eventData: { method: "email_link", rememberMe: rememberMe || false },
+          ipAddress: clientIP,
+          userAgent,
+          success: true
+        });
 
         return {
           success: true,
           redirectTo: "/account"
         };
       } catch (error) {
+        // Log failed email link login
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          eventType: "auth.login.failed",
+          eventData: {
+            method: "email_link",
+            email: input.email,
+            reason: error instanceof TRPCError ? error.message : "unknown"
+          },
+          ipAddress,
+          userAgent,
+          success: false
+        });
+
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -471,7 +693,7 @@ export const authRouter = createTRPCRouter({
         token: z.string()
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { email, token } = input;
 
       try {
@@ -486,15 +708,47 @@ export const authRouter = createTRPCRouter({
         }
 
         const conn = ConnectionFactory();
+
+        // Get user ID for audit log
+        const userRes = await conn.execute({
+          sql: "SELECT id FROM User WHERE email = ?",
+          args: [email]
+        });
+        const userId = userRes.rows[0] ? (userRes.rows[0] as any).id : null;
+
         const query = `UPDATE User SET email_verified = ? WHERE email = ?`;
         const params = [true, email];
         await conn.execute({ sql: query, args: params });
+
+        // Log successful email verification
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          userId,
+          eventType: "auth.email.verify.complete",
+          eventData: { email },
+          ipAddress,
+          userAgent,
+          success: true
+        });
 
         return {
           success: true,
           message: "Email verification success, you may close this window"
         };
       } catch (error) {
+        // Log failed email verification
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          eventType: "auth.email.verify.complete",
+          eventData: {
+            email,
+            reason: error instanceof TRPCError ? error.message : "unknown"
+          },
+          ipAddress,
+          userAgent,
+          success: false
+        });
+
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -510,6 +764,10 @@ export const authRouter = createTRPCRouter({
     .input(registerUserSchema)
     .mutation(async ({ input, ctx }) => {
       const { email, password, passwordConfirmation } = input;
+
+      // Apply rate limiting
+      const clientIP = getClientIP(getH3Event(ctx));
+      rateLimitRegistration(clientIP, getH3Event(ctx));
 
       // Schema already validates password match, but double check
       if (password !== passwordConfirmation) {
@@ -529,9 +787,20 @@ export const authRouter = createTRPCRouter({
           args: [userId, email, passwordHash, "email"]
         });
 
-        const token = await createJWT(userId);
+        // Create session with client info
+        const clientIP = getClientIP(getH3Event(ctx));
+        const userAgent =
+          getUserAgent(getH3Event(ctx));
+        const sessionId = await createSession(
+          userId,
+          "14d",
+          clientIP,
+          userAgent
+        );
 
-        setCookie(ctx.event.nativeEvent, "userIDToken", token, {
+        const token = await createJWT(userId, sessionId);
+
+        setCookie(getH3Event(ctx), "userIDToken", token, {
           maxAge: 60 * 60 * 24 * 14, // 14 days
           path: "/",
           httpOnly: true,
@@ -539,8 +808,35 @@ export const authRouter = createTRPCRouter({
           sameSite: "lax"
         });
 
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
+
+        // Log successful registration
+        await logAuditEvent({
+          userId,
+          eventType: "auth.register.success",
+          eventData: { email, method: "email" },
+          ipAddress: clientIP,
+          userAgent,
+          success: true
+        });
+
         return { success: true, message: "success" };
       } catch (e) {
+        // Log failed registration
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          eventType: "auth.register.failed",
+          eventData: {
+            email,
+            method: "email",
+            reason: e instanceof Error ? e.message : "unknown"
+          },
+          ipAddress,
+          userAgent,
+          success: false
+        });
+
         console.error("Registration error:", e);
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -552,66 +848,131 @@ export const authRouter = createTRPCRouter({
   emailPasswordLogin: publicProcedure
     .input(loginUserSchema)
     .mutation(async ({ input, ctx }) => {
-      const { email, password, rememberMe } = input;
+      try {
+        const { email, password, rememberMe } = input;
 
-      const conn = ConnectionFactory();
-      const res = await conn.execute({
-        sql: "SELECT * FROM User WHERE email = ?",
-        args: [email]
-      });
+        // Apply rate limiting
+        const clientIP = getClientIP(getH3Event(ctx));
+        rateLimitLogin(email, clientIP, getH3Event(ctx));
 
-      if (res.rows.length === 0) {
+        const conn = ConnectionFactory();
+        const res = await conn.execute({
+          sql: "SELECT * FROM User WHERE email = ?",
+          args: [email]
+        });
+
+        // Always run password check to prevent timing attacks
+        const user =
+          res.rows.length > 0 ? (res.rows[0] as unknown as User) : null;
+        const passwordHash = user?.password_hash || null;
+        const passwordMatch = await checkPasswordSafe(password, passwordHash);
+
+        // Check all conditions after password verification
+        if (!user || !passwordHash || !passwordMatch) {
+          // Debug logging (remove after fixing)
+          console.log("Login failed for:", email);
+          console.log("User found:", !!user);
+          console.log("Password hash exists:", !!passwordHash);
+          console.log("Password match:", passwordMatch);
+
+          // Log failed login attempt (wrap in try-catch to ensure it never blocks auth flow)
+          try {
+            const { ipAddress, userAgent } = getAuditContext(
+              getH3Event(ctx)
+            );
+            await logAuditEvent({
+              eventType: "auth.login.failed",
+              eventData: {
+                email,
+                method: "password",
+                reason: "invalid_credentials"
+              },
+              ipAddress,
+              userAgent,
+              success: false
+            });
+          } catch (auditError) {
+            console.error("Audit logging failed:", auditError);
+          }
+
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "no-match"
+          });
+        }
+
+        if (
+          !user.provider ||
+          !["email", "google", "github", "apple"].includes(user.provider)
+        ) {
+          await conn.execute({
+            sql: "UPDATE User SET provider = ? WHERE id = ?",
+            args: ["email", user.id]
+          });
+        }
+
+        const expiresIn = rememberMe ? "14d" : "12h";
+
+        // Create session with client info (reuse clientIP from rate limiting)
+        const userAgent =
+          getUserAgent(getH3Event(ctx));
+        const sessionId = await createSession(
+          user.id,
+          expiresIn,
+          clientIP,
+          userAgent
+        );
+
+        const token = await createJWT(user.id, sessionId, expiresIn);
+
+        const cookieOptions: any = {
+          path: "/",
+          httpOnly: true,
+          secure: env.NODE_ENV === "production",
+          sameSite: "lax"
+        };
+
+        if (rememberMe) {
+          cookieOptions.maxAge = 60 * 60 * 24 * 14; // 14 days
+        }
+
+        setCookie(getH3Event(ctx), "userIDToken", token, cookieOptions);
+
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
+
+        // Log successful login (wrap in try-catch to ensure it never blocks auth flow)
+        try {
+          await logAuditEvent({
+            userId: user.id,
+            eventType: "auth.login.success",
+            eventData: { method: "password", rememberMe: rememberMe || false },
+            ipAddress: clientIP,
+            userAgent,
+            success: true
+          });
+        } catch (auditError) {
+          console.error("Audit logging failed:", auditError);
+        }
+
+        return { success: true, message: "success" };
+      } catch (error) {
+        // Log the actual error for debugging
+        console.error("emailPasswordLogin error:", error);
+        console.error("Error stack:", error instanceof Error ? error.stack : "no stack");
+        
+        // Re-throw TRPCErrors as-is
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        
+        // Wrap other errors
         throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "no-match"
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An error occurred during login",
+          cause: error
         });
       }
-
-      const user = res.rows[0] as unknown as User;
-
-      if (!user.password_hash) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "no-match"
-        });
-      }
-
-      const passwordMatch = await checkPassword(password, user.password_hash);
-
-      if (!passwordMatch) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "no-match"
-        });
-      }
-
-      if (
-        !user.provider ||
-        !["email", "google", "github", "apple"].includes(user.provider)
-      ) {
-        await conn.execute({
-          sql: "UPDATE User SET provider = ? WHERE id = ?",
-          args: ["email", user.id]
-        });
-      }
-
-      const expiresIn = rememberMe ? "14d" : "12h";
-      const token = await createJWT(user.id, expiresIn);
-
-      const cookieOptions: any = {
-        path: "/",
-        httpOnly: true,
-        secure: env.NODE_ENV === "production",
-        sameSite: "lax"
-      };
-
-      if (rememberMe) {
-        cookieOptions.maxAge = 60 * 60 * 24 * 14; // 14 days
-      }
-
-      setCookie(ctx.event.nativeEvent, "userIDToken", token, cookieOptions);
-
-      return { success: true, message: "success" };
     }),
 
   requestEmailLinkLogin: publicProcedure
@@ -626,7 +987,7 @@ export const authRouter = createTRPCRouter({
 
       try {
         const requested = getCookie(
-          ctx.event.nativeEvent,
+          getH3Event(ctx),
           "emailLoginLinkRequested"
         );
         if (requested) {
@@ -705,7 +1066,7 @@ export const authRouter = createTRPCRouter({
 
         const exp = new Date(Date.now() + 2 * 60 * 1000);
         setCookie(
-          ctx.event.nativeEvent,
+          getH3Event(ctx),
           "emailLoginLinkRequested",
           exp.toUTCString(),
           {
@@ -745,9 +1106,13 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
+      // Apply rate limiting
+      const clientIP = getClientIP(getH3Event(ctx));
+      rateLimitPasswordReset(clientIP, getH3Event(ctx));
+
       try {
         const requested = getCookie(
-          ctx.event.nativeEvent,
+          getH3Event(ctx),
           "passwordResetRequested"
         );
         if (requested) {
@@ -821,7 +1186,7 @@ export const authRouter = createTRPCRouter({
 
         const exp = new Date(Date.now() + 5 * 60 * 1000);
         setCookie(
-          ctx.event.nativeEvent,
+          getH3Event(ctx),
           "passwordResetRequested",
           exp.toUTCString(),
           {
@@ -830,8 +1195,38 @@ export const authRouter = createTRPCRouter({
           }
         );
 
+        // Log password reset request
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          userId: user.id,
+          eventType: "auth.password.reset.request",
+          eventData: { email },
+          ipAddress,
+          userAgent,
+          success: true
+        });
+
         return { success: true, message: "email sent" };
       } catch (error) {
+        // Log failed password reset request (only if not rate limited)
+        if (
+          !(error instanceof TRPCError && error.code === "TOO_MANY_REQUESTS")
+        ) {
+          const { ipAddress, userAgent } = getAuditContext(
+            getH3Event(ctx)
+          );
+          await logAuditEvent({
+            eventType: "auth.password.reset.request",
+            eventData: {
+              email: input.email,
+              reason: error instanceof TRPCError ? error.message : "unknown"
+            },
+            ipAddress,
+            userAgent,
+            success: false
+          });
+        }
+
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -912,17 +1307,40 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        setCookie(ctx.event.nativeEvent, "emailToken", "", {
+        setCookie(getH3Event(ctx), "emailToken", "", {
           maxAge: 0,
           path: "/"
         });
-        setCookie(ctx.event.nativeEvent, "userIDToken", "", {
+        setCookie(getH3Event(ctx), "userIDToken", "", {
           maxAge: 0,
           path: "/"
         });
 
+        // Log successful password reset
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          userId: payload.id,
+          eventType: "auth.password.reset.complete",
+          eventData: {},
+          ipAddress,
+          userAgent,
+          success: true
+        });
+
         return { success: true, message: "success" };
       } catch (error) {
+        // Log failed password reset
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          eventType: "auth.password.reset.complete",
+          eventData: {
+            reason: error instanceof TRPCError ? error.message : "unknown"
+          },
+          ipAddress,
+          userAgent,
+          success: false
+        });
+
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -939,9 +1357,13 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
+      // Apply rate limiting
+      const clientIP = getClientIP(getH3Event(ctx));
+      rateLimitEmailVerification(clientIP, getH3Event(ctx));
+
       try {
         const requested = getCookie(
-          ctx.event.nativeEvent,
+          getH3Event(ctx),
           "emailVerificationRequested"
         );
         if (requested) {
@@ -970,6 +1392,8 @@ export const authRouter = createTRPCRouter({
             message: "User not found"
           });
         }
+
+        const user = res.rows[0] as unknown as User;
 
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({ email })
@@ -1016,7 +1440,7 @@ export const authRouter = createTRPCRouter({
         await sendEmail(email, "freno.me email verification", htmlContent);
 
         setCookie(
-          ctx.event.nativeEvent,
+          getH3Event(ctx),
           "emailVerificationRequested",
           Date.now().toString(),
           {
@@ -1025,8 +1449,38 @@ export const authRouter = createTRPCRouter({
           }
         );
 
+        // Log email verification request
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          userId: user.id,
+          eventType: "auth.email.verify.request",
+          eventData: { email },
+          ipAddress,
+          userAgent,
+          success: true
+        });
+
         return { success: true, message: "Verification email sent" };
       } catch (error) {
+        // Log failed email verification request (only if not rate limited)
+        if (
+          !(error instanceof TRPCError && error.code === "TOO_MANY_REQUESTS")
+        ) {
+          const { ipAddress, userAgent } = getAuditContext(
+            getH3Event(ctx)
+          );
+          await logAuditEvent({
+            eventType: "auth.email.verify.request",
+            eventData: {
+              email: input.email,
+              reason: error instanceof TRPCError ? error.message : "unknown"
+            },
+            ipAddress,
+            userAgent,
+            success: false
+          });
+        }
+
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -1052,13 +1506,37 @@ export const authRouter = createTRPCRouter({
     }),
 
   signOut: publicProcedure.mutation(async ({ ctx }) => {
-    setCookie(ctx.event.nativeEvent, "userIDToken", "", {
+    // Try to get user ID for audit log before clearing cookies
+    let userId: string | null = null;
+    try {
+      const token = getCookie(getH3Event(ctx), "userIDToken");
+      if (token) {
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        const { payload } = await jwtVerify(token, secret);
+        userId = payload.id as string;
+      }
+    } catch (e) {
+      // Ignore token verification errors during signout
+    }
+
+    setCookie(getH3Event(ctx), "userIDToken", "", {
       maxAge: 0,
       path: "/"
     });
-    setCookie(ctx.event.nativeEvent, "emailToken", "", {
+    setCookie(getH3Event(ctx), "emailToken", "", {
       maxAge: 0,
       path: "/"
+    });
+
+    // Log signout
+    const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+    await logAuditEvent({
+      userId,
+      eventType: "auth.logout",
+      eventData: {},
+      ipAddress,
+      userAgent,
+      success: true
     });
 
     return { success: true };
