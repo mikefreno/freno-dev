@@ -169,7 +169,7 @@ export default function LoginPage() {
         const result = await response.json();
 
         if (response.ok && result.result?.data) {
-          navigate("/account");
+          navigate("/account", { replace: true });
         } else {
           const errorMsg =
             result.error?.message ||
@@ -207,8 +207,7 @@ export default function LoginPage() {
         if (response.ok && result.result?.data?.success) {
           setShowPasswordSuccess(true);
           setTimeout(() => {
-            navigate(-1); // Go back
-            window.location.reload(); // Refresh to update session
+            navigate("/account", { replace: true });
           }, 500);
         } else {
           setShowPasswordError(true);

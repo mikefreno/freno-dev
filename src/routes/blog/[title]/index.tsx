@@ -15,7 +15,7 @@ import { Fire } from "~/components/icons/Fire";
 import CommentSectionWrapper from "~/components/blog/CommentSectionWrapper";
 import PostBodyClient from "~/components/blog/PostBodyClient";
 import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
-import { TerminalSplash } from "~/components/TerminalSplash";
+import { Spinner } from "~/components/Spinner";
 import { api } from "~/lib/api";
 import "../post.css";
 
@@ -299,7 +299,14 @@ export default function PostPage() {
 
   return (
     <>
-      <Show when={data()} fallback={<TerminalSplash />}>
+      <Show
+        when={data()}
+        fallback={
+          <div class="flex h-screen items-center justify-center">
+            <Spinner size="xl" />
+          </div>
+        }
+      >
         {(loadedData) => {
           // Handle redirect for by-id route
           if ("redirect" in loadedData()) {

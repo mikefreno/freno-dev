@@ -401,12 +401,37 @@ const SuggestionDecoration = Extension.create({
                   span.className = "inline-flex items-center ml-1";
                   span.style.pointerEvents = "none";
 
-                  // Create a simple spinner using CSS animation
+                  // Use Spinner component
                   const spinner = document.createElement("span");
-                  spinner.className =
-                    "inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin";
+                  spinner.className = "text-red inline-block";
                   spinner.style.color = "rgb(239, 68, 68)"; // Tailwind red-500
                   spinner.style.opacity = "0.5";
+                  spinner.style.fontSize = "18px";
+                  spinner.style.lineHeight = "1.5";
+
+                  // Render spinner chars manually since we're in ProseMirror
+                  const spinnerChars = [
+                    "⠋",
+                    "⠙",
+                    "⠹",
+                    "⠸",
+                    "⠼",
+                    "⠴",
+                    "⠦",
+                    "⠧",
+                    "⠇",
+                    "⠏"
+                  ];
+                  let charIndex = 0;
+                  spinner.textContent = spinnerChars[0];
+
+                  const interval = setInterval(() => {
+                    charIndex = (charIndex + 1) % spinnerChars.length;
+                    spinner.textContent = spinnerChars[charIndex];
+                  }, 50);
+
+                  // Store interval on element for cleanup
+                  (spinner as any)._spinnerInterval = interval;
 
                   span.appendChild(spinner);
                   return span;
@@ -1574,7 +1599,6 @@ export default function TextEditor(props: TextEditorProps) {
           }, 2000);
         }
 
-        // Debounced infill trigger (250ms) - only if enabled and (desktop OR fullscreen mode)
         if (infillConfig() && !isInitialLoad && infillEnabled()) {
           const isMobileNotFullscreen =
             typeof window !== "undefined" &&
@@ -1588,7 +1612,7 @@ export default function TextEditor(props: TextEditorProps) {
             }
             infillDebounceTimer = setTimeout(() => {
               requestInfill();
-            }, 250);
+            }, 500);
           }
         }
       });
