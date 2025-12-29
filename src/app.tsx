@@ -40,6 +40,14 @@ function AppLayout(props: { children: any }) {
         setRightBarVisible(true);
       }
     });
+
+    // Hide leftbar on mobile after 500ms with translation animation
+    const currentIsMobile = isMobile(windowWidth());
+    if (currentIsMobile) {
+      setTimeout(() => {
+        setLeftBarVisible(false);
+      }, 1000);
+    }
   });
 
   // Auto-hide on scroll (mobile only)

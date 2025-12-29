@@ -350,7 +350,7 @@ export default function PostPage() {
                             "pointer-events": "none"
                           }}
                         />
-                        <div class="fixed top-1/3 z-50 m-auto w-full px-4 text-center tracking-widest text-white backdrop-blur-md select-text text-shadow-lg backdrop:brightness-50 md:w-[calc(100vw-500px)]">
+                        <div class="fixed top-24 z-50 m-auto w-full px-4 text-center tracking-widest text-white backdrop-blur-md select-text text-shadow-lg backdrop:brightness-50 sm:top-36 md:top-[20vh] md:w-[calc(100vw-500px)]">
                           <div class="py-8 text-3xl font-semibold tracking-widest">
                             {p().title.replaceAll("_", " ")}
                             <Show when={p().subtitle}>

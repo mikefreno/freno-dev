@@ -13,21 +13,21 @@ export default function Home() {
 
       <main class="flex h-full flex-col gap-8 px-4 py-16 text-xl">
         <div class="flex-1">
-          <Typewriter speed={30} keepAlive={2000}>
+          <Typewriter speed={30} keepAlive={2000} delay={500}>
             <div class="text-4xl">Hey!</div>
           </Typewriter>
-          <Typewriter speed={80} keepAlive={2000}>
+          <Typewriter speed={80} keepAlive={2000} delay={500}>
             <div>
               My name is <span class="text-green">Mike Freno</span>, I'm a{" "}
               <span class="text-blue">Software Engineer</span> based in{" "}
               <span class="text-yellow">Brooklyn, NY.</span>
             </div>
           </Typewriter>
-          <Typewriter speed={100} keepAlive={2000}>
+          <Typewriter speed={100} keepAlive={2000} delay={500}>
             I'm a passionate developer tooling, game, and open source software
             developer.
           </Typewriter>
-          <Typewriter speed={100} keepAlive={2000}>
+          <Typewriter speed={100} keepAlive={2000} delay={500}>
             Recently been working in the world of{" "}
             <a
               href="https://www.love2d.org"
@@ -37,7 +37,7 @@ export default function Home() {
             </a>{" "}
             (an open source game engine for Lua).{" "}
           </Typewriter>{" "}
-          <Typewriter speed={100} keepAlive={2000}>
+          <Typewriter speed={100} keepAlive={2000} delay={500}>
             You can see some of my work{" "}
             <a
               href="https://github.com/mikefreno"
@@ -46,7 +46,7 @@ export default function Home() {
               here (github).
             </a>
           </Typewriter>
-          <Typewriter speed={100} keepAlive={2000}>
+          <Typewriter speed={100} keepAlive={2000} delay={500}>
             If you want to get in touch, check to side bar for various links.
           </Typewriter>
           <div class="pt-8 text-center">
@@ -154,7 +154,11 @@ export default function Home() {
             </div>
           </div>
           <div class="flex justify-between">
-            <Typewriter speed={120} class="mx-auto max-w-3/4 pt-8 md:max-w-1/2">
+            <Typewriter
+              speed={120}
+              class="mx-auto max-w-3/4 pt-8 md:max-w-1/2"
+              delay={500}
+            >
               And if you love the color schemes of this site
               <div class="mx-auto w-fit">
                 <DarkModeToggle />
@@ -171,14 +175,14 @@ export default function Home() {
               and a home server setup too. Which I will write about soon™.
             </Typewriter>
             <div class="flex flex-col items-end justify-center gap-4 pr-4">
-              <Typewriter speed={30} keepAlive={false}>
+              <Typewriter speed={30} keepAlive={false} delay={500}>
                 <div>
                   My Collection of
                   <br />
                   By-the-ways:
                 </div>
               </Typewriter>
-              <Typewriter speed={30} keepAlive={false}>
+              <Typewriter speed={30} keepAlive={false} delay={500}>
                 <ul class="list-disc">
                   <li>I use Neovim</li>
                   <li>I use Arch Linux</li>
