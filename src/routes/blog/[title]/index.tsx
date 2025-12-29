@@ -18,6 +18,7 @@ import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
 import { Spinner } from "~/components/Spinner";
 import { api } from "~/lib/api";
 import "../post.css";
+import { Post } from "~/db/types";
 
 const getPostByTitle = query(
   async (
@@ -314,7 +315,10 @@ export default function PostPage() {
           }
 
           return (
-            <Show when={loadedData().post} fallback={<Navigate href="/404" />}>
+            <Show
+              when={loadedData().post as Post}
+              fallback={<Navigate href="/404" />}
+            >
               {(p) => {
                 const postData = loadedData();
 
@@ -368,9 +372,19 @@ export default function PostPage() {
                           <div class="flex w-full flex-col justify-center pt-8 md:flex-row md:justify-between">
                             <div class="">
                               <div class="flex justify-center italic md:justify-start md:pl-24">
-                                <div>
-                                  Written {new Date(p().date).toDateString()}
-                                  <br />
+                                Written {new Date(p().date).toDateString()}
+                              </div>
+                              <div>
+                                <Show when={p().last_edited_date !== p().date}>
+                                  <div class="flex justify-center text-sm italic md:justify-start md:pl-24">
+                                    Edited:{" "}
+                                    {new Date(
+                                      p().last_edited_date
+                                    ).toDateString()}
+                                  </div>
+                                </Show>
+
+                                <div class="flex justify-center md:justify-start md:pl-24">
                                   By Michael Freno
                                 </div>
                               </div>
