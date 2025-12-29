@@ -274,7 +274,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   });
 
   return (
-    <div class="mx-auto max-w-4xl px-4 pt-32 md:pt-40">
+    <div class="mx-auto max-w-4xl px-4">
       <div
         id="post-content-body"
         ref={contentRef}

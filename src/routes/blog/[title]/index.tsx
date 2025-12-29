@@ -351,11 +351,13 @@ export default function PostPage() {
                           }}
                         />
                         <div class="fixed top-1/3 z-50 m-auto w-full px-4 text-center tracking-widest text-white backdrop-blur-md select-text text-shadow-lg backdrop:brightness-50 md:w-[calc(100vw-500px)]">
-                          <div class="text-3xl font-semibold tracking-widest">
+                          <div class="py-8 text-3xl font-semibold tracking-widest">
                             {p().title.replaceAll("_", " ")}
-                            <div class="py-8 text-xl font-light tracking-widest">
-                              {p().subtitle}
-                            </div>
+                            <Show when={p().subtitle}>
+                              <div class="py-8 text-xl font-light tracking-widest">
+                                {p().subtitle}
+                              </div>
+                            </Show>
                           </div>
                         </div>
                       </div>
@@ -363,7 +365,7 @@ export default function PostPage() {
                       <div class="z-10 pt-80 backdrop-blur-[0.01px] sm:pt-96 md:pt-[50vh]">
                         {/* Content that slides over the fixed image */}
                         <div class="bg-base relative pb-24">
-                          <div class="top-4 flex w-full flex-col justify-center md:absolute md:flex-row md:justify-between">
+                          <div class="flex w-full flex-col justify-center pt-8 md:flex-row md:justify-between">
                             <div class="">
                               <div class="flex justify-center italic md:justify-start md:pl-24">
                                 <div>
@@ -441,7 +443,14 @@ export default function PostPage() {
                               </div>
                             </div>
                           </div>
-
+                          <div class="py-8 text-center text-2xl font-semibold tracking-widest">
+                            {p().title.replaceAll("_", " ")}
+                            <Show when={p().subtitle}>
+                              <div class="py-8 text-xl font-light tracking-widest">
+                                {p().subtitle}
+                              </div>
+                            </Show>
+                          </div>
                           {/* Post body */}
                           <PostBodyClient
                             body={p().body}
