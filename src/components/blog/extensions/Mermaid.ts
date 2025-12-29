@@ -154,6 +154,41 @@ export const Mermaid = Node.create({
       code.textContent = node.attrs.content || "";
       pre.appendChild(code);
 
+      // Validation status indicator
+      const statusIndicator = document.createElement("div");
+      statusIndicator.className =
+        "absolute top-2 left-2 w-3 h-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+
+      // Validate syntax asynchronously
+      const validateSyntax = async () => {
+        const content = node.attrs.content || "";
+        if (!content.trim()) {
+          statusIndicator.className =
+            "absolute top-2 left-2 w-3 h-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+          return;
+        }
+
+        try {
+          // Dynamic import to avoid bundling issues
+          const mermaid = (await import("mermaid")).default;
+          await mermaid.parse(content);
+          // Valid - green indicator
+          statusIndicator.className =
+            "absolute top-2 left-2 w-3 h-3 rounded-full bg-green opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+          statusIndicator.title = "Valid mermaid syntax";
+        } catch (err) {
+          // Invalid - red indicator
+          statusIndicator.className =
+            "absolute top-2 left-2 w-3 h-3 rounded-full bg-red opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+          statusIndicator.title = `Invalid syntax: ${
+            (err as any).message || "Parse error"
+          }`;
+        }
+      };
+
+      // Run validation
+      validateSyntax();
+
       // Edit button overlay
       const editBtn = document.createElement("button");
       editBtn.className =
@@ -174,6 +209,7 @@ export const Mermaid = Node.create({
       });
 
       dom.appendChild(pre);
+      dom.appendChild(statusIndicator);
       dom.appendChild(editBtn);
 
       return {
@@ -184,6 +220,8 @@ export const Mermaid = Node.create({
             return false;
           }
           code.textContent = updatedNode.attrs.content || "";
+          // Re-validate on update
+          validateSyntax();
           return true;
         }
       };

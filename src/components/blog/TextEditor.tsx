@@ -31,6 +31,7 @@ import { ConditionalInline } from "./extensions/ConditionalInline";
 import TextAlign from "@tiptap/extension-text-align";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
+import mermaid from "mermaid";
 import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
@@ -714,6 +715,25 @@ export default function TextEditor(props: TextEditorProps) {
   let bubbleMenuRef!: HTMLDivElement;
   let containerRef!: HTMLDivElement;
 
+  // Initialize mermaid for validation and preview
+  onMount(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "dark",
+      securityLevel: "loose",
+      fontFamily: "monospace",
+      themeVariables: {
+        darkMode: true,
+        primaryColor: "#2c2f40",
+        primaryTextColor: "#b5c1f1",
+        primaryBorderColor: "#739df2",
+        lineColor: "#739df2",
+        secondaryColor: "#3e4255",
+        tertiaryColor: "#505469"
+      }
+    });
+  });
+
   const [showBubbleMenu, setShowBubbleMenu] = createSignal(false);
   const [bubbleMenuPosition, setBubbleMenuPosition] = createSignal({
     top: 0,
@@ -746,6 +766,12 @@ export default function TextEditor(props: TextEditorProps) {
   const [mermaidEditorPos, setMermaidEditorPos] = createSignal<number | null>(
     null
   );
+  const [mermaidValidation, setMermaidValidation] = createSignal<{
+    valid: boolean;
+    error: string | null;
+  }>({ valid: true, error: null });
+  const [mermaidPreviewSvg, setMermaidPreviewSvg] = createSignal<string>("");
+  let mermaidValidationTimer: ReturnType<typeof setTimeout> | null = null;
 
   // References section heading customization
   const [referencesHeading, setReferencesHeading] = createSignal(
@@ -1030,6 +1056,54 @@ export default function TextEditor(props: TextEditorProps) {
     instance.commands.setMermaid(templateCode);
     setShowMermaidTemplates(false);
   };
+
+  // Validate and preview mermaid syntax
+  const validateAndPreviewMermaid = async (code: string) => {
+    if (!code.trim()) {
+      setMermaidValidation({ valid: true, error: null });
+      setMermaidPreviewSvg("");
+      return;
+    }
+
+    try {
+      // Validate syntax using mermaid's parse function
+      await mermaid.parse(code);
+
+      // If valid, render preview
+      const id = `mermaid-preview-${Date.now()}`;
+      const { svg } = await mermaid.render(id, code);
+
+      setMermaidValidation({ valid: true, error: null });
+      setMermaidPreviewSvg(svg);
+    } catch (err: any) {
+      // Extract useful error message
+      let errorMsg = err.message || "Invalid syntax";
+
+      // Clean up mermaid error messages for better readability
+      if (errorMsg.includes("Parse error")) {
+        errorMsg = errorMsg.replace(
+          /^.*Parse error on line \d+:\s*/i,
+          "Parse error: "
+        );
+      }
+
+      setMermaidValidation({ valid: false, error: errorMsg });
+      setMermaidPreviewSvg("");
+    }
+  };
+
+  // Debounced validation when content changes
+  createEffect(() => {
+    const content = mermaidEditorContent();
+
+    if (mermaidValidationTimer) {
+      clearTimeout(mermaidValidationTimer);
+    }
+
+    mermaidValidationTimer = setTimeout(() => {
+      validateAndPreviewMermaid(content);
+    }, 500);
+  });
 
   // Capture history snapshot
   const captureHistory = async (editorInstance: any) => {
@@ -4340,27 +4414,67 @@ export default function TextEditor(props: TextEditorProps) {
             {/* Editor */}
             <div class="space-y-4">
               <div>
-                <label class="text-text mb-2 block text-sm font-semibold">
-                  Diagram Code
-                </label>
+                <div class="mb-2 flex items-center justify-between">
+                  <label class="text-text text-sm font-semibold">
+                    Diagram Code
+                  </label>
+                  {/* Validation Status */}
+                  <div class="flex items-center gap-2">
+                    <Show when={mermaidValidation().valid}>
+                      <span class="text-green flex items-center gap-1 text-xs font-semibold">
+                        <span>✓</span> Valid syntax
+                      </span>
+                    </Show>
+                    <Show
+                      when={
+                        !mermaidValidation().valid && mermaidValidation().error
+                      }
+                    >
+                      <span class="text-red flex items-center gap-1 text-xs font-semibold">
+                        <span>✗</span> Invalid syntax
+                      </span>
+                    </Show>
+                  </div>
+                </div>
                 <textarea
-                  class="bg-surface0 border-surface2 text-text focus:border-blue w-full rounded border p-3 font-mono text-sm focus:outline-none"
-                  rows={15}
+                  class={`bg-surface0 text-text w-full rounded border p-3 font-mono text-sm transition-colors focus:outline-none ${
+                    mermaidValidation().valid
+                      ? "border-surface2 focus:border-blue"
+                      : "border-red focus:border-red"
+                  }`}
+                  rows={12}
                   value={mermaidEditorContent()}
                   onInput={(e) =>
                     setMermaidEditorContent(e.currentTarget.value)
                   }
                   placeholder="Enter your mermaid diagram code..."
                 />
+
+                {/* Error Message */}
+                <Show
+                  when={!mermaidValidation().valid && mermaidValidation().error}
+                >
+                  <div class="text-red border-red bg-red/10 mt-2 rounded-lg border p-2 text-xs">
+                    <strong>Error:</strong> {mermaidValidation().error}
+                  </div>
+                </Show>
               </div>
 
-              {/* Preview Info */}
+              {/* Live Preview */}
+              <Show when={mermaidPreviewSvg()}>
+                <div>
+                  <label class="text-text mb-2 block text-sm font-semibold">
+                    Live Preview
+                  </label>
+                  <div class="bg-surface0 border-surface2 max-h-96 overflow-auto rounded border p-4">
+                    <div innerHTML={mermaidPreviewSvg()} />
+                  </div>
+                </div>
+              </Show>
+
+              {/* Info */}
               <div class="text-subtext0 border-yellow bg-yellow/10 rounded-lg border p-3 text-sm">
-                <strong>Note:</strong> The diagram will render when you view the
-                post. Make sure your syntax is correct to avoid rendering
-                errors.
-                <br />
-                <strong>Common issue:</strong> Use ASCII hyphens for arrows (
+                <strong>Tip:</strong> Use ASCII hyphens for arrows (
                 <code>--&gt;</code> not <code>—&gt;</code>). Smart punctuation
                 can break diagrams.
               </div>
@@ -4377,7 +4491,13 @@ export default function TextEditor(props: TextEditorProps) {
                 <button
                   type="button"
                   onClick={saveMermaidEdit}
-                  class="bg-blue rounded px-4 py-2 text-sm text-white transition-all hover:brightness-110 active:scale-95"
+                  disabled={!mermaidValidation().valid}
+                  class="bg-blue rounded px-4 py-2 text-sm text-white transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  title={
+                    !mermaidValidation().valid
+                      ? "Fix syntax errors before saving"
+                      : ""
+                  }
                 >
                   Save Changes
                 </button>
