@@ -96,6 +96,66 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   let contentRef: HTMLDivElement | undefined;
   const [hljs, setHljs] = createSignal<HLJSApi | null>(null);
 
+  const addCopyButtons = () => {
+    if (!contentRef) return;
+
+    const codeBlocks = contentRef.querySelectorAll("pre code");
+
+    codeBlocks.forEach((codeBlock) => {
+      const pre = codeBlock.parentElement;
+      if (!pre || pre.querySelector(".copy-button")) return;
+
+      // Create wrapper for positioning
+      pre.style.position = "relative";
+
+      // Create copy button
+      const copyButton = document.createElement("button");
+      copyButton.className =
+        "copy-button absolute top-2 right-2 px-3 py-1.5 text-xs font-medium rounded transition-all duration-200 z-10";
+      copyButton.style.cssText =
+        "background-color: var(--color-surface0); color: var(--color-text); border: 1px solid var(--color-overlay0);";
+      copyButton.textContent = "Copy";
+
+      copyButton.addEventListener("mouseenter", () => {
+        copyButton.style.backgroundColor = "var(--color-surface1)";
+      });
+
+      copyButton.addEventListener("mouseleave", () => {
+        if (copyButton.textContent === "Copy") {
+          copyButton.style.backgroundColor = "var(--color-surface0)";
+        }
+      });
+
+      copyButton.addEventListener("click", async () => {
+        const code = codeBlock.textContent || "";
+
+        try {
+          await navigator.clipboard.writeText(code);
+          copyButton.textContent = "Copied!";
+          copyButton.style.backgroundColor = "var(--color-green)";
+          copyButton.style.color = "var(--color-base)";
+
+          setTimeout(() => {
+            copyButton.textContent = "Copy";
+            copyButton.style.backgroundColor = "var(--color-surface0)";
+            copyButton.style.color = "var(--color-text)";
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy code:", err);
+          copyButton.textContent = "Failed";
+          copyButton.style.backgroundColor = "var(--color-red)";
+
+          setTimeout(() => {
+            copyButton.textContent = "Copy";
+            copyButton.style.backgroundColor = "var(--color-surface0)";
+          }, 2000);
+        }
+      });
+
+      pre.appendChild(copyButton);
+    });
+  };
+
   const processReferences = () => {
     if (!contentRef) return;
 
@@ -253,6 +313,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     if (hljsInstance && props.hasCodeBlock && contentRef) {
       setTimeout(() => {
         hljsInstance.highlightAll();
+        addCopyButtons();
       }, 100);
     }
   });
@@ -261,6 +322,9 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   onMount(() => {
     setTimeout(() => {
       processReferences();
+      if (props.hasCodeBlock) {
+        addCopyButtons();
+      }
     }, 150);
   });
 
@@ -269,6 +333,9 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     if (props.body && contentRef) {
       setTimeout(() => {
         processReferences();
+        if (props.hasCodeBlock) {
+          addCopyButtons();
+        }
       }, 150);
     }
   });
