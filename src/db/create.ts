@@ -9,8 +9,42 @@ export const model: { [key: string]: string } = {
       display_name TEXT,
       provider TEXT,
       image TEXT,
-      registered_at TEXT NOT NULL DEFAULT (datetime('now'))
+      registered_at TEXT NOT NULL DEFAULT (datetime('now')),
+      failed_attempts INTEGER DEFAULT 0,
+      locked_until TEXT
     );
+  `,
+  Session: `
+    CREATE TABLE Session
+    (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token_family TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL,
+      last_used TEXT NOT NULL DEFAULT (datetime('now')),
+      ip_address TEXT,
+      user_agent TEXT,
+      revoked INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_session_user_id ON Session (user_id);
+    CREATE INDEX IF NOT EXISTS idx_session_expires_at ON Session (expires_at);
+  `,
+  PasswordResetToken: `
+    CREATE TABLE PasswordResetToken
+    (
+      id TEXT PRIMARY KEY,
+      token TEXT NOT NULL UNIQUE,
+      user_id TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      used_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_password_reset_token ON PasswordResetToken (token);
+    CREATE INDEX IF NOT EXISTS idx_password_reset_user_id ON PasswordResetToken (user_id);
+    CREATE INDEX IF NOT EXISTS idx_password_reset_expires_at ON PasswordResetToken (expires_at);
   `,
   Post: `
     CREATE TABLE Post

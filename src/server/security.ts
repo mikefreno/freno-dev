@@ -400,3 +400,251 @@ export function rateLimitEmailVerification(
     event
   );
 }
+
+// ========== Account Lockout ==========
+
+/**
+ * Account lockout configuration
+ */
+export const ACCOUNT_LOCKOUT = {
+  MAX_FAILED_ATTEMPTS: 5,
+  LOCKOUT_DURATION_MS: 5 * 60 * 1000 // 5 minutes
+} as const;
+
+/**
+ * Check if an account is locked
+ * @param userId - User ID to check
+ * @returns Object with isLocked status and remaining time if locked
+ */
+export async function checkAccountLockout(userId: string): Promise<{
+  isLocked: boolean;
+  remainingMs?: number;
+  lockedUntil?: string;
+}> {
+  const { ConnectionFactory } = await import("./database");
+  const conn = ConnectionFactory();
+
+  const result = await conn.execute({
+    sql: "SELECT locked_until, failed_attempts FROM User WHERE id = ?",
+    args: [userId]
+  });
+
+  if (result.rows.length === 0) {
+    return { isLocked: false };
+  }
+
+  const user = result.rows[0];
+  const lockedUntil = user.locked_until as string | null;
+
+  if (!lockedUntil) {
+    return { isLocked: false };
+  }
+
+  const lockExpiry = new Date(lockedUntil);
+  const now = new Date();
+
+  if (lockExpiry > now) {
+    const remainingMs = lockExpiry.getTime() - now.getTime();
+    return {
+      isLocked: true,
+      remainingMs,
+      lockedUntil
+    };
+  }
+
+  // Lockout expired, clear it
+  await conn.execute({
+    sql: "UPDATE User SET locked_until = NULL, failed_attempts = 0 WHERE id = ?",
+    args: [userId]
+  });
+
+  return { isLocked: false };
+}
+
+/**
+ * Record a failed login attempt and lock account if threshold exceeded
+ * @param userId - User ID
+ * @returns Object with isLocked status and remaining time if locked
+ */
+export async function recordFailedLogin(userId: string): Promise<{
+  isLocked: boolean;
+  remainingMs?: number;
+  failedAttempts: number;
+}> {
+  const { ConnectionFactory } = await import("./database");
+  const conn = ConnectionFactory();
+
+  // Increment failed attempts
+  const result = await conn.execute({
+    sql: `UPDATE User 
+          SET failed_attempts = COALESCE(failed_attempts, 0) + 1 
+          WHERE id = ? 
+          RETURNING failed_attempts`,
+    args: [userId]
+  });
+
+  const failedAttempts = (result.rows[0]?.failed_attempts as number) || 0;
+
+  // Check if we should lock the account
+  if (failedAttempts >= ACCOUNT_LOCKOUT.MAX_FAILED_ATTEMPTS) {
+    const lockedUntil = new Date(
+      Date.now() + ACCOUNT_LOCKOUT.LOCKOUT_DURATION_MS
+    );
+
+    await conn.execute({
+      sql: "UPDATE User SET locked_until = ? WHERE id = ?",
+      args: [lockedUntil.toISOString(), userId]
+    });
+
+    return {
+      isLocked: true,
+      remainingMs: ACCOUNT_LOCKOUT.LOCKOUT_DURATION_MS,
+      failedAttempts
+    };
+  }
+
+  return {
+    isLocked: false,
+    failedAttempts
+  };
+}
+
+/**
+ * Reset failed login attempts on successful login
+ * @param userId - User ID
+ */
+export async function resetFailedAttempts(userId: string): Promise<void> {
+  const { ConnectionFactory } = await import("./database");
+  const conn = ConnectionFactory();
+
+  await conn.execute({
+    sql: "UPDATE User SET failed_attempts = 0, locked_until = NULL WHERE id = ?",
+    args: [userId]
+  });
+}
+
+// ========== Password Reset Token Management ==========
+
+/**
+ * Password reset token configuration
+ */
+export const PASSWORD_RESET_CONFIG = {
+  TOKEN_EXPIRY_MS: 60 * 60 * 1000 // 1 hour
+} as const;
+
+/**
+ * Create a password reset token
+ * @param userId - User ID
+ * @returns The reset token and token ID
+ */
+export async function createPasswordResetToken(userId: string): Promise<{
+  token: string;
+  tokenId: string;
+  expiresAt: string;
+}> {
+  const { ConnectionFactory } = await import("./database");
+  const { v4: uuid } = await import("uuid");
+  const conn = ConnectionFactory();
+
+  // Generate cryptographically secure token
+  const token = crypto.randomUUID();
+  const tokenId = uuid();
+  const expiresAt = new Date(
+    Date.now() + PASSWORD_RESET_CONFIG.TOKEN_EXPIRY_MS
+  );
+
+  // Invalidate any existing unused tokens for this user
+  await conn.execute({
+    sql: "UPDATE PasswordResetToken SET used_at = datetime('now') WHERE user_id = ? AND used_at IS NULL",
+    args: [userId]
+  });
+
+  // Create new token
+  await conn.execute({
+    sql: `INSERT INTO PasswordResetToken (id, token, user_id, expires_at)
+          VALUES (?, ?, ?, ?)`,
+    args: [tokenId, token, userId, expiresAt.toISOString()]
+  });
+
+  return {
+    token,
+    tokenId,
+    expiresAt: expiresAt.toISOString()
+  };
+}
+
+/**
+ * Validate and consume a password reset token
+ * @param token - Reset token
+ * @returns User ID if valid, null otherwise
+ */
+export async function validatePasswordResetToken(
+  token: string
+): Promise<{ userId: string; tokenId: string } | null> {
+  const { ConnectionFactory } = await import("./database");
+  const conn = ConnectionFactory();
+
+  const result = await conn.execute({
+    sql: `SELECT id, user_id, expires_at, used_at 
+          FROM PasswordResetToken 
+          WHERE token = ?`,
+    args: [token]
+  });
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  const tokenRecord = result.rows[0];
+
+  // Check if already used
+  if (tokenRecord.used_at) {
+    return null;
+  }
+
+  // Check if expired
+  const expiresAt = new Date(tokenRecord.expires_at as string);
+  if (expiresAt < new Date()) {
+    return null;
+  }
+
+  return {
+    userId: tokenRecord.user_id as string,
+    tokenId: tokenRecord.id as string
+  };
+}
+
+/**
+ * Mark a password reset token as used
+ * @param tokenId - Token ID
+ */
+export async function markPasswordResetTokenUsed(
+  tokenId: string
+): Promise<void> {
+  const { ConnectionFactory } = await import("./database");
+  const conn = ConnectionFactory();
+
+  await conn.execute({
+    sql: "UPDATE PasswordResetToken SET used_at = datetime('now') WHERE id = ?",
+    args: [tokenId]
+  });
+}
+
+/**
+ * Clean up expired password reset tokens
+ * Should be run periodically (e.g., via cron job)
+ */
+export async function cleanupExpiredPasswordResetTokens(): Promise<number> {
+  const { ConnectionFactory } = await import("./database");
+  const conn = ConnectionFactory();
+
+  const result = await conn.execute({
+    sql: `DELETE FROM PasswordResetToken 
+          WHERE expires_at < datetime('now')
+          OR used_at IS NOT NULL
+          RETURNING id`,
+    args: []
+  });
+
+  return result.rows.length;
+}

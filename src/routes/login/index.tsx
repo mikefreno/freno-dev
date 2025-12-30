@@ -175,7 +175,17 @@ export default function LoginPage() {
             result.error?.message ||
             result.result?.data?.message ||
             "Registration failed";
+          const errorCode = result.error?.data?.code;
+
+          // Check for rate limiting
           if (
+            errorCode === "TOO_MANY_REQUESTS" ||
+            errorMsg.includes("Too many attempts")
+          ) {
+            setError(errorMsg);
+          }
+          // Check for duplicate email
+          else if (
             errorMsg.includes("duplicate") ||
             errorMsg.includes("already exists")
           ) {
@@ -210,7 +220,29 @@ export default function LoginPage() {
             navigate("/account", { replace: true });
           }, 500);
         } else {
-          setShowPasswordError(true);
+          // Handle specific error types
+          const errorMessage = result.error?.message || "";
+          const errorCode = result.error?.data?.code;
+
+          // Check for rate limiting
+          if (
+            errorCode === "TOO_MANY_REQUESTS" ||
+            errorMessage.includes("Too many attempts")
+          ) {
+            setError(errorMessage);
+          }
+          // Check for account lockout
+          else if (
+            errorCode === "FORBIDDEN" ||
+            errorMessage.includes("Account locked") ||
+            errorMessage.includes("Account is locked")
+          ) {
+            setError(errorMessage);
+          }
+          // Generic login failure
+          else {
+            setShowPasswordError(true);
+          }
         }
       } else {
         // Email link login flow
@@ -254,7 +286,22 @@ export default function LoginPage() {
             result.error?.message ||
             result.result?.data?.message ||
             "Failed to send email";
-          setError(errorMsg);
+          const errorCode = result.error?.data?.code;
+
+          // Check for rate limiting or countdown not expired
+          if (
+            errorCode === "TOO_MANY_REQUESTS" ||
+            errorMsg.includes("countdown not expired") ||
+            errorMsg.includes("Too many attempts")
+          ) {
+            setError(
+              errorMsg.includes("countdown")
+                ? "Please wait before requesting another email link"
+                : errorMsg
+            );
+          } else {
+            setError(errorMsg);
+          }
         }
       }
     } catch (err: any) {
@@ -341,9 +388,29 @@ export default function LoginPage() {
               </Show>
               <Show
                 when={
+                  error().includes("Account locked") ||
+                  error().includes("Account is locked")
+                }
+              >
+                <div class="mb-2 text-base font-semibold">
+                  🔒 Account Locked
+                </div>
+                <div class="text-sm">{error()}</div>
+              </Show>
+              <Show when={error().includes("Too many attempts")}>
+                <div class="mb-2 text-base font-semibold">
+                  ⏱️ Rate Limit Exceeded
+                </div>
+                <div class="text-crust text-sm">{error()}</div>
+              </Show>
+              <Show
+                when={
                   error() &&
                   error() !== "passwordMismatch" &&
-                  error() !== "duplicate"
+                  error() !== "duplicate" &&
+                  !error().includes("Account locked") &&
+                  !error().includes("Account is locked") &&
+                  !error().includes("Too many attempts")
                 }
               >
                 <div class="text-base text-sm">{error()}</div>

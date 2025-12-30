@@ -92,7 +92,17 @@ export default function RequestPasswordResetPage() {
         }
       } else {
         const errorMsg = result.error?.message || "Failed to send reset email";
-        if (errorMsg.includes("countdown not expired")) {
+        const errorCode = result.error?.data?.code;
+
+        // Handle rate limiting
+        if (
+          errorCode === "TOO_MANY_REQUESTS" ||
+          errorMsg.includes("Too many attempts")
+        ) {
+          setError(errorMsg);
+        }
+        // Handle countdown not expired
+        else if (errorMsg.includes("countdown not expired")) {
           setError("Please wait before requesting another reset email");
         } else {
           setError(errorMsg);
@@ -192,7 +202,30 @@ export default function RequestPasswordResetPage() {
       {/* Error Message */}
       <Show when={error()}>
         <div class="mt-4 flex justify-center">
-          <div class="text-red text-sm italic">{error()}</div>
+          <div
+            class={`${
+              error().includes("Too many attempts") ||
+              error().includes("wait before requesting")
+                ? "border-maroon bg-red rounded-lg border px-4 py-3"
+                : ""
+            } max-w-md text-center`}
+          >
+            <Show when={error().includes("Too many attempts")}>
+              <div class="mb-1 text-base font-semibold">
+                ⏱️ Rate Limit Exceeded
+              </div>
+            </Show>
+            <div
+              class={`${
+                error().includes("Too many attempts") ||
+                error().includes("wait before requesting")
+                  ? "text-sm"
+                  : "text-red text-sm italic"
+              }`}
+            >
+              {error()}
+            </div>
+          </div>
         </div>
       </Show>
 

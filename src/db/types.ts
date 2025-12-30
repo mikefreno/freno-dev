@@ -13,6 +13,29 @@ export interface User {
   db_destroy_date?: string | null;
   created_at: string;
   updated_at: string;
+  failed_attempts?: number;
+  locked_until?: string | null;
+}
+
+export interface Session {
+  id: string;
+  user_id: string;
+  token_family: string;
+  created_at: string;
+  expires_at: string;
+  last_used: string;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  revoked: number;
+}
+
+export interface PasswordResetToken {
+  id: string;
+  token: string;
+  user_id: string;
+  expires_at: string;
+  used_at?: string | null;
+  created_at: string;
 }
 
 export interface Post {

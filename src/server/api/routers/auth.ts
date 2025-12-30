@@ -35,7 +35,13 @@ import {
   rateLimitLogin,
   rateLimitPasswordReset,
   rateLimitRegistration,
-  rateLimitEmailVerification
+  rateLimitEmailVerification,
+  checkAccountLockout,
+  recordFailedLogin,
+  resetFailedAttempts,
+  createPasswordResetToken,
+  validatePasswordResetToken,
+  markPasswordResetTokenUsed
 } from "~/server/security";
 import { logAuditEvent } from "~/server/audit";
 import type { H3Event } from "vinxi/http";
@@ -48,7 +54,7 @@ import type { Context } from "../utils";
  */
 function getH3Event(ctx: Context): H3Event {
   // Check if nativeEvent exists (production)
-  if (ctx.event && 'nativeEvent' in ctx.event && ctx.event.nativeEvent) {
+  if (ctx.event && "nativeEvent" in ctx.event && ctx.event.nativeEvent) {
     return ctx.event.nativeEvent as H3Event;
   }
   // Otherwise, assume ctx.event is H3Event (development)
@@ -133,7 +139,7 @@ function setAuthCookies(
     path: "/",
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     ...options
   };
 
@@ -310,8 +316,7 @@ export const authRouter = createTRPCRouter({
 
         // Create session with client info
         const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent =
-          getUserAgent(getH3Event(ctx));
+        const userAgent = getUserAgent(getH3Event(ctx));
         const sessionId = await createSession(
           userId,
           "14d",
@@ -326,7 +331,7 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax"
+          sameSite: "strict"
         });
 
         // Set CSRF token for authenticated session
@@ -493,8 +498,7 @@ export const authRouter = createTRPCRouter({
 
         // Create session with client info
         const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent =
-          getUserAgent(getH3Event(ctx));
+        const userAgent = getUserAgent(getH3Event(ctx));
         const sessionId = await createSession(
           userId,
           "14d",
@@ -509,7 +513,7 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax"
+          sameSite: "strict"
         });
 
         // Set CSRF token for authenticated session
@@ -613,8 +617,7 @@ export const authRouter = createTRPCRouter({
 
         // Create session with client info
         const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent =
-          getUserAgent(getH3Event(ctx));
+        const userAgent = getUserAgent(getH3Event(ctx));
         const expiresIn = rememberMe ? "14d" : "12h";
         const sessionId = await createSession(
           userId,
@@ -629,19 +632,14 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax"
+          sameSite: "strict"
         };
 
         if (rememberMe) {
           cookieOptions.maxAge = 60 * 60 * 24 * 14;
         }
 
-        setCookie(
-          getH3Event(ctx),
-          "userIDToken",
-          userToken,
-          cookieOptions
-        );
+        setCookie(getH3Event(ctx), "userIDToken", userToken, cookieOptions);
 
         // Set CSRF token for authenticated session
         setCSRFToken(getH3Event(ctx));
@@ -789,8 +787,7 @@ export const authRouter = createTRPCRouter({
 
         // Create session with client info
         const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent =
-          getUserAgent(getH3Event(ctx));
+        const userAgent = getUserAgent(getH3Event(ctx));
         const sessionId = await createSession(
           userId,
           "14d",
@@ -805,7 +802,7 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax"
+          sameSite: "strict"
         });
 
         // Set CSRF token for authenticated session
@@ -869,23 +866,57 @@ export const authRouter = createTRPCRouter({
 
         // Check all conditions after password verification
         if (!user || !passwordHash || !passwordMatch) {
-          // Debug logging (remove after fixing)
-          console.log("Login failed for:", email);
-          console.log("User found:", !!user);
-          console.log("Password hash exists:", !!passwordHash);
-          console.log("Password match:", passwordMatch);
+          // Record failed login attempt if user exists
+          if (user?.id) {
+            const lockoutStatus = await recordFailedLogin(user.id);
 
-          // Log failed login attempt (wrap in try-catch to ensure it never blocks auth flow)
+            if (lockoutStatus.isLocked) {
+              const remainingSec = Math.ceil(
+                (lockoutStatus.remainingMs || 0) / 1000
+              );
+
+              // Log account lockout
+              try {
+                const { ipAddress, userAgent } = getAuditContext(
+                  getH3Event(ctx)
+                );
+                await logAuditEvent({
+                  userId: user.id,
+                  eventType: "auth.login.failed",
+                  eventData: {
+                    email,
+                    method: "password",
+                    reason: "account_locked",
+                    failedAttempts: lockoutStatus.failedAttempts
+                  },
+                  ipAddress,
+                  userAgent,
+                  success: false
+                });
+              } catch (auditError) {
+                console.error("Audit logging failed:", auditError);
+              }
+
+              throw new TRPCError({
+                code: "FORBIDDEN",
+                message: `Account locked due to too many failed login attempts. Try again in ${Math.ceil(remainingSec / 60)} minutes.`
+              });
+            }
+          }
+
+          // Log failed login attempt
           try {
-            const { ipAddress, userAgent } = getAuditContext(
-              getH3Event(ctx)
-            );
+            const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
             await logAuditEvent({
+              userId: user?.id,
               eventType: "auth.login.failed",
               eventData: {
                 email,
                 method: "password",
-                reason: "invalid_credentials"
+                reason: "invalid_credentials",
+                failedAttempts: user?.id
+                  ? (res.rows[0]?.failed_attempts as number)
+                  : undefined
               },
               ipAddress,
               userAgent,
@@ -901,6 +932,19 @@ export const authRouter = createTRPCRouter({
           });
         }
 
+        // Check if account is locked before allowing login
+        const lockoutCheck = await checkAccountLockout(user.id);
+        if (lockoutCheck.isLocked) {
+          const remainingSec = Math.ceil(
+            (lockoutCheck.remainingMs || 0) / 1000
+          );
+
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `Account is locked due to too many failed login attempts. Try again in ${Math.ceil(remainingSec / 60)} minutes.`
+          });
+        }
+
         if (
           !user.provider ||
           !["email", "google", "github", "apple"].includes(user.provider)
@@ -911,11 +955,13 @@ export const authRouter = createTRPCRouter({
           });
         }
 
+        // Reset failed attempts on successful login
+        await resetFailedAttempts(user.id);
+
         const expiresIn = rememberMe ? "14d" : "12h";
 
         // Create session with client info (reuse clientIP from rate limiting)
-        const userAgent =
-          getUserAgent(getH3Event(ctx));
+        const userAgent = getUserAgent(getH3Event(ctx));
         const sessionId = await createSession(
           user.id,
           expiresIn,
@@ -929,7 +975,7 @@ export const authRouter = createTRPCRouter({
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
-          sameSite: "lax"
+          sameSite: "strict"
         };
 
         if (rememberMe) {
@@ -959,13 +1005,16 @@ export const authRouter = createTRPCRouter({
       } catch (error) {
         // Log the actual error for debugging
         console.error("emailPasswordLogin error:", error);
-        console.error("Error stack:", error instanceof Error ? error.stack : "no stack");
-        
+        console.error(
+          "Error stack:",
+          error instanceof Error ? error.stack : "no stack"
+        );
+
         // Re-throw TRPCErrors as-is
         if (error instanceof TRPCError) {
           throw error;
         }
-        
+
         // Wrap other errors
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -986,10 +1035,7 @@ export const authRouter = createTRPCRouter({
       const { email, rememberMe } = input;
 
       try {
-        const requested = getCookie(
-          getH3Event(ctx),
-          "emailLoginLinkRequested"
-        );
+        const requested = getCookie(getH3Event(ctx), "emailLoginLinkRequested");
         if (requested) {
           const expires = new Date(requested);
           const remaining = expires.getTime() - Date.now();
@@ -1111,10 +1157,7 @@ export const authRouter = createTRPCRouter({
       rateLimitPasswordReset(clientIP, getH3Event(ctx));
 
       try {
-        const requested = getCookie(
-          getH3Event(ctx),
-          "passwordResetRequested"
-        );
+        const requested = getCookie(getH3Event(ctx), "passwordResetRequested");
         if (requested) {
           const expires = new Date(requested);
           const remaining = expires.getTime() - Date.now();
@@ -1138,11 +1181,9 @@ export const authRouter = createTRPCRouter({
 
         const user = res.rows[0] as unknown as User;
 
-        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-        const token = await new SignJWT({ id: user.id })
-          .setProtectedHeader({ alg: "HS256" })
-          .setExpirationTime("15m")
-          .sign(secret);
+        // Create password reset token (1 hour expiry, single-use)
+        const { token } = await createPasswordResetToken(user.id);
+
         const domain = env.VITE_DOMAIN || "https://freno.me";
         const htmlContent = `<html>
 <head>
@@ -1175,6 +1216,9 @@ export const authRouter = createTRPCRouter({
     <br/>
     <div class="center">
         <a href="${domain}/login/password-reset?token=${token}" class="button">Reset Password</a>
+    </div>
+    <div class="center">
+        <p>This link will expire in 1 hour and can only be used once.</p>
     </div>
     <div class="center">
         <p>You can ignore this if you did not request this email, someone may have requested it in error</p>
@@ -1212,9 +1256,7 @@ export const authRouter = createTRPCRouter({
         if (
           !(error instanceof TRPCError && error.code === "TOO_MANY_REQUESTS")
         ) {
-          const { ipAddress, userAgent } = getAuditContext(
-            getH3Event(ctx)
-          );
+          const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
           await logAuditEvent({
             eventType: "auth.password.reset.request",
             eventData: {
@@ -1265,22 +1307,24 @@ export const authRouter = createTRPCRouter({
       }
 
       try {
-        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-        const { payload } = await jwtVerify(token, secret);
+        // Validate and consume the password reset token
+        const tokenValidation = await validatePasswordResetToken(token);
 
-        if (!payload.id || typeof payload.id !== "string") {
+        if (!tokenValidation) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "bad token"
+            message: "Invalid or expired reset token"
           });
         }
+
+        const { userId, tokenId } = tokenValidation;
 
         const conn = ConnectionFactory();
         const passwordHash = await hashPassword(newPassword);
 
         const userRes = await conn.execute({
           sql: "SELECT provider FROM User WHERE id = ?",
-          args: [payload.id]
+          args: [userId]
         });
 
         if (userRes.rows.length === 0) {
@@ -1297,16 +1341,20 @@ export const authRouter = createTRPCRouter({
           !["google", "github", "apple"].includes(currentProvider)
         ) {
           await conn.execute({
-            sql: "UPDATE User SET password_hash = ?, provider = ? WHERE id = ?",
-            args: [passwordHash, "email", payload.id]
+            sql: "UPDATE User SET password_hash = ?, provider = ?, failed_attempts = 0, locked_until = NULL WHERE id = ?",
+            args: [passwordHash, "email", userId]
           });
         } else {
           await conn.execute({
-            sql: "UPDATE User SET password_hash = ? WHERE id = ?",
-            args: [passwordHash, payload.id]
+            sql: "UPDATE User SET password_hash = ?, failed_attempts = 0, locked_until = NULL WHERE id = ?",
+            args: [passwordHash, userId]
           });
         }
 
+        // Mark token as used
+        await markPasswordResetTokenUsed(tokenId);
+
+        // Clear authentication cookies
         setCookie(getH3Event(ctx), "emailToken", "", {
           maxAge: 0,
           path: "/"
@@ -1319,7 +1367,7 @@ export const authRouter = createTRPCRouter({
         // Log successful password reset
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
-          userId: payload.id,
+          userId: userId,
           eventType: "auth.password.reset.complete",
           eventData: {},
           ipAddress,
@@ -1347,7 +1395,7 @@ export const authRouter = createTRPCRouter({
         console.error("Password reset error:", error);
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "token expired"
+          message: "Invalid or expired reset token"
         });
       }
     }),
@@ -1466,9 +1514,7 @@ export const authRouter = createTRPCRouter({
         if (
           !(error instanceof TRPCError && error.code === "TOO_MANY_REQUESTS")
         ) {
-          const { ipAddress, userAgent } = getAuditContext(
-            getH3Event(ctx)
-          );
+          const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
           await logAuditEvent({
             eventType: "auth.email.verify.request",
             eventData: {
