@@ -25,6 +25,23 @@ function formatDomainName(url: string): string {
   return withoutWww.charAt(0).toUpperCase() + withoutWww.slice(1);
 }
 
+/**
+ * Converts a banner photo URL to its thumbnail version
+ * Replaces the filename with -small variant (e.g., image.jpg -> image-small.jpg)
+ */
+function getThumbnailUrl(bannerPhoto: string | null): string {
+  if (!bannerPhoto) return "/blueprint.jpg";
+
+  // Check if URL contains a file extension
+  const match = bannerPhoto.match(/^(.+)(\.[^.]+)$/);
+  if (match) {
+    return `${match[1]}-small${match[2]}`;
+  }
+
+  // Fallback to original if no extension found
+  return bannerPhoto;
+}
+
 interface GitCommit {
   sha: string;
   message: string;
@@ -393,9 +410,16 @@ export function LeftBar() {
                       <Typewriter class="flex flex-col" keepAlive={false}>
                         <div class="relative overflow-hidden">
                           <img
-                            src={post.banner_photo || "/blueprint.jpg"}
+                            src={getThumbnailUrl(post.banner_photo)}
                             alt="post-cover"
                             class="float-right mb-1 ml-2 h-12 w-16 rounded object-cover"
+                            onError={(e) => {
+                              // Fallback to full banner if thumbnail doesn't exist
+                              const img = e.currentTarget;
+                              if (img.src !== (post.banner_photo || "/blueprint.jpg")) {
+                                img.src = post.banner_photo || "/blueprint.jpg";
+                              }
+                            }}
                           />
                           <span class="inline wrap-break-word hyphens-auto">
                             {insertSoftHyphens(post.title.replace(/_/g, " "))}

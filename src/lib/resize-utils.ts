@@ -58,3 +58,83 @@ export function createIsMobile(
 ): Accessor<boolean> {
   return () => isMobile(windowWidth());
 }
+
+/**
+ * Resizes an image file to a maximum width/height while maintaining aspect ratio
+ * @param file Original image file
+ * @param maxWidth Maximum width in pixels
+ * @param maxHeight Maximum height in pixels
+ * @param quality JPEG quality (0-1), default 0.85
+ * @returns Resized image as Blob
+ */
+export async function resizeImage(
+  file: File | Blob,
+  maxWidth: number,
+  maxHeight: number,
+  quality: number = 0.85
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      reject(new Error("Failed to get canvas context"));
+      return;
+    }
+
+    img.onload = () => {
+      let { width, height } = img;
+
+      // Calculate new dimensions maintaining aspect ratio
+      if (width > maxWidth || height > maxHeight) {
+        const aspectRatio = width / height;
+
+        if (width > height) {
+          width = Math.min(width, maxWidth);
+          height = width / aspectRatio;
+        } else {
+          height = Math.min(height, maxHeight);
+          width = height * aspectRatio;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      // Draw image on canvas with new dimensions
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert canvas to blob
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to create blob from canvas"));
+          }
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      reject(new Error("Failed to load image"));
+    };
+
+    // Load image from file
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        img.src = e.target.result as string;
+      } else {
+        reject(new Error("Failed to read file"));
+      }
+    };
+    reader.onerror = () => {
+      reject(new Error("FileReader error"));
+    };
+    reader.readAsDataURL(file);
+  });
+}
