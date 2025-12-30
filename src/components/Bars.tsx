@@ -1,6 +1,13 @@
 import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
-import { onMount, createSignal, Show, For, onCleanup } from "solid-js";
+import {
+  onMount,
+  createSignal,
+  Show,
+  For,
+  onCleanup,
+  createEffect
+} from "solid-js";
 import { api } from "~/lib/api";
 import { insertSoftHyphens } from "~/lib/client-utils";
 import GitHub from "./icons/GitHub";
@@ -10,7 +17,7 @@ import { ActivityHeatmap } from "./ActivityHeatmap";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { SkeletonBox, SkeletonText } from "./SkeletonLoader";
 import { env } from "~/env/client";
-import { A, useNavigate } from "@solidjs/router";
+import { A, useNavigate, useLocation } from "@solidjs/router";
 
 function formatDomainName(url: string): string {
   const domain = url.split("://")[1]?.split(":")[0] ?? url;
@@ -165,6 +172,7 @@ export function RightBarContent() {
 
 export function LeftBar() {
   const { leftBarVisible, setLeftBarVisible } = useBars();
+  const location = useLocation();
   let ref: HTMLDivElement | undefined;
 
   const [recentPosts, setRecentPosts] = createSignal<any[] | undefined>(
@@ -193,6 +201,31 @@ export function LeftBar() {
     } catch (error) {
       console.error("Sign out failed:", error);
       setSignOutLoading(false);
+    }
+  };
+
+  const fetchUserInfo = async () => {
+    try {
+      const response = await fetch("/api/trpc/user.getProfile", {
+        method: "GET"
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.result?.data) {
+          setUserInfo({
+            email: result.result.data.email,
+            isAuthenticated: true
+          });
+        } else {
+          setUserInfo({ email: null, isAuthenticated: false });
+        }
+      } else {
+        setUserInfo({ email: null, isAuthenticated: false });
+      }
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+      setUserInfo({ email: null, isAuthenticated: false });
     }
   };
 
@@ -250,34 +283,25 @@ export function LeftBar() {
         setRecentPosts([]);
       }
 
-      try {
-        const response = await fetch("/api/trpc/user.getProfile", {
-          method: "GET"
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.result?.data) {
-            setUserInfo({
-              email: result.result.data.email,
-              isAuthenticated: true
-            });
-          } else {
-            setUserInfo({ email: null, isAuthenticated: false });
-          }
-        } else {
-          setUserInfo({ email: null, isAuthenticated: false });
-        }
-      } catch (error) {
-        console.error("Failed to fetch user info:", error);
-        setUserInfo({ email: null, isAuthenticated: false });
-      }
+      await fetchUserInfo();
     };
 
     setTimeout(() => {
       fetchData();
     }, 0);
   });
+
+  // Refetch user info whenever location changes
+  createEffect(() => {
+    // Track location changes
+    location.pathname;
+
+    // Only refetch if component is mounted
+    if (isMounted()) {
+      fetchUserInfo();
+    }
+  });
+
   const navigate = useNavigate();
 
   return (
