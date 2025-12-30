@@ -395,7 +395,7 @@ export default function LoginPage() {
                 <div class="mb-2 text-base font-semibold">
                   🔒 Account Locked
                 </div>
-                <div class="text-sm">{error()}</div>
+                <div class="text-crust text-sm">{error()}</div>
               </Show>
               <Show when={error().includes("Too many attempts")}>
                 <div class="mb-2 text-base font-semibold">
