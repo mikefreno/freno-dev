@@ -2,7 +2,7 @@ import { Show } from "solid-js";
 import { useParams, query } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
+import { getEvent } from "vinxi/http";
 import PostForm from "~/components/blog/PostForm";
 import "../post.css";
 
@@ -10,9 +10,14 @@ const getPostForEdit = query(async (id: string) => {
   "use server";
   const { getPrivilegeLevel, getUserID, ConnectionFactory } =
     await import("~/server/utils");
-  const event = getRequestEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
-  const userID = await getUserID(event.nativeEvent);
+  const event = getEvent()!;
+  const privilegeLevel = await getPrivilegeLevel(event);
+  const userID = await getUserID(event);
+
+  // Return 401 for non-admin users
+  if (privilegeLevel !== "admin") {
+    throw new Response("Unauthorized", { status: 401 });
+  }
 
   const conn = ConnectionFactory();
   const query = `SELECT * FROM Post WHERE id = ?`;
@@ -32,6 +37,10 @@ const getPostForEdit = query(async (id: string) => {
 
   return { post, tags, privilegeLevel, userID };
 }, "post-for-edit");
+
+export const route = {
+  load: ({ params }: { params: { id: string } }) => getPostForEdit(params.id)
+};
 
 export default function EditPost() {
   const params = useParams();
@@ -64,31 +73,19 @@ export default function EditPost() {
       />
 
       <Show
-        when={data()?.privilegeLevel === "admin"}
+        when={data() && postData()}
         fallback={
           <div class="w-full pt-[30vh] text-center">
-            <div class="text-text text-2xl">Unauthorized</div>
-            <div class="text-subtext0 mt-4">
-              You must be an admin to edit posts.
-            </div>
+            <div class="text-text text-xl">Loading post...</div>
           </div>
         }
       >
-        <Show
-          when={data() && postData()}
-          fallback={
-            <div class="w-full pt-[30vh] text-center">
-              <div class="text-text text-xl">Loading post...</div>
-            </div>
-          }
-        >
-          <PostForm
-            mode="edit"
-            postId={parseInt(params.id)}
-            initialData={postData()!}
-            userID={data()!.userID}
-          />
-        </Show>
+        <PostForm
+          mode="edit"
+          postId={parseInt(params.id)}
+          initialData={postData()!}
+          userID={data()!.userID}
+        />
       </Show>
     </>
   );
