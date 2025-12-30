@@ -416,7 +416,10 @@ export function LeftBar() {
                             onError={(e) => {
                               // Fallback to full banner if thumbnail doesn't exist
                               const img = e.currentTarget;
-                              if (img.src !== (post.banner_photo || "/blueprint.jpg")) {
+                              if (
+                                img.src !==
+                                (post.banner_photo || "/blueprint.jpg")
+                              ) {
                                 img.src = post.banner_photo || "/blueprint.jpg";
                               }
                             }}

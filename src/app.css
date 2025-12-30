@@ -209,7 +209,8 @@
   transition-duration: 500ms;
   syntax: "*";
   inherits: false;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: stable both-edges;
+  scrollbar-color: var(--color-text) var(--color-base);
 }
 
 ::selection {

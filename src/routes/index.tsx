@@ -106,7 +106,7 @@ export default function Home() {
               </div>
 
               {/* Life and Lineage */}
-              <div class="border-surface0 flex w-full flex-col gap-2 rounded-md border-2 p-4 text-center xl:mr-4">
+              <div class="border-surface0 flex w-full flex-col gap-2 rounded-md border-2 p-4 text-center">
                 <div>My mobile game:</div>
                 <a
                   class="text-blue hover-underline-animation mx-auto w-fit"
