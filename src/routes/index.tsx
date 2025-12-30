@@ -153,7 +153,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div class="flex justify-between">
+          <div class="flex justify-between text-center">
             <Typewriter
               speed={120}
               class="mx-auto max-w-3/4 pt-8 md:max-w-1/2"
@@ -174,22 +174,22 @@ export default function Home() {
               macos and arch linux rice in there if you're into that kinda thing
               and a home server setup too. Which I will write about soon™.
             </Typewriter>
-            <div class="flex flex-col items-end justify-center gap-4 pr-4">
-              <Typewriter speed={30} keepAlive={false} delay={500}>
-                <div>
-                  My Collection of
-                  <br />
-                  By-the-ways:
-                </div>
-              </Typewriter>
-              <Typewriter speed={30} keepAlive={false} delay={500}>
-                <ul class="list-disc">
-                  <li>I use Neovim</li>
-                  <li>I use Arch Linux</li>
-                  <li>I use Rust</li>
-                </ul>
-              </Typewriter>
-            </div>
+          </div>
+          <div class="flex flex-col items-end justify-center gap-4 pr-4">
+            <Typewriter speed={30} keepAlive={false} delay={500}>
+              <div>
+                My Collection of
+                <br />
+                By-the-ways:
+              </div>
+            </Typewriter>
+            <Typewriter speed={30} keepAlive={false} delay={500}>
+              <ul class="list-disc">
+                <li>I use Neovim</li>
+                <li>I use Arch Linux</li>
+                <li>I use Rust</li>
+              </ul>
+            </Typewriter>
           </div>
         </div>
       </main>
