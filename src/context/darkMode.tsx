@@ -49,7 +49,13 @@ export const DarkModeProvider: ParentComponent = (props) => {
   // Initialize with correct theme synchronously
   const [isDark, setIsDark] = createSignal(getInitialTheme());
 
+  // Force update immediately on client to fix hydration mismatch
   onMount(() => {
+    const actualTheme = getInitialTheme();
+    if (isDark() !== actualTheme) {
+      setIsDark(actualTheme);
+    }
+
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     // Listen for system theme changes

@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, createSignal, onMount } from "solid-js";
 import MoonIcon from "./icons/MoonIcon";
 import SunIcon from "./icons/SunIcon";
 import { Typewriter } from "./Typewriter";
@@ -6,6 +6,11 @@ import { useDarkMode } from "~/context/darkMode";
 
 export function DarkModeToggle() {
   const { isDark, toggleDarkMode } = useDarkMode();
+  const [mounted, setMounted] = createSignal(false);
+
+  onMount(() => {
+    setMounted(true);
+  });
 
   return (
     <button
@@ -14,17 +19,27 @@ export function DarkModeToggle() {
       aria-label="Toggle dark mode"
     >
       <Show
-        when={isDark()}
-        fallback={<SunIcon size={24} fill="var(--color-text)" />}
+        when={mounted()}
+        fallback={<div style={{ width: "24px", height: "24px" }} />}
       >
-        <MoonIcon size={24} fill="var(--color-text)" />
+        <Show
+          when={isDark()}
+          fallback={<SunIcon size={24} fill="var(--color-text)" />}
+        >
+          <MoonIcon size={24} fill="var(--color-text)" />
+        </Show>
       </Show>
       <span class="text-lg font-semibold">
         <Show
-          when={isDark()}
-          fallback={<Typewriter keepAlive={false}>Light Mode</Typewriter>}
+          when={mounted()}
+          fallback={<span style={{ visibility: "hidden" }}>Dark Mode</span>}
         >
-          <Typewriter keepAlive={false}>Dark Mode</Typewriter>
+          <Show
+            when={isDark()}
+            fallback={<Typewriter keepAlive={false}>Light Mode</Typewriter>}
+          >
+            <Typewriter keepAlive={false}>Dark Mode</Typewriter>
+          </Show>
         </Show>
       </span>
     </button>
