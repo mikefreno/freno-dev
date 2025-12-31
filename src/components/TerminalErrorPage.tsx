@@ -159,7 +159,7 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
       </div>
 
       {/* Main content */}
-      <div class="relative z-10 flex min-h-screen flex-col items-start justify-start px-8 py-16 md:px-16">
+      <div class="relative z-10 flex min-h-screen flex-col items-start justify-start py-16 lg:px-16">
         {/* Terminal header */}
         <div class="mb-8 w-full max-w-4xl">
           <div class="border-surface0 text-subtext0 flex items-center gap-2 border-b pb-2 font-mono text-sm">
