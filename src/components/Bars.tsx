@@ -206,6 +206,8 @@ export function LeftBar() {
 
   const [isMounted, setIsMounted] = createSignal(false);
   const [signOutLoading, setSignOutLoading] = createSignal(false);
+  const [getLostText, setGetLostText] = createSignal("What's this?");
+  const [getLostVisible, setGetLostVisible] = createSignal(false);
 
   const handleLinkClick = () => {
     if (typeof window !== "undefined" && window.innerWidth < 768) {
@@ -252,6 +254,60 @@ export function LeftBar() {
   onMount(() => {
     setIsMounted(true);
 
+    // Terminal-style appearance animation for "Get Lost" button
+    const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
+    const originalText = "What's this?";
+    let glitchInterval: NodeJS.Timeout;
+
+    // Delay appearance to match terminal vibe
+    setTimeout(() => {
+      // Make visible immediately so typing animation is visible
+      setGetLostVisible(true);
+
+      // Type-in animation with random characters resolving
+      let currentIndex = 0;
+      const typeInterval = setInterval(() => {
+        if (currentIndex <= originalText.length) {
+          let displayText = originalText.substring(0, currentIndex);
+          // Add random trailing characters
+          if (currentIndex < originalText.length) {
+            const remaining = originalText.length - currentIndex;
+            for (let i = 0; i < remaining; i++) {
+              displayText +=
+                glitchChars[Math.floor(Math.random() * glitchChars.length)];
+            }
+          }
+          setGetLostText(displayText);
+          currentIndex++;
+        } else {
+          clearInterval(typeInterval);
+          setGetLostText(originalText);
+
+          // Start regular glitch effect after typing completes
+          glitchInterval = setInterval(() => {
+            if (Math.random() > 0.9) {
+              // 10% chance to glitch
+              let glitched = "";
+              for (let i = 0; i < originalText.length; i++) {
+                if (Math.random() > 0.7) {
+                  // 30% chance each character glitches
+                  glitched +=
+                    glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                } else {
+                  glitched += originalText[i];
+                }
+              }
+              setGetLostText(glitched);
+
+              setTimeout(() => {
+                setGetLostText(originalText);
+              }, 100);
+            }
+          }, 150);
+        }
+      }, 140); // Type speed (higher is slower)
+    }, 500); // Initial delay before appearing
+
     if (ref) {
       // Focus trap for accessibility on mobile
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -291,6 +347,11 @@ export function LeftBar() {
 
       onCleanup(() => {
         ref?.removeEventListener("keydown", handleKeyDown);
+        clearInterval(glitchInterval);
+      });
+    } else {
+      onCleanup(() => {
+        clearInterval(glitchInterval);
       });
     }
 
@@ -498,28 +559,38 @@ export function LeftBar() {
                     </button>
                   </li>
                 </Show>
-                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                  <button
-                    onClick={() => {
-                      const lostUrls = [
-                        "/dev/null",
-                        "/segfault",
-                        "/void",
-                        "/404",
-                        "/lost-and-still-lost"
-                      ];
-                      const randomUrl =
-                        lostUrls[Math.floor(Math.random() * lostUrls.length)];
-                      navigate(randomUrl);
-                      handleLinkClick();
-                    }}
-                    class="text-left"
-                  >
-                    Get Lost
-                  </button>
-                </li>
               </ul>
             </Typewriter>
+
+            {/* Get Lost button - outside Typewriter to allow glitch effect */}
+            <ul class="flex flex-col gap-4 pb-6">
+              <li
+                class="hover:text-subtext0 w-fit transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"
+                classList={{
+                  "opacity-0 pointer-events-none": !getLostVisible(),
+                  "opacity-100": getLostVisible()
+                }}
+              >
+                <button
+                  onClick={() => {
+                    const lostUrls = [
+                      "/dev/null",
+                      "/segfault",
+                      "/void",
+                      "/404",
+                      "/lost-and-still-lost"
+                    ];
+                    const randomUrl =
+                      lostUrls[Math.floor(Math.random() * lostUrls.length)];
+                    navigate(randomUrl);
+                    handleLinkClick();
+                  }}
+                  class="text-left font-mono"
+                >
+                  {getLostText()}
+                </button>
+              </li>
+            </ul>
 
             <hr class="border-overlay0 -mx-4 my-auto" />
             <div class="my-auto">

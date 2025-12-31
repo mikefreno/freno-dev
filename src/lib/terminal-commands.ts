@@ -13,16 +13,19 @@ export interface CommandContext {
     type: "success" | "error" | "info"
   ) => void;
   triggerCrash?: () => void;
+  isDark?: boolean;
 }
 
 export const createTerminalCommands = (context: CommandContext) => {
   // Define available routes
   const routes = [
+    { path: "/", name: "home" },
     { path: "/blog", name: "blog" },
     { path: "/resume", name: "resume" },
     { path: "/contact", name: "contact" },
     { path: "/downloads", name: "downloads" },
-    { path: "/account", name: "account" }
+    { path: "/account", name: "account" },
+    { path: "/login", name: "login" }
   ];
 
   const commands: Record<
@@ -41,11 +44,15 @@ export const createTerminalCommands = (context: CommandContext) => {
       action: () => window.history.back(),
       description: "Go back"
     },
+    cd: {
+      action: () => context.navigate("/"),
+      description: "Navigate to home"
+    },
     ls: {
       action: () => {
         context.addToHistory(
           "ls",
-          "home blog  resume  contact  downloads  login  account",
+          "home  blog  resume  contact  downloads  login  account",
           "success"
         );
       },
@@ -157,9 +164,10 @@ export const createTerminalCommands = (context: CommandContext) => {
     },
     neofetch: {
       action: () => {
+        const theme = context.isDark ? "Catppuccin-mocha" : "Gruvbox-light";
         context.addToHistory(
           "neofetch",
-          `       _,met$$$$$gg.          guest@freno.dev\n    ,g$$$$$$$$$$$$$$$P.       ----------------\n  ,g$$P\"\"       \"\"\"Y$$.\"    OS: 404 Not Found\n ,$$P'              \`$$$.    Shell: terminal-shell\n',$$P       ,ggs.     \`$$b:  Resolution: Lost\n\`d$$'     ,$P\"'   .    $$$   Theme: Catppuccin\n $$P      d$'     ,    $$P   Terminal: web-terminal\n $$:      $$.   -    ,d$$'   CPU: Confusion (404)\n $$;      Y$b._   _,d$P'     Memory: ???\n Y$$.    \`.\`\"Y$$$$P\"'        \n \`$$b      \"-.__            \n  \`Y$$                      \n   \`Y$$.                    \n     \`$$b.                  \n       \`Y$$b.               \n          \`\"Y$b._           \n              \`\"\"\"\"        `,
+          `       _,met$$$$$gg.          guest@freno.dev\n    ,g$$$$$$$$$$$$$$$P.       ----------------\n  ,g$$P\"\"       \"\"\"Y$$.\"     OS: 404 Not Found\n ,$$P'              \`$$$.    Shell: terminal-shell\n',$$P       ,ggs.     \`$$b:  Resolution: Lost\n\`d$$'     ,$P\"'   .    $$$   Theme: ${theme}\n $$P      d$'     ,    $$P   Terminal: web-terminal\n $$:      $$.   -    ,d$$'   CPU: Confusion (404)\n $$;      Y$b._   _,d$P'     Memory: ???\n Y$$.    \`.\`\"Y$$$$P\"'        \n \`$$b      \"-.__            \n  \`Y$$                      \n   \`Y$$.                    \n     \`$$b.                  \n       \`Y$$b.               \n          \`\"Y$b._           \n              \`\"\"\"\"        `,
           "info"
         );
       },
