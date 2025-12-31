@@ -126,7 +126,7 @@ export default function NotFound() {
         onGlitchTextChange={setGlitchText}
         commandContext={{
           triggerCrash: () => setShouldCrash(true),
-          isDark: isDark()
+          isDark: isDark
         }}
       />
     </>

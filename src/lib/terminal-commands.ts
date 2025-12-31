@@ -13,7 +13,8 @@ export interface CommandContext {
     type: "success" | "error" | "info"
   ) => void;
   triggerCrash?: () => void;
-  isDark?: boolean;
+  isDark?: () => boolean;
+  openBtop?: () => void;
 }
 
 export const createTerminalCommands = (context: CommandContext) => {
@@ -164,7 +165,7 @@ export const createTerminalCommands = (context: CommandContext) => {
     },
     neofetch: {
       action: () => {
-        const theme = context.isDark ? "Catppuccin-mocha" : "Gruvbox-light";
+        const theme = context.isDark?.() ? "Catppuccin-mocha" : "Gruvbox-light";
         context.addToHistory(
           "neofetch",
           `       _,met$$$$$gg.          guest@freno.dev\n    ,g$$$$$$$$$$$$$$$P.       ----------------\n  ,g$$P\"\"       \"\"\"Y$$.\"     OS: 404 Not Found\n ,$$P'              \`$$$.    Shell: terminal-shell\n',$$P       ,ggs.     \`$$b:  Resolution: Lost\n\`d$$'     ,$P\"'   .    $$$   Theme: ${theme}\n $$P      d$'     ,    $$P   Terminal: web-terminal\n $$:      $$.   -    ,d$$'   CPU: Confusion (404)\n $$;      Y$b._   _,d$P'     Memory: ???\n Y$$.    \`.\`\"Y$$$$P\"'        \n \`$$b      \"-.__            \n  \`Y$$                      \n   \`Y$$.                    \n     \`$$b.                  \n       \`Y$$b.               \n          \`\"Y$b._           \n              \`\"\"\"\"        `,
@@ -211,6 +212,20 @@ export const createTerminalCommands = (context: CommandContext) => {
         );
       },
       description: "Print system information"
+    },
+    btop: {
+      action: () => {
+        if (context.openBtop) {
+          context.openBtop();
+        } else {
+          context.addToHistory(
+            "btop",
+            "btop: command not available in this context",
+            "error"
+          );
+        }
+      },
+      description: "System resource monitor"
     }
   };
 

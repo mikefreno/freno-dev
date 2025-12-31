@@ -13,6 +13,7 @@ import {
   executeTerminalCommand,
   CommandContext
 } from "~/lib/terminal-commands";
+import { Btop } from "~/components/Btop";
 
 interface TerminalErrorPageProps {
   glitchText: string;
@@ -34,6 +35,7 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
   const [command, setCommand] = createSignal("");
   const [history, setHistory] = createSignal<CommandHistoryItem[]>([]);
   const [historyIndex, setHistoryIndex] = createSignal(-1);
+  const [btopOpen, setBtopOpen] = createSignal(false);
   let inputRef: HTMLInputElement | undefined;
   let footerRef: HTMLDivElement | undefined;
 
@@ -62,6 +64,7 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
     navigate: props.navigate,
     location: props.location,
     addToHistory,
+    openBtop: () => setBtopOpen(true),
     ...props.commandContext
   });
 
@@ -159,7 +162,7 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
       </div>
 
       {/* Main content */}
-      <div class="relative z-10 flex min-h-screen flex-col items-start justify-start py-16 lg:px-16">
+      <div class="relative z-10 flex min-h-screen flex-col items-start justify-start px-4 py-16 lg:px-16">
         {/* Terminal header */}
         <div class="mb-8 w-full max-w-4xl">
           <div class="border-surface0 text-subtext0 flex items-center gap-2 border-b pb-2 font-mono text-sm">
@@ -220,6 +223,7 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
               onKeyDown={handleKeyDown}
               class="text-text caret-text ml-1 flex-1 border-none bg-transparent outline-none"
               autocomplete="off"
+              autocapitalize="off"
               spellcheck={false}
             />
           </div>
@@ -233,6 +237,11 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
           {props.footer}
         </div>
       </div>
+
+      {/* Btop overlay */}
+      <Show when={btopOpen()}>
+        <Btop onClose={() => setBtopOpen(false)} />
+      </Show>
 
       {/* Custom styles */}
       <style>{`

@@ -20,13 +20,14 @@ export default function ErrorBoundaryFallback(
     };
   }
 
-  // Try to get dark mode, fallback to true (dark) if context unavailable
-  let isDark = true;
+  // Try to get dark mode, fallback to a function returning true (dark) if context unavailable
+  let isDark: () => boolean;
   try {
     const darkMode = useDarkMode();
-    isDark = darkMode.isDark();
+    isDark = darkMode.isDark;
   } catch (e) {
     // Context not available, use default
+    isDark = () => true;
   }
 
   const [glitchText, setGlitchText] = createSignal("ERROR");
