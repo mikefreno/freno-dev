@@ -498,6 +498,26 @@ export function LeftBar() {
                     </button>
                   </li>
                 </Show>
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <button
+                    onClick={() => {
+                      const lostUrls = [
+                        "/dev/null",
+                        "/segfault",
+                        "/void",
+                        "/404",
+                        "/lost-and-still-lost"
+                      ];
+                      const randomUrl =
+                        lostUrls[Math.floor(Math.random() * lostUrls.length)];
+                      navigate(randomUrl);
+                      handleLinkClick();
+                    }}
+                    class="text-left"
+                  >
+                    Get Lost
+                  </button>
+                </li>
               </ul>
             </Typewriter>
 

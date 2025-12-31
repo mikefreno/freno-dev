@@ -181,12 +181,20 @@ function AppLayout(props: { children: any }) {
               JavaScript is disabled. Features will be limited.
             </div>
           </noscript>
-          <div
-            onMouseUp={handleCenterTapRelease}
-            onTouchEnd={handleCenterTapRelease}
+          <ErrorBoundary
+            fallback={(error, reset) => (
+              <ErrorBoundaryFallback error={error} reset={reset} />
+            )}
           >
-            <Suspense fallback={<TerminalSplash />}>{props.children}</Suspense>
-          </div>
+            <div
+              onMouseUp={handleCenterTapRelease}
+              onTouchEnd={handleCenterTapRelease}
+            >
+              <Suspense fallback={<TerminalSplash />}>
+                {props.children}
+              </Suspense>
+            </div>
+          </ErrorBoundary>
         </div>
         <RightBar />
       </div>

@@ -1,14 +1,90 @@
 import { Title, Meta } from "@solidjs/meta";
 import { HttpStatusCode } from "@solidjs/start";
-import { useNavigate } from "@solidjs/router";
-import { createEffect, createSignal, For } from "solid-js";
+import { useNavigate, useLocation } from "@solidjs/router";
+import { createSignal, onCleanup, onMount, For, Show } from "solid-js";
+import {
+  CommandHistoryItem,
+  createTerminalCommands,
+  executeTerminalCommand
+} from "~/lib/terminal-commands";
+
+// Component that crashes when rendered
+function CrashComponent() {
+  throw new Error("Terminal crash test - triggering error boundary");
+}
 
 export default function NotFound() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [glitchText, setGlitchText] = createSignal("404");
+  const [command, setCommand] = createSignal("");
+  const [history, setHistory] = createSignal<CommandHistoryItem[]>([]);
+  const [historyIndex, setHistoryIndex] = createSignal(-1);
+  const [shouldCrash, setShouldCrash] = createSignal(false);
+  let inputRef: HTMLInputElement | undefined;
 
-  createEffect(() => {
-    const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
+  const addToHistory = (
+    cmd: string,
+    output: string,
+    type: "success" | "error" | "info"
+  ) => {
+    if (cmd === "clear") {
+      setHistory([]);
+    } else {
+      setHistory([...history(), { command: cmd, output, type }]);
+    }
+  };
+
+  const commands = createTerminalCommands({
+    navigate,
+    location,
+    addToHistory,
+    triggerCrash: () => setShouldCrash(true)
+  });
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      executeTerminalCommand(command(), commands, addToHistory);
+      setCommand("");
+      setHistoryIndex(-1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const allCommands = history().map((h) => h.command);
+      if (allCommands.length > 0) {
+        const newIndex =
+          historyIndex() === -1
+            ? allCommands.length - 1
+            : Math.max(0, historyIndex() - 1);
+        setHistoryIndex(newIndex);
+        setCommand(allCommands[newIndex]);
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const allCommands = history().map((h) => h.command);
+      if (historyIndex() !== -1) {
+        const newIndex = Math.min(allCommands.length - 1, historyIndex() + 1);
+        setHistoryIndex(newIndex);
+        setCommand(allCommands[newIndex]);
+      }
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      const typed = command().toLowerCase();
+      const matches = Object.keys(commands).filter((cmd) =>
+        cmd.startsWith(typed)
+      );
+      if (matches.length === 1) {
+        setCommand(matches[0]);
+      } else if (matches.length > 1) {
+        addToHistory(command(), matches.join("  "), "info");
+      }
+    } else if (e.key === "l" && e.ctrlKey) {
+      e.preventDefault();
+      setHistory([]);
+    }
+  };
+
+  onMount(() => {
+    const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`0123456789";
     const originalText = "404";
 
     const glitchInterval = setInterval(() => {
@@ -28,177 +104,193 @@ export default function NotFound() {
       }
     }, 300);
 
-    return () => clearInterval(glitchInterval);
-  });
+    inputRef?.focus();
 
-  const createParticles = () => {
-    return Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      animationDelay: `${Math.random() * 3}s`,
-      animationDuration: `${2 + Math.random() * 3}s`
-    }));
-  };
+    onCleanup(() => {
+      clearInterval(glitchInterval);
+    });
+  });
 
   return (
     <>
+      <Show when={shouldCrash()}>
+        {/*@ts-ignore (this is intentional)*/}
+        <CrashComponent />
+      </Show>
       <Title>404 Not Found | Michael Freno</Title>
       <Meta
         name="description"
         content="404 - Page not found. The page you're looking for doesn't exist."
       />
       <HttpStatusCode code={404} />
-      <div class="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-black dark:via-slate-900 dark:to-black">
-        {/* Animated particle background */}
-        <div class="absolute inset-0 overflow-hidden">
-          <For each={createParticles()}>
-            {(particle) => (
-              <div
-                class="absolute animate-pulse"
-                style={{
-                  left: particle.left,
-                  top: particle.top,
-                  "animation-delay": particle.animationDelay,
-                  "animation-duration": particle.animationDuration
-                }}
-              >
-                <div class="h-1 w-1 rounded-full bg-blue-400 opacity-30 dark:bg-blue-300" />
-              </div>
-            )}
-          </For>
-        </div>
-
-        {/* Animated grid background */}
-        <div class="absolute inset-0 opacity-10">
+      <div
+        class="relative min-h-screen w-full overflow-hidden"
+        onClick={() => inputRef?.focus()}
+      >
+        {/* Scanline effect */}
+        <div class="pointer-events-none absolute inset-0 z-20 opacity-5">
           <div
             class="h-full w-full"
             style={{
-              "background-image": `
-              linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)
-            `,
-              "background-size": "50px 50px",
-              animation: "grid-move 20s linear infinite"
+              "background-image":
+                "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px)",
+              animation: "scanline 8s linear infinite"
             }}
           />
         </div>
 
         {/* Main content */}
-        <div class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 text-center">
-          {/* Glitchy 404 */}
-          <div class="mb-8">
-            <h1
-              class="bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 bg-clip-text text-8xl font-bold text-transparent select-none md:text-9xl"
-              style={{
-                "text-shadow": "0 0 30px rgba(59, 130, 246, 0.5)",
-                filter: "drop-shadow(0 0 10px rgba(59, 130, 246, 0.3))"
-              }}
-            >
-              {glitchText()}
-            </h1>
-            <div class="mx-auto mt-2 h-1 w-32 animate-pulse bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
+        <div class="relative z-10 flex min-h-screen flex-col items-start justify-start px-8 py-16 md:px-16">
+          {/* Terminal header */}
+          <div class="mb-8 w-full max-w-4xl">
+            <div class="border-surface0 text-subtext0 flex items-center gap-2 border-b pb-2 font-mono text-sm">
+              <span class="text-green">freno@terminal</span>
+              <span class="text-subtext1">:</span>
+              <span class="text-blue">~</span>
+              <span class="text-subtext1">$</span>
+            </div>
           </div>
 
-          {/* Error message with typewriter effect */}
-          <div class="max-w-2xl space-y-4">
-            <h2 class="animate-fade-in text-2xl font-light text-slate-300 md:text-3xl dark:text-slate-400">
-              You seem to have drifted off into space...
-            </h2>
-            <p class="animate-fade-in-delay text-lg text-slate-400 dark:text-slate-500">
-              ...or the page you're looking for has drifted into the void.
-              <br />
-              But don't worry, we can navigate you back to safety.
-            </p>
+          {/* 404 Error Display */}
+          <div class="mb-8 w-full max-w-4xl font-mono">
+            <div class="mb-4 flex items-center gap-2">
+              <span class="text-red">error:</span>
+              <span class="text-text">HTTP {glitchText()} - Not Found</span>
+            </div>
+
+            <div class="border-red bg-mantle mb-6 border-l-4 p-4 text-sm">
+              <div class="mb-2 flex items-start gap-2">
+                <span class="text-red">✗</span>
+                <div class="flex-1">
+                  <div class="text-text">Failed to resolve route</div>
+                  <div class="text-subtext0 mt-1">
+                    The requested path does not exist in the routing table
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-subtext1 mt-3">
+                <span class="text-yellow">→</span> Location:{" "}
+                <span class="text-peach">{location.pathname}</span>
+              </div>
+            </div>
+
+            <div class="text-subtext0 space-y-2 text-sm">
+              <div class="flex items-start gap-2">
+                <span class="text-blue">ℹ</span>
+                <span>
+                  Type <span class="text-green">help</span> to see available
+                  commands, or try one of the suggestions below
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Action buttons */}
-          <div class="mt-12 flex flex-col gap-4 sm:flex-row">
+          {/* Command suggestions */}
+          <div class="mb-8 w-full max-w-4xl space-y-3 font-mono text-sm">
+            <div class="text-subtext1">Quick commands:</div>
+
             <button
               onClick={() => navigate("/")}
-              class="group relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25 active:scale-95"
+              class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
             >
-              <div class="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <span class="relative flex items-center gap-2">
-                🏠 Return Home
+              <span class="text-green">$</span>
+              <span class="text-blue group-hover:text-sky">cd</span>
+              <span class="text-text group-hover:text-blue">~</span>
+              <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+                [Return home]
               </span>
             </button>
 
             <button
               onClick={() => window.history.back()}
-              class="group relative overflow-hidden rounded-lg border-2 border-slate-600 bg-transparent px-8 py-4 text-lg font-medium text-slate-300 transition-all duration-300 hover:border-blue-500 hover:bg-blue-500/10 hover:text-blue-400 active:scale-95"
+              class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
             >
-              <span class="relative flex items-center gap-2">← Go Back</span>
+              <span class="text-green">$</span>
+              <span class="text-blue group-hover:text-sky">cd</span>
+              <span class="text-text group-hover:text-blue">..</span>
+              <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+                [Go back]
+              </span>
+            </button>
+
+            <button
+              onClick={() => navigate("/blog")}
+              class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
+            >
+              <span class="text-green">$</span>
+              <span class="text-blue group-hover:text-sky">cd</span>
+              <span class="text-text group-hover:text-blue">~/blog</span>
+              <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+                [View blog]
+              </span>
             </button>
           </div>
 
-          {/* Floating elements */}
-          <div class="animate-bounce-slow absolute top-20 left-10">
-            <div class="h-6 w-6 rotate-45 bg-gradient-to-br from-blue-400 to-purple-500 opacity-60" />
-          </div>
-          <div class="animate-bounce-slow-delay absolute top-32 right-16">
-            <div class="h-4 w-4 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 opacity-60" />
-          </div>
-          <div class="animate-bounce-slow absolute bottom-20 left-20">
-            <div
-              class="h-5 w-5 bg-gradient-to-br from-blue-500 to-purple-400 opacity-60"
-              style={{ "clip-path": "polygon(50% 0%, 0% 100%, 100% 100%)" }}
-            />
+          {/* Command history */}
+          <Show when={history().length > 0}>
+            <div class="mb-4 w-full max-w-4xl font-mono text-sm">
+              <For each={history()}>
+                {(item) => (
+                  <div class="mb-3">
+                    <div class="text-subtext0 flex items-center gap-2">
+                      <span class="text-green">freno@terminal</span>
+                      <span class="text-subtext1">:</span>
+                      <span class="text-blue">~</span>
+                      <span class="text-subtext1">$</span>
+                      <span class="text-text">{item.command}</span>
+                    </div>
+                    <div
+                      class="mt-1 whitespace-pre-wrap"
+                      classList={{
+                        "text-text": item.type === "success",
+                        "text-red": item.type === "error",
+                        "text-blue": item.type === "info"
+                      }}
+                    >
+                      {item.output}
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
+
+          {/* Interactive input */}
+          <div class="w-full max-w-4xl font-mono text-sm">
+            <div class="flex items-center gap-2">
+              <span class="text-green">freno@terminal</span>
+              <span class="text-subtext1">:</span>
+              <span class="text-blue">~</span>
+              <span class="text-subtext1">$</span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={command()}
+                onInput={(e) => setCommand(e.currentTarget.value)}
+                onKeyDown={handleKeyDown}
+                class="text-text caret-text ml-1 flex-1 border-none bg-transparent outline-none"
+                autocomplete="off"
+                spellcheck={false}
+              />
+            </div>
           </div>
 
           {/* Footer */}
-          <div class="absolute bottom-8 left-1/2 -translate-x-1/2">
-            <p class="text-sm text-slate-500 dark:text-slate-600">
-              Error Code: 404 • Page Not Found
-            </p>
+          <div class="text-subtext1 absolute right-4 bottom-4 font-mono text-xs">
+            <span class="text-red">404</span>{" "}
+            <span class="text-subtext0">|</span> Page Not Found
           </div>
         </div>
 
         {/* Custom styles */}
         <style>{`
-          @keyframes grid-move {
+          @keyframes scanline {
             0% {
-              transform: translate(0, 0);
+              transform: translateY(-100%);
             }
             100% {
-              transform: translate(50px, 50px);
-            }
-          }
-
-          .animate-fade-in {
-            animation: fadeIn 1s ease-out 0.5s both;
-          }
-
-          .animate-fade-in-delay {
-            animation: fadeIn 1s ease-out 1s both;
-          }
-
-          .animate-bounce-slow {
-            animation: bounce-slow 3s ease-in-out infinite;
-          }
-
-          .animate-bounce-slow-delay {
-            animation: bounce-slow 3s ease-in-out infinite 1.5s;
-          }
-
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes bounce-slow {
-            0%,
-            100% {
-              transform: translateY(0) rotate(0deg);
-            }
-            50% {
-              transform: translateY(-20px) rotate(180deg);
+              transform: translateY(100%);
             }
           }
         `}</style>

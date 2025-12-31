@@ -1,5 +1,10 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, For, onMount, onCleanup } from "solid-js";
+import { createSignal, onMount, onCleanup, For, Show } from "solid-js";
+import {
+  CommandHistoryItem,
+  createTerminalCommands,
+  executeTerminalCommand
+} from "~/lib/terminal-commands";
 
 export interface ErrorBoundaryFallbackProps {
   error: Error;
@@ -9,22 +14,83 @@ export interface ErrorBoundaryFallbackProps {
 export default function ErrorBoundaryFallback(
   props: ErrorBoundaryFallbackProps
 ) {
-  // Try to get navigate, but handle case where we're outside router context
   let navigate: ((path: string) => void) | undefined;
   try {
     navigate = useNavigate();
   } catch (e) {
-    // If we're outside router context, fallback to window.location
     navigate = (path: string) => {
       window.location.href = path;
     };
   }
   const [glitchText, setGlitchText] = createSignal("ERROR");
+  const [command, setCommand] = createSignal("");
+  const [history, setHistory] = createSignal<CommandHistoryItem[]>([]);
+  const [historyIndex, setHistoryIndex] = createSignal(-1);
+  let inputRef: HTMLInputElement | undefined;
 
-  // Log error immediately (safe for SSR)
   console.error(props.error);
 
-  // Client-only glitch animation
+  const addToHistory = (
+    cmd: string,
+    output: string,
+    type: "success" | "error" | "info"
+  ) => {
+    if (cmd === "clear") {
+      setHistory([]);
+    } else {
+      setHistory([...history(), { command: cmd, output, type }]);
+    }
+  };
+
+  const commands = createTerminalCommands({
+    navigate: navigate!,
+    location: {
+      pathname: typeof window !== "undefined" ? window.location.pathname : "/"
+    },
+    addToHistory
+  });
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      executeTerminalCommand(command(), commands, addToHistory);
+      setCommand("");
+      setHistoryIndex(-1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const allCommands = history().map((h) => h.command);
+      if (allCommands.length > 0) {
+        const newIndex =
+          historyIndex() === -1
+            ? allCommands.length - 1
+            : Math.max(0, historyIndex() - 1);
+        setHistoryIndex(newIndex);
+        setCommand(allCommands[newIndex]);
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const allCommands = history().map((h) => h.command);
+      if (historyIndex() !== -1) {
+        const newIndex = Math.min(allCommands.length - 1, historyIndex() + 1);
+        setHistoryIndex(newIndex);
+        setCommand(allCommands[newIndex]);
+      }
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      const typed = command().toLowerCase();
+      const matches = Object.keys(commands).filter((cmd) =>
+        cmd.startsWith(typed)
+      );
+      if (matches.length === 1) {
+        setCommand(matches[0]);
+      } else if (matches.length > 1) {
+        addToHistory(command(), matches.join("  "), "info");
+      }
+    } else if (e.key === "l" && e.ctrlKey) {
+      e.preventDefault();
+      setHistory([]);
+    }
+  };
+
   onMount(() => {
     const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
     const originalText = "ERROR";
@@ -46,183 +112,189 @@ export default function ErrorBoundaryFallback(
       }
     }, 400);
 
-    onCleanup(() => clearInterval(glitchInterval));
+    inputRef?.focus();
+
+    onCleanup(() => {
+      clearInterval(glitchInterval);
+    });
   });
 
-  const createParticles = () => {
-    return Array.from({ length: 40 }, (_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      animationDelay: `${Math.random() * 3}s`,
-      animationDuration: `${2 + Math.random() * 3}s`
-    }));
-  };
-
   return (
-    <div class="relative min-h-screen w-full overflow-hidden bg-gradient-to-bl from-slate-900 via-red-950/20 to-slate-900 dark:from-black dark:via-red-950/30 dark:to-black">
-      <div class="absolute inset-0 overflow-hidden">
-        <For each={createParticles()}>
-          {(particle) => (
-            <div
-              class="absolute animate-pulse"
-              style={{
-                left: particle.left,
-                top: particle.top,
-                "animation-delay": particle.animationDelay,
-                "animation-duration": particle.animationDuration
-              }}
-            >
-              <div class="h-1 w-1 rounded-full bg-red-400 opacity-40 dark:bg-red-300" />
-            </div>
-          )}
-        </For>
-      </div>
-
-      {/* Animated grid background */}
-      <div class="absolute inset-0 opacity-10">
+    <div
+      class="bg-crust relative min-h-screen w-full overflow-hidden"
+      onClick={() => inputRef?.focus()}
+    >
+      {/* Scanline effect */}
+      <div class="pointer-events-none absolute inset-0 z-20 opacity-5">
         <div
           class="h-full w-full"
           style={{
-            "background-image": `
-              linear-gradient(rgba(239, 68, 68, 0.3) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(239, 68, 68, 0.3) 1px, transparent 1px)
-            `,
-            "background-size": "60px 60px",
-            animation: "grid-move 25s linear infinite"
+            "background-image":
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px)",
+            animation: "scanline 8s linear infinite"
           }}
         />
       </div>
 
       {/* Main content */}
-      <div class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 text-center">
-        {/* Glitchy ERROR text */}
-        <div class="mb-8">
-          <h1
-            class="bg-gradient-to-r from-red-400 via-orange-500 to-red-600 bg-clip-text text-7xl font-bold text-transparent select-none md:text-8xl"
-            style={{
-              "text-shadow": "0 0 30px rgba(239, 68, 68, 0.5)",
-              filter: "drop-shadow(0 0 10px rgba(239, 68, 68, 0.3))"
-            }}
-          >
-            {glitchText()}
-          </h1>
-          <div class="mx-auto mt-2 h-1 w-40 animate-pulse bg-gradient-to-r from-transparent via-red-500 to-transparent" />
+      <div class="relative z-10 flex min-h-screen flex-col items-start justify-start px-8 py-16 md:px-16">
+        {/* Terminal header */}
+        <div class="mb-8 w-full max-w-4xl">
+          <div class="border-surface0 text-subtext0 flex items-center gap-2 border-b pb-2 font-mono text-sm">
+            <span class="text-green">freno@terminal</span>
+            <span class="text-subtext1">:</span>
+            <span class="text-blue">~</span>
+            <span class="text-subtext1">$</span>
+          </div>
         </div>
 
-        {/* Error message */}
-        <div class="max-w-2xl space-y-4">
-          <h2 class="animate-fade-in text-2xl font-light text-slate-700 md:text-3xl dark:text-slate-400">
-            Huh.
-          </h2>
-          <p class="animate-fade-in-delay text-lg text-slate-600 dark:text-slate-500">
-            An unexpected error has disrupted the flow of ... something.
-            <br />
-            But don't worry, you can try again or navigate back to safety.
-          </p>
-          {props.error.message && (
-            <p class="animate-fade-in-delay-2 font-mono text-sm text-slate-600 dark:text-slate-600">
-              Error: {props.error.message}
-            </p>
-          )}
+        {/* Error Display */}
+        <div class="mb-8 w-full max-w-4xl font-mono">
+          <div class="mb-4 flex items-center gap-2">
+            <span class="text-red">fatal:</span>
+            <span class="text-text">Unhandled Runtime Exception</span>
+          </div>
+
+          <div class="border-red bg-mantle mb-6 border-l-4 p-4 text-sm">
+            <div class="mb-2 flex items-start gap-2">
+              <span class="text-red text-xl">✗</span>
+              <div class="flex-1">
+                <div class="text-red mb-2 text-lg">{glitchText()}</div>
+                <div class="text-text">
+                  Application encountered an unexpected error
+                </div>
+                {props.error.message && (
+                  <div class="bg-surface0 text-subtext0 mt-2 rounded p-2">
+                    <div class="text-yellow mb-1">Message:</div>
+                    <div class="text-text">{props.error.message}</div>
+                  </div>
+                )}
+                {props.error.stack && (
+                  <div class="bg-surface0 text-subtext1 mt-3 max-h-40 overflow-auto rounded p-2 text-xs">
+                    <div class="text-yellow mb-1">Stack trace:</div>
+                    <pre class="whitespace-pre-wrap">{props.error.stack}</pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div class="text-subtext0 space-y-2 text-sm">
+            <div class="flex items-start gap-2">
+              <span class="text-blue">ℹ</span>
+              <span>
+                Type <span class="text-green">help</span> to see available
+                commands, or try one of the suggestions below
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div class="mt-12 flex flex-col gap-4 sm:flex-row">
+        {/* Command options */}
+        <div class="mb-8 w-full max-w-4xl space-y-3 font-mono text-sm">
+          <div class="text-subtext1">Quick actions:</div>
+
           <button
             onClick={() => props.reset()}
-            class="group relative overflow-hidden rounded-lg bg-gradient-to-r from-red-600 to-orange-600 px-8 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-red-500/25 active:scale-95"
+            class="group border-surface0 bg-mantle hover:border-yellow hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
           >
-            <div class="absolute inset-0 bg-gradient-to-r from-red-700 to-orange-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-            <span class="relative flex items-center gap-2">🔄 Try Again</span>
+            <span class="text-green">$</span>
+            <span class="text-yellow group-hover:text-peach">./reset</span>
+            <span class="text-subtext1">--state</span>
+            <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+              [Try again]
+            </span>
           </button>
 
           <button
-            onClick={() => navigate("/")}
-            class="group relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25 active:scale-95"
+            onClick={() => navigate!("/")}
+            class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
           >
-            <div class="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-            <span class="relative flex items-center gap-2">🏠 cd ~</span>
+            <span class="text-green">$</span>
+            <span class="text-blue group-hover:text-sky">cd</span>
+            <span class="text-text group-hover:text-blue">~</span>
+            <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+              [Return home]
+            </span>
           </button>
 
           <button
             onClick={() => window.history.back()}
-            class="group relative overflow-hidden rounded-lg border-2 border-slate-600 bg-transparent px-8 py-4 text-lg font-medium text-slate-600 transition-all duration-300 hover:border-red-500 hover:bg-red-500/10 hover:text-red-400 active:scale-95"
+            class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
           >
-            <span class="relative flex items-center gap-2">← Go Back</span>
+            <span class="text-green">$</span>
+            <span class="text-blue group-hover:text-sky">cd</span>
+            <span class="text-text group-hover:text-blue">..</span>
+            <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+              [Go back]
+            </span>
           </button>
         </div>
 
-        {/* Floating elements */}
-        <div class="animate-bounce-slow absolute top-20 left-10">
-          <div class="h-6 w-6 rotate-45 bg-gradient-to-br from-red-400 to-orange-500 opacity-60" />
-        </div>
-        <div class="animate-bounce-slow-delay absolute top-32 right-16">
-          <div class="h-4 w-4 rounded-full bg-gradient-to-br from-orange-400 to-red-500 opacity-60" />
-        </div>
-        <div class="animate-bounce-slow absolute bottom-20 left-20">
-          <div
-            class="h-5 w-5 bg-gradient-to-br from-red-500 to-orange-400 opacity-60"
-            style={{ "clip-path": "polygon(50% 0%, 0% 100%, 100% 100%)" }}
-          />
+        {/* Command history */}
+        <Show when={history().length > 0}>
+          <div class="mb-4 w-full max-w-4xl font-mono text-sm">
+            <For each={history()}>
+              {(item) => (
+                <div class="mb-3">
+                  <div class="text-subtext0 flex items-center gap-2">
+                    <span class="text-green">freno@terminal</span>
+                    <span class="text-subtext1">:</span>
+                    <span class="text-blue">~</span>
+                    <span class="text-subtext1">$</span>
+                    <span class="text-text">{item.command}</span>
+                  </div>
+                  <pre
+                    class="mt-1 whitespace-pre-wrap"
+                    classList={{
+                      "text-text": item.type === "success",
+                      "text-red": item.type === "error",
+                      "text-blue": item.type === "info"
+                    }}
+                  >
+                    {item.output}
+                  </pre>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+
+        {/* Interactive input */}
+        <div class="w-full max-w-4xl font-mono text-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-green">freno@terminal</span>
+            <span class="text-subtext1">:</span>
+            <span class="text-blue">~</span>
+            <span class="text-subtext1">$</span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={command()}
+              onInput={(e) => setCommand(e.currentTarget.value)}
+              onKeyDown={handleKeyDown}
+              class="text-text caret-text ml-1 flex-1 border-none bg-transparent outline-none"
+              autocomplete="off"
+              spellcheck={false}
+            />
+          </div>
         </div>
 
         {/* Footer */}
-        <div class="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <p class="text-sm text-slate-500 dark:text-slate-600">
-            System Error • Something went wrong
-          </p>
+        <div class="text-subtext1 absolute right-4 bottom-4 font-mono text-xs">
+          <span class="text-red">ERR</span> <span class="text-subtext0">|</span>{" "}
+          Runtime Exception
         </div>
       </div>
 
       {/* Custom styles */}
       <style>{`
-        @keyframes grid-move {
+        @keyframes scanline {
           0% {
-            transform: translate(0, 0);
+            transform: translateY(-100%);
           }
           100% {
-            transform: translate(60px, 60px);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fadeIn 1s ease-out 0.5s both;
-        }
-
-        .animate-fade-in-delay {
-          animation: fadeIn 1s ease-out 1s both;
-        }
-
-        .animate-fade-in-delay-2 {
-          animation: fadeIn 1s ease-out 1.5s both;
-        }
-
-        .animate-bounce-slow {
-          animation: bounce-slow 3s ease-in-out infinite;
-        }
-
-        .animate-bounce-slow-delay {
-          animation: bounce-slow 3s ease-in-out infinite 1.5s;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes bounce-slow {
-          0%,
-          100% {
-            transform: translateY(0) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(180deg);
+            transform: translateY(100%);
           }
         }
       `}</style>
