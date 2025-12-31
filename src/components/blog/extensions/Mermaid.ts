@@ -211,23 +211,80 @@ export const Mermaid = Node.create({
       // Run validation
       validateSyntax();
 
-      // Edit button overlay
+      // Edit button overlay - visible on mobile tap/selection, hover on desktop
       const editBtn = document.createElement("button");
       editBtn.className =
-        "absolute top-2 right-2 bg-blue text-white px-3 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10";
+        "absolute top-2 right-2 bg-blue text-white px-3 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 touch-manipulation";
       editBtn.textContent = "Edit Diagram";
       editBtn.contentEditable = "false";
 
-      editBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        // Emit custom event to open modal
+      const openEditor = () => {
         const pos = typeof getPos === "function" ? getPos() : 0;
         const event = new CustomEvent("edit-mermaid", {
           detail: { content: node.attrs.content, pos }
         });
         editor.view.dom.dispatchEvent(event);
+      };
+
+      editBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openEditor();
+      });
+
+      // Mobile support: Show button when node is selected (tapped)
+      let isSelected = false;
+      const updateButtonVisibility = () => {
+        if (typeof getPos !== "function") return;
+
+        const pos = getPos();
+        const { from, to } = editor.state.selection;
+
+        // Check if this node is selected
+        const nodeIsSelected = from === pos && to === pos + node.nodeSize;
+
+        if (nodeIsSelected !== isSelected) {
+          isSelected = nodeIsSelected;
+          if (isSelected) {
+            // Show button when selected (for mobile)
+            editBtn.style.opacity = "1";
+          } else {
+            // Hide button when not selected (reset to CSS control)
+            editBtn.style.opacity = "";
+          }
+        }
+      };
+
+      // Listen for selection changes
+      const plugin = editor.view.state.plugins.find(
+        (p: any) => p.spec?.key === "mermaidSelection"
+      );
+
+      // Use intersection observer to trigger update when visible
+      let updateInterval: ReturnType<typeof setInterval> | null = null;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              // Check selection periodically when visible
+              updateInterval = setInterval(updateButtonVisibility, 100);
+            } else {
+              // Stop checking when not visible
+              if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+              }
+            }
+          });
+        },
+        { threshold: 0.01 }
+      );
+
+      observer.observe(dom);
+
+      // Also check on touch
+      dom.addEventListener("touchstart", () => {
+        setTimeout(updateButtonVisibility, 50);
       });
 
       dom.appendChild(pre);
@@ -244,7 +301,14 @@ export const Mermaid = Node.create({
           code.textContent = updatedNode.attrs.content || "";
           // Re-validate on update
           validateSyntax();
+          updateButtonVisibility();
           return true;
+        },
+        destroy: () => {
+          if (updateInterval) {
+            clearInterval(updateInterval);
+          }
+          observer.disconnect();
         }
       };
     };
