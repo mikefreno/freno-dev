@@ -40,7 +40,7 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen())}
-        class="focus-visible:border-peach focus-visible:ring-offset-peach bg-surface0 focus-visible:ring-opacity-75 relative w-full cursor-default rounded-lg py-2 pr-10 pl-3 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:text-sm"
+        class="focus-visible:border-blue focus-visible:ring-offset-blue bg-surface0 focus-visible:ring-opacity-75 relative w-full cursor-default rounded-lg py-2 pr-10 pl-3 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:text-sm"
       >
         <span class="block truncate">{selected().label}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -62,7 +62,7 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
                 onClick={() => handleSelect(sort)}
                 class={`relative w-full cursor-default py-2 pr-4 pl-10 text-left select-none ${
                   selected().val === sort.val
-                    ? "bg-peach text-base brightness-75"
+                    ? "bg-blue text-base brightness-75"
                     : "text-text hover:brightness-125"
                 }`}
               >
@@ -74,12 +74,12 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
                   {sort.label}
                 </span>
                 <Show when={selected().val === sort.val}>
-                  <span class="text-peach absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span class="text-blue absolute inset-y-0 left-0 flex items-center pl-3">
                     <Check
                       strokeWidth={1}
                       height={24}
                       width={24}
-                      class="stroke-text"
+                      class="stroke-base"
                     />
                   </span>
                 </Show>

@@ -46,7 +46,7 @@ export interface Post {
   body: string;
   banner_photo?: string;
   date?: string | null;
-  published: boolean;
+  published: number; // 0 or 1 (sqlite)
   author_id: string;
   reads: number;
   attachments?: string;

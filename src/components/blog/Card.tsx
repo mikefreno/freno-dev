@@ -2,22 +2,7 @@ import { Show } from "solid-js";
 import CardLinks from "./CardLinks";
 import DeletePostButton from "./DeletePostButton";
 import { Fire } from "~/components/icons/Fire";
-
-export interface Post {
-  id: number;
-  title: string;
-  subtitle: string | null;
-  body: string | null;
-  banner_photo: string | null;
-  date: string;
-  published: boolean;
-  category: string;
-  author_id: string;
-  reads: number;
-  attachments: string | null;
-  total_likes: number;
-  total_comments: number;
-}
+import { Post } from "~/db/types";
 
 export interface CardProps {
   post: Post;

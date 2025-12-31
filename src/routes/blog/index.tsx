@@ -6,6 +6,7 @@ import { getRequestEvent } from "solid-js/web";
 import PostSortingSelect from "~/components/blog/PostSortingSelect";
 import TagSelector from "~/components/blog/TagSelector";
 import PostSorting from "~/components/blog/PostSorting";
+import PublishStatusToggle from "~/components/blog/PublishStatusToggle";
 import { TerminalSplash } from "~/components/TerminalSplash";
 
 const getPosts = query(async () => {
@@ -79,6 +80,8 @@ export default function BlogIndex() {
     "filter" in searchParams ? searchParams.filter : undefined;
   const include = () =>
     "include" in searchParams ? searchParams.include : undefined;
+  const status = () =>
+    "status" in searchParams ? searchParams.status : undefined;
 
   const data = createAsync(() => getPosts(), { deferStream: true });
 
@@ -90,11 +93,15 @@ export default function BlogIndex() {
         <Show when={data()} fallback={<TerminalSplash />}>
           {(loadedData) => (
             <>
-              <div class="flex flex-row justify-around gap-4 px-4">
+              <div class="flex flex-col items-center gap-4 px-4 md:flex-row md:justify-around">
                 <PostSortingSelect />
 
                 <Show when={Object.keys(loadedData().tagMap).length > 0}>
                   <TagSelector tagMap={loadedData().tagMap} />
+                </Show>
+
+                <Show when={loadedData().privilegeLevel === "admin"}>
+                  <PublishStatusToggle />
                 </Show>
 
                 <Show when={loadedData().privilegeLevel === "admin"}>
@@ -121,6 +128,7 @@ export default function BlogIndex() {
                     filters={filters()}
                     sort={sort()}
                     include={include()}
+                    status={status()}
                   />
                 </div>
               </Show>

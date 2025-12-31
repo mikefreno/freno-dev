@@ -1,5 +1,6 @@
 import { For, Show, createMemo } from "solid-js";
-import Card, { Post } from "./Card";
+import Card from "./Card";
+import { Post } from "~/db/types";
 
 export interface Tag {
   value: string;
@@ -13,10 +14,22 @@ export interface PostSortingProps {
   filters?: string;
   sort?: string;
   include?: string;
+  status?: string;
 }
 
 export default function PostSorting(props: PostSortingProps) {
   const filteredPosts = createMemo(() => {
+    let filtered = props.posts;
+
+    // Apply publication status filter (admin only)
+    if (props.privilegeLevel === "admin" && props.status) {
+      if (props.status === "published") {
+        filtered = filtered.filter((post) => post.published === 1);
+      } else if (props.status === "unpublished") {
+        filtered = filtered.filter((post) => post.published === 0);
+      }
+    }
+
     // Build map of post_id -> tags for that post
     const postTags = new Map<number, Set<string>>();
     props.tags.forEach((tag) => {
@@ -41,7 +54,7 @@ export default function PostSorting(props: PostSortingProps) {
 
       const includeSet = new Set(includeList);
 
-      return props.posts.filter((post) => {
+      return filtered.filter((post) => {
         const tags = postTags.get(post.id);
         if (!tags || tags.size === 0) return false;
 
@@ -61,12 +74,12 @@ export default function PostSorting(props: PostSortingProps) {
 
       // Empty blacklist means show everything
       if (filterList.length === 0) {
-        return props.posts;
+        return filtered;
       }
 
       const filterSet = new Set(filterList);
 
-      return props.posts.filter((post) => {
+      return filtered.filter((post) => {
         const tags = postTags.get(post.id);
         if (!tags || tags.size === 0) return true; // Show posts with no tags
 
@@ -81,7 +94,7 @@ export default function PostSorting(props: PostSortingProps) {
     }
 
     // No filters: show all posts
-    return props.posts;
+    return filtered;
   });
 
   const sortedPosts = createMemo(() => {
