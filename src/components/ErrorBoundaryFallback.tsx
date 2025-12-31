@@ -122,7 +122,7 @@ export default function ErrorBoundaryFallback(
     <TerminalErrorPage
       glitchText="ERROR"
       glitchChars={"!@#$%^&*()_+-=[]{}|;':\",./<>?~`"}
-      glitchSpeed={400}
+      glitchSpeed={150}
       glitchThreshold={0.8}
       glitchIntensity={0.6}
       navigate={navigate!}

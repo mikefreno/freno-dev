@@ -230,7 +230,7 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
           ref={footerRef}
           class="text-subtext1 absolute right-4 bottom-4 font-mono text-xs"
         >
-          {props.footerText}
+          {props.footer}
         </div>
       </div>
 

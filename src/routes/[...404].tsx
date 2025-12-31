@@ -110,7 +110,7 @@ export default function NotFound() {
       <TerminalErrorPage
         glitchText="404"
         glitchChars={"!@#$%^&*()_+-=[]{}|;':\",./<>?~`0123456789"}
-        glitchSpeed={300}
+        glitchSpeed={150}
         glitchThreshold={0.85}
         glitchIntensity={0.7}
         navigate={navigate}
