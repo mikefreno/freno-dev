@@ -26,16 +26,39 @@ export function useDarkMode() {
   return context;
 }
 
+const STORAGE_KEY = "theme-override";
+
+const getSystemPreference = () => {
+  if (typeof window !== "undefined") {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  return false;
+};
+
+const getInitialTheme = () => {
+  if (typeof window === "undefined") return false;
+
+  const storedOverride = localStorage.getItem(STORAGE_KEY);
+  if (storedOverride !== null) {
+    return storedOverride === "dark";
+  }
+  return getSystemPreference();
+};
+
 export const DarkModeProvider: ParentComponent = (props) => {
-  const [isDark, setIsDark] = createSignal(false);
+  // Initialize with correct theme synchronously
+  const [isDark, setIsDark] = createSignal(getInitialTheme());
 
   onMount(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    setIsDark(mediaQuery.matches);
 
     // Listen for system theme changes
     const handleChange = (e: MediaQueryListEvent) => {
-      setIsDark(e.matches);
+      // Only update if there's no explicit override
+      const storedOverride = localStorage.getItem(STORAGE_KEY);
+      if (storedOverride === null) {
+        setIsDark(e.matches);
+      }
     };
 
     mediaQuery.addEventListener("change", handleChange);
@@ -57,11 +80,30 @@ export const DarkModeProvider: ParentComponent = (props) => {
   });
 
   const toggleDarkMode = () => {
-    setIsDark(!isDark());
+    const newValue = !isDark();
+    setIsDark(newValue);
+
+    // Only persist if different from system preference
+    const systemPreference = getSystemPreference();
+    if (newValue !== systemPreference) {
+      localStorage.setItem(STORAGE_KEY, newValue ? "dark" : "light");
+    } else {
+      // If matching system preference, remove override
+      localStorage.removeItem(STORAGE_KEY);
+    }
   };
 
   const setDarkMode = (dark: boolean) => {
     setIsDark(dark);
+
+    // Only persist if different from system preference
+    const systemPreference = getSystemPreference();
+    if (dark !== systemPreference) {
+      localStorage.setItem(STORAGE_KEY, dark ? "dark" : "light");
+    } else {
+      // If matching system preference, remove override
+      localStorage.removeItem(STORAGE_KEY);
+    }
   };
 
   return (
