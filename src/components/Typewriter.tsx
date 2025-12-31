@@ -19,6 +19,8 @@ export function Typewriter(props: {
   onMount(() => {
     if (!containerRef || !cursorRef) return;
 
+    containerRef.style.position = "relative";
+
     // FIRST: Walk DOM and split text into character spans
     const textNodes: { node: Text; text: string; startIndex: number }[] = [];
     let totalChars = 0;
@@ -58,19 +60,7 @@ export function Typewriter(props: {
     // Mark as animated AFTER DOM manipulation - this triggers CSS to hide characters
     setAnimated(true);
 
-    // Mark container as ready for animation
     containerRef.setAttribute("data-typewriter-ready", "true");
-
-    // Position cursor at the first character location
-    const firstChar = containerRef.querySelector(
-      '[data-char-index="0"]'
-    ) as HTMLElement;
-    if (firstChar && cursorRef) {
-      // Insert cursor before the first character
-      firstChar.parentNode?.insertBefore(cursorRef, firstChar);
-      // Set cursor height to match first character
-      cursorRef.style.height = `${firstChar.offsetHeight}px`;
-    }
 
     // Listen for animation end to hide cursor
     const handleAnimationEnd = () => {
@@ -94,16 +84,14 @@ export function Typewriter(props: {
           if (charSpan) {
             charSpan.style.opacity = "1";
 
-            // Move cursor after this character and match its height
-            if (cursorRef) {
-              charSpan.parentNode?.insertBefore(
-                cursorRef,
-                charSpan.nextSibling
-              );
+            if (cursorRef && containerRef) {
+              const rect = charSpan.getBoundingClientRect();
+              const containerRect = containerRef.getBoundingClientRect();
 
-              // Match the height of the current character
-              const charHeight = charSpan.offsetHeight;
-              cursorRef.style.height = `${charHeight}px`;
+              // Position cursor at the end of the current character
+              cursorRef.style.left = `${rect.right - containerRect.left}px`;
+              cursorRef.style.top = `${rect.top - containerRect.top}px`;
+              cursorRef.style.height = `${charSpan.offsetHeight}px`;
             }
           }
 
@@ -131,7 +119,6 @@ export function Typewriter(props: {
       setTimeout(revealNextChar, 100);
     };
 
-    // Start delay if specified, otherwise start immediately
     if (delay > 0) {
       setTimeout(() => {
         setIsDelaying(false);

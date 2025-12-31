@@ -104,7 +104,10 @@ export function RightBarContent() {
   });
 
   return (
-    <div class="text-text flex h-full flex-col gap-6 overflow-y-auto pb-6 md:w-min">
+    <div
+      id="rightbar-content"
+      class="text-text flex h-full flex-col gap-6 overflow-y-auto pb-6 md:w-min"
+    >
       <Typewriter keepAlive={false} class="z-50 px-4 md:pt-4">
         <ul class="flex flex-col gap-4">
           <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
@@ -531,7 +534,8 @@ export function RightBar() {
         width: "250px",
         "box-shadow": "inset 6px 0 16px -6px rgba(0, 0, 0, 0.1)",
         "padding-top": "env(safe-area-inset-top)",
-        "padding-bottom": "env(safe-area-inset-bottom)"
+        "padding-bottom": "env(safe-area-inset-bottom)",
+        "scrollbar-width": "none"
       }}
     >
       <RightBarContent />
