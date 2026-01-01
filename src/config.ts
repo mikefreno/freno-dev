@@ -29,8 +29,8 @@ export const AUTH_CONFIG = {
 export const RATE_LIMITS = {
   /** Login: 5 attempts per 15 minutes per IP */
   LOGIN_IP: { maxAttempts: 5, windowMs: 15 * 60 * 1000 },
-  /** Login: 3 attempts per hour per email */
-  LOGIN_EMAIL: { maxAttempts: 3, windowMs: 60 * 60 * 1000 },
+  /** Login: 5 attempts per hour per email */
+  LOGIN_EMAIL: { maxAttempts: 5, windowMs: 60 * 60 * 1000 },
   /** Password reset: 3 attempts per hour per IP */
   PASSWORD_RESET_IP: { maxAttempts: 3, windowMs: 60 * 60 * 1000 },
   /** Registration: 3 attempts per hour per IP */
@@ -231,7 +231,7 @@ export const ERROR_PAGE_CONFIG = {
 
 export const VALIDATION_CONFIG = {
   /** Minimum password length (must match securePasswordSchema in schemas/user.ts) */
-  MIN_PASSWORD_LENGTH: 12,
+  MIN_PASSWORD_LENGTH: 8,
   /** Maximum message length for contact form */
   MAX_CONTACT_MESSAGE_LENGTH: 500,
   /** Minimum password confirmation match length before showing error */

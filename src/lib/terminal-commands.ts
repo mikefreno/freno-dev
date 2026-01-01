@@ -47,13 +47,14 @@ export const createTerminalCommands = (context: CommandContext) => {
     },
     cd: {
       action: () => context.navigate("/"),
-      description: "Navigate to home"
+      description: "Navigate to home",
+      hidden: true
     },
     ls: {
       action: () => {
         context.addToHistory(
           "ls",
-          "home  blog  resume  contact  downloads  login  account",
+          "home  blog/  resume  contact  downloads  login  account",
           "success"
         );
       },
@@ -63,7 +64,7 @@ export const createTerminalCommands = (context: CommandContext) => {
       action: () => {
         context.addToHistory(
           "ls -la",
-          "drwxr-xr-x  blog/\n-rw-r--r--  resume\n-rw-r--r--  contact\n-rw-r--r--  downloads\n-rw-r--r--  account",
+          "drwxr-xr-x  home\ndrwxr-xr-x  blog/\n-rw-r--r--  resume\n-rw-r--r--  contact\n-rw-r--r--  downloads\n-rw-r--r--  login\n-rw-r--r--  account",
           "success"
         );
       },
@@ -124,7 +125,8 @@ export const createTerminalCommands = (context: CommandContext) => {
           "error"
         );
       },
-      description: "Don't try this at home, kids"
+      description: "Don't try this at home, kids",
+      hidden: true
     },
     cowsay: {
       action: () => {
@@ -231,18 +233,16 @@ export const createTerminalCommands = (context: CommandContext) => {
 
   // Add all cd variants for each route
   routes.forEach((route) => {
-    // cd blog (visible in help)
     commands[`cd ${route.name}`] = {
       action: () => context.navigate(route.path),
-      description: `Navigate to ${route.name}`
+      description: `Navigate to ${route.name}`,
+      hidden: true
     };
-    // cd /blog (hidden alias)
     commands[`cd ${route.path}`] = {
       action: () => context.navigate(route.path),
       description: `Navigate to ${route.name}`,
       hidden: true
     };
-    // cd ~/blog (hidden alias)
     commands[`cd ~${route.path}`] = {
       action: () => context.navigate(route.path),
       description: `Navigate to ${route.name}`,
