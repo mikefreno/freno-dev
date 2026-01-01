@@ -18,6 +18,10 @@ export const AUTH_CONFIG = {
   REMEMBER_ME_MAX_AGE: 60 * 60 * 24 * 14, // 14 days
   /** CSRF token cookie max age in seconds (14 days) */
   CSRF_TOKEN_MAX_AGE: 60 * 60 * 24 * 14, // 14 days
+  /** Email login link JWT expiration (15 minutes - provides reasonable time to check email without being too permissive) */
+  EMAIL_LOGIN_LINK_EXPIRY: "15m" as const,
+  /** Email verification link JWT expiration (15 minutes) */
+  EMAIL_VERIFICATION_LINK_EXPIRY: "15m" as const,
   /** Lineage JWT expiration for mobile game */
   LINEAGE_JWT_EXPIRY: "14d" as const
 } as const;
@@ -232,6 +236,12 @@ export const ERROR_PAGE_CONFIG = {
 export const VALIDATION_CONFIG = {
   /** Minimum password length (must match securePasswordSchema in schemas/user.ts) */
   MIN_PASSWORD_LENGTH: 8,
+  /** Require at least one uppercase letter in password */
+  PASSWORD_REQUIRE_UPPERCASE: true,
+  /** Require at least one number in password */
+  PASSWORD_REQUIRE_NUMBER: true,
+  /** Require at least one special character in password (false = optional but recommended) */
+  PASSWORD_REQUIRE_SPECIAL: false,
   /** Maximum message length for contact form */
   MAX_CONTACT_MESSAGE_LENGTH: 500,
   /** Minimum password confirmation match length before showing error */

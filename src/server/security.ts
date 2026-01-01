@@ -199,27 +199,33 @@ interface RateLimitRecord {
 }
 
 /**
- * In-memory rate limit store
- * In production, consider using Redis for distributed rate limiting
- */
-const rateLimitStore = new Map<string, RateLimitRecord>();
-
-/**
  * Clear rate limit store (for testing only)
+ * Clears all rate limit records from the database
  */
-export function clearRateLimitStore(): void {
-  rateLimitStore.clear();
+export async function clearRateLimitStore(): Promise<void> {
+  const { ConnectionFactory } = await import("./database");
+  const conn = ConnectionFactory();
+  await conn.execute({
+    sql: "DELETE FROM RateLimit",
+    args: []
+  });
 }
 
 /**
  * Cleanup expired rate limit entries every 5 minutes
+ * Runs in background to prevent database bloat
  */
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of rateLimitStore.entries()) {
-    if (now > record.resetAt) {
-      rateLimitStore.delete(key);
-    }
+setInterval(async () => {
+  try {
+    const { ConnectionFactory } = await import("./database");
+    const conn = ConnectionFactory();
+    const now = new Date().toISOString();
+    await conn.execute({
+      sql: "DELETE FROM RateLimit WHERE reset_at < ?",
+      args: [now]
+    });
+  } catch (error) {
+    console.error("Failed to cleanup expired rate limits:", error);
   }
 }, RATE_LIMIT_CLEANUP_INTERVAL_MS);
 
@@ -270,26 +276,51 @@ export function getAuditContext(event: H3Event): {
  * @returns Remaining attempts before limit is hit
  * @throws TRPCError if rate limit exceeded
  */
-export function checkRateLimit(
+export async function checkRateLimit(
   identifier: string,
   maxAttempts: number,
   windowMs: number,
   event?: H3Event
-): number {
+): Promise<number> {
+  const { ConnectionFactory } = await import("./database");
+  const { v4: uuid } = await import("uuid");
+  const conn = ConnectionFactory();
   const now = Date.now();
-  const record = rateLimitStore.get(identifier);
+  const resetAt = new Date(now + windowMs);
 
-  if (!record || now > record.resetAt) {
+  // Try to get existing record
+  const result = await conn.execute({
+    sql: "SELECT id, count, reset_at FROM RateLimit WHERE identifier = ?",
+    args: [identifier]
+  });
+
+  if (result.rows.length === 0) {
     // Create new record
-    rateLimitStore.set(identifier, {
-      count: 1,
-      resetAt: now + windowMs
+    await conn.execute({
+      sql: "INSERT INTO RateLimit (id, identifier, count, reset_at) VALUES (?, ?, ?, ?)",
+      args: [uuid(), identifier, 1, resetAt.toISOString()]
     });
     return maxAttempts - 1;
   }
 
-  if (record.count >= maxAttempts) {
-    const remainingMs = record.resetAt - now;
+  const record = result.rows[0];
+  const recordResetAt = new Date(record.reset_at as string);
+
+  // Check if window has expired
+  if (now > recordResetAt.getTime()) {
+    // Reset the record
+    await conn.execute({
+      sql: "UPDATE RateLimit SET count = 1, reset_at = ?, updated_at = datetime('now') WHERE identifier = ?",
+      args: [resetAt.toISOString(), identifier]
+    });
+    return maxAttempts - 1;
+  }
+
+  const count = record.count as number;
+
+  // Check if limit exceeded
+  if (count >= maxAttempts) {
+    const remainingMs = recordResetAt.getTime() - now;
     const remainingSec = Math.ceil(remainingMs / 1000);
 
     // Log rate limit exceeded (fire-and-forget)
@@ -318,8 +349,12 @@ export function checkRateLimit(
   }
 
   // Increment count
-  record.count++;
-  return maxAttempts - record.count;
+  await conn.execute({
+    sql: "UPDATE RateLimit SET count = count + 1, updated_at = datetime('now') WHERE identifier = ?",
+    args: [identifier]
+  });
+
+  return maxAttempts - count - 1;
 }
 
 /**
@@ -331,13 +366,13 @@ export const RATE_LIMITS = CONFIG_RATE_LIMITS;
 /**
  * Rate limiting middleware for login operations
  */
-export function rateLimitLogin(
+export async function rateLimitLogin(
   email: string,
   clientIP: string,
   event?: H3Event
-): void {
+): Promise<void> {
   // Rate limit by IP
-  checkRateLimit(
+  await checkRateLimit(
     `login:ip:${clientIP}`,
     RATE_LIMITS.LOGIN_IP.maxAttempts,
     RATE_LIMITS.LOGIN_IP.windowMs,
@@ -345,7 +380,7 @@ export function rateLimitLogin(
   );
 
   // Rate limit by email
-  checkRateLimit(
+  await checkRateLimit(
     `login:email:${email}`,
     RATE_LIMITS.LOGIN_EMAIL.maxAttempts,
     RATE_LIMITS.LOGIN_EMAIL.windowMs,
@@ -356,11 +391,11 @@ export function rateLimitLogin(
 /**
  * Rate limiting middleware for password reset
  */
-export function rateLimitPasswordReset(
+export async function rateLimitPasswordReset(
   clientIP: string,
   event?: H3Event
-): void {
-  checkRateLimit(
+): Promise<void> {
+  await checkRateLimit(
     `password-reset:ip:${clientIP}`,
     RATE_LIMITS.PASSWORD_RESET_IP.maxAttempts,
     RATE_LIMITS.PASSWORD_RESET_IP.windowMs,
@@ -371,8 +406,11 @@ export function rateLimitPasswordReset(
 /**
  * Rate limiting middleware for registration
  */
-export function rateLimitRegistration(clientIP: string, event?: H3Event): void {
-  checkRateLimit(
+export async function rateLimitRegistration(
+  clientIP: string,
+  event?: H3Event
+): Promise<void> {
+  await checkRateLimit(
     `registration:ip:${clientIP}`,
     RATE_LIMITS.REGISTRATION_IP.maxAttempts,
     RATE_LIMITS.REGISTRATION_IP.windowMs,
@@ -383,11 +421,11 @@ export function rateLimitRegistration(clientIP: string, event?: H3Event): void {
 /**
  * Rate limiting middleware for email verification
  */
-export function rateLimitEmailVerification(
+export async function rateLimitEmailVerification(
   clientIP: string,
   event?: H3Event
-): void {
-  checkRateLimit(
+): Promise<void> {
+  await checkRateLimit(
     `email-verification:ip:${clientIP}`,
     RATE_LIMITS.EMAIL_VERIFICATION_IP.maxAttempts,
     RATE_LIMITS.EMAIL_VERIFICATION_IP.windowMs,

@@ -13,6 +13,7 @@ import GitHub from "~/components/icons/GitHub";
 import Eye from "~/components/icons/Eye";
 import EyeSlash from "~/components/icons/EyeSlash";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
+import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
 import { isValidEmail, validatePassword } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
 import { env } from "~/env/client";
@@ -52,11 +53,8 @@ export default function LoginPage() {
   const [showPasswordInput, setShowPasswordInput] = createSignal(false);
   const [showPasswordConfInput, setShowPasswordConfInput] = createSignal(false);
   const [passwordsMatch, setPasswordsMatch] = createSignal(false);
-  const [showPasswordLengthWarning, setShowPasswordLengthWarning] =
-    createSignal(false);
-  const [passwordLengthSufficient, setPasswordLengthSufficient] =
-    createSignal(false);
-  const [passwordBlurred, setPasswordBlurred] = createSignal(false);
+  const [password, setPassword] = createSignal("");
+  const [passwordConf, setPasswordConf] = createSignal("");
 
   let emailRef: HTMLInputElement | undefined;
   let passwordRef: HTMLInputElement | undefined;
@@ -325,43 +323,15 @@ export default function LoginPage() {
     setPasswordsMatch(newPassword === newPasswordConf);
   };
 
-  const checkPasswordLength = (password: string) => {
-    if (password.length >= VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
-      setPasswordLengthSufficient(true);
-      setShowPasswordLengthWarning(false);
-    } else {
-      setPasswordLengthSufficient(false);
-      if (passwordBlurred()) {
-        setShowPasswordLengthWarning(true);
-      }
-    }
-  };
-
-  const passwordLengthBlurCheck = () => {
-    if (
-      !passwordLengthSufficient() &&
-      passwordRef &&
-      passwordRef.value !== ""
-    ) {
-      setShowPasswordLengthWarning(true);
-    }
-    setPasswordBlurred(true);
-  };
-
-  const handleNewPasswordChange = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    checkPasswordLength(target.value);
+  const handlePasswordChange = (e: Event) => {
+    const target = e.currentTarget as HTMLInputElement;
+    setPassword(target.value);
   };
 
   const handlePasswordConfChange = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    if (passwordRef) {
-      checkForMatch(passwordRef.value, target.value);
-    }
-  };
-
-  const handlePasswordBlur = () => {
-    passwordLengthBlurCheck();
+    const target = e.currentTarget as HTMLInputElement;
+    setPasswordConf(target.value);
+    checkForMatch(password(), target.value);
   };
 
   return (
@@ -477,8 +447,7 @@ export default function LoginPage() {
                     required
                     minLength={8}
                     ref={passwordRef}
-                    onInput={register() ? handleNewPasswordChange : undefined}
-                    onBlur={register() ? handlePasswordBlur : undefined}
+                    onInput={register() ? handlePasswordChange : undefined}
                     placeholder=" "
                     title="Password must be at least 8 characters"
                     class="underlinedInput bg-transparent"
@@ -514,18 +483,18 @@ export default function LoginPage() {
                   </Show>
                 </button>
               </div>
-              <div
-                class={`${
-                  showPasswordLengthWarning() ? "" : "opacity-0 select-none"
-                } text-red text-center transition-opacity duration-200 ease-in-out`}
-              >
-                Password too short! Min Length: 8
+            </Show>
+
+            {/* Password strength meter - shown only for registration */}
+            <Show when={register()}>
+              <div class="mx-auto flex justify-center px-4 py-2">
+                <PasswordStrengthMeter password={password()} />
               </div>
             </Show>
 
             {/* Password confirmation - shown only for registration */}
             <Show when={register()}>
-              <div class="-mt-4 flex justify-center">
+              <div class="flex justify-center">
                 <div class="input-group mx-4">
                   <input
                     type={showPasswordConfInput() ? "text" : "password"}
@@ -571,9 +540,8 @@ export default function LoginPage() {
               <div
                 class={`${
                   !passwordsMatch() &&
-                  passwordLengthSufficient() &&
-                  passwordConfRef &&
-                  passwordConfRef.value.length >= 6
+                  passwordConf().length >=
+                    VALIDATION_CONFIG.MIN_PASSWORD_CONF_LENGTH_FOR_ERROR
                     ? ""
                     : "opacity-0 select-none"
                 } text-red text-center transition-opacity duration-200 ease-in-out`}

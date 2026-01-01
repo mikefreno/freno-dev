@@ -1071,7 +1071,7 @@ export const authRouter = createTRPCRouter({
           rememberMe: rememberMe ?? false
         })
           .setProtectedHeader({ alg: "HS256" })
-          .setExpirationTime("15m")
+          .setExpirationTime(AUTH_CONFIG.EMAIL_LOGIN_LINK_EXPIRY)
           .sign(secret);
 
         const domain = env.VITE_DOMAIN || "https://freno.me";
@@ -1453,7 +1453,7 @@ export const authRouter = createTRPCRouter({
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({ email })
           .setProtectedHeader({ alg: "HS256" })
-          .setExpirationTime("15m")
+          .setExpirationTime(AUTH_CONFIG.EMAIL_VERIFICATION_LINK_EXPIRY)
           .sign(secret);
 
         const domain = env.VITE_DOMAIN || "https://freno.me";

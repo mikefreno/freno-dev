@@ -45,30 +45,34 @@ export function validatePassword(password: string): {
     );
   }
 
-  // Require uppercase letter
-  if (!/[A-Z]/.test(password)) {
+  // Require uppercase letter (if configured)
+  if (VALIDATION_CONFIG.PASSWORD_REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
     errors.push("Password must contain at least one uppercase letter");
   }
 
-  // Require lowercase letter
+  // Require lowercase letter (always required for balanced security)
   if (!/[a-z]/.test(password)) {
     errors.push("Password must contain at least one lowercase letter");
   }
 
-  // Require number
-  if (!/[0-9]/.test(password)) {
+  // Require number (if configured)
+  if (VALIDATION_CONFIG.PASSWORD_REQUIRE_NUMBER && !/[0-9]/.test(password)) {
     errors.push("Password must contain at least one number");
   }
 
-  // Require special character
-  if (!/[^A-Za-z0-9]/.test(password)) {
+  // Require special character (if configured)
+  if (
+    VALIDATION_CONFIG.PASSWORD_REQUIRE_SPECIAL &&
+    !/[^A-Za-z0-9]/.test(password)
+  ) {
     errors.push("Password must contain at least one special character");
   }
 
   // Check for common weak passwords
   const commonPasswords = [
     "password",
-    "12345678",
+    "1234",
+    "5678",
     "qwerty",
     "letmein",
     "welcome",
@@ -93,9 +97,9 @@ export function validatePassword(password: string): {
   let strength: PasswordStrength = "weak";
 
   if (errors.length === 0) {
-    if (password.length >= 20) {
+    if (password.length >= 16) {
       strength = "strong";
-    } else if (password.length >= 16) {
+    } else if (password.length >= 12) {
       strength = "good";
     } else if (password.length >= VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
       strength = "fair";
