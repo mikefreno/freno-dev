@@ -16,6 +16,7 @@ import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { isValidEmail, validatePassword } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
 import { env } from "~/env/client";
+import { VALIDATION_CONFIG, COUNTDOWN_CONFIG } from "~/config";
 
 const checkAuth = query(async () => {
   "use server";
@@ -325,7 +326,7 @@ export default function LoginPage() {
   };
 
   const checkPasswordLength = (password: string) => {
-    if (password.length >= 8) {
+    if (password.length >= VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
       setPasswordLengthSufficient(true);
       setShowPasswordLengthWarning(false);
     } else {
@@ -628,7 +629,7 @@ export default function LoginPage() {
                 }
               >
                 <CountdownCircleTimer
-                  duration={120}
+                  duration={COUNTDOWN_CONFIG.EMAIL_LOGIN_LINK_DURATION_S}
                   initialRemainingTime={countDown()}
                   size={48}
                   strokeWidth={6}

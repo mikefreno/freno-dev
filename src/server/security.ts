@@ -4,6 +4,13 @@ import type { H3Event } from "vinxi/http";
 import { t } from "~/server/api/utils";
 import { logAuditEvent } from "~/server/audit";
 import { env } from "~/env/server";
+import {
+  AUTH_CONFIG,
+  RATE_LIMITS as CONFIG_RATE_LIMITS,
+  RATE_LIMIT_CLEANUP_INTERVAL_MS,
+  ACCOUNT_LOCKOUT as CONFIG_ACCOUNT_LOCKOUT,
+  PASSWORD_RESET_CONFIG as CONFIG_PASSWORD_RESET
+} from "~/config";
 
 /**
  * Extract cookie value from H3Event (works in both production and tests)
@@ -106,7 +113,7 @@ export function generateCSRFToken(): string {
 export function setCSRFToken(event: H3Event): string {
   const token = generateCSRFToken();
   setCookieValue(event, "csrf-token", token, {
-    maxAge: 60 * 60 * 24 * 14, // 14 days - same as session
+    maxAge: AUTH_CONFIG.CSRF_TOKEN_MAX_AGE,
     path: "/",
     httpOnly: false, // Must be readable by client JS
     secure: env.NODE_ENV === "production",
@@ -207,17 +214,14 @@ export function clearRateLimitStore(): void {
 /**
  * Cleanup expired rate limit entries every 5 minutes
  */
-setInterval(
-  () => {
-    const now = Date.now();
-    for (const [key, record] of rateLimitStore.entries()) {
-      if (now > record.resetAt) {
-        rateLimitStore.delete(key);
-      }
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of rateLimitStore.entries()) {
+    if (now > record.resetAt) {
+      rateLimitStore.delete(key);
     }
-  },
-  5 * 60 * 1000
-);
+  }
+}, RATE_LIMIT_CLEANUP_INTERVAL_MS);
 
 /**
  * Get client IP address from request headers
@@ -320,19 +324,9 @@ export function checkRateLimit(
 
 /**
  * Rate limit configuration for different operations
+ * Re-exported from config for backward compatibility
  */
-export const RATE_LIMITS = {
-  // Login: 5 attempts per 15 minutes per IP
-  LOGIN_IP: { maxAttempts: 5, windowMs: 15 * 60 * 1000 },
-  // Login: 3 attempts per hour per email
-  LOGIN_EMAIL: { maxAttempts: 3, windowMs: 60 * 60 * 1000 },
-  // Password reset: 3 attempts per hour per IP
-  PASSWORD_RESET_IP: { maxAttempts: 3, windowMs: 60 * 60 * 1000 },
-  // Registration: 3 attempts per hour per IP
-  REGISTRATION_IP: { maxAttempts: 3, windowMs: 60 * 60 * 1000 },
-  // Email verification: 5 attempts per 15 minutes per IP
-  EMAIL_VERIFICATION_IP: { maxAttempts: 5, windowMs: 15 * 60 * 1000 }
-} as const;
+export const RATE_LIMITS = CONFIG_RATE_LIMITS;
 
 /**
  * Rate limiting middleware for login operations
@@ -405,11 +399,9 @@ export function rateLimitEmailVerification(
 
 /**
  * Account lockout configuration
+ * Re-exported from config for backward compatibility
  */
-export const ACCOUNT_LOCKOUT = {
-  MAX_FAILED_ATTEMPTS: 5,
-  LOCKOUT_DURATION_MS: 5 * 60 * 1000 // 5 minutes
-} as const;
+export const ACCOUNT_LOCKOUT = CONFIG_ACCOUNT_LOCKOUT;
 
 /**
  * Check if an account is locked
@@ -527,10 +519,9 @@ export async function resetFailedAttempts(userId: string): Promise<void> {
 
 /**
  * Password reset token configuration
+ * Re-exported from config for backward compatibility
  */
-export const PASSWORD_RESET_CONFIG = {
-  TOKEN_EXPIRY_MS: 60 * 60 * 1000 // 1 hour
-} as const;
+export const PASSWORD_RESET_CONFIG = CONFIG_PASSWORD_RESET;
 
 /**
  * Create a password reset token

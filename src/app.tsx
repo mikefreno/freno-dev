@@ -153,7 +153,7 @@ function AppLayout(props: { children: any }) {
 
   const handleCenterTapRelease = (e: MouseEvent | TouchEvent) => {
     if (typeof window === "undefined") return;
-    const currentIsMobile = window.innerWidth < 768;
+    const currentIsMobile = isMobile(window.innerWidth);
 
     // Only hide left bar on mobile when it's visible
     if (currentIsMobile && leftBarVisible()) {

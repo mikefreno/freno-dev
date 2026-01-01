@@ -26,6 +26,12 @@ import {
   TimeoutError,
   APIError
 } from "~/server/fetch-utils";
+import {
+  NETWORK_CONFIG,
+  COOLDOWN_TIMERS,
+  VALIDATION_CONFIG,
+  COUNTDOWN_CONFIG
+} from "~/config";
 
 const getContactData = query(async () => {
   "use server";
@@ -52,7 +58,7 @@ const sendContactEmail = action(async (formData: FormData) => {
     message: z
       .string()
       .min(1, "Message is required")
-      .max(500, "Message too long")
+      .max(VALIDATION_CONFIG.MAX_CONTACT_MESSAGE_LENGTH, "Message too long")
   });
 
   try {
@@ -99,20 +105,20 @@ const sendContactEmail = action(async (formData: FormData) => {
             "content-type": "application/json"
           },
           body: JSON.stringify(sendinblueData),
-          timeout: 15000
+          timeout: NETWORK_CONFIG.EMAIL_API_TIMEOUT_MS
         });
 
         await checkResponse(response);
         return response;
       },
       {
-        maxRetries: 2,
-        retryDelay: 1000
+        maxRetries: NETWORK_CONFIG.MAX_RETRIES,
+        retryDelay: NETWORK_CONFIG.RETRY_DELAY_MS
       }
     );
 
     // Set cooldown cookie
-    const exp = new Date(Date.now() + 1 * 60 * 1000);
+    const exp = new Date(Date.now() + COOLDOWN_TIMERS.CONTACT_REQUEST_MS);
     setCookie("contactRequestSent", exp.toUTCString(), {
       expires: exp,
       path: "/"
@@ -418,7 +424,7 @@ export default function ContactPage() {
                     title="Please enter your message"
                     class="underlinedInput w-full bg-transparent"
                     rows={4}
-                    maxlength={500}
+                    maxlength={VALIDATION_CONFIG.MAX_CONTACT_MESSAGE_LENGTH}
                   />
                   <span class="bar" />
                   <label class="underlinedInputLabel">Message</label>
@@ -456,7 +462,7 @@ export default function ContactPage() {
                     }
                   >
                     <CountdownCircleTimer
-                      duration={60}
+                      duration={COUNTDOWN_CONFIG.CONTACT_FORM_DURATION_S}
                       initialRemainingTime={countDown()}
                       size={48}
                       strokeWidth={6}

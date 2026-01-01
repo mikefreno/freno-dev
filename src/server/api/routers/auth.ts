@@ -46,6 +46,7 @@ import {
 import { logAuditEvent } from "~/server/audit";
 import type { H3Event } from "vinxi/http";
 import type { Context } from "../utils";
+import { AUTH_CONFIG, NETWORK_CONFIG, COOLDOWN_TIMERS } from "~/config";
 
 /**
  * Safely extract H3Event from Context
@@ -70,7 +71,7 @@ function getH3Event(ctx: Context): H3Event {
 async function createJWT(
   userId: string,
   sessionId: string,
-  expiresIn: string = "14d"
+  expiresIn: string = AUTH_CONFIG.JWT_EXPIRY
 ): Promise<string> {
   const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
   const token = await new SignJWT({
@@ -173,15 +174,15 @@ async function sendEmail(to: string, subject: string, htmlContent: string) {
           "content-type": "application/json"
         },
         body: JSON.stringify(sendinblueData),
-        timeout: 15000
+        timeout: NETWORK_CONFIG.EMAIL_API_TIMEOUT_MS
       });
 
       await checkResponse(response);
       return response;
     },
     {
-      maxRetries: 2,
-      retryDelay: 1000
+      maxRetries: NETWORK_CONFIG.MAX_RETRIES,
+      retryDelay: NETWORK_CONFIG.RETRY_DELAY_MS
     }
   );
 }
@@ -206,7 +207,7 @@ export const authRouter = createTRPCRouter({
               client_secret: env.GITHUB_CLIENT_SECRET,
               code
             }),
-            timeout: 15000
+            timeout: NETWORK_CONFIG.GITHUB_API_TIMEOUT_MS
           }
         );
 
@@ -226,7 +227,7 @@ export const authRouter = createTRPCRouter({
             headers: {
               Authorization: `token ${access_token}`
             },
-            timeout: 15000
+            timeout: NETWORK_CONFIG.GITHUB_API_TIMEOUT_MS
           }
         );
 
@@ -241,7 +242,7 @@ export const authRouter = createTRPCRouter({
             headers: {
               Authorization: `token ${access_token}`
             },
-            timeout: 15000
+            timeout: NETWORK_CONFIG.GITHUB_API_TIMEOUT_MS
           }
         );
 
@@ -319,7 +320,7 @@ export const authRouter = createTRPCRouter({
         const userAgent = getUserAgent(getH3Event(ctx));
         const sessionId = await createSession(
           userId,
-          "14d",
+          AUTH_CONFIG.JWT_EXPIRY,
           clientIP,
           userAgent
         );
@@ -327,7 +328,7 @@ export const authRouter = createTRPCRouter({
         const token = await createJWT(userId, sessionId);
 
         setCookie(getH3Event(ctx), "userIDToken", token, {
-          maxAge: 60 * 60 * 24 * 14, // 14 days
+          maxAge: AUTH_CONFIG.SESSION_COOKIE_MAX_AGE,
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
@@ -417,7 +418,7 @@ export const authRouter = createTRPCRouter({
               redirect_uri: `${env.VITE_DOMAIN || "https://freno.me"}/api/auth/callback/google`,
               grant_type: "authorization_code"
             }),
-            timeout: 15000
+            timeout: NETWORK_CONFIG.GOOGLE_API_TIMEOUT_MS
           }
         );
 
@@ -437,7 +438,7 @@ export const authRouter = createTRPCRouter({
             headers: {
               Authorization: `Bearer ${access_token}`
             },
-            timeout: 15000
+            timeout: NETWORK_CONFIG.GOOGLE_API_TIMEOUT_MS
           }
         );
 
@@ -501,7 +502,7 @@ export const authRouter = createTRPCRouter({
         const userAgent = getUserAgent(getH3Event(ctx));
         const sessionId = await createSession(
           userId,
-          "14d",
+          AUTH_CONFIG.JWT_EXPIRY,
           clientIP,
           userAgent
         );
@@ -509,7 +510,7 @@ export const authRouter = createTRPCRouter({
         const token = await createJWT(userId, sessionId);
 
         setCookie(getH3Event(ctx), "userIDToken", token, {
-          maxAge: 60 * 60 * 24 * 14, // 14 days
+          maxAge: AUTH_CONFIG.SESSION_COOKIE_MAX_AGE,
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
@@ -618,7 +619,9 @@ export const authRouter = createTRPCRouter({
         // Create session with client info
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
-        const expiresIn = rememberMe ? "14d" : "12h";
+        const expiresIn = rememberMe
+          ? AUTH_CONFIG.JWT_EXPIRY
+          : AUTH_CONFIG.JWT_EXPIRY_SHORT;
         const sessionId = await createSession(
           userId,
           expiresIn,
@@ -636,7 +639,7 @@ export const authRouter = createTRPCRouter({
         };
 
         if (rememberMe) {
-          cookieOptions.maxAge = 60 * 60 * 24 * 14;
+          cookieOptions.maxAge = AUTH_CONFIG.REMEMBER_ME_MAX_AGE;
         }
 
         setCookie(getH3Event(ctx), "userIDToken", userToken, cookieOptions);
@@ -790,7 +793,7 @@ export const authRouter = createTRPCRouter({
         const userAgent = getUserAgent(getH3Event(ctx));
         const sessionId = await createSession(
           userId,
-          "14d",
+          AUTH_CONFIG.JWT_EXPIRY,
           clientIP,
           userAgent
         );
@@ -798,7 +801,7 @@ export const authRouter = createTRPCRouter({
         const token = await createJWT(userId, sessionId);
 
         setCookie(getH3Event(ctx), "userIDToken", token, {
-          maxAge: 60 * 60 * 24 * 14, // 14 days
+          maxAge: AUTH_CONFIG.SESSION_COOKIE_MAX_AGE,
           path: "/",
           httpOnly: true,
           secure: env.NODE_ENV === "production",
@@ -958,7 +961,9 @@ export const authRouter = createTRPCRouter({
         // Reset failed attempts on successful login
         await resetFailedAttempts(user.id);
 
-        const expiresIn = rememberMe ? "14d" : "12h";
+        const expiresIn = rememberMe
+          ? AUTH_CONFIG.JWT_EXPIRY
+          : AUTH_CONFIG.JWT_EXPIRY_SHORT;
 
         // Create session with client info (reuse clientIP from rate limiting)
         const userAgent = getUserAgent(getH3Event(ctx));
@@ -979,7 +984,7 @@ export const authRouter = createTRPCRouter({
         };
 
         if (rememberMe) {
-          cookieOptions.maxAge = 60 * 60 * 24 * 14; // 14 days
+          cookieOptions.maxAge = AUTH_CONFIG.REMEMBER_ME_MAX_AGE;
         }
 
         setCookie(getH3Event(ctx), "userIDToken", token, cookieOptions);
@@ -1110,13 +1115,13 @@ export const authRouter = createTRPCRouter({
 
         await sendEmail(email, "freno.me login link", htmlContent);
 
-        const exp = new Date(Date.now() + 2 * 60 * 1000);
+        const exp = new Date(Date.now() + COOLDOWN_TIMERS.EMAIL_LOGIN_LINK_MS);
         setCookie(
           getH3Event(ctx),
           "emailLoginLinkRequested",
           exp.toUTCString(),
           {
-            maxAge: 2 * 60,
+            maxAge: COOLDOWN_TIMERS.EMAIL_LOGIN_LINK_COOKIE_MAX_AGE,
             path: "/"
           }
         );
@@ -1228,13 +1233,15 @@ export const authRouter = createTRPCRouter({
 
         await sendEmail(email, "password reset", htmlContent);
 
-        const exp = new Date(Date.now() + 5 * 60 * 1000);
+        const exp = new Date(
+          Date.now() + COOLDOWN_TIMERS.PASSWORD_RESET_REQUEST_MS
+        );
         setCookie(
           getH3Event(ctx),
           "passwordResetRequested",
           exp.toUTCString(),
           {
-            maxAge: 5 * 60,
+            maxAge: COOLDOWN_TIMERS.PASSWORD_RESET_REQUEST_COOKIE_MAX_AGE,
             path: "/"
           }
         );
@@ -1417,9 +1424,9 @@ export const authRouter = createTRPCRouter({
         if (requested) {
           const time = parseInt(requested);
           const currentTime = Date.now();
-          const difference = (currentTime - time) / (1000 * 60);
+          const difference = (currentTime - time) / 1000;
 
-          if (difference < 15) {
+          if (difference * 1000 < COOLDOWN_TIMERS.EMAIL_VERIFICATION_MS) {
             throw new TRPCError({
               code: "TOO_MANY_REQUESTS",
               message:
@@ -1492,7 +1499,7 @@ export const authRouter = createTRPCRouter({
           "emailVerificationRequested",
           Date.now().toString(),
           {
-            maxAge: 15 * 60,
+            maxAge: COOLDOWN_TIMERS.EMAIL_VERIFICATION_COOKIE_MAX_AGE,
             path: "/"
           }
         );

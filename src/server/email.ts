@@ -1,7 +1,8 @@
 import { SignJWT } from "jose";
 import { env } from "~/env/server";
+import { AUTH_CONFIG } from "~/config";
 
-export const LINEAGE_JWT_EXPIRY = "14d";
+export const LINEAGE_JWT_EXPIRY = AUTH_CONFIG.LINEAGE_JWT_EXPIRY;
 
 export async function sendEmailVerification(userEmail: string): Promise<{
   success: boolean;

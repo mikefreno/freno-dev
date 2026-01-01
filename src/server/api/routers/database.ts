@@ -31,8 +31,9 @@ import {
   updateUserImageSchema,
   updateUserEmailSchema
 } from "../schemas/database";
+import { CACHE_CONFIG } from "~/config";
 
-const BLOG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const BLOG_CACHE_TTL = CACHE_CONFIG.BLOG_CACHE_TTL_MS;
 
 export const databaseRouter = createTRPCRouter({
   getCommentReactions: publicProcedure

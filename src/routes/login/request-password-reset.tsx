@@ -4,6 +4,7 @@ import { Title, Meta } from "@solidjs/meta";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { isValidEmail } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
+import { COUNTDOWN_CONFIG } from "~/config";
 
 export default function RequestPasswordResetPage() {
   const navigate = useNavigate();
@@ -176,7 +177,7 @@ export default function RequestPasswordResetPage() {
             <div class="mx-auto pt-4">
               <CountdownCircleTimer
                 isPlaying={true}
-                duration={300}
+                duration={COUNTDOWN_CONFIG.PASSWORD_RESET_DURATION_S}
                 initialRemainingTime={countDown()}
                 size={48}
                 strokeWidth={6}

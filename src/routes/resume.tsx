@@ -2,6 +2,7 @@ import { Title, Meta } from "@solidjs/meta";
 import { createSignal, onMount, Show, For } from "solid-js";
 import { isServer } from "solid-js/web";
 import { TerminalSplash } from "~/components/TerminalSplash";
+import { PDF_CONFIG } from "~/config";
 
 export default function Resume() {
   const [pages, setPages] = createSignal<HTMLCanvasElement[]>([]);
@@ -26,7 +27,7 @@ export default function Resume() {
       // Render each page
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 1.5 });
+        const viewport = page.getViewport({ scale: PDF_CONFIG.RENDER_SCALE });
 
         // Create canvas
         const canvas = document.createElement("canvas");

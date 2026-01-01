@@ -2,6 +2,7 @@ import { Title, Meta } from "@solidjs/meta";
 import { HttpStatusCode } from "@solidjs/start";
 import { useNavigate } from "@solidjs/router";
 import { createEffect, createSignal, For } from "solid-js";
+import { ERROR_PAGE_CONFIG } from "~/config";
 
 export default function Page_401() {
   const navigate = useNavigate();
@@ -24,15 +25,18 @@ export default function Page_401() {
         }
         setGlitchText(glitched);
 
-        setTimeout(() => setGlitchText(originalText), 100);
+        setTimeout(
+          () => setGlitchText(originalText),
+          ERROR_PAGE_CONFIG.GLITCH_DURATION_MS
+        );
       }
-    }, 300);
+    }, ERROR_PAGE_CONFIG.GLITCH_INTERVAL_MS);
 
     return () => clearInterval(glitchInterval);
   });
 
   const createParticles = () => {
-    return Array.from({ length: 45 }, (_, i) => ({
+    return Array.from({ length: ERROR_PAGE_CONFIG.PARTICLE_COUNT }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,

@@ -1,3 +1,5 @@
+import { CACHE_CONFIG } from "~/config";
+
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
@@ -80,7 +82,8 @@ export async function withCacheAndStale<T>(
     logErrors?: boolean;
   } = {}
 ): Promise<T> {
-  const { maxStaleMs = 7 * 24 * 60 * 60 * 1000, logErrors = true } = options;
+  const { maxStaleMs = CACHE_CONFIG.MAX_STALE_DATA_MS, logErrors = true } =
+    options;
 
   const cached = cache.get<T>(key, ttlMs);
   if (cached !== null) {

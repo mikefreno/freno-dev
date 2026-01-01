@@ -6,6 +6,7 @@ import Eye from "~/components/icons/Eye";
 import EyeSlash from "~/components/icons/EyeSlash";
 import { validatePassword } from "~/lib/validation";
 import { api } from "~/lib/api";
+import { VALIDATION_CONFIG, COUNTDOWN_CONFIG } from "~/config";
 
 export default function PasswordResetPage() {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ export default function PasswordResetPage() {
   };
 
   const checkPasswordLength = (password: string) => {
-    if (password.length >= 8) {
+    if (password.length >= VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
       setPasswordLengthSufficient(true);
       setShowPasswordLengthWarning(false);
     } else {
@@ -223,7 +224,8 @@ export default function PasswordResetPage() {
                 showPasswordLengthWarning() ? "" : "opacity-0 select-none"
               } text-red text-center transition-opacity duration-200 ease-in-out`}
             >
-              Password too short! Min Length: 8
+              Password too short! Min Length:{" "}
+              {VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
             </div>
 
             {/* Password Confirmation Input */}
@@ -279,7 +281,8 @@ export default function PasswordResetPage() {
                 !passwordsMatch() &&
                 passwordLengthSufficient() &&
                 newPasswordConfRef &&
-                newPasswordConfRef.value.length >= 6
+                newPasswordConfRef.value.length >=
+                  VALIDATION_CONFIG.MIN_PASSWORD_CONF_LENGTH_FOR_ERROR
                   ? ""
                   : "opacity-0 select-none"
               } text-red text-center transition-opacity duration-200 ease-in-out`}
@@ -307,7 +310,7 @@ export default function PasswordResetPage() {
               <div class="mx-auto pt-4">
                 <CountdownCircleTimer
                   isPlaying={countDown()}
-                  duration={5}
+                  duration={COUNTDOWN_CONFIG.PASSWORD_RESET_SUCCESS_DURATION_S}
                   size={200}
                   strokeWidth={12}
                   colors="var(--color-blue)"

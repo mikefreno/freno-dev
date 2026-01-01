@@ -164,14 +164,6 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
       {/* Main content */}
       <div class="relative z-10 flex min-h-screen flex-col items-start justify-start px-4 py-16 lg:px-16">
         {/* Terminal header */}
-        <div class="mb-8 w-full max-w-4xl">
-          <div class="border-surface0 text-subtext0 flex items-center gap-2 border-b pb-2 font-mono text-sm">
-            <span class="text-green">freno@terminal</span>
-            <span class="text-subtext1">:</span>
-            <span class="text-blue">~</span>
-            <span class="text-subtext1">$</span>
-          </div>
-        </div>
 
         {/* Error Content - passed as prop */}
         {props.errorContent}

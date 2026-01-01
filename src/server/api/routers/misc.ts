@@ -20,6 +20,7 @@ import {
   TimeoutError,
   APIError
 } from "~/server/fetch-utils";
+import { NETWORK_CONFIG, COOLDOWN_TIMERS, VALIDATION_CONFIG } from "~/config";
 const assets: Record<string, string> = {
   "shapes-with-abigail": "shapes-with-abigail.apk",
   "magic-delve": "magic-delve.apk",
@@ -257,7 +258,10 @@ export const miscRouter = createTRPCRouter({
       z.object({
         name: z.string().min(1),
         email: z.string().email(),
-        message: z.string().min(1).max(500)
+        message: z
+          .string()
+          .min(1)
+          .max(VALIDATION_CONFIG.MAX_CONTACT_MESSAGE_LENGTH)
       })
     )
     .mutation(async ({ input }) => {
@@ -300,19 +304,19 @@ export const miscRouter = createTRPCRouter({
                 "content-type": "application/json"
               },
               body: JSON.stringify(sendinblueData),
-              timeout: 15000
+              timeout: NETWORK_CONFIG.EMAIL_API_TIMEOUT_MS
             });
 
             await checkResponse(response);
             return response;
           },
           {
-            maxRetries: 2,
-            retryDelay: 1000
+            maxRetries: NETWORK_CONFIG.MAX_RETRIES,
+            retryDelay: NETWORK_CONFIG.RETRY_DELAY_MS
           }
         );
 
-        const exp = new Date(Date.now() + 1 * 60 * 1000);
+        const exp = new Date(Date.now() + COOLDOWN_TIMERS.CONTACT_REQUEST_MS);
         setCookie("contactRequestSent", exp.toUTCString(), {
           expires: exp,
           path: "/"
@@ -415,12 +419,15 @@ export const miscRouter = createTRPCRouter({
                   "content-type": "application/json"
                 },
                 body: JSON.stringify(sendinblueMyData),
-                timeout: 15000
+                timeout: NETWORK_CONFIG.EMAIL_API_TIMEOUT_MS
               });
               await checkResponse(response);
               return response;
             },
-            { maxRetries: 2, retryDelay: 1000 }
+            {
+              maxRetries: NETWORK_CONFIG.MAX_RETRIES,
+              retryDelay: NETWORK_CONFIG.RETRY_DELAY_MS
+            }
           ),
           fetchWithRetry(
             async () => {
@@ -432,16 +439,19 @@ export const miscRouter = createTRPCRouter({
                   "content-type": "application/json"
                 },
                 body: JSON.stringify(sendinblueUserData),
-                timeout: 15000
+                timeout: NETWORK_CONFIG.EMAIL_API_TIMEOUT_MS
               });
               await checkResponse(response);
               return response;
             },
-            { maxRetries: 2, retryDelay: 1000 }
+            {
+              maxRetries: NETWORK_CONFIG.MAX_RETRIES,
+              retryDelay: NETWORK_CONFIG.RETRY_DELAY_MS
+            }
           )
         ]);
 
-        const exp = new Date(Date.now() + 1 * 60 * 1000);
+        const exp = new Date(Date.now() + COOLDOWN_TIMERS.CONTACT_REQUEST_MS);
         setCookie("deletionRequestSent", exp.toUTCString(), {
           expires: exp,
           path: "/"

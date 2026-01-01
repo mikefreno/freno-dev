@@ -18,6 +18,7 @@ import { DarkModeToggle } from "./DarkModeToggle";
 import { SkeletonBox, SkeletonText } from "./SkeletonLoader";
 import { env } from "~/env/client";
 import { A, useNavigate, useLocation } from "@solidjs/router";
+import { BREAKPOINTS } from "~/config";
 
 function formatDomainName(url: string): string {
   const domain = url.split("://")[1]?.split(":")[0] ?? url;
@@ -67,7 +68,10 @@ export function RightBarContent() {
   const [loading, setLoading] = createSignal(true);
 
   const handleLinkClick = () => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
+    if (
+      typeof window !== "undefined" &&
+      window.innerWidth < BREAKPOINTS.MOBILE
+    ) {
       setLeftBarVisible(false);
     }
   };
@@ -210,7 +214,10 @@ export function LeftBar() {
   const [getLostVisible, setGetLostVisible] = createSignal(false);
 
   const handleLinkClick = () => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
+    if (
+      typeof window !== "undefined" &&
+      window.innerWidth < BREAKPOINTS.MOBILE
+    ) {
       setLeftBarVisible(false);
     }
   };
@@ -311,7 +318,7 @@ export function LeftBar() {
     if (ref) {
       // Focus trap for accessibility on mobile
       const handleKeyDown = (e: KeyboardEvent) => {
-        const isMobile = window.innerWidth < 768;
+        const isMobile = window.innerWidth < BREAKPOINTS.MOBILE;
 
         if (!isMobile || !leftBarVisible()) return;
 

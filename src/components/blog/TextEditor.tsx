@@ -54,6 +54,7 @@ import ruby from "highlight.js/lib/languages/ruby";
 import swift from "highlight.js/lib/languages/swift";
 import kotlin from "highlight.js/lib/languages/kotlin";
 import dockerfile from "highlight.js/lib/languages/dockerfile";
+import { BREAKPOINTS } from "~/config";
 
 const lowlight = createLowlight(common);
 
@@ -1648,7 +1649,7 @@ export default function TextEditor(props: TextEditorProps) {
             !hasSuggestion() ||
             !isFullscreen() ||
             typeof window === "undefined" ||
-            window.innerWidth >= 768
+            window.innerWidth >= BREAKPOINTS.MOBILE
           ) {
             return false;
           }
@@ -1663,7 +1664,7 @@ export default function TextEditor(props: TextEditorProps) {
             !hasSuggestion() ||
             !isFullscreen() ||
             typeof window === "undefined" ||
-            window.innerWidth >= 768
+            window.innerWidth >= BREAKPOINTS.MOBILE
           ) {
             return false;
           }
@@ -1737,7 +1738,7 @@ export default function TextEditor(props: TextEditorProps) {
         if (infillConfig() && !isInitialLoad && infillEnabled()) {
           const isMobileNotFullscreen =
             typeof window !== "undefined" &&
-            window.innerWidth < 768 &&
+            window.innerWidth < BREAKPOINTS.MOBILE &&
             !isFullscreen();
 
           // Skip auto-infill on mobile when not in fullscreen
@@ -4108,7 +4109,7 @@ export default function TextEditor(props: TextEditorProps) {
                     title={
                       infillEnabled()
                         ? typeof window !== "undefined" &&
-                          window.innerWidth < 768
+                          window.innerWidth < BREAKPOINTS.MOBILE
                           ? "AI Autocomplete: ON (swipe right to accept full)"
                           : "AI Autocomplete: ON (Ctrl/Cmd+Space to trigger manually)"
                         : "AI Autocomplete: OFF (Click to enable)"

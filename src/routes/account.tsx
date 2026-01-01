@@ -12,6 +12,7 @@ import Dropzone from "~/components/blog/Dropzone";
 import AddImageToS3 from "~/lib/s3upload";
 import { validatePassword, isValidEmail } from "~/lib/validation";
 import { TerminalSplash } from "~/components/TerminalSplash";
+import { VALIDATION_CONFIG } from "~/config";
 
 import type { UserProfile } from "~/types/user";
 
@@ -806,7 +807,7 @@ export default function AccountPage() {
                           ref={oldPasswordRef}
                           type={showOldPasswordInput() ? "text" : "password"}
                           required
-                          minlength="8"
+                          minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
                           disabled={passwordChangeLoading()}
                           placeholder=" "
                           title="Password must be at least 8 characters"
@@ -997,7 +998,7 @@ export default function AccountPage() {
                               ref={deleteAccountPasswordRef}
                               type="password"
                               required
-                              minlength="8"
+                              minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
                               disabled={deleteAccountButtonLoading()}
                               placeholder=" "
                               title="Enter your password to confirm account deletion"

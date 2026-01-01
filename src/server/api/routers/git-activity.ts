@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { env } from "~/env/server";
 import { withCacheAndStale } from "~/server/cache";
+import { CACHE_CONFIG } from "~/config";
 import {
   fetchWithTimeout,
   checkResponse,
@@ -30,7 +31,7 @@ export const gitActivityRouter = createTRPCRouter({
     .query(async ({ input }) => {
       return withCacheAndStale(
         `github-commits-${input.limit}`,
-        10 * 60 * 1000, // 10 minutes
+        CACHE_CONFIG.GIT_ACTIVITY_CACHE_TTL_MS,
         async () => {
           const reposResponse = await fetchWithTimeout(
             `https://api.github.com/users/MikeFreno/repos?sort=pushed&per_page=10`,
@@ -108,7 +109,7 @@ export const gitActivityRouter = createTRPCRouter({
 
           return allCommits.slice(0, input.limit);
         },
-        { maxStaleMs: 24 * 60 * 60 * 1000 } // Accept stale data up to 24 hours old
+        { maxStaleMs: CACHE_CONFIG.GIT_ACTIVITY_MAX_STALE_MS }
       ).catch((error) => {
         if (error instanceof NetworkError) {
           console.error("GitHub API unavailable (network error)");
@@ -130,7 +131,7 @@ export const gitActivityRouter = createTRPCRouter({
     .query(async ({ input }) => {
       return withCacheAndStale(
         `gitea-commits-${input.limit}`,
-        10 * 60 * 1000, // 10 minutes
+        CACHE_CONFIG.GIT_ACTIVITY_CACHE_TTL_MS,
         async () => {
           const reposResponse = await fetchWithTimeout(
             `${env.GITEA_URL}/api/v1/users/Mike/repos?limit=100`,
@@ -210,7 +211,7 @@ export const gitActivityRouter = createTRPCRouter({
 
           return allCommits.slice(0, input.limit);
         },
-        { maxStaleMs: 24 * 60 * 60 * 1000 }
+        { maxStaleMs: CACHE_CONFIG.GIT_ACTIVITY_MAX_STALE_MS }
       ).catch((error) => {
         if (error instanceof NetworkError) {
           console.error("Gitea API unavailable (network error)");

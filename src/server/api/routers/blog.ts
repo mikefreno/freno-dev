@@ -3,8 +3,9 @@ import { ConnectionFactory } from "~/server/utils";
 import { withCacheAndStale } from "~/server/cache";
 import { incrementPostReadSchema } from "../schemas/blog";
 import type { PostWithCommentsAndLikes } from "~/db/types";
+import { CACHE_CONFIG } from "~/config";
 
-const BLOG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const BLOG_CACHE_TTL = CACHE_CONFIG.BLOG_CACHE_TTL_MS;
 
 // Shared cache function for all blog posts
 const getAllPostsData = async (privilegeLevel: string) => {

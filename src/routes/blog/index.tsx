@@ -8,6 +8,7 @@ import TagSelector from "~/components/blog/TagSelector";
 import PostSorting from "~/components/blog/PostSorting";
 import PublishStatusToggle from "~/components/blog/PublishStatusToggle";
 import { TerminalSplash } from "~/components/TerminalSplash";
+import { CACHE_CONFIG } from "~/config";
 
 const getPosts = query(async () => {
   "use server";
@@ -17,11 +18,14 @@ const getPosts = query(async () => {
   const event = getRequestEvent()!;
   const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
 
-  return withCache(`posts-${privilegeLevel}`, 5 * 60 * 1000, async () => {
-    const conn = ConnectionFactory();
+  return withCache(
+    `posts-${privilegeLevel}`,
+    CACHE_CONFIG.BLOG_POSTS_LIST_CACHE_TTL_MS,
+    async () => {
+      const conn = ConnectionFactory();
 
-    // Fetch all posts with aggregated data
-    let postsQuery = `
+      // Fetch all posts with aggregated data
+      let postsQuery = `
       SELECT 
         p.id,
         p.title,
@@ -41,17 +45,17 @@ const getPosts = query(async () => {
       LEFT JOIN Comment c ON p.id = c.post_id
     `;
 
-    if (privilegeLevel !== "admin") {
-      postsQuery += ` WHERE p.published = TRUE`;
-    }
+      if (privilegeLevel !== "admin") {
+        postsQuery += ` WHERE p.published = TRUE`;
+      }
 
-    postsQuery += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments`;
-    postsQuery += ` ORDER BY p.date ASC;`;
+      postsQuery += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments`;
+      postsQuery += ` ORDER BY p.date ASC;`;
 
-    const postsResult = await conn.execute(postsQuery);
-    const posts = postsResult.rows;
+      const postsResult = await conn.execute(postsQuery);
+      const posts = postsResult.rows;
 
-    const tagsQuery = `
+      const tagsQuery = `
       SELECT t.value, t.post_id
       FROM Tag t
       JOIN Post p ON t.post_id = p.id
@@ -59,17 +63,18 @@ const getPosts = query(async () => {
       ORDER BY t.value ASC
     `;
 
-    const tagsResult = await conn.execute(tagsQuery);
-    const tags = tagsResult.rows;
+      const tagsResult = await conn.execute(tagsQuery);
+      const tags = tagsResult.rows;
 
-    const tagMap: Record<string, number> = {};
-    tags.forEach((tag: any) => {
-      const key = `${tag.value}`;
-      tagMap[key] = (tagMap[key] || 0) + 1;
-    });
+      const tagMap: Record<string, number> = {};
+      tags.forEach((tag: any) => {
+        const key = `${tag.value}`;
+        tagMap[key] = (tagMap[key] || 0) + 1;
+      });
 
-    return { posts, tags, tagMap, privilegeLevel };
-  });
+      return { posts, tags, tagMap, privilegeLevel };
+    }
+  );
 }, "posts");
 
 export default function BlogIndex() {

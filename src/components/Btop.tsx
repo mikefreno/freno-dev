@@ -1,4 +1,5 @@
 import { createSignal, onMount, onCleanup, Show } from "solid-js";
+import { BREAKPOINTS } from "~/config";
 
 interface BtopProps {
   onClose: () => void;
@@ -39,10 +40,10 @@ export function Btop(props: BtopProps) {
   onMount(() => {
     // Check if mobile
     if (typeof window !== "undefined") {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < BREAKPOINTS.MOBILE);
 
       const handleResize = () => {
-        setIsMobile(window.innerWidth < 768);
+        setIsMobile(window.innerWidth < BREAKPOINTS.MOBILE);
       };
       window.addEventListener("resize", handleResize);
       onCleanup(() => window.removeEventListener("resize", handleResize));

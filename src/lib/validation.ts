@@ -2,6 +2,8 @@
  * Form validation utilities
  */
 
+import { VALIDATION_CONFIG } from "~/config";
+
 /**
  * Validate email format
  */
@@ -36,9 +38,11 @@ export function validatePassword(password: string): {
 } {
   const errors: string[] = [];
 
-  // Minimum length: 12 characters
-  if (password.length < 12) {
-    errors.push("Password must be at least 12 characters long");
+  // Minimum length from config
+  if (password.length < VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
+    errors.push(
+      `Password must be at least ${VALIDATION_CONFIG.MIN_PASSWORD_LENGTH} characters long`
+    );
   }
 
   // Require uppercase letter
@@ -93,7 +97,7 @@ export function validatePassword(password: string): {
       strength = "strong";
     } else if (password.length >= 16) {
       strength = "good";
-    } else if (password.length >= 12) {
+    } else if (password.length >= VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
       strength = "fair";
     }
   }

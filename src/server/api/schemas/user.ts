@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { validatePassword } from "~/lib/validation";
+import { VALIDATION_CONFIG } from "~/config";
 
 /**
  * User API Validation Schemas
@@ -14,11 +15,14 @@ import { validatePassword } from "~/lib/validation";
 
 /**
  * Secure password validation with strength requirements
- * Minimum 12 characters, uppercase, lowercase, number, and special character
+ * Minimum length from config, uppercase, lowercase, number, and special character
  */
 const securePasswordSchema = z
   .string()
-  .min(12, "Password must be at least 12 characters")
+  .min(
+    VALIDATION_CONFIG.MIN_PASSWORD_LENGTH,
+    `Password must be at least ${VALIDATION_CONFIG.MIN_PASSWORD_LENGTH} characters`
+  )
   .refine(
     (password) => {
       const result = validatePassword(password);
@@ -44,7 +48,7 @@ export const registerUserSchema = z
   .object({
     email: z.string().email(),
     password: securePasswordSchema,
-    passwordConfirmation: z.string().min(12)
+    passwordConfirmation: z.string().min(VALIDATION_CONFIG.MIN_PASSWORD_LENGTH)
   })
   .refine((data) => data.password === data.passwordConfirmation, {
     message: "Passwords do not match",
@@ -100,7 +104,9 @@ export const changePasswordSchema = z
   .object({
     oldPassword: z.string().min(1, "Current password is required"),
     newPassword: securePasswordSchema,
-    newPasswordConfirmation: z.string().min(12)
+    newPasswordConfirmation: z
+      .string()
+      .min(VALIDATION_CONFIG.MIN_PASSWORD_LENGTH)
   })
   .refine((data) => data.newPassword === data.newPasswordConfirmation, {
     message: "Passwords do not match",
@@ -117,7 +123,9 @@ export const changePasswordSchema = z
 export const setPasswordSchema = z
   .object({
     newPassword: securePasswordSchema,
-    newPasswordConfirmation: z.string().min(12)
+    newPasswordConfirmation: z
+      .string()
+      .min(VALIDATION_CONFIG.MIN_PASSWORD_LENGTH)
   })
   .refine((data) => data.newPassword === data.newPasswordConfirmation, {
     message: "Passwords do not match",
@@ -138,7 +146,9 @@ export const resetPasswordSchema = z
   .object({
     token: z.string().min(1),
     newPassword: securePasswordSchema,
-    newPasswordConfirmation: z.string().min(12)
+    newPasswordConfirmation: z
+      .string()
+      .min(VALIDATION_CONFIG.MIN_PASSWORD_LENGTH)
   })
   .refine((data) => data.newPassword === data.newPasswordConfirmation, {
     message: "Passwords do not match",
