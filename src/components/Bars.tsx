@@ -212,6 +212,11 @@ export function LeftBar() {
   const [signOutLoading, setSignOutLoading] = createSignal(false);
   const [getLostText, setGetLostText] = createSignal("What's this?");
   const [getLostVisible, setGetLostVisible] = createSignal(false);
+  const [windowWidth, setWindowWidth] = createSignal(
+    typeof window !== "undefined"
+      ? window.innerWidth
+      : BREAKPOINTS.MOBILE_MAX_WIDTH
+  );
 
   const handleLinkClick = () => {
     if (
@@ -260,6 +265,12 @@ export function LeftBar() {
 
   onMount(() => {
     setIsMounted(true);
+
+    // Set up window resize listener for reactive styling
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
 
     // Terminal-style appearance animation for "Get Lost" button
     const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
@@ -355,10 +366,12 @@ export function LeftBar() {
       onCleanup(() => {
         ref?.removeEventListener("keydown", handleKeyDown);
         clearInterval(glitchInterval);
+        window.removeEventListener("resize", handleResize);
       });
     } else {
       onCleanup(() => {
         clearInterval(glitchInterval);
+        window.removeEventListener("resize", handleResize);
       });
     }
 
@@ -391,6 +404,21 @@ export function LeftBar() {
   });
 
   const navigate = useNavigate();
+  const getMainNavStyles = () => {
+    const baseStyles = {
+      "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
+      width: "250px",
+      "padding-top": "env(safe-area-inset-top)",
+      "padding-bottom": "env(safe-area-inset-bottom)"
+    };
+
+    const shadowStyle =
+      windowWidth() >= BREAKPOINTS.MOBILE_MAX_WIDTH
+        ? { "box-shadow": "inset -6px 0 16px -6px rgba(0, 0, 0, 0.1)" }
+        : { "box-shadow": "0 10px 10px 0 rgba(0, 0, 0, 0.2)" };
+
+    return { ...baseStyles, ...shadowStyle };
+  };
 
   return (
     <nav
@@ -403,13 +431,7 @@ export function LeftBar() {
         "-translate-x-full": !leftBarVisible(),
         "translate-x-0": leftBarVisible()
       }}
-      style={{
-        "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
-        width: "250px",
-        "box-shadow": "inset -6px 0 16px -6px rgba(0, 0, 0, 0.1)",
-        "padding-top": "env(safe-area-inset-top)",
-        "padding-bottom": "env(safe-area-inset-bottom)"
-      }}
+      style={getMainNavStyles()}
     >
       {/* Hamburger menu button - positioned at right edge of navbar */}
       <button
