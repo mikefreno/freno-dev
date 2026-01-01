@@ -15,6 +15,7 @@ import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
 import { BarsProvider, useBars } from "./context/bars";
 import { DarkModeProvider } from "./context/darkMode";
 import { createWindowWidth, isMobile } from "~/lib/resize-utils";
+import { MOBILE_CONFIG } from "./config";
 
 function AppLayout(props: { children: any }) {
   const {
@@ -25,7 +26,6 @@ function AppLayout(props: { children: any }) {
   } = useBars();
 
   let lastScrollY = 0;
-  const SCROLL_THRESHOLD = 75;
 
   // Use onMount to avoid hydration issues - window operations are client-only
   onMount(() => {
@@ -58,7 +58,7 @@ function AppLayout(props: { children: any }) {
       const currentScrollY = window.scrollY;
       const currentIsMobile = isMobile(windowWidth());
 
-      if (currentIsMobile && currentScrollY > SCROLL_THRESHOLD) {
+      if (currentIsMobile && currentScrollY > MOBILE_CONFIG.SCROLL_THRESHOLD) {
         // Scrolling down past threshold - hide left bar on mobile
         if (currentScrollY > lastScrollY) {
           setLeftBarVisible(false);
@@ -104,7 +104,6 @@ function AppLayout(props: { children: any }) {
     const windowWidth = createWindowWidth();
     let touchStartX = 0;
     let touchStartY = 0;
-    const SWIPE_THRESHOLD = 100;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
@@ -119,25 +118,11 @@ function AppLayout(props: { children: any }) {
       const currentIsMobile = isMobile(windowWidth());
 
       // Only trigger if horizontal swipe is dominant
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        // Mobile: Only left bar
-        if (currentIsMobile) {
-          if (deltaX > SWIPE_THRESHOLD) {
-            setLeftBarVisible(true);
-          }
-          // Swipe left anywhere - hide left bar
-          else if (deltaX < -SWIPE_THRESHOLD) {
-            setLeftBarVisible(false);
-          }
-        } else {
-          // Desktop: Both bars
-          if (deltaX > SWIPE_THRESHOLD) {
-            setLeftBarVisible(true);
-          }
-          // Swipe left anywhere - reveal right bar
-          else if (deltaX < -SWIPE_THRESHOLD) {
-            setRightBarVisible(true);
-          }
+      if (currentIsMobile && Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (deltaX > MOBILE_CONFIG.SWIPE_THRESHOLD) {
+          setLeftBarVisible(true);
+        } else if (deltaX < -MOBILE_CONFIG.SWIPE_THRESHOLD) {
+          setLeftBarVisible(false);
         }
       }
     };
