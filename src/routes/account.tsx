@@ -13,6 +13,7 @@ import AddImageToS3 from "~/lib/s3upload";
 import { validatePassword, isValidEmail } from "~/lib/validation";
 import { TerminalSplash } from "~/components/TerminalSplash";
 import { VALIDATION_CONFIG } from "~/config";
+import { api } from "~/lib/api";
 
 import type { UserProfile } from "~/types/user";
 
@@ -73,6 +74,7 @@ export default function AccountPage() {
     createSignal(false);
   const [profileImageSetLoading, setProfileImageSetLoading] =
     createSignal(false);
+  const [signOutLoading, setSignOutLoading] = createSignal(false);
 
   const [passwordsMatch, setPasswordsMatch] = createSignal(false);
   const [showPasswordLengthWarning, setShowPasswordLengthWarning] =
@@ -453,6 +455,18 @@ export default function AccountPage() {
       setShowPasswordLengthWarning(true);
     }
     setPasswordBlurred(true);
+  };
+
+  // Sign out handler
+  const handleSignOut = async () => {
+    setSignOutLoading(true);
+    try {
+      await api.auth.signOut.mutate();
+      navigate("/");
+    } catch (error) {
+      console.error("Sign out failed:", error);
+      setSignOutLoading(false);
+    }
   };
 
   // Helper to get provider display name
@@ -941,14 +955,18 @@ export default function AccountPage() {
 
                 {/* Sign Out Section */}
                 <div class="mx-auto max-w-md py-4">
-                  <form method="post" action="/api/auth/signout">
-                    <button
-                      type="submit"
-                      class="bg-overlay0 hover:bg-overlay1 w-full rounded px-4 py-2 transition-all"
-                    >
-                      Sign Out
-                    </button>
-                  </form>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    disabled={signOutLoading()}
+                    class={`${
+                      signOutLoading()
+                        ? "bg-overlay0 cursor-not-allowed opacity-75"
+                        : "bg-overlay0 hover:bg-overlay1"
+                    } w-full rounded px-4 py-2 transition-all`}
+                  >
+                    {signOutLoading() ? "Signing Out..." : "Sign Out"}
+                  </button>
                 </div>
 
                 <hr class="mt-8 mb-8" />
