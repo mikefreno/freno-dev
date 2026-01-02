@@ -16,6 +16,7 @@ import { VALIDATION_CONFIG } from "~/config";
 import { api } from "~/lib/api";
 
 import type { UserProfile } from "~/types/user";
+import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
 
 const getUserProfile = query(async (): Promise<UserProfile | null> => {
   "use server";
@@ -84,6 +85,7 @@ export default function AccountPage() {
   const [passwordBlurred, setPasswordBlurred] = createSignal(false);
   const [passwordError, setPasswordError] = createSignal(false);
   const [passwordDeletionError, setPasswordDeletionError] = createSignal(false);
+  const [newPassword, setNewPassword] = createSignal("");
 
   const [showOldPasswordInput, setShowOldPasswordInput] = createSignal(false);
   const [showPasswordInput, setShowPasswordInput] = createSignal(false);
@@ -433,6 +435,7 @@ export default function AccountPage() {
 
   const handleNewPasswordChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
+    setNewPassword(target.value);
     checkPasswordLength(target.value);
     if (newPasswordConfRef) {
       checkForMatch(target.value, newPasswordConfRef.value);
@@ -838,9 +841,21 @@ export default function AccountPage() {
                         >
                           <Show
                             when={showOldPasswordInput()}
-                            fallback={<Eye />}
+                            fallback={
+                              <EyeSlash
+                                height={24}
+                                width={24}
+                                strokeWidth={1}
+                                class="stroke-text"
+                              />
+                            }
                           >
-                            <EyeSlash />
+                            <Eye
+                              height={24}
+                              width={24}
+                              strokeWidth={1}
+                              class="stroke-text"
+                            />
                           </Show>
                         </button>
                       </div>
@@ -861,6 +876,9 @@ export default function AccountPage() {
                       />
                       <span class="bar"></span>
                       <label class="underlinedInputLabel">New Password</label>
+                      <div class="pt-1">
+                        <PasswordStrengthMeter password={newPassword()} />
+                      </div>
                       <button
                         type="button"
                         onClick={() =>
@@ -868,18 +886,26 @@ export default function AccountPage() {
                         }
                         class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
                       >
-                        <Show when={showPasswordInput()} fallback={<Eye />}>
-                          <EyeSlash />
+                        <Show
+                          when={showPasswordInput()}
+                          fallback={
+                            <EyeSlash
+                              height={24}
+                              width={24}
+                              strokeWidth={1}
+                              class="stroke-text"
+                            />
+                          }
+                        >
+                          <Eye
+                            height={24}
+                            width={24}
+                            strokeWidth={1}
+                            class="stroke-text"
+                          />
                         </Show>
                       </button>
                     </div>
-
-                    <Show when={showPasswordLengthWarning()}>
-                      <div class="text-red mb-4 text-center text-sm">
-                        Password too short! Min Length: 8
-                      </div>
-                    </Show>
-
                     <div class="input-group relative mx-4 mb-2">
                       <input
                         ref={newPasswordConfRef}
@@ -894,7 +920,7 @@ export default function AccountPage() {
                       />
                       <span class="bar"></span>
                       <label class="underlinedInputLabel">
-                        Password Confirmation
+                        New Password Confirmation
                       </label>
                       <button
                         type="button"
@@ -903,8 +929,23 @@ export default function AccountPage() {
                         }
                         class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
                       >
-                        <Show when={showPasswordConfInput()} fallback={<Eye />}>
-                          <EyeSlash />
+                        <Show
+                          when={showPasswordConfInput()}
+                          fallback={
+                            <EyeSlash
+                              height={24}
+                              width={24}
+                              strokeWidth={1}
+                              class="stroke-text"
+                            />
+                          }
+                        >
+                          <Eye
+                            height={24}
+                            width={24}
+                            strokeWidth={1}
+                            class="stroke-text"
+                          />
                         </Show>
                       </button>
                     </div>

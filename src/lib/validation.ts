@@ -37,6 +37,7 @@ export function validatePassword(password: string): {
   strength: PasswordStrength;
 } {
   const errors: string[] = [];
+  let includesSpecial = false;
 
   // Minimum length from config
   if (password.length < VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
@@ -60,11 +61,11 @@ export function validatePassword(password: string): {
     errors.push("Password must contain at least one number");
   }
 
+  if (/[^A-Za-z0-9]/.test(password)) {
+    includesSpecial = true;
+  }
   // Require special character (if configured)
-  if (
-    VALIDATION_CONFIG.PASSWORD_REQUIRE_SPECIAL &&
-    !/[^A-Za-z0-9]/.test(password)
-  ) {
+  if (VALIDATION_CONFIG.PASSWORD_REQUIRE_SPECIAL && !includesSpecial) {
     errors.push("Password must contain at least one special character");
   }
 
@@ -97,6 +98,13 @@ export function validatePassword(password: string): {
   let strength: PasswordStrength = "weak";
 
   if (errors.length === 0) {
+    if (includesSpecial) {
+      if (password.length >= 14) {
+        strength = "strong";
+      } else if (password.length >= VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
+        strength = "good";
+      }
+    }
     if (password.length >= 16) {
       strength = "strong";
     } else if (password.length >= 12) {

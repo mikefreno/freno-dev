@@ -1,5 +1,5 @@
 import { createMemo, For, Show } from "solid-js";
-import { validatePassword, type PasswordStrength } from "~/lib/validation";
+import { validatePassword } from "~/lib/validation";
 import { VALIDATION_CONFIG } from "~/config";
 import CheckCircle from "./icons/CheckCircle";
 
@@ -86,7 +86,7 @@ export default function PasswordStrengthMeter(
       {/* Strength bar */}
       <Show when={props.password.length > 0}>
         <div class="space-y-1">
-          <div class="bg-surface h-2 w-full overflow-hidden rounded-full">
+          <div class="bg-surface border-yellow h-2 w-full overflow-hidden rounded-full border">
             <div
               class={`${config().color} h-full transition-all duration-300 ease-out`}
               style={{ width: config().width }}

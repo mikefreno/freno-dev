@@ -540,7 +540,7 @@ export function LeftBar() {
           {/* Navigation Links */}
           <div class="mt-auto">
             <Typewriter keepAlive={false}>
-              <ul class="flex flex-col gap-4 py-6">
+              <ul class="flex flex-col gap-4 pt-6">
                 <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
                   <a href="/" onClick={handleLinkClick}>
                     Home
@@ -592,7 +592,7 @@ export function LeftBar() {
             </Typewriter>
 
             {/* Get Lost button - outside Typewriter to allow glitch effect */}
-            <ul class="flex flex-col gap-4 pb-6">
+            <ul class="pt-4 pb-6">
               <li
                 class="hover:text-subtext0 w-fit transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"
                 classList={{
