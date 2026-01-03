@@ -838,6 +838,9 @@ export default function TextEditor(props: TextEditorProps) {
   let isInitialLoad = true; // Flag to prevent capturing history on initial load
   let hasAttemptedHistoryLoad = false; // Flag to prevent repeated load attempts
 
+  // Throttle timer for reference operations
+  let updateThrottleTimer: ReturnType<typeof setTimeout> | null = null;
+
   // LLM Infill state
   const [currentSuggestion, setCurrentSuggestion] = createSignal<string>("");
   const [isInfillLoading, setIsInfillLoading] = createSignal(false);
@@ -1717,9 +1720,15 @@ export default function TextEditor(props: TextEditorProps) {
     onUpdate: ({ editor }) => {
       untrack(() => {
         props.updateContent(editor.getHTML());
-        setTimeout(() => {
+
+        // Throttle reference operations to reduce DOM thrashing
+        if (updateThrottleTimer) {
+          clearTimeout(updateThrottleTimer);
+        }
+        updateThrottleTimer = setTimeout(() => {
           renumberAllReferences(editor);
           updateReferencesSection(editor);
+          updateThrottleTimer = null;
         }, TEXT_EDITOR_CONFIG.REFERENCE_UPDATE_DELAY_MS);
 
         // Debounced history capture

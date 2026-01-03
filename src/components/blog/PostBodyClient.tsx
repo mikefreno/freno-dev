@@ -115,42 +115,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       copyButton.style.cssText =
         "background-color: var(--color-surface0); color: var(--color-text); border: 1px solid var(--color-overlay0);";
       copyButton.textContent = "Copy";
-
-      copyButton.addEventListener("mouseenter", () => {
-        copyButton.style.backgroundColor = "var(--color-surface1)";
-      });
-
-      copyButton.addEventListener("mouseleave", () => {
-        if (copyButton.textContent === "Copy") {
-          copyButton.style.backgroundColor = "var(--color-surface0)";
-        }
-      });
-
-      copyButton.addEventListener("click", async () => {
-        const code = codeBlock.textContent || "";
-
-        try {
-          await navigator.clipboard.writeText(code);
-          copyButton.textContent = "Copied!";
-          copyButton.style.backgroundColor = "var(--color-green)";
-          copyButton.style.color = "var(--color-base)";
-
-          setTimeout(() => {
-            copyButton.textContent = "Copy";
-            copyButton.style.backgroundColor = "var(--color-surface0)";
-            copyButton.style.color = "var(--color-text)";
-          }, 2000);
-        } catch (err) {
-          console.error("Failed to copy code:", err);
-          copyButton.textContent = "Failed";
-          copyButton.style.backgroundColor = "var(--color-red)";
-
-          setTimeout(() => {
-            copyButton.textContent = "Copy";
-            copyButton.style.backgroundColor = "var(--color-surface0)";
-          }, 2000);
-        }
-      });
+      copyButton.dataset.codeBlock = "true"; // Mark for event delegation
 
       pre.appendChild(copyButton);
     });
@@ -326,6 +291,64 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         addCopyButtons();
       }
     }, 150);
+
+    // Event delegation for copy buttons (single listener for all buttons)
+    if (contentRef) {
+      const handleCopyButtonInteraction = async (e: Event) => {
+        const target = e.target as HTMLElement;
+
+        // Handle mouseenter
+        if (
+          e.type === "mouseover" &&
+          target.classList.contains("copy-button")
+        ) {
+          target.style.backgroundColor = "var(--color-surface1)";
+        }
+
+        // Handle mouseleave
+        if (e.type === "mouseout" && target.classList.contains("copy-button")) {
+          if (target.textContent === "Copy") {
+            target.style.backgroundColor = "var(--color-surface0)";
+          }
+        }
+
+        // Handle click
+        if (e.type === "click" && target.classList.contains("copy-button")) {
+          const pre = target.parentElement;
+          const codeBlock = pre?.querySelector("code");
+          if (!codeBlock) return;
+
+          const code = codeBlock.textContent || "";
+
+          try {
+            await navigator.clipboard.writeText(code);
+            target.textContent = "Copied!";
+            target.style.backgroundColor = "var(--color-green)";
+            target.style.color = "var(--color-base)";
+
+            setTimeout(() => {
+              target.textContent = "Copy";
+              target.style.backgroundColor = "var(--color-surface0)";
+              target.style.color = "var(--color-text)";
+            }, 2000);
+          } catch (err) {
+            console.error("Failed to copy code:", err);
+            target.textContent = "Failed";
+            target.style.backgroundColor = "var(--color-red)";
+
+            setTimeout(() => {
+              target.textContent = "Copy";
+              target.style.backgroundColor = "var(--color-surface0)";
+            }, 2000);
+          }
+        }
+      };
+
+      // Single event listener for all copy button interactions
+      contentRef.addEventListener("click", handleCopyButtonInteraction);
+      contentRef.addEventListener("mouseover", handleCopyButtonInteraction);
+      contentRef.addEventListener("mouseout", handleCopyButtonInteraction);
+    }
   });
 
   createEffect(() => {
