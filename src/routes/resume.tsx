@@ -1,6 +1,29 @@
 import { Title, Meta } from "@solidjs/meta";
+import { onCleanup, onMount } from "solid-js";
 
 export default function Resume() {
+  let iframeRef: HTMLIFrameElement | undefined;
+
+  // this error kept happening in production, so I added this to prevent it, idk what was happening
+  onMount(() => {
+    const handleError = (e: ErrorEvent) => {
+      if (e.filename?.includes("resume.pdf") || e.message === "Script error.") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    window.addEventListener("error", handleError, true);
+
+    onCleanup(() => {
+      window.removeEventListener("error", handleError, true);
+
+      if (iframeRef) {
+        iframeRef.src = "about:blank";
+      }
+    });
+  });
+
   return (
     <>
       <Title>Resume | Michael Freno</Title>
@@ -9,8 +32,8 @@ export default function Resume() {
         content="View Michael Freno's resume - Software Engineer."
       />
 
-      <main class="w-full flex-1 flex-col items-center p-4">
-        <div class="mb-4 flex gap-3">
+      <main class="flex h-screen w-full flex-col">
+        <div class="mb-4 flex justify-center gap-3 pt-4">
           <a
             href="/resume.pdf"
             target="_blank"
@@ -27,12 +50,14 @@ export default function Resume() {
             Download PDF
           </a>
         </div>
-
-        <embed
-          src="/resume.pdf"
-          type="application/pdf"
-          class="h-full w-full max-w-5xl shadow-lg"
-        />
+        <div class="flex h-full w-full items-center justify-center">
+          <iframe
+            ref={iframeRef}
+            src="/resume.pdf"
+            class="h-full w-full border-0"
+            title="Resume PDF"
+          />
+        </div>
       </main>
     </>
   );
