@@ -3107,6 +3107,10 @@ export default function TextEditor(props: TextEditorProps) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           setIsFullscreen(false);
+          const navigationElement = document.getElementById("navigation");
+          if (navigationElement) {
+            navigationElement.classList.remove("hidden");
+          }
           setSearchParams({ fullscreen: undefined });
         }
       };
