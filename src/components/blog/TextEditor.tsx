@@ -54,7 +54,7 @@ import ruby from "highlight.js/lib/languages/ruby";
 import swift from "highlight.js/lib/languages/swift";
 import kotlin from "highlight.js/lib/languages/kotlin";
 import dockerfile from "highlight.js/lib/languages/dockerfile";
-import { BREAKPOINTS } from "~/config";
+import { BREAKPOINTS, MOBILE_CONFIG, TEXT_EDITOR_CONFIG } from "~/config";
 
 const lowlight = createLowlight(common);
 
@@ -370,8 +370,6 @@ const IframeEmbed = Node.create<IframeOptions>({
     };
   }
 });
-const CONTEXT_SIZE = 512; // Characters before/after cursor for context for llm infill
-const SWIPE_THRESHOLD = 100; // Swipe distance threshold in pixels (matches app.tsx)
 
 // Custom Reference mark extension
 import { Extension } from "@tiptap/core";
@@ -1417,7 +1415,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
   };
 
-  // Extract editor context for LLM infill (CONTEXT_SIZE chars before/after cursor)
   const getEditorContext = (): {
     prefix: string;
     suffix: string;
@@ -1453,12 +1450,12 @@ export default function TextEditor(props: TextEditorProps) {
     if (text.length === 0) return null;
 
     const prefix = text.slice(
-      Math.max(0, textOffset - CONTEXT_SIZE),
+      Math.max(0, textOffset - TEXT_EDITOR_CONFIG.CONTEXT_SIZE),
       textOffset
     );
     const suffix = text.slice(
       textOffset,
-      Math.min(text.length, textOffset + CONTEXT_SIZE)
+      Math.min(text.length, textOffset + TEXT_EDITOR_CONFIG.CONTEXT_SIZE)
     );
 
     return {
@@ -1664,7 +1661,7 @@ export default function TextEditor(props: TextEditorProps) {
             !hasSuggestion() ||
             !isFullscreen() ||
             typeof window === "undefined" ||
-            window.innerWidth >= BREAKPOINTS.MOBILE
+            window.innerWidth >= BREAKPOINTS.MOBILE_MAX_WIDTH
           ) {
             return false;
           }
@@ -1677,7 +1674,7 @@ export default function TextEditor(props: TextEditorProps) {
           // Check if horizontal swipe is dominant
           if (Math.abs(deltaX) > Math.abs(deltaY)) {
             // Swipe right - accept full suggestion
-            if (deltaX > SWIPE_THRESHOLD) {
+            if (deltaX > MOBILE_CONFIG.SWIPE_THRESHOLD) {
               event.preventDefault();
               acceptFull();
               return true;
@@ -1738,7 +1735,7 @@ export default function TextEditor(props: TextEditorProps) {
         if (infillConfig() && !isInitialLoad && infillEnabled()) {
           const isMobileNotFullscreen =
             typeof window !== "undefined" &&
-            window.innerWidth < BREAKPOINTS.MOBILE &&
+            window.innerWidth < BREAKPOINTS.MOBILE_MAX_WIDTH &&
             !isFullscreen();
 
           // Skip auto-infill on mobile when not in fullscreen
@@ -4096,9 +4093,9 @@ export default function TextEditor(props: TextEditorProps) {
                     type="button"
                     onClick={() => {
                       setInfillEnabled(!infillEnabled());
-                      // Clear any existing suggestion when disabled
                       if (!infillEnabled()) {
                         setCurrentSuggestion("");
+                        setIsInfillLoading(false);
                       }
                     }}
                     class={`${
@@ -4109,7 +4106,7 @@ export default function TextEditor(props: TextEditorProps) {
                     title={
                       infillEnabled()
                         ? typeof window !== "undefined" &&
-                          window.innerWidth < BREAKPOINTS.MOBILE
+                          window.innerWidth < BREAKPOINTS.MOBILE_MAX_WIDTH
                           ? "AI Autocomplete: ON (swipe right to accept full)"
                           : "AI Autocomplete: ON (Ctrl/Cmd+Space to trigger manually)"
                         : "AI Autocomplete: OFF (Click to enable)"
