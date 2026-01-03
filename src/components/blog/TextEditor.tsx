@@ -436,7 +436,7 @@ const SuggestionDecoration = Extension.create({
                   const interval = setInterval(() => {
                     charIndex = (charIndex + 1) % spinnerChars.length;
                     spinner.textContent = spinnerChars[charIndex];
-                  }, 50);
+                  }, TEXT_EDITOR_CONFIG.SPINNER_INTERVAL_MS);
 
                   // Store interval on element for cleanup
                   (spinner as any)._spinnerInterval = interval;
@@ -834,7 +834,6 @@ export default function TextEditor(props: TextEditorProps) {
     createSignal<number>(-1);
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [isLoadingHistory, setIsLoadingHistory] = createSignal(false);
-  const MAX_HISTORY_SIZE = 100; // Match database pruning limit
   let historyDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   let isInitialLoad = true; // Flag to prevent capturing history on initial load
   let hasAttemptedHistoryLoad = false; // Flag to prevent repeated load attempts
@@ -934,8 +933,8 @@ export default function TextEditor(props: TextEditorProps) {
       const requestBody = {
         input_prefix: context.prefix,
         input_suffix: context.suffix,
-        n_predict: 100,
-        temperature: 0.3,
+        n_predict: TEXT_EDITOR_CONFIG.INFILL_MAX_TOKENS,
+        temperature: TEXT_EDITOR_CONFIG.INFILL_TEMPERATURE,
         stop: ["\n\n", "</s>", "<|endoftext|>"],
         stream: false
       };
@@ -1101,7 +1100,7 @@ export default function TextEditor(props: TextEditorProps) {
 
     mermaidValidationTimer = setTimeout(() => {
       validateAndPreviewMermaid(content);
-    }, 500);
+    }, TEXT_EDITOR_CONFIG.MERMAID_VALIDATION_DEBOUNCE_MS);
   });
 
   // Capture history snapshot
@@ -1139,8 +1138,10 @@ export default function TextEditor(props: TextEditorProps) {
 
     // Limit history size
     const limitedHistory =
-      updatedHistory.length > MAX_HISTORY_SIZE
-        ? updatedHistory.slice(updatedHistory.length - MAX_HISTORY_SIZE)
+      updatedHistory.length > TEXT_EDITOR_CONFIG.MAX_HISTORY_SIZE
+        ? updatedHistory.slice(
+            updatedHistory.length - TEXT_EDITOR_CONFIG.MAX_HISTORY_SIZE
+          )
         : updatedHistory;
 
     setHistory(limitedHistory);
@@ -1234,7 +1235,7 @@ export default function TextEditor(props: TextEditorProps) {
     // Scroll to first change after a brief delay to allow content to render
     setTimeout(() => {
       scrollToFirstChange(instance, oldContent, node.content);
-    }, 100);
+    }, TEXT_EDITOR_CONFIG.SCROLL_TO_CHANGE_DELAY_MS);
   };
 
   // Find and scroll to the first difference between old and new content
@@ -1359,11 +1360,11 @@ export default function TextEditor(props: TextEditorProps) {
     // Fade out and remove
     setTimeout(() => {
       highlight.style.opacity = "0";
-    }, 100);
+    }, TEXT_EDITOR_CONFIG.HIGHLIGHT_FADE_DELAY_MS);
 
     setTimeout(() => {
       highlight.remove();
-    }, 700);
+    }, TEXT_EDITOR_CONFIG.HIGHLIGHT_REMOVE_DELAY_MS);
   };
 
   // Load history from database
@@ -1570,7 +1571,7 @@ export default function TextEditor(props: TextEditorProps) {
       // This ensures infill works regardless of how content was loaded
       setTimeout(() => {
         isInitialLoad = false;
-      }, 1000);
+      }, TEXT_EDITOR_CONFIG.INITIAL_LOAD_DELAY_MS);
 
       // Listen for mermaid edit events
       editor.view.dom.addEventListener("edit-mermaid", ((e: CustomEvent) => {
@@ -1719,9 +1720,9 @@ export default function TextEditor(props: TextEditorProps) {
         setTimeout(() => {
           renumberAllReferences(editor);
           updateReferencesSection(editor);
-        }, 100);
+        }, TEXT_EDITOR_CONFIG.REFERENCE_UPDATE_DELAY_MS);
 
-        // Debounced history capture (capture after 2 seconds of inactivity)
+        // Debounced history capture
         // Skip during initial load
         if (!isInitialLoad) {
           if (historyDebounceTimer) {
@@ -1729,7 +1730,7 @@ export default function TextEditor(props: TextEditorProps) {
           }
           historyDebounceTimer = setTimeout(() => {
             captureHistory(editor);
-          }, 2000);
+          }, TEXT_EDITOR_CONFIG.HISTORY_DEBOUNCE_MS);
         }
 
         if (infillConfig() && !isInitialLoad && infillEnabled()) {
@@ -1745,7 +1746,7 @@ export default function TextEditor(props: TextEditorProps) {
             }
             infillDebounceTimer = setTimeout(() => {
               requestInfill();
-            }, 500);
+            }, TEXT_EDITOR_CONFIG.INFILL_DEBOUNCE_MS);
           }
         }
       });
@@ -1812,7 +1813,7 @@ export default function TextEditor(props: TextEditorProps) {
             setTimeout(() => {
               migrateLegacyReferences(instance);
               migrateLegacyMermaidBlocks(instance);
-            }, 50);
+            }, TEXT_EDITOR_CONFIG.LEGACY_MIGRATION_DELAY_MS);
 
             // Capture initial state in history only if no history was loaded
             setTimeout(() => {
@@ -1829,12 +1830,12 @@ export default function TextEditor(props: TextEditorProps) {
                 );
               }
               isInitialLoad = false;
-            }, 200);
+            }, TEXT_EDITOR_CONFIG.INITIAL_HISTORY_CAPTURE_DELAY_MS);
           } else {
             // Content already matches - this is the initial load case
             setTimeout(() => {
               isInitialLoad = false;
-            }, 500);
+            }, TEXT_EDITOR_CONFIG.INITIAL_LOAD_FALLBACK_DELAY_MS);
           }
         }
       },
