@@ -1,4 +1,3 @@
-import { exampleRouter } from "./routers/example";
 import { authRouter } from "./routers/auth";
 import { auditRouter } from "./routers/audit";
 import { databaseRouter } from "./routers/database";
@@ -12,7 +11,6 @@ import { infillRouter } from "./routers/infill";
 import { createTRPCRouter } from "./utils";
 
 export const appRouter = createTRPCRouter({
-  example: exampleRouter,
   auth: authRouter,
   audit: auditRouter,
   database: databaseRouter,
