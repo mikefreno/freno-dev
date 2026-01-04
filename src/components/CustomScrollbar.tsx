@@ -192,11 +192,10 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
           <div
             ref={thumbRef}
             onMouseDown={handleThumbMouseDown}
-            class="absolute right-0.5 w-2 cursor-pointer rounded-full hover:w-2.5"
+            class="bg-text absolute right-0.5 w-2 cursor-pointer rounded-full hover:w-2.5"
             style={{
               height: `${Math.max(thumbHeight(), 5)}%`,
               top: `${(scrollPercentage() / 100) * (100 - thumbHeight())}%`,
-              background: isDragging() ? "#4b5563" : "#9ca3af",
               transition: "width 0.15s, background 0.15s"
             }}
           />
