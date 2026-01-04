@@ -64,7 +64,13 @@ const TEST_PAGES: PageTestConfig[] = [
   { name: "Home", path: "/" },
   { name: "About", path: "/about" },
   { name: "Blog Index", path: "/blog" },
-  { name: "Blog Post", path: "/blog/A_Journey_in_Self_Hosting" },
+  { name: "Blog Post (basic)", path: "/blog/I_made_a_macOS_app_in_a_day" },
+  {
+    name: "Blog Post with multiple images",
+    path: "/blog/Shapes_With_Abigail!"
+  },
+  { name: "Blog Post with large banner", path: "/blog/My_MacOS_rice." },
+  { name: "Blog Post with Mermaid", path: "/blog/A_Journey_in_Self_Hosting" },
   { name: "Resume", path: "/resume" },
   { name: "Contact", path: "/contact" }
 ];
@@ -77,11 +83,102 @@ if (process.env.TEST_BLOG_POST) {
   });
 }
 
+async function setupPerformanceObservers(page: Page) {
+  await page.addInitScript(() => {
+    (window as any).__perfMetrics = {
+      lcp: 0,
+      cls: 0,
+      fid: 0,
+      largestContentfulPaint: 0,
+      cumulativeLayoutShift: 0,
+      firstInputDelay: 0,
+      layoutShifts: [] as number[],
+      longTasks: [] as number[]
+    };
+
+    // Observe LCP
+    if ("PerformanceObserver" in window) {
+      try {
+        const lcpObserver = new PerformanceObserver((entryList) => {
+          const entries = entryList.getEntries();
+          const lastEntry = entries[entries.length - 1] as any;
+          (window as any).__perfMetrics.lcp =
+            lastEntry.renderTime || lastEntry.loadTime;
+          (window as any).__perfMetrics.largestContentfulPaint =
+            lastEntry.renderTime || lastEntry.loadTime;
+        });
+        lcpObserver.observe({
+          type: "largest-contentful-paint",
+          buffered: true
+        });
+      } catch (e) {
+        // LCP not supported
+      }
+
+      // Observe CLS
+      try {
+        const clsObserver = new PerformanceObserver((entryList) => {
+          for (const entry of entryList.getEntries()) {
+            const layoutShift = entry as any;
+            if (!layoutShift.hadRecentInput) {
+              (window as any).__perfMetrics.cls += layoutShift.value;
+              (window as any).__perfMetrics.cumulativeLayoutShift +=
+                layoutShift.value;
+              (window as any).__perfMetrics.layoutShifts.push(
+                layoutShift.value
+              );
+            }
+          }
+        });
+        clsObserver.observe({ type: "layout-shift", buffered: true });
+      } catch (e) {
+        // CLS not supported
+      }
+
+      // Observe FID (first input)
+      try {
+        const fidObserver = new PerformanceObserver((entryList) => {
+          const firstInput = entryList.getEntries()[0] as any;
+          if (firstInput) {
+            (window as any).__perfMetrics.fid =
+              firstInput.processingStart - firstInput.startTime;
+            (window as any).__perfMetrics.firstInputDelay =
+              firstInput.processingStart - firstInput.startTime;
+          }
+        });
+        fidObserver.observe({ type: "first-input", buffered: true });
+      } catch (e) {
+        // FID not supported
+      }
+
+      // Observe long tasks
+      try {
+        const longTaskObserver = new PerformanceObserver((entryList) => {
+          for (const entry of entryList.getEntries()) {
+            (window as any).__perfMetrics.longTasks.push(entry.duration);
+          }
+        });
+        longTaskObserver.observe({ type: "longtask", buffered: true });
+      } catch (e) {
+        // Long tasks not supported
+      }
+    }
+  });
+}
+
 async function collectPerformanceMetrics(
   page: Page
 ): Promise<PerformanceMetrics> {
-  // Wait for page to be fully loaded
-  await page.waitForLoadState("networkidle");
+  // Wait for page to be loaded
+  await page.waitForLoadState("load");
+
+  // Wait a bit longer for LCP to settle (it can change as content loads)
+  await page.waitForTimeout(1000);
+
+  // Additional wait for any remaining network activity
+  await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {
+    // Ignore timeout - networkidle may never happen for some pages
+  });
 
   // Collect comprehensive performance metrics
   const metrics = await page.evaluate(() => {
@@ -91,28 +188,38 @@ async function collectPerformanceMetrics(
     const paint = performance.getEntriesByType("paint");
     const fcp = paint.find((entry) => entry.name === "first-contentful-paint");
 
-    // Get LCP using PerformanceObserver
-    let lcp = 0;
-    let cls = 0;
-    let fid = 0;
+    // Get metrics from our observers
+    const observedMetrics = (window as any).__perfMetrics || {
+      lcp: 0,
+      cls: 0,
+      fid: 0,
+      longTasks: []
+    };
 
-    // Try to get LCP from existing entries
-    const lcpEntries = performance.getEntriesByType(
-      "largest-contentful-paint"
-    ) as any[];
-    if (lcpEntries.length > 0) {
-      lcp =
-        lcpEntries[lcpEntries.length - 1].renderTime ||
-        lcpEntries[lcpEntries.length - 1].loadTime;
+    // Fallback to direct API if observers didn't capture anything
+    let lcp = observedMetrics.lcp;
+    let cls = observedMetrics.cls;
+    let fid = observedMetrics.fid;
+
+    if (lcp === 0) {
+      const lcpEntries = performance.getEntriesByType(
+        "largest-contentful-paint"
+      ) as any[];
+      if (lcpEntries.length > 0) {
+        lcp =
+          lcpEntries[lcpEntries.length - 1].renderTime ||
+          lcpEntries[lcpEntries.length - 1].loadTime;
+      }
     }
 
-    // Get layout shift entries
-    const layoutShiftEntries = performance.getEntriesByType(
-      "layout-shift"
-    ) as any[];
-    cls = layoutShiftEntries
-      .filter((entry: any) => !entry.hadRecentInput)
-      .reduce((sum: number, entry: any) => sum + entry.value, 0);
+    if (cls === 0) {
+      const layoutShiftEntries = performance.getEntriesByType(
+        "layout-shift"
+      ) as any[];
+      cls = layoutShiftEntries
+        .filter((entry: any) => !entry.hadRecentInput)
+        .reduce((sum: number, entry: any) => sum + entry.value, 0);
+    }
 
     // Get resource timing
     const resources = performance.getEntriesByType(
@@ -157,23 +264,45 @@ async function collectPerformanceMetrics(
       }
     });
 
-    // Get performance measure entries for JS execution
-    const measures = performance.getEntriesByType("measure");
-    let jsExecutionTime = 0;
+    // Calculate long task duration
     let taskDuration = 0;
+    if (observedMetrics.longTasks && observedMetrics.longTasks.length > 0) {
+      taskDuration = observedMetrics.longTasks.reduce(
+        (sum: number, duration: number) => sum + duration,
+        0
+      );
+    }
+
+    // Get more granular performance entries
+    let jsExecutionTime = 0;
     let layoutDuration = 0;
     let paintDuration = 0;
 
+    const measures = performance.getEntriesByType("measure");
     measures.forEach((entry) => {
       if (entry.name.includes("script") || entry.name.includes("js")) {
         jsExecutionTime += entry.duration;
       }
     });
 
-    // Try to get long task entries
-    const longTasks = performance.getEntriesByType("longtask") as any[];
-    longTasks.forEach((task: any) => {
-      taskDuration += task.duration;
+    // Check for script evaluation entries
+    const entries = performance.getEntries();
+    entries.forEach((entry: any) => {
+      if (entry.entryType === "measure") {
+        if (
+          entry.name.toLowerCase().includes("script") ||
+          entry.name.toLowerCase().includes("js")
+        ) {
+          jsExecutionTime += entry.duration;
+        } else if (entry.name.toLowerCase().includes("layout")) {
+          layoutDuration += entry.duration;
+        } else if (
+          entry.name.toLowerCase().includes("paint") ||
+          entry.name.toLowerCase().includes("render")
+        ) {
+          paintDuration += entry.duration;
+        }
+      }
     });
 
     return {
@@ -219,7 +348,8 @@ async function testPagePerformance(
   for (let i = 0; i < WARMUP_RUNS; i++) {
     const context = await browser.newContext();
     const page = await context.newPage();
-    await page.goto(url, { waitUntil: "networkidle" });
+    await setupPerformanceObservers(page);
+    await page.goto(url, { waitUntil: "load" });
     await page.close();
     await context.close();
     console.log(`   ✓ Warmup run ${i + 1}/${WARMUP_RUNS}`);
@@ -235,8 +365,11 @@ async function testPagePerformance(
     });
     const page = await context.newPage();
 
+    // Setup performance observers before navigation
+    await setupPerformanceObservers(page);
+
     // Navigate and collect metrics
-    await page.goto(url, { waitUntil: "networkidle" });
+    await page.goto(url, { waitUntil: "load" });
     const metrics = await collectPerformanceMetrics(page);
 
     await page.close();

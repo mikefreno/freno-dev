@@ -24,6 +24,8 @@ tasks
 # Temp
 gitignore
 #*_migration_source
+perf-results-*.json
+
 
 # System Files
 .DS_Store
