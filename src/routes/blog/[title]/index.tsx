@@ -343,9 +343,9 @@ export default function PostPage() {
                       }
                     />
 
-                    <div class="relative -mt-16 overflow-x-hidden">
+                    <div class="blog-overide relative -mt-16 overflow-x-hidden">
                       {/* Fixed banner image background */}
-                      <div class="fixed inset-0 top-0 left-0 z-0 h-full w-full overflow-hidden brightness-75 sm:h-96 md:ml-62.5 md:h-[50vh] md:w-[calc(100vw-500px)]">
+                      <div class="fixed inset-0 top-0 left-0 z-0 aspect-auto max-h-3/4 w-full overflow-hidden brightness-75 md:ml-62.5 md:max-h-[50vh] md:w-[calc(100vw-500px)]">
                         <img
                           src={p().banner_photo || "/blueprint.jpg"}
                           alt="post-cover"
