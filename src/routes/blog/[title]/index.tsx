@@ -370,35 +370,36 @@ export default function PostPage() {
                       <div class="z-10 pt-80 backdrop-blur-[0.01px] sm:pt-96 md:pt-[50vh]">
                         {/* Content that slides over the fixed image */}
                         <div class="bg-base relative pb-24">
-                          <div class="flex w-full flex-col justify-center pt-8 md:flex-row md:justify-between">
-                            <div class="">
-                              <div class="flex justify-center italic md:justify-start md:pl-24">
-                                Written {new Date(p().date).toDateString()}
-                              </div>
-                              <div>
+                          <div class="flex w-full flex-col justify-center pt-8 lg:flex-row lg:items-start lg:justify-between">
+                            <div class="flex flex-col gap-2 px-4 md:px-8">
+                              <div class="flex flex-col text-center md:text-left">
+                                <div class="text-sm italic">
+                                  Written {new Date(p().date).toDateString()}
+                                </div>
                                 <Show when={p().last_edited_date !== p().date}>
-                                  <div class="flex justify-center text-sm italic md:justify-start md:pl-24">
+                                  <div class="text-subtext0 text-xs italic">
                                     Edited:{" "}
                                     {new Date(
                                       p().last_edited_date
                                     ).toDateString()}
                                   </div>
                                 </Show>
-
-                                <div class="flex justify-center md:justify-start md:pl-24">
-                                  By Michael Freno
-                                </div>
                               </div>
-                              <div class="flex max-w-105 flex-wrap justify-center italic md:justify-start md:pl-24">
+
+                              <div class="text-center text-sm md:text-left">
+                                By Michael Freno
+                              </div>
+
+                              <div class="flex flex-wrap justify-center gap-2 pt-2 md:justify-start">
                                 <For each={postData.tags as any[]}>
                                   {(tag) => {
                                     const tagValue = tag.value;
                                     return tagValue ? (
                                       <A
                                         href={`/blog?include=${encodeURIComponent(tagValue.split("#")[1])}`}
-                                        class="group bg-teal relative m-1 h-fit w-fit rounded-xl px-2 py-1 text-sm transition-all duration-200 hover:brightness-110 active:scale-95"
+                                        class="bg-teal rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-95 sm:text-sm"
                                       >
-                                        <div class="text-white">{tagValue}</div>
+                                        {tagValue}
                                       </A>
                                     ) : null;
                                   }}
@@ -406,40 +407,38 @@ export default function PostPage() {
                               </div>
                             </div>
 
-                            <div class="flex flex-row justify-center pt-4 md:pt-0 md:pr-8">
-                              <div class="mx-2">
-                                <div class="tooltip flex flex-col">
-                                  <div class="mx-auto">
-                                    <Fire
-                                      height={32}
-                                      width={32}
-                                      color="var(--color-red)"
-                                    />
-                                  </div>
-                                  <div class="text-text my-auto pt-0.5 pl-2 text-sm">
-                                    {postData.reads || 0}{" "}
-                                    {postData.reads === 1 ? "Hit" : "Hits"}
-                                  </div>
+                            <div class="flex flex-row justify-center gap-4 pt-6 lg:pt-0 lg:pr-8">
+                              <div class="tooltip flex flex-col items-center">
+                                <div>
+                                  <Fire
+                                    height={32}
+                                    width={32}
+                                    color="var(--color-red)"
+                                  />
+                                </div>
+                                <div class="text-text pt-0.5 text-sm whitespace-nowrap">
+                                  {postData.reads || 0}{" "}
+                                  {postData.reads === 1 ? "Hit" : "Hits"}
                                 </div>
                               </div>
 
-                              <a href="#comments" class="mx-2">
+                              <a href="#comments">
                                 <button
                                   onClick={() => {
                                     document
                                       .getElementById("comments")
                                       ?.scrollIntoView({ behavior: "smooth" });
                                   }}
-                                  class="tooltip flex flex-col"
+                                  class="tooltip flex flex-col items-center"
                                 >
-                                  <div class="mx-auto hover:brightness-125">
+                                  <div class="hover:brightness-125">
                                     <CommentIcon
                                       strokeWidth={1}
                                       height={32}
                                       width={32}
                                     />
                                   </div>
-                                  <div class="text-text my-auto pt-0.5 pl-2 text-sm">
+                                  <div class="text-text pt-0.5 text-sm whitespace-nowrap">
                                     {postData.comments.length}{" "}
                                     {postData.comments.length === 1
                                       ? "Comment"
@@ -448,7 +447,7 @@ export default function PostPage() {
                                 </button>
                               </a>
 
-                              <div class="mx-2">
+                              <div>
                                 <SessionDependantLike
                                   currentUserID={postData.userID}
                                   privilegeLevel={postData.privilegeLevel}

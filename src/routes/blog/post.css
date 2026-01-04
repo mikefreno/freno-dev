@@ -687,6 +687,25 @@ button:active,
 #post-content-body span#references-section-start {
   display: none !important;
 }
+
+/* Reference links in content */
+#post-content-body .reference-link {
+  text-decoration: none;
+  font-size: 0.75em;
+  vertical-align: super;
+}
+
+/* References section styling */
+#post-content-body .references-heading {
+  border-top: 1px solid var(--color-surface2);
+  margin-top: 4rem;
+  padding-top: 2rem;
+}
+
+/* Individual reference item */
+#post-content-body .reference-item {
+  scroll-margin-top: 100px;
+}
 /* Code block styles for published posts */
 #post-content-body pre {
   position: relative;
@@ -740,8 +759,8 @@ button:active,
   position: absolute;
   left: 0;
   top: 0;
-  bottom: 0;
-  padding: 1rem 0.75rem;
+  height: 100%;
+  padding: 0.75rem 0.75rem;
   text-align: right;
   user-select: none;
   pointer-events: none;
@@ -749,7 +768,7 @@ button:active,
   border-right: 1px solid var(--color-surface0);
   color: var(--color-overlay0);
   font-size: 0.875rem;
-  line-height: 1.5rem;
+  line-height: 1.35rem;
   font-family: inherit;
   min-width: 3rem;
 }

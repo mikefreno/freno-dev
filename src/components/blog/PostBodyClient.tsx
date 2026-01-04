@@ -194,8 +194,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         link.textContent = `[${refNumber}]`;
         link.className =
           "reference-link text-blue hover:text-sky no-underline cursor-pointer";
-        link.style.cssText =
-          "text-decoration: none; font-size: 0.75em; vertical-align: super;";
 
         link.onclick = (e) => {
           e.preventDefault();
@@ -235,9 +233,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       // Find the parent container and add styling
       const parentDiv = referencesSection.parentElement;
       if (parentDiv) {
-        // Add top border and padding
-        parentDiv.style.cssText =
-          "border-top: 1px solid var(--surface2); margin-top: 4rem; padding-top: 2rem;";
+        parentDiv.classList.add("references-heading");
       }
 
       // Find all paragraphs after the References heading that start with [n]
@@ -258,7 +254,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
             // Add styling
             currentElement.className =
               "reference-item transition-colors duration-500 text-sm mb-3";
-            currentElement.style.cssText = "scroll-margin-top: 100px;";
 
             // Parse and style the content - get everything after [n]
             let refText = text.substring(match[0].length);
