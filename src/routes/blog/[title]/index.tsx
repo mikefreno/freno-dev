@@ -17,6 +17,7 @@ import PostBodyClient from "~/components/blog/PostBodyClient";
 import type { Comment, CommentReaction, UserPublicData } from "~/types/comment";
 import { Spinner } from "~/components/Spinner";
 import { api } from "~/lib/api";
+import CustomScrollbar from "~/components/CustomScrollbar";
 import "../post.css";
 import { Post } from "~/db/types";
 
@@ -299,73 +300,77 @@ export default function PostPage() {
   };
 
   return (
-    <>
-      <Show
-        when={data()}
-        fallback={
-          <div class="flex h-screen items-center justify-center">
-            <Spinner size="xl" />
-          </div>
+    <Show
+      when={data()}
+      fallback={
+        <div class="flex h-screen items-center justify-center">
+          <Spinner size="xl" />
+        </div>
+      }
+    >
+      {(loadedData) => {
+        // Handle redirect for by-id route
+        if ("redirect" in loadedData()) {
+          return <Navigate href={(loadedData() as any).redirect} />;
         }
-      >
-        {(loadedData) => {
-          // Handle redirect for by-id route
-          if ("redirect" in loadedData()) {
-            return <Navigate href={(loadedData() as any).redirect} />;
-          }
 
-          return (
-            <Show
-              when={loadedData().post as Post}
-              fallback={<Navigate href="/404" />}
-            >
-              {(p) => {
-                const postData = loadedData();
+        return (
+          <Show
+            when={loadedData().post as Post}
+            fallback={<Navigate href="/404" />}
+          >
+            {(p) => {
+              const postData = loadedData();
 
-                // Convert arrays back to Maps for component
-                const userCommentMap = new Map<UserPublicData, number[]>(
-                  postData.userCommentArray || []
-                );
-                const reactionMap = new Map<number, CommentReaction[]>(
-                  postData.reactionArray || []
-                );
+              // Convert arrays back to Maps for component
+              const userCommentMap = new Map<UserPublicData, number[]>(
+                postData.userCommentArray || []
+              );
+              const reactionMap = new Map<number, CommentReaction[]>(
+                postData.reactionArray || []
+              );
 
-                return (
-                  <>
-                    <Title>
-                      {p().title.replaceAll("_", " ")} | Michael Freno
-                    </Title>
-                    <Meta
-                      name="description"
-                      content={
-                        p().subtitle ||
-                        `Read ${p().title.replaceAll("_", " ")} by Michael Freno on the freno.me blog.`
-                      }
-                    />
+              return (
+                <>
+                  <Title>
+                    {p().title.replaceAll("_", " ")} | Michael Freno
+                  </Title>
+                  <Meta
+                    name="description"
+                    content={
+                      p().subtitle ||
+                      `Read ${p().title.replaceAll("_", " ")} by Michael Freno on the freno.me blog.`
+                    }
+                  />
 
-                    <div class="blog-overide relative -mt-16 overflow-x-hidden">
-                      {/* Fixed banner image background */}
-                      <div class="fixed inset-0 top-0 left-0 z-0 aspect-auto max-h-3/4 w-full overflow-hidden brightness-75 md:ml-62.5 md:max-h-[50vh] md:w-[calc(100vw-500px)]">
-                        <img
-                          src={p().banner_photo || "/blueprint.jpg"}
-                          alt="post-cover"
-                          class="h-full w-full object-cover select-none"
-                          style={{
-                            "pointer-events": "none"
-                          }}
-                        />
-                        <div class="fixed top-24 z-50 m-auto w-full px-4 text-center tracking-widest text-white backdrop-blur-md select-text text-shadow-lg backdrop:brightness-50 sm:top-36 md:top-[20vh] md:w-[calc(100vw-500px)]">
-                          <div class="py-8 text-3xl font-semibold tracking-widest">
-                            {p().title.replaceAll("_", " ")}
-                            <Show when={p().subtitle}>
-                              <div class="py-8 text-xl font-light tracking-widest">
-                                {p().subtitle}
-                              </div>
-                            </Show>
-                          </div>
+                  <div class="blog-overide relative -mt-16 overflow-x-hidden">
+                    {/* Fixed banner image background */}
+                    <div class="fixed inset-0 top-0 left-0 z-0 aspect-auto max-h-3/4 w-full overflow-hidden brightness-75 md:ml-62.5 md:max-h-[50vh] md:w-[calc(100vw-500px)]">
+                      <img
+                        src={p().banner_photo || "/blueprint.jpg"}
+                        alt="post-cover"
+                        class="h-full w-full object-cover select-none"
+                        style={{
+                          "pointer-events": "none"
+                        }}
+                      />
+                      <div class="fixed top-24 z-50 m-auto w-full px-4 text-center tracking-widest text-white backdrop-blur-md select-text text-shadow-lg backdrop:brightness-50 sm:top-36 md:top-[20vh] md:w-[calc(100vw-500px)]">
+                        <div class="py-8 text-3xl font-semibold tracking-widest">
+                          {p().title.replaceAll("_", " ")}
+                          <Show when={p().subtitle}>
+                            <div class="py-8 text-xl font-light tracking-widest">
+                              {p().subtitle}
+                            </div>
+                          </Show>
                         </div>
                       </div>
+                    </div>
 
+                    <CustomScrollbar
+                      autoHide={true}
+                      autoHideDelay={1500}
+                      rightOffset={250}
+                    >
                       <div class="z-10 pt-80 backdrop-blur-[0.01px] sm:pt-96 md:pt-[50vh]">
                         {/* Content that slides over the fixed image */}
                         <div class="bg-base relative pb-24">
@@ -501,14 +506,14 @@ export default function PostPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </>
-                );
-              }}
-            </Show>
-          );
-        }}
-      </Show>
-    </>
+                    </CustomScrollbar>
+                  </div>
+                </>
+              );
+            }}
+          </Show>
+        );
+      }}
+    </Show>
   );
 }
