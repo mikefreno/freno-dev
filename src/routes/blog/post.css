@@ -692,7 +692,7 @@ button:active,
   position: relative;
   overflow: auto;
   max-height: 60vh;
-  background-color: var(--color-crust);
+  background-color: #1a1a1a;
   color: #fff;
   font-family: "Source Code Pro", monospace;
   border-radius: 0.5rem;
@@ -711,12 +711,16 @@ button:active,
 
 /* Language header */
 #post-content-body .language-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0.5rem 1rem;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background-color: var(--color-mantle);
+  background-color: #1a1a1a;
   color: var(--color-subtext1);
   border-bottom: 1px solid var(--color-surface0);
   border-top-left-radius: 0.375rem;
@@ -741,7 +745,7 @@ button:active,
   text-align: right;
   user-select: none;
   pointer-events: none;
-  background-color: var(--color-crust);
+  background-color: #1a1a1a;
   border-right: 1px solid var(--color-surface0);
   color: var(--color-overlay0);
   font-size: 0.875rem;
@@ -755,13 +759,13 @@ button:active,
   padding-left: 4rem;
 }
 
-/* Copy button */
+/* Copy button - now in header */
 #post-content-body .copy-button {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.75rem;
+  position: relative;
+  top: unset;
+  right: unset;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.625rem;
   font-weight: 500;
   border-radius: 0.25rem;
   transition: all 0.2s;
@@ -770,6 +774,8 @@ button:active,
   color: var(--color-text);
   border: 1px solid var(--color-overlay0);
   cursor: pointer;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 #post-content-body .copy-button:hover {

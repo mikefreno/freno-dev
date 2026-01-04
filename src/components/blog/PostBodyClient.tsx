@@ -103,22 +103,47 @@ export default function PostBodyClient(props: PostBodyClientProps) {
 
     codeBlocks.forEach((codeBlock) => {
       const pre = codeBlock.parentElement;
-      if (!pre || pre.querySelector(".copy-button")) return;
+      if (!pre) return;
+
+      // Check if already processed (has header with copy button)
+      const existingHeader = pre.previousElementSibling;
+      if (
+        existingHeader?.classList.contains("language-header") &&
+        existingHeader.querySelector(".copy-button")
+      ) {
+        return;
+      }
+
+      // Set off-black background for code block
+      pre.style.backgroundColor = "#1a1a1a";
 
       // Extract language from code block classes
       const classes = Array.from(codeBlock.classList);
       const languageClass = classes.find((cls) => cls.startsWith("language-"));
       const language = languageClass?.replace("language-", "") || "";
 
-      // Create language header if language is detected and not already present
-      if (
-        language &&
-        pre.previousElementSibling?.classList.contains("language-header") ===
-          false
-      ) {
+      // Create language header if language is detected
+      if (language) {
         const languageHeader = document.createElement("div");
         languageHeader.className = "language-header";
-        languageHeader.textContent = language;
+        languageHeader.style.backgroundColor = "#1a1a1a";
+
+        // Add language label
+        const languageLabel = document.createElement("span");
+        languageLabel.textContent = language;
+        languageHeader.appendChild(languageLabel);
+
+        // Create copy button in header
+        const copyButton = document.createElement("button");
+        copyButton.className = "copy-button";
+        copyButton.textContent = "Copy";
+        copyButton.dataset.codeBlock = "true";
+
+        // Store reference to the code block for copying
+        copyButton.dataset.codeBlockId = `code-${Math.random().toString(36).substr(2, 9)}`;
+        codeBlock.dataset.codeBlockId = copyButton.dataset.codeBlockId;
+
+        languageHeader.appendChild(copyButton);
 
         // Insert header before pre element
         pre.parentElement?.insertBefore(languageHeader, pre);
@@ -144,14 +169,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
 
         pre.appendChild(lineNumbers);
       }
-
-      // Create copy button
-      const copyButton = document.createElement("button");
-      copyButton.className = "copy-button";
-      copyButton.textContent = "Copy";
-      copyButton.dataset.codeBlock = "true";
-
-      pre.appendChild(copyButton);
     });
   };
 
@@ -340,8 +357,14 @@ export default function PostBodyClient(props: PostBodyClientProps) {
 
         // Handle click
         if (e.type === "click" && target.classList.contains("copy-button")) {
-          const pre = target.parentElement;
-          const codeBlock = pre?.querySelector("code");
+          // Find the code block using the stored ID
+          const codeBlockId = target.dataset.codeBlockId;
+          const codeBlock = codeBlockId
+            ? contentRef?.querySelector(
+                `code[data-code-block-id="${codeBlockId}"]`
+              )
+            : null;
+
           if (!codeBlock) return;
 
           const code = codeBlock.textContent || "";
