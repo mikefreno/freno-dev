@@ -765,12 +765,16 @@ button:active,
   user-select: none;
   pointer-events: none;
   background-color: #1a1a1a;
-  border-right: 1px solid var(--color-surface0);
+  /*border-right: 1px solid var(--color-surface0);*/
   color: var(--color-overlay0);
   font-size: 0.875rem;
   line-height: 1.35rem;
   font-family: inherit;
   min-width: 3rem;
+}
+.line-numbers > div {
+  padding-right: 0.5rem;
+  border-right: 1px solid var(--color-surface0);
 }
 
 /* Code with line numbers - add padding for line numbers column */
