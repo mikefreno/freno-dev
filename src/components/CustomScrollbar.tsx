@@ -105,33 +105,22 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
 
     updateScrollbar();
 
-    setTimeout(() => updateScrollbar(), 100);
-    setTimeout(() => updateScrollbar(), 500);
-
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
       updateScrollbar();
     };
 
-    let mutationTimeout: NodeJS.Timeout;
-    const observer = new MutationObserver(() => {
-      clearTimeout(mutationTimeout);
-      mutationTimeout = setTimeout(() => {
-        updateScrollbar();
-      }, 150);
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollbar();
     });
 
-    observer.observe(containerRef, {
-      childList: true,
-      subtree: true
-    });
+    resizeObserver.observe(containerRef);
 
     containerRef.addEventListener("scroll", updateScrollbar, { passive: true });
     window.addEventListener("resize", handleResize);
 
     onCleanup(() => {
-      observer.disconnect();
-      clearTimeout(mutationTimeout);
+      resizeObserver.disconnect();
       containerRef?.removeEventListener("scroll", updateScrollbar);
       window.removeEventListener("resize", handleResize);
       if (hideTimeout) clearTimeout(hideTimeout);
