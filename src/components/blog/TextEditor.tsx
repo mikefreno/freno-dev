@@ -31,7 +31,7 @@ import { ConditionalInline } from "./extensions/ConditionalInline";
 import TextAlign from "@tiptap/extension-text-align";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
-import mermaid from "mermaid";
+import type { default as MermaidType } from "mermaid";
 import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
@@ -699,8 +699,14 @@ export default function TextEditor(props: TextEditorProps) {
   let bubbleMenuRef!: HTMLDivElement;
   let containerRef!: HTMLDivElement;
 
-  onMount(() => {
-    mermaid.initialize({
+  const [mermaid, setMermaid] = createSignal<typeof MermaidType | null>(null);
+
+  onMount(async () => {
+    // Lazy load mermaid only when editor is mounted
+    const mermaidModule = await import("mermaid");
+    const mermaidInstance = mermaidModule.default;
+
+    mermaidInstance.initialize({
       startOnLoad: false,
       theme: "dark",
       securityLevel: "loose",
@@ -715,6 +721,8 @@ export default function TextEditor(props: TextEditorProps) {
         tertiaryColor: "#505469"
       }
     });
+
+    setMermaid(() => mermaidInstance);
   });
 
   const [showBubbleMenu, setShowBubbleMenu] = createSignal(false);
@@ -1017,6 +1025,9 @@ export default function TextEditor(props: TextEditorProps) {
   };
 
   const validateAndPreviewMermaid = async (code: string) => {
+    const mermaidInstance = mermaid();
+    if (!mermaidInstance) return; // Wait for mermaid to load
+
     if (!code.trim()) {
       setMermaidValidation({ valid: true, error: null });
       setMermaidPreviewSvg("");
@@ -1024,10 +1035,10 @@ export default function TextEditor(props: TextEditorProps) {
     }
 
     try {
-      await mermaid.parse(code);
+      await mermaidInstance.parse(code);
 
       const id = `mermaid-preview-${Date.now()}`;
-      const { svg } = await mermaid.render(id, code);
+      const { svg } = await mermaidInstance.render(id, code);
 
       setMermaidValidation({ valid: true, error: null });
       setMermaidPreviewSvg(svg);

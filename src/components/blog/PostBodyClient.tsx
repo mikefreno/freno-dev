@@ -1,6 +1,7 @@
-import { createEffect, createSignal, onMount } from "solid-js";
+import { createEffect, createSignal, onMount, lazy } from "solid-js";
 import type { HLJSApi } from "highlight.js";
-import MermaidRenderer from "./MermaidRenderer";
+
+const MermaidRenderer = lazy(() => import("./MermaidRenderer"));
 
 export interface PostBodyClientProps {
   body: string;

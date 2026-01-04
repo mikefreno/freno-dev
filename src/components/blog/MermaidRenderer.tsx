@@ -1,25 +1,29 @@
 import { onMount } from "solid-js";
-import mermaid from "mermaid";
-
-mermaid.initialize({
-  startOnLoad: false,
-  theme: "dark",
-  securityLevel: "loose",
-  fontFamily: "monospace",
-  themeVariables: {
-    darkMode: true,
-    primaryColor: "#2c2f40",
-    primaryTextColor: "#b5c1f1",
-    primaryBorderColor: "#739df2",
-    lineColor: "#739df2",
-    secondaryColor: "#3e4255",
-    tertiaryColor: "#505469"
-  }
-});
 
 export default function MermaidRenderer() {
-  onMount(() => {
+  onMount(async () => {
     const mermaidPres = document.querySelectorAll('pre[data-type="mermaid"]');
+
+    // Only load mermaid if there are diagrams to render
+    if (mermaidPres.length === 0) return;
+
+    const mermaid = (await import("mermaid")).default;
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "dark",
+      securityLevel: "loose",
+      fontFamily: "monospace",
+      themeVariables: {
+        darkMode: true,
+        primaryColor: "#2c2f40",
+        primaryTextColor: "#b5c1f1",
+        primaryBorderColor: "#739df2",
+        lineColor: "#739df2",
+        secondaryColor: "#3e4255",
+        tertiaryColor: "#505469"
+      }
+    });
 
     mermaidPres.forEach(async (pre, index) => {
       const code = pre.querySelector("code");

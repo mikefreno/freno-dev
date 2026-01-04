@@ -1,10 +1,11 @@
-import { Show } from "solid-js";
+import { Show, lazy } from "solid-js";
 import { useParams, query } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
 import { createAsync } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
-import PostForm from "~/components/blog/PostForm";
 import "../post.css";
+
+const PostForm = lazy(() => import("~/components/blog/PostForm"));
 
 const getPostForEdit = query(async (id: string) => {
   "use server";
