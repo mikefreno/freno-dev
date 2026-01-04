@@ -209,7 +209,6 @@
   transition-duration: 500ms;
   syntax: "*";
   inherits: false;
-  scrollbar-color: var(--color-text) var(--color-base);
 }
 
 ::selection {
@@ -223,14 +222,6 @@
 ::-webkit-selection {
   background-color: var(--color-text);
   color: var(--color-crust);
-}
-#center-body {
-  scrollbar-width: thin;
-  scrollbar-gutter: stable both-edges;
-}
-#center-body:has(.blog-overide) {
-  scrollbar-width: none !important;
-  scrollbar-gutter: unset !important;
 }
 #rightbar-content {
   scrollbar-width: none;

@@ -16,6 +16,7 @@ import { BarsProvider, useBars } from "./context/bars";
 import { DarkModeProvider } from "./context/darkMode";
 import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 import { MOBILE_CONFIG } from "./config";
+import CustomScrollbar from "./components/CustomScrollbar";
 
 function AppLayout(props: { children: any }) {
   const {
@@ -167,7 +168,13 @@ function AppLayout(props: { children: any }) {
               onTouchEnd={handleCenterTapRelease}
             >
               <Suspense fallback={<TerminalSplash />}>
-                {props.children}
+                <CustomScrollbar
+                  autoHide={true}
+                  autoHideDelay={1500}
+                  rightOffset={250}
+                >
+                  {props.children}
+                </CustomScrollbar>
               </Suspense>
             </div>
           </ErrorBoundary>

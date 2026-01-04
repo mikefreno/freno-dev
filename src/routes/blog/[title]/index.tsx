@@ -286,199 +286,197 @@ export default function PostPage() {
   };
 
   return (
-    <CustomScrollbar autoHide={true} autoHideDelay={1500} rightOffset={250}>
-      <Show
-        when={data()}
-        fallback={
-          <div class="flex h-screen items-center justify-center">
-            <Spinner size="xl" />
-          </div>
+    <Show
+      when={data()}
+      fallback={
+        <div class="flex h-screen items-center justify-center">
+          <Spinner size="xl" />
+        </div>
+      }
+    >
+      {(loadedData) => {
+        if ("redirect" in loadedData()) {
+          return <Navigate href={(loadedData() as any).redirect} />;
         }
-      >
-        {(loadedData) => {
-          if ("redirect" in loadedData()) {
-            return <Navigate href={(loadedData() as any).redirect} />;
-          }
 
-          return (
-            <Show
-              when={loadedData().post as Post}
-              fallback={<Navigate href="/404" />}
-            >
-              {(p) => {
-                const postData = loadedData();
+        return (
+          <Show
+            when={loadedData().post as Post}
+            fallback={<Navigate href="/404" />}
+          >
+            {(p) => {
+              const postData = loadedData();
 
-                const userCommentMap = new Map<UserPublicData, number[]>(
-                  postData.userCommentArray || []
-                );
-                const reactionMap = new Map<number, CommentReaction[]>(
-                  postData.reactionArray || []
-                );
+              const userCommentMap = new Map<UserPublicData, number[]>(
+                postData.userCommentArray || []
+              );
+              const reactionMap = new Map<number, CommentReaction[]>(
+                postData.reactionArray || []
+              );
 
-                return (
-                  <>
-                    <Title>
-                      {p().title.replaceAll("_", " ")} | Michael Freno
-                    </Title>
-                    <Meta
-                      name="description"
-                      content={
-                        p().subtitle ||
-                        `Read ${p().title.replaceAll("_", " ")} by Michael Freno on the freno.me blog.`
-                      }
-                    />
+              return (
+                <>
+                  <Title>
+                    {p().title.replaceAll("_", " ")} | Michael Freno
+                  </Title>
+                  <Meta
+                    name="description"
+                    content={
+                      p().subtitle ||
+                      `Read ${p().title.replaceAll("_", " ")} by Michael Freno on the freno.me blog.`
+                    }
+                  />
 
-                    <div class="blog-overide relative -mt-16 overflow-x-hidden">
-                      <div class="fixed inset-0 top-0 left-0 z-0 aspect-auto max-h-3/4 w-full overflow-hidden brightness-75 md:ml-62.5 md:max-h-[50vh] md:w-[calc(100vw-500px)]">
-                        <img
-                          src={p().banner_photo || "/blueprint.jpg"}
-                          alt="post-cover"
-                          class="h-full w-full object-cover select-none"
-                          style={{
-                            "pointer-events": "none"
-                          }}
-                        />
-                        <div class="fixed top-24 z-50 m-auto w-full px-4 text-center tracking-widest text-white backdrop-blur-md select-text text-shadow-lg backdrop:brightness-50 sm:top-36 md:top-[20vh] md:w-[calc(100vw-500px)]">
-                          <div class="py-8 text-3xl font-semibold tracking-widest">
-                            {p().title.replaceAll("_", " ")}
-                            <Show when={p().subtitle}>
-                              <div class="py-8 text-xl font-light tracking-widest">
-                                {p().subtitle}
-                              </div>
-                            </Show>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="z-10 pt-80 backdrop-blur-[0.01px] sm:pt-96 md:pt-[50vh]">
-                        <div class="bg-base relative pb-24">
-                          <div class="flex w-full flex-col justify-center pt-8 lg:flex-row lg:items-start lg:justify-between">
-                            <div class="flex flex-col gap-2 px-4 md:px-8">
-                              <div class="flex flex-col text-center md:text-left">
-                                <div class="text-sm italic">
-                                  Written {new Date(p().date).toDateString()}
-                                </div>
-                                <Show when={p().last_edited_date !== p().date}>
-                                  <div class="text-subtext0 text-xs italic">
-                                    Edited:{" "}
-                                    {new Date(
-                                      p().last_edited_date
-                                    ).toDateString()}
-                                  </div>
-                                </Show>
-                              </div>
-
-                              <div class="text-center text-sm md:text-left">
-                                By Michael Freno
-                              </div>
-
-                              <div class="flex flex-wrap justify-center gap-2 pt-2 md:justify-start">
-                                <For each={postData.tags as any[]}>
-                                  {(tag) => {
-                                    const tagValue = tag.value;
-                                    return tagValue ? (
-                                      <A
-                                        href={`/blog?include=${encodeURIComponent(tagValue.split("#")[1])}`}
-                                        class="bg-teal rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-95 sm:text-sm"
-                                      >
-                                        {tagValue}
-                                      </A>
-                                    ) : null;
-                                  }}
-                                </For>
-                              </div>
+                  <div class="blog-overide relative -mt-16 overflow-x-hidden">
+                    <div class="fixed inset-0 top-0 left-0 z-0 aspect-auto max-h-3/4 w-full overflow-hidden brightness-75 md:ml-62.5 md:max-h-[50vh] md:w-[calc(100vw-500px)]">
+                      <img
+                        src={p().banner_photo || "/blueprint.jpg"}
+                        alt="post-cover"
+                        class="h-full w-full object-cover select-none"
+                        style={{
+                          "pointer-events": "none"
+                        }}
+                      />
+                      <div class="fixed top-24 z-50 m-auto w-full px-4 text-center tracking-widest text-white backdrop-blur-md select-text text-shadow-lg backdrop:brightness-50 sm:top-36 md:top-[20vh] md:w-[calc(100vw-500px)]">
+                        <div class="py-8 text-3xl font-semibold tracking-widest">
+                          {p().title.replaceAll("_", " ")}
+                          <Show when={p().subtitle}>
+                            <div class="py-8 text-xl font-light tracking-widest">
+                              {p().subtitle}
                             </div>
-
-                            <div class="flex flex-row justify-center gap-4 pt-6 lg:pt-0 lg:pr-8">
-                              <div class="tooltip flex flex-col items-center">
-                                <div>
-                                  <Fire
-                                    height={32}
-                                    width={32}
-                                    color="var(--color-red)"
-                                  />
-                                </div>
-                                <div class="text-text pt-0.5 text-sm whitespace-nowrap">
-                                  {postData.reads || 0}{" "}
-                                  {postData.reads === 1 ? "Hit" : "Hits"}
-                                </div>
-                              </div>
-
-                              <a href="#comments">
-                                <button
-                                  onClick={() => {
-                                    document
-                                      .getElementById("comments")
-                                      ?.scrollIntoView({ behavior: "smooth" });
-                                  }}
-                                  class="tooltip flex flex-col items-center"
-                                >
-                                  <div class="hover:brightness-125">
-                                    <CommentIcon
-                                      strokeWidth={1}
-                                      height={32}
-                                      width={32}
-                                    />
-                                  </div>
-                                  <div class="text-text pt-0.5 text-sm whitespace-nowrap">
-                                    {postData.comments.length}{" "}
-                                    {postData.comments.length === 1
-                                      ? "Comment"
-                                      : "Comments"}
-                                  </div>
-                                </button>
-                              </a>
-
-                              <div>
-                                <SessionDependantLike
-                                  currentUserID={postData.userID}
-                                  privilegeLevel={postData.privilegeLevel}
-                                  likes={postData.likes as any[]}
-                                  projectID={p().id}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div class="py-8 text-center text-2xl font-semibold tracking-widest">
-                            {p().title.replaceAll("_", " ")}
-                            <Show when={p().subtitle}>
-                              <div class="py-8 text-xl font-light tracking-widest">
-                                {p().subtitle}
-                              </div>
-                            </Show>
-                          </div>
-
-                          <PostBodyClient
-                            body={p().body}
-                            hasCodeBlock={hasCodeBlock(p().body)}
-                          />
-
-                          <div
-                            id="comments"
-                            class="mx-4 pt-12 pb-12 md:mx-8 lg:mx-12"
-                          >
-                            <CommentSectionWrapper
-                              privilegeLevel={postData.privilegeLevel}
-                              allComments={postData.comments as Comment[]}
-                              topLevelComments={
-                                postData.topLevelComments as Comment[]
-                              }
-                              id={p().id}
-                              reactionMap={reactionMap}
-                              currentUserID={postData.userID || ""}
-                              userCommentMap={userCommentMap}
-                            />
-                          </div>
+                          </Show>
                         </div>
                       </div>
                     </div>
-                  </>
-                );
-              }}
-            </Show>
-          );
-        }}
-      </Show>
-    </CustomScrollbar>
+
+                    <div class="z-10 pt-80 backdrop-blur-[0.01px] sm:pt-96 md:pt-[50vh]">
+                      <div class="bg-base relative pb-24">
+                        <div class="flex w-full flex-col justify-center pt-8 lg:flex-row lg:items-start lg:justify-between">
+                          <div class="flex flex-col gap-2 px-4 md:px-8">
+                            <div class="flex flex-col text-center md:text-left">
+                              <div class="text-sm italic">
+                                Written {new Date(p().date).toDateString()}
+                              </div>
+                              <Show when={p().last_edited_date !== p().date}>
+                                <div class="text-subtext0 text-xs italic">
+                                  Edited:{" "}
+                                  {new Date(
+                                    p().last_edited_date
+                                  ).toDateString()}
+                                </div>
+                              </Show>
+                            </div>
+
+                            <div class="text-center text-sm md:text-left">
+                              By Michael Freno
+                            </div>
+
+                            <div class="flex flex-wrap justify-center gap-2 pt-2 md:justify-start">
+                              <For each={postData.tags as any[]}>
+                                {(tag) => {
+                                  const tagValue = tag.value;
+                                  return tagValue ? (
+                                    <A
+                                      href={`/blog?include=${encodeURIComponent(tagValue.split("#")[1])}`}
+                                      class="bg-teal rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-95 sm:text-sm"
+                                    >
+                                      {tagValue}
+                                    </A>
+                                  ) : null;
+                                }}
+                              </For>
+                            </div>
+                          </div>
+
+                          <div class="flex flex-row justify-center gap-4 pt-6 lg:pt-0 lg:pr-8">
+                            <div class="tooltip flex flex-col items-center">
+                              <div>
+                                <Fire
+                                  height={32}
+                                  width={32}
+                                  color="var(--color-red)"
+                                />
+                              </div>
+                              <div class="text-text pt-0.5 text-sm whitespace-nowrap">
+                                {postData.reads || 0}{" "}
+                                {postData.reads === 1 ? "Hit" : "Hits"}
+                              </div>
+                            </div>
+
+                            <a href="#comments">
+                              <button
+                                onClick={() => {
+                                  document
+                                    .getElementById("comments")
+                                    ?.scrollIntoView({ behavior: "smooth" });
+                                }}
+                                class="tooltip flex flex-col items-center"
+                              >
+                                <div class="hover:brightness-125">
+                                  <CommentIcon
+                                    strokeWidth={1}
+                                    height={32}
+                                    width={32}
+                                  />
+                                </div>
+                                <div class="text-text pt-0.5 text-sm whitespace-nowrap">
+                                  {postData.comments.length}{" "}
+                                  {postData.comments.length === 1
+                                    ? "Comment"
+                                    : "Comments"}
+                                </div>
+                              </button>
+                            </a>
+
+                            <div>
+                              <SessionDependantLike
+                                currentUserID={postData.userID}
+                                privilegeLevel={postData.privilegeLevel}
+                                likes={postData.likes as any[]}
+                                projectID={p().id}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div class="py-8 text-center text-2xl font-semibold tracking-widest">
+                          {p().title.replaceAll("_", " ")}
+                          <Show when={p().subtitle}>
+                            <div class="py-8 text-xl font-light tracking-widest">
+                              {p().subtitle}
+                            </div>
+                          </Show>
+                        </div>
+
+                        <PostBodyClient
+                          body={p().body}
+                          hasCodeBlock={hasCodeBlock(p().body)}
+                        />
+
+                        <div
+                          id="comments"
+                          class="mx-4 pt-12 pb-12 md:mx-8 lg:mx-12"
+                        >
+                          <CommentSectionWrapper
+                            privilegeLevel={postData.privilegeLevel}
+                            allComments={postData.comments as Comment[]}
+                            topLevelComments={
+                              postData.topLevelComments as Comment[]
+                            }
+                            id={p().id}
+                            reactionMap={reactionMap}
+                            currentUserID={postData.userID || ""}
+                            userCommentMap={userCommentMap}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            }}
+          </Show>
+        );
+      }}
+    </Show>
   );
 }
