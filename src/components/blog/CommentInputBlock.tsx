@@ -4,7 +4,6 @@ import type { CommentInputBlockProps } from "~/types/comment";
 export default function CommentInputBlock(props: CommentInputBlockProps) {
   let bodyRef: HTMLTextAreaElement | undefined;
 
-  // Clear the textarea when comment is submitted
   createEffect(() => {
     if (!props.commentSubmitLoading && bodyRef) {
       bodyRef.value = "";

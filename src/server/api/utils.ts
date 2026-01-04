@@ -26,7 +26,6 @@ async function createContextInner(event: APIEvent): Promise<Context> {
         privilegeLevel = payload.id === env.ADMIN_ID ? "admin" : "user";
       }
     } catch (err) {
-      // Silently clear invalid token (401s are expected for non-authenticated users)
       setCookie(event.nativeEvent, "userIDToken", "", {
         maxAge: 0,
         expires: new Date("2016-10-05")
@@ -57,7 +56,7 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      userId: ctx.userId // userId is non-null here
+      userId: ctx.userId
     }
   });
 });
@@ -72,11 +71,10 @@ const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      userId: ctx.userId! // userId is non-null for admins
+      userId: ctx.userId!
     }
   });
 });
 
-// Protected procedures
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 export const adminProcedure = t.procedure.use(enforceUserIsAdmin);

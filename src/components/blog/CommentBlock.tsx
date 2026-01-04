@@ -25,16 +25,13 @@ export default function CommentBlock(props: CommentBlockProps) {
   const [deletionLoading, setDeletionLoading] = createSignal(false);
   const [userData, setUserData] = createSignal<UserPublicData | null>(null);
 
-  // Refs
   let containerRef: HTMLDivElement | undefined;
   let commentInputRef: HTMLDivElement | undefined;
 
-  // Auto-collapse at level 4+
   createEffect(() => {
     setCommentCollapsed(props.level >= 4);
   });
 
-  // Find user data from comment map
   createEffect(() => {
     if (props.userCommentMap) {
       props.userCommentMap.forEach((commentIds, user) => {
@@ -45,23 +42,19 @@ export default function CommentBlock(props: CommentBlockProps) {
     }
   });
 
-  // Update toggle height based on container size
   createEffect(() => {
     if (containerRef) {
       const correction = showingReactionOptions() ? 80 : 48;
       setToggleHeight(containerRef.clientHeight + correction);
     }
-    // Trigger on these dependencies
     windowWidth();
     showingReactionOptions();
   });
 
-  // Update reactions from map
   createEffect(() => {
     setReactions(props.reactionMap.get(props.comment.id) || []);
   });
 
-  // Event handlers
   const collapseCommentToggle = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -112,7 +105,6 @@ export default function CommentBlock(props: CommentBlockProps) {
     );
   };
 
-  // Computed values
   const upvoteCount = () =>
     reactions().filter((r) => r.type === "upVote").length;
 

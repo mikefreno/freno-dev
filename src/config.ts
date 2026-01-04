@@ -10,9 +10,9 @@
 export const AUTH_CONFIG = {
   JWT_EXPIRY: "14d" as const,
   JWT_EXPIRY_SHORT: "12h" as const,
-  SESSION_COOKIE_MAX_AGE: 60 * 60 * 24 * 14, // 14 days
-  REMEMBER_ME_MAX_AGE: 60 * 60 * 24 * 14, // 14 days
-  CSRF_TOKEN_MAX_AGE: 60 * 60 * 24 * 14, // 14 days
+  SESSION_COOKIE_MAX_AGE: 60 * 60 * 24 * 14,
+  REMEMBER_ME_MAX_AGE: 60 * 60 * 24 * 14,
+  CSRF_TOKEN_MAX_AGE: 60 * 60 * 24 * 14,
   EMAIL_LOGIN_LINK_EXPIRY: "15m" as const,
   EMAIL_VERIFICATION_LINK_EXPIRY: "15m" as const,
   LINEAGE_JWT_EXPIRY: "14d" as const
@@ -51,7 +51,6 @@ export const PASSWORD_RESET_CONFIG = {
 // ============================================================
 
 export const COOLDOWN_TIMERS = {
-  // those without * 1000 are in seconds
   EMAIL_LOGIN_LINK_MS: 2 * 60 * 1000,
   EMAIL_LOGIN_LINK_COOKIE_MAX_AGE: 2 * 60,
   PASSWORD_RESET_REQUEST_MS: 5 * 60 * 1000,
@@ -107,7 +106,6 @@ export const TYPEWRITER_CONFIG = {
 // ============================================================
 
 export const COUNTDOWN_CONFIG = {
-  // these are in seconds
   EMAIL_LOGIN_LINK_DURATION_S: 120,
   PASSWORD_RESET_DURATION_S: 300,
   CONTACT_FORM_DURATION_S: 60,
@@ -189,8 +187,8 @@ export const TEXT_EDITOR_CONFIG = {
   INITIAL_LOAD_FALLBACK_DELAY_MS: 500,
   INITIAL_LOAD_DELAY_MS: 1000,
   SPINNER_INTERVAL_MS: 50,
-  HIGHLIGHT_FADE_DELAY_MS: 100,
-  HIGHLIGHT_REMOVE_DELAY_MS: 700,
+  HIGHLIGHT_FADE_DELAY_MS: 400,
+  HIGHLIGHT_REMOVE_DELAY_MS: 1000,
   REFERENCE_UPDATE_DELAY_MS: 500,
   SCROLL_TO_CHANGE_DELAY_MS: 100
 } as const;
@@ -203,7 +201,6 @@ export const VALIDATION_CONFIG = {
   MIN_PASSWORD_LENGTH: 8,
   PASSWORD_REQUIRE_UPPERCASE: true,
   PASSWORD_REQUIRE_NUMBER: true,
-  // changed to just recommended, may change again in future
   PASSWORD_REQUIRE_SPECIAL: false,
   MAX_CONTACT_MESSAGE_LENGTH: 500,
   MIN_PASSWORD_CONF_LENGTH_FOR_ERROR: 6

@@ -371,12 +371,10 @@ const IframeEmbed = Node.create<IframeOptions>({
   }
 });
 
-// Custom Reference mark extension
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 
-// Suggestion decoration extension - shows inline AI suggestions
 const SuggestionDecoration = Extension.create({
   name: "suggestionDecoration",
 
@@ -391,7 +389,6 @@ const SuggestionDecoration = Extension.create({
             return DecorationSet.empty;
           },
           apply(tr, oldSet, oldState, newState) {
-            // Get suggestion and loading state from editor storage
             const storage = (editor.storage as any).suggestionDecoration || {};
             const suggestion = storage.text || "";
             const isLoading = storage.isLoading || false;
@@ -400,7 +397,6 @@ const SuggestionDecoration = Extension.create({
             const pos = selection.$anchor.pos;
             const decorations = [];
 
-            // Show loading spinner inline if loading
             if (isLoading) {
               const loadingDecoration = Decoration.widget(
                 pos,
@@ -409,15 +405,13 @@ const SuggestionDecoration = Extension.create({
                   span.className = "inline-flex items-center ml-1";
                   span.style.pointerEvents = "none";
 
-                  // Use Spinner component
                   const spinner = document.createElement("span");
                   spinner.className = "text-red inline-block";
-                  spinner.style.color = "rgb(239, 68, 68)"; // Tailwind red-500
+                  spinner.style.color = "rgb(239, 68, 68)";
                   spinner.style.opacity = "0.5";
                   spinner.style.fontSize = "18px";
                   spinner.style.lineHeight = "1.5";
 
-                  // Render spinner chars manually since we're in ProseMirror
                   const spinnerChars = [
                     "⠋",
                     "⠙",
@@ -438,20 +432,18 @@ const SuggestionDecoration = Extension.create({
                     spinner.textContent = spinnerChars[charIndex];
                   }, TEXT_EDITOR_CONFIG.SPINNER_INTERVAL_MS);
 
-                  // Store interval on element for cleanup
                   (spinner as any)._spinnerInterval = interval;
 
                   span.appendChild(spinner);
                   return span;
                 },
                 {
-                  side: 1 // Place after the cursor
+                  side: 1
                 }
               );
               decorations.push(loadingDecoration);
             }
 
-            // Show suggestion text if present
             if (suggestion) {
               const suggestionDecoration = Decoration.widget(
                 pos,
@@ -468,7 +460,7 @@ const SuggestionDecoration = Extension.create({
                   return span;
                 },
                 {
-                  side: 1 // Place after the cursor
+                  side: 1
                 }
               );
               decorations.push(suggestionDecoration);
@@ -498,7 +490,6 @@ const SuggestionDecoration = Extension.create({
   }
 });
 
-// Custom Reference mark extension
 import { Mark, mergeAttributes } from "@tiptap/core";
 import { Spinner } from "../Spinner";
 
@@ -548,7 +539,6 @@ const Reference = Mark.create({
     };
   },
 
-  // Exclude other marks (like links) from being applied to references
   excludes: "_",
 
   parseHTML() {
@@ -556,7 +546,6 @@ const Reference = Mark.create({
       {
         tag: "sup[data-ref-id]"
       },
-      // Also parse legacy superscript references during HTML parsing
       {
         tag: "sup",
         getAttrs: (element) => {
@@ -564,7 +553,6 @@ const Reference = Mark.create({
           const text = element.textContent || "";
           const match = text.match(/^\[(\d+)\]$/);
           if (match && !element.getAttribute("data-ref-id")) {
-            // This is a legacy reference - convert it
             return {
               refId: `ref-legacy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               refNum: parseInt(match[1])
@@ -617,7 +605,6 @@ const Reference = Mark.create({
               );
               if (refMark) {
                 if (dispatch) {
-                  // Update both the mark attributes and the text content
                   const from = pos;
                   const to = pos + node.text.length;
                   const newMark = refMark.type.create({
@@ -625,7 +612,6 @@ const Reference = Mark.create({
                     refNum: newNum
                   });
 
-                  // Replace text and marks together
                   tr.replaceWith(
                     from,
                     to,
@@ -644,7 +630,6 @@ const Reference = Mark.create({
   }
 });
 
-// Custom ReferenceSectionMarker node - invisible marker to identify references section
 const ReferenceSectionMarker = Node.create({
   name: "referenceSectionMarker",
   group: "inline",
@@ -706,7 +691,7 @@ const ReferenceSectionMarker = Node.create({
 export interface TextEditorProps {
   updateContent: (content: string) => void;
   preSet?: string;
-  postId?: number; // Optional: for persisting history to database
+  postId?: number;
 }
 
 export default function TextEditor(props: TextEditorProps) {
@@ -714,7 +699,6 @@ export default function TextEditor(props: TextEditorProps) {
   let bubbleMenuRef!: HTMLDivElement;
   let containerRef!: HTMLDivElement;
 
-  // Initialize mermaid for validation and preview
   onMount(() => {
     mermaid.initialize({
       startOnLoad: false,
@@ -759,7 +743,6 @@ export default function TextEditor(props: TextEditorProps) {
 
   const [showKeyboardHelp, setShowKeyboardHelp] = createSignal(false);
 
-  // Mermaid editor modal state
   const [showMermaidEditor, setShowMermaidEditor] = createSignal(false);
   const [mermaidEditorContent, setMermaidEditorContent] = createSignal("");
   const [mermaidEditorPos, setMermaidEditorPos] = createSignal<number | null>(
@@ -772,14 +755,12 @@ export default function TextEditor(props: TextEditorProps) {
   const [mermaidPreviewSvg, setMermaidPreviewSvg] = createSignal<string>("");
   let mermaidValidationTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // References section heading customization
   const [referencesHeading, setReferencesHeading] = createSignal(
     typeof window !== "undefined"
       ? localStorage.getItem("editor-references-heading") || "References"
       : "References"
   );
 
-  // Persist heading changes to localStorage
   createEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("editor-references-heading", referencesHeading());
@@ -821,10 +802,9 @@ export default function TextEditor(props: TextEditorProps) {
   const [keyboardVisible, setKeyboardVisible] = createSignal(false);
   const [keyboardHeight, setKeyboardHeight] = createSignal(0);
 
-  // Undo Tree History (MVP - In-Memory + Database)
   interface HistoryNode {
-    id: string; // Local UUID
-    dbId?: number; // Database ID from PostHistory table
+    id: string;
+    dbId?: number;
     content: string;
     timestamp: Date;
   }
@@ -835,32 +815,27 @@ export default function TextEditor(props: TextEditorProps) {
   const [showHistoryModal, setShowHistoryModal] = createSignal(false);
   const [isLoadingHistory, setIsLoadingHistory] = createSignal(false);
   let historyDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-  let isInitialLoad = true; // Flag to prevent capturing history on initial load
-  let hasAttemptedHistoryLoad = false; // Flag to prevent repeated load attempts
+  let isInitialLoad = true;
+  let hasAttemptedHistoryLoad = false;
 
-  // Throttle timer for reference operations
   let updateThrottleTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // LLM Infill state
   const [currentSuggestion, setCurrentSuggestion] = createSignal<string>("");
   const [isInfillLoading, setIsInfillLoading] = createSignal(false);
   const [infillConfig, setInfillConfig] = createSignal<{
     endpoint: string;
     token: string;
   } | null>(null);
-  const [infillEnabled, setInfillEnabled] = createSignal(true); // Toggle for auto-suggestions
+  const [infillEnabled, setInfillEnabled] = createSignal(true);
   let infillDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // Touch gesture state for mobile AI suggestion acceptance
   let touchStartX = 0;
   let touchStartY = 0;
 
-  // Force reactive updates for button states
   const [editorState, setEditorState] = createSignal(0);
 
-  // Helper to check editor active state reactively
   const isActive = (type: string, attrs?: Record<string, any>) => {
-    editorState(); // Track reactive dependency
+    editorState();
     const instance = editor();
     return instance ? instance.isActive(type, attrs) : false;
   };
@@ -881,7 +856,6 @@ export default function TextEditor(props: TextEditorProps) {
     return alignment === "left";
   };
 
-  // Helper for mobile-optimized button classes
   const getButtonClasses = (
     isActive: boolean,
     includeHover: boolean = false
@@ -893,7 +867,6 @@ export default function TextEditor(props: TextEditorProps) {
     return `${baseClasses} ${activeClass} ${hoverClass}`.trim();
   };
 
-  // Fetch infill config on mount (admin-only)
   createEffect(async () => {
     try {
       const config = await api.infill.getConfig.query();
@@ -905,19 +878,16 @@ export default function TextEditor(props: TextEditorProps) {
     }
   });
 
-  // Update suggestion: Store in editor and force view update
   createEffect(() => {
     const instance = editor();
     const suggestion = currentSuggestion();
     const loading = isInfillLoading();
 
     if (instance) {
-      // Store suggestion and loading state in editor storage (cast to any to avoid TS error)
       (instance.storage as any).suggestionDecoration = {
         text: suggestion,
         isLoading: loading
       };
-      // Force view update to show/hide decoration
       instance.view.dispatch(instance.state.tr);
     }
   });
@@ -932,7 +902,6 @@ export default function TextEditor(props: TextEditorProps) {
     setIsInfillLoading(true);
 
     try {
-      // llama.cpp infill format
       const requestBody = {
         input_prefix: context.prefix,
         input_suffix: context.suffix,
@@ -957,7 +926,6 @@ export default function TextEditor(props: TextEditorProps) {
 
       const data = await response.json();
 
-      // llama.cpp infill format returns { content: "..." }
       const suggestion = data.content || "";
 
       if (suggestion.trim()) {
@@ -971,15 +939,12 @@ export default function TextEditor(props: TextEditorProps) {
     }
   };
 
-  // Helper to check if suggestion is active
   const hasSuggestion = () => currentSuggestion().length > 0;
 
-  // Accept next word from suggestion
   const acceptWord = () => {
     const suggestion = currentSuggestion();
     if (!suggestion) return;
 
-    // Take first word (split on whitespace)
     const words = suggestion.split(/\s+/);
     const firstWord = words[0] || "";
 
@@ -988,17 +953,14 @@ export default function TextEditor(props: TextEditorProps) {
       instance.commands.insertContent(firstWord + " ");
     }
 
-    // Update suggestion to remaining text
     const remaining = words.slice(1).join(" ");
     setCurrentSuggestion(remaining);
   };
 
-  // Accept current line from suggestion
   const acceptLine = () => {
     const suggestion = currentSuggestion();
     if (!suggestion) return;
 
-    // Take up to first newline
     const lines = suggestion.split("\n");
     const firstLine = lines[0] || "";
 
@@ -1007,12 +969,10 @@ export default function TextEditor(props: TextEditorProps) {
       instance.commands.insertContent(firstLine);
     }
 
-    // Update suggestion to remaining text
     const remaining = lines.slice(1).join("\n");
     setCurrentSuggestion(remaining);
   };
 
-  // Accept full suggestion
   const acceptFull = () => {
     const suggestion = currentSuggestion();
     if (!suggestion) return;
@@ -1025,7 +985,6 @@ export default function TextEditor(props: TextEditorProps) {
     setCurrentSuggestion("");
   };
 
-  // Mermaid editor helpers
   const saveMermaidEdit = () => {
     const instance = editor();
     const pos = mermaidEditorPos();
@@ -1033,7 +992,6 @@ export default function TextEditor(props: TextEditorProps) {
 
     if (!instance || pos === null) return;
 
-    // Update the node at the stored position
     const tr = instance.state.tr;
     const node = instance.state.doc.nodeAt(pos);
 
@@ -1058,7 +1016,6 @@ export default function TextEditor(props: TextEditorProps) {
     setShowMermaidTemplates(false);
   };
 
-  // Validate and preview mermaid syntax
   const validateAndPreviewMermaid = async (code: string) => {
     if (!code.trim()) {
       setMermaidValidation({ valid: true, error: null });
@@ -1067,20 +1024,16 @@ export default function TextEditor(props: TextEditorProps) {
     }
 
     try {
-      // Validate syntax using mermaid's parse function
       await mermaid.parse(code);
 
-      // If valid, render preview
       const id = `mermaid-preview-${Date.now()}`;
       const { svg } = await mermaid.render(id, code);
 
       setMermaidValidation({ valid: true, error: null });
       setMermaidPreviewSvg(svg);
     } catch (err: any) {
-      // Extract useful error message
       let errorMsg = err.message || "Invalid syntax";
 
-      // Clean up mermaid error messages for better readability
       if (errorMsg.includes("Parse error")) {
         errorMsg = errorMsg.replace(
           /^.*Parse error on line \d+:\s*/i,
@@ -1093,7 +1046,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
   };
 
-  // Debounced validation when content changes
   createEffect(() => {
     const content = mermaidEditorContent();
 
@@ -1106,9 +1058,7 @@ export default function TextEditor(props: TextEditorProps) {
     }, TEXT_EDITOR_CONFIG.MERMAID_VALIDATION_DEBOUNCE_MS);
   });
 
-  // Capture history snapshot
   const captureHistory = async (editorInstance: any) => {
-    // Skip if initial load
     if (isInitialLoad) {
       return;
     }
@@ -1117,29 +1067,25 @@ export default function TextEditor(props: TextEditorProps) {
     const currentHistory = history();
     const currentIndex = currentHistoryIndex();
 
-    // Get previous content for diff creation
     const previousContent =
       currentIndex >= 0 ? currentHistory[currentIndex].content : "";
 
-    // Skip if content hasn't changed
     if (content === previousContent) {
       return;
     }
 
-    // Create new history node
     const newNode: HistoryNode = {
       id: crypto.randomUUID(),
       content,
       timestamp: new Date()
     };
 
-    // If we're not at the end of history, truncate future history (linear history for MVP)
+    // Truncate future history if not at end (linear history)
     const updatedHistory =
       currentIndex === currentHistory.length - 1
         ? [...currentHistory, newNode]
         : [...currentHistory.slice(0, currentIndex + 1), newNode];
 
-    // Limit history size
     const limitedHistory =
       updatedHistory.length > TEXT_EDITOR_CONFIG.MAX_HISTORY_SIZE
         ? updatedHistory.slice(
@@ -1150,7 +1096,6 @@ export default function TextEditor(props: TextEditorProps) {
     setHistory(limitedHistory);
     setCurrentHistoryIndex(limitedHistory.length - 1);
 
-    // Persist to database if postId is provided
     if (props.postId) {
       try {
         const parentHistoryId =
@@ -1166,10 +1111,8 @@ export default function TextEditor(props: TextEditorProps) {
           isSaved: false
         });
 
-        // Update the node with database ID
         if (result.success && result.historyId) {
           newNode.dbId = result.historyId;
-          // Update history with dbId
           setHistory((prev) => {
             const updated = [...prev];
             updated[updated.length - 1] = newNode;
@@ -1178,22 +1121,16 @@ export default function TextEditor(props: TextEditorProps) {
         }
       } catch (error) {
         console.error("Failed to persist history to database:", error);
-        // Continue anyway - we have in-memory history
       }
     }
   };
 
-  // Parse UTC datetime string from SQLite to JavaScript Date
-  // SQLite datetime('now') returns format: "YYYY-MM-DD HH:MM:SS" in UTC
+  // SQLite datetime('now') returns "YYYY-MM-DD HH:MM:SS" in UTC
   const parseUTCDateTime = (utcDateString: string): Date => {
-    // SQLite returns datetime in format "YYYY-MM-DD HH:MM:SS"
-    // We need to append 'Z' to indicate UTC, or convert to ISO format
-    // Replace space with 'T' and append 'Z' for proper UTC parsing
     const isoString = utcDateString.replace(" ", "T") + "Z";
     return new Date(isoString);
   };
 
-  // Format relative time for history display
   const formatRelativeTime = (date: Date): string => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -1209,7 +1146,6 @@ export default function TextEditor(props: TextEditorProps) {
     return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
   };
 
-  // Restore history to a specific point
   const restoreHistory = (index: number) => {
     const instance = editor();
     if (!instance) return;
@@ -1217,31 +1153,19 @@ export default function TextEditor(props: TextEditorProps) {
     const node = history()[index];
     if (!node) return;
 
-    // Get current content before changing
     const oldContent = instance.getHTML();
 
-    // Set content without triggering history capture
     instance.commands.setContent(node.content, { emitUpdate: false });
-
-    // Update current index
     setCurrentHistoryIndex(index);
-
-    // Update parent content
     props.updateContent(node.content);
-
-    // Close modal
     setShowHistoryModal(false);
-
-    // Force UI update
     setEditorState((prev) => prev + 1);
 
-    // Scroll to first change after a brief delay to allow content to render
     setTimeout(() => {
       scrollToFirstChange(instance, oldContent, node.content);
     }, TEXT_EDITOR_CONFIG.SCROLL_TO_CHANGE_DELAY_MS);
   };
 
-  // Find and scroll to the first difference between old and new content
   const scrollToFirstChange = (
     editorInstance: any,
     oldHTML: string,
@@ -1249,13 +1173,11 @@ export default function TextEditor(props: TextEditorProps) {
   ) => {
     if (oldHTML === newHTML) return;
 
-    // Convert HTML to plain text for comparison
     const oldText = editorInstance.state.doc.textContent;
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = oldHTML;
     const oldTextContent = tempDiv.textContent || "";
 
-    // Find first character difference
     let firstDiffPos = 0;
     const minLength = Math.min(oldTextContent.length, oldText.length);
 
@@ -1266,12 +1188,10 @@ export default function TextEditor(props: TextEditorProps) {
       }
     }
 
-    // If no character diff found but lengths differ, use the shorter length
     if (firstDiffPos === 0 && oldTextContent.length !== oldText.length) {
       firstDiffPos = minLength;
     }
 
-    // Convert text position to ProseMirror position
     let currentTextPos = 0;
     let pmPos = 0;
     let found = false;
@@ -1282,7 +1202,6 @@ export default function TextEditor(props: TextEditorProps) {
       if (node.isText) {
         const nodeTextLength = node.text?.length || 0;
         if (currentTextPos + nodeTextLength >= firstDiffPos) {
-          // Found the node containing the first change
           pmPos = pos + (firstDiffPos - currentTextPos);
           found = true;
           return false;
@@ -1292,13 +1211,11 @@ export default function TextEditor(props: TextEditorProps) {
     });
 
     if (pmPos > 0) {
-      // Scroll to the position
       const coords = editorInstance.view.coordsAtPos(pmPos);
       const editorElement = editorInstance.view.dom as HTMLElement;
       const container = editorElement.closest(".overflow-y-auto");
 
       if (container && coords) {
-        // Calculate scroll position (center the change in viewport)
         const containerRect = container.getBoundingClientRect();
         const scrollOffset =
           coords.top - containerRect.top - containerRect.height / 3;
@@ -1309,16 +1226,13 @@ export default function TextEditor(props: TextEditorProps) {
         });
       }
 
-      // Also set cursor to that position
       editorInstance.commands.focus();
       editorInstance.commands.setTextSelection(pmPos);
 
-      // Flash highlight at the change position
       flashHighlight(editorInstance, pmPos);
     }
   };
 
-  // Flash a highlight at a specific position
   const flashHighlight = (editorInstance: any, pos: number) => {
     const coords = editorInstance.view.coordsAtPos(pos);
     if (!coords) return;
@@ -1327,21 +1241,19 @@ export default function TextEditor(props: TextEditorProps) {
     const container = editorElement.closest(".overflow-y-auto");
     if (!container) return;
 
-    // Create highlight element
     const highlight = document.createElement("div");
     highlight.style.position = "absolute";
     highlight.style.left = `${coords.left}px`;
     highlight.style.top = `${coords.top}px`;
-    highlight.style.width = "300px"; // Cover a good amount of text
+    highlight.style.width = "300px";
     highlight.style.height = "1.5em";
-    highlight.style.backgroundColor = "rgba(239, 68, 68, 0.3)"; // red-500 with opacity
+    highlight.style.backgroundColor = "rgba(239, 68, 68, 0.3)";
     highlight.style.pointerEvents = "none";
     highlight.style.borderRadius = "4px";
     highlight.style.zIndex = "1000";
     highlight.style.transition = "opacity 0.6s ease-out";
     highlight.style.opacity = "1";
 
-    // Position relative to the container
     const containerRect = container.getBoundingClientRect();
     const relativeTop = coords.top - containerRect.top + container.scrollTop;
     const relativeLeft =
@@ -1350,7 +1262,6 @@ export default function TextEditor(props: TextEditorProps) {
     highlight.style.left = `${relativeLeft}px`;
     highlight.style.top = `${relativeTop}px`;
 
-    // Append to container
     const positionedContainer = container as HTMLElement;
     if (
       positionedContainer.style.position !== "relative" &&
@@ -1360,7 +1271,6 @@ export default function TextEditor(props: TextEditorProps) {
     }
     positionedContainer.appendChild(highlight);
 
-    // Fade out and remove
     setTimeout(() => {
       highlight.style.opacity = "0";
     }, TEXT_EDITOR_CONFIG.HIGHLIGHT_FADE_DELAY_MS);
@@ -1370,12 +1280,11 @@ export default function TextEditor(props: TextEditorProps) {
     }, TEXT_EDITOR_CONFIG.HIGHLIGHT_REMOVE_DELAY_MS);
   };
 
-  // Load history from database
   const loadHistoryFromDB = async () => {
     if (!props.postId) return;
 
     setIsLoadingHistory(true);
-    hasAttemptedHistoryLoad = true; // Mark that we've attempted to load
+    hasAttemptedHistoryLoad = true;
     try {
       console.log("[History] Loading from DB for postId:", props.postId);
       const dbHistory = await api.postHistory.getHistory.query({
@@ -1393,13 +1302,11 @@ export default function TextEditor(props: TextEditorProps) {
           dbHistory[dbHistory.length - 1].content.length
         );
 
-        // Convert database history to HistoryNode format with reconstructed content
-        // Database stores timestamps in UTC, so we need to parse them correctly
         const historyNodes: HistoryNode[] = dbHistory.map((entry) => ({
           id: `db-${entry.id}`,
           dbId: entry.id,
-          content: entry.content, // Full reconstructed content from diffs
-          timestamp: parseUTCDateTime(entry.created_at) // Parse UTC timestamp
+          content: entry.content,
+          timestamp: parseUTCDateTime(entry.created_at)
         }));
 
         setHistory(historyNodes);
@@ -1430,18 +1337,15 @@ export default function TextEditor(props: TextEditorProps) {
     const { state } = instance;
     const cursorPos = state.selection.$anchor.pos;
 
-    // Convert ProseMirror position to text offset
-    // We need to count actual text characters, not node positions
     let textOffset = 0;
     let reachedCursor = false;
 
     state.doc.descendants((node, pos) => {
-      if (reachedCursor) return false; // Stop traversing
+      if (reachedCursor) return false;
 
       if (node.isText) {
         const nodeEnd = pos + node.nodeSize;
         if (cursorPos <= nodeEnd) {
-          // Cursor is within or right after this text node
           textOffset += Math.min(cursorPos - pos, node.text?.length || 0);
           reachedCursor = true;
           return false;
@@ -1473,7 +1377,6 @@ export default function TextEditor(props: TextEditorProps) {
     element: editorRef,
     extensions: [
       StarterKit.configure({
-        // Disable these since we're adding them separately with custom config
         codeBlock: false
       }),
       CodeBlockLowlight.configure({ lowlight }),
@@ -1537,7 +1440,6 @@ export default function TextEditor(props: TextEditorProps) {
     ],
     content: props.preSet || `<p><em><b>Hello!</b> World</em></p>`,
     onCreate: ({ editor }) => {
-      // Migrate legacy references on initial load
       if (props.preSet) {
         setTimeout(() => {
           const doc = editor.state.doc;
@@ -1570,13 +1472,10 @@ export default function TextEditor(props: TextEditorProps) {
         }, 100);
       }
 
-      // CRITICAL FIX: Always set isInitialLoad to false after a delay
-      // This ensures infill works regardless of how content was loaded
       setTimeout(() => {
         isInitialLoad = false;
       }, TEXT_EDITOR_CONFIG.INITIAL_LOAD_DELAY_MS);
 
-      // Listen for mermaid edit events
       editor.view.dom.addEventListener("edit-mermaid", ((e: CustomEvent) => {
         setMermaidEditorContent(e.detail.content);
         setMermaidEditorPos(e.detail.pos);
@@ -1588,21 +1487,18 @@ export default function TextEditor(props: TextEditorProps) {
         class: "focus:outline-none"
       },
       handleKeyDown(view, event) {
-        // Trigger infill: Ctrl+Space (or Cmd+Space)
         if ((event.ctrlKey || event.metaKey) && event.key === " ") {
           event.preventDefault();
           requestInfill();
           return true;
         }
 
-        // Cancel suggestion: Escape
         if (event.key === "Escape" && hasSuggestion()) {
           event.preventDefault();
           setCurrentSuggestion("");
           return true;
         }
 
-        // Accept word: Right Arrow (only when suggestion active)
         if (
           event.key === "ArrowRight" &&
           hasSuggestion() &&
@@ -1615,14 +1511,12 @@ export default function TextEditor(props: TextEditorProps) {
           return true;
         }
 
-        // Accept line: Alt+Tab
         if (event.altKey && event.key === "Tab" && hasSuggestion()) {
           event.preventDefault();
           acceptLine();
           return true;
         }
 
-        // Accept full: Shift+Tab
         if (
           event.shiftKey &&
           event.key === "Tab" &&
@@ -1634,7 +1528,6 @@ export default function TextEditor(props: TextEditorProps) {
           return true;
         }
 
-        // Cmd/Ctrl+R for inserting reference
         if ((event.metaKey || event.ctrlKey) && event.key === "r") {
           event.preventDefault();
           insertReference();
@@ -1675,9 +1568,7 @@ export default function TextEditor(props: TextEditorProps) {
           const deltaX = touchEndX - touchStartX;
           const deltaY = touchEndY - touchStartY;
 
-          // Check if horizontal swipe is dominant
           if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            // Swipe right - accept full suggestion
             if (deltaX > MOBILE_CONFIG.SWIPE_THRESHOLD) {
               event.preventDefault();
               acceptFull();
@@ -1721,7 +1612,6 @@ export default function TextEditor(props: TextEditorProps) {
       untrack(() => {
         props.updateContent(editor.getHTML());
 
-        // Throttle reference operations to reduce DOM thrashing
         if (updateThrottleTimer) {
           clearTimeout(updateThrottleTimer);
         }
@@ -1731,8 +1621,6 @@ export default function TextEditor(props: TextEditorProps) {
           updateThrottleTimer = null;
         }, TEXT_EDITOR_CONFIG.REFERENCE_UPDATE_DELAY_MS);
 
-        // Debounced history capture
-        // Skip during initial load
         if (!isInitialLoad) {
           if (historyDebounceTimer) {
             clearTimeout(historyDebounceTimer);
@@ -1748,7 +1636,6 @@ export default function TextEditor(props: TextEditorProps) {
             window.innerWidth < BREAKPOINTS.MOBILE_MAX_WIDTH &&
             !isFullscreen();
 
-          // Skip auto-infill on mobile when not in fullscreen
           if (!isMobileNotFullscreen) {
             if (infillDebounceTimer) {
               clearTimeout(infillDebounceTimer);
@@ -1761,12 +1648,10 @@ export default function TextEditor(props: TextEditorProps) {
       });
     },
     onSelectionUpdate: ({ editor }) => {
-      // Clear suggestion when cursor moves (click/arrow keys without suggestion)
       if (currentSuggestion()) {
         setCurrentSuggestion("");
       }
 
-      // Force reactive update for button states
       setEditorState((prev) => prev + 1);
 
       const { from, to } = editor.state.selection;
@@ -1806,10 +1691,8 @@ export default function TextEditor(props: TextEditorProps) {
             );
             instance.commands.setContent(newContent, { emitUpdate: false });
 
-            // Reset the load attempt flag when content changes
             hasAttemptedHistoryLoad = false;
 
-            // Load history from database if postId is provided
             if (props.postId) {
               await loadHistoryFromDB();
               console.log(
@@ -1818,13 +1701,11 @@ export default function TextEditor(props: TextEditorProps) {
               );
             }
 
-            // Migrate legacy superscript references to Reference marks
             setTimeout(() => {
               migrateLegacyReferences(instance);
               migrateLegacyMermaidBlocks(instance);
             }, TEXT_EDITOR_CONFIG.LEGACY_MIGRATION_DELAY_MS);
 
-            // Capture initial state in history only if no history was loaded
             setTimeout(() => {
               if (history().length === 0) {
                 console.log(
@@ -1841,7 +1722,6 @@ export default function TextEditor(props: TextEditorProps) {
               isInitialLoad = false;
             }, TEXT_EDITOR_CONFIG.INITIAL_HISTORY_CAPTURE_DELAY_MS);
           } else {
-            // Content already matches - this is the initial load case
             setTimeout(() => {
               isInitialLoad = false;
             }, TEXT_EDITOR_CONFIG.INITIAL_LOAD_FALLBACK_DELAY_MS);
@@ -1852,7 +1732,6 @@ export default function TextEditor(props: TextEditorProps) {
     )
   );
 
-  // Load history when editor is ready (for edit mode)
   createEffect(() => {
     const instance = editor();
     if (
@@ -1860,7 +1739,7 @@ export default function TextEditor(props: TextEditorProps) {
       props.postId &&
       history().length === 0 &&
       !isLoadingHistory() &&
-      !hasAttemptedHistoryLoad // Only attempt once
+      !hasAttemptedHistoryLoad
     ) {
       console.log(
         "[History] Editor ready, loading history for postId:",
@@ -1876,7 +1755,6 @@ export default function TextEditor(props: TextEditorProps) {
     const doc = editorInstance.state.doc;
     const blocksToMigrate: Array<{ pos: number; content: string }> = [];
 
-    // Mermaid diagram keywords to detect
     const mermaidKeywords = [
       "graph ",
       "sequenceDiagram",
@@ -1895,13 +1773,11 @@ export default function TextEditor(props: TextEditorProps) {
       "C4Context"
     ];
 
-    // Find code blocks that look like mermaid
     doc.descendants((node: any, pos: number) => {
       if (node.type.name === "codeBlock") {
         const content = node.textContent || "";
         const trimmedContent = content.trim();
 
-        // Check if this looks like a mermaid diagram
         const isMermaid = mermaidKeywords.some((keyword) =>
           trimmedContent.startsWith(keyword)
         );
@@ -1924,12 +1800,10 @@ export default function TextEditor(props: TextEditorProps) {
     blocksToMigrate.forEach(({ pos, content }) => {
       const node = editorInstance.state.doc.nodeAt(pos);
       if (node) {
-        // Create new mermaid node
         const mermaidNode = editorInstance.schema.nodes.mermaid.create({
           content
         });
 
-        // Replace the code block with mermaid node
         tr.replaceWith(pos, pos + node.nodeSize, mermaidNode);
       }
     });
@@ -1953,7 +1827,6 @@ export default function TextEditor(props: TextEditorProps) {
       marks: any[];
     }> = [];
 
-    // First pass: collect all text nodes with superscript
     doc.descendants((node: any, pos: number) => {
       if (node.isText && node.marks) {
         const hasReference = node.marks.some(
@@ -1973,7 +1846,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     });
 
-    // Second pass: identify complete references (might be split)
     let i = 0;
     while (i < allSuperscriptNodes.length) {
       const node = allSuperscriptNodes[i];
@@ -2001,7 +1873,6 @@ export default function TextEditor(props: TextEditorProps) {
         const nextNode = allSuperscriptNodes[i + 1];
         const afterNode = allSuperscriptNodes[i + 2];
 
-        // Check if next nodes form [n]
         if (nextNode.text.match(/^\d+$/) && afterNode.text === "]") {
           const refNum = parseInt(nextNode.text);
           const totalLength =
@@ -2076,7 +1947,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     });
 
-    // Sort by position
     allRefs.sort((a, b) => a.pos - b.pos);
 
     // Check if renumbering is needed (if any ref doesn't match its expected number)
@@ -2098,13 +1968,11 @@ export default function TextEditor(props: TextEditorProps) {
       const ref = allRefs[i];
 
       if (ref.refNum !== correctNum) {
-        // Create updated mark
         const newMark = editorInstance.schema.marks.reference.create({
           refId: ref.refId,
           refNum: correctNum
         });
 
-        // Replace the node with updated text and mark
         tr.replaceWith(
           ref.pos,
           ref.pos + ref.textLength,
@@ -2113,7 +1981,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     }
 
-    // Dispatch the single transaction with all changes
     editorInstance.view.dispatch(tr);
   };
 
@@ -2125,7 +1992,6 @@ export default function TextEditor(props: TextEditorProps) {
 
     doc.descendants((node: any) => {
       if (node.isText && node.marks) {
-        // Look for both Reference marks (new) and superscript (legacy)
         const refMark = node.marks.find(
           (mark: any) => mark.type.name === "reference"
         );
@@ -2134,10 +2000,8 @@ export default function TextEditor(props: TextEditorProps) {
         );
 
         if (refMark) {
-          // Use refNum from Reference mark
           foundRefs.add(refMark.attrs.refNum.toString());
         } else if (hasSuperscript) {
-          // Fallback to legacy superscript pattern matching
           const text = node.text || "";
           const match = text.match(/^\[(.+?)\]$/);
           if (match) {
@@ -2148,29 +2012,24 @@ export default function TextEditor(props: TextEditorProps) {
     });
 
     if (foundRefs.size === 0) {
-      // No references found - remove the entire section if it exists
       let markerPos = -1;
       let hrPos = -1;
       let sectionEndPos = -1;
 
       doc.descendants((node: any, pos: number) => {
-        // Find marker first
         if (node.type.name === "referenceSectionMarker") {
           markerPos = pos;
         }
-        // Find HR before marker
         if (markerPos === -1 && node.type.name === "horizontalRule") {
           hrPos = pos;
         }
       });
 
-      // Find the end of the references section
       if (markerPos >= 0) {
         let foundEnd = false;
         doc.descendants((node: any, pos: number) => {
           if (foundEnd || pos <= markerPos) return;
 
-          // Section ends at next HR or H2 heading
           if (
             node.type.name === "horizontalRule" ||
             (node.type.name === "heading" && node.attrs.level <= 2)
@@ -2180,7 +2039,6 @@ export default function TextEditor(props: TextEditorProps) {
           }
         });
 
-        // If no end found, section goes to end of document
         if (!foundEnd) {
           sectionEndPos = doc.content.size;
         }
@@ -2212,13 +2070,11 @@ export default function TextEditor(props: TextEditorProps) {
       { pos: number; isPlaceholder: boolean }
     >();
 
-    // Look for the marker first
     doc.descendants((node: any, pos: number) => {
       if (node.type.name === "referenceSectionMarker") {
         markerPos = pos;
         markerHeading = node.attrs.heading || referencesHeading();
       }
-      // If marker found, look for heading after it
       if (
         markerPos >= 0 &&
         referencesHeadingPos === -1 &&
@@ -2228,7 +2084,6 @@ export default function TextEditor(props: TextEditorProps) {
       ) {
         referencesHeadingPos = pos;
       }
-      // Find section end (next HR or H2)
       if (
         referencesHeadingPos >= 0 &&
         sectionEndPos === -1 &&
@@ -2238,7 +2093,6 @@ export default function TextEditor(props: TextEditorProps) {
       ) {
         sectionEndPos = pos;
       }
-      // Collect existing reference numbers within the section
       if (
         referencesHeadingPos >= 0 &&
         pos > referencesHeadingPos &&
@@ -2254,12 +2108,10 @@ export default function TextEditor(props: TextEditorProps) {
       }
     });
 
-    // If no section end found, it goes to document end
     if (referencesHeadingPos >= 0 && sectionEndPos === -1) {
       sectionEndPos = doc.content.size;
     }
 
-    // Update marker heading if it changed
     if (markerPos >= 0 && markerHeading !== referencesHeading()) {
       const tr = editorInstance.state.tr;
       const markerNode = doc.nodeAt(markerPos);
@@ -2275,7 +2127,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     }
 
-    // Update heading text if it changed
     if (referencesHeadingPos >= 0 && markerHeading !== referencesHeading()) {
       const tr = editorInstance.state.tr;
       const headingNode = doc.nodeAt(referencesHeadingPos);
@@ -2293,7 +2144,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     }
 
-    // Create section if marker not found
     if (markerPos === -1) {
       const content: any[] = [
         { type: "horizontalRule" },
@@ -2313,7 +2163,6 @@ export default function TextEditor(props: TextEditorProps) {
         }
       ];
 
-      // Add placeholder paragraphs for each reference
       refNumbers.forEach((refNum) => {
         content.push({
           type: "paragraph",
@@ -2340,11 +2189,9 @@ export default function TextEditor(props: TextEditorProps) {
       return;
     }
 
-    // Section exists - manage placeholders
     const tr = editorInstance.state.tr;
     let hasChanges = false;
 
-    // Step 1: Remove placeholders for references that no longer exist
     const toDelete: Array<{ pos: number; nodeSize: number }> = [];
     existingRefs.forEach((info, refNum) => {
       if (info.isPlaceholder && !refNumbers.includes(refNum)) {
@@ -2355,7 +2202,6 @@ export default function TextEditor(props: TextEditorProps) {
       }
     });
 
-    // Delete in reverse order to maintain positions
     toDelete
       .sort((a, b) => b.pos - a.pos)
       .forEach(({ pos, nodeSize }) => {
@@ -2363,9 +2209,7 @@ export default function TextEditor(props: TextEditorProps) {
         hasChanges = true;
       });
 
-    // Step 2: Add placeholders for new references in correct order
     if (referencesHeadingPos >= 0) {
-      // For each missing reference, find the correct insertion position
       refNumbers.forEach((refNum) => {
         if (!existingRefs.has(refNum)) {
           const refNumInt = parseInt(refNum);
@@ -2375,7 +2219,6 @@ export default function TextEditor(props: TextEditorProps) {
             insertPos = referencesHeadingPos + headingNode.nodeSize;
           }
 
-          // Find the last existing reference that comes before this one
           let foundInsertPos = false;
           existingRefs.forEach((info, existingRefNum) => {
             const existingRefNumInt = parseInt(existingRefNum);
@@ -2384,7 +2227,6 @@ export default function TextEditor(props: TextEditorProps) {
               !isNaN(refNumInt) &&
               existingRefNumInt < refNumInt
             ) {
-              // This existing ref comes before the new one, insert after it
               const existingNode = doc.nodeAt(info.pos);
               if (
                 existingNode &&
@@ -2396,9 +2238,6 @@ export default function TextEditor(props: TextEditorProps) {
             }
           });
 
-          // If no existing reference comes before this one, but there are references after,
-          // we've already set insertPos to right after heading which is correct
-          // If this is larger than all existing refs, find the last one
           if (!foundInsertPos && existingRefs.size > 0) {
             let maxRefNum = -1;
             let maxRefPos = insertPos;
@@ -2411,7 +2250,6 @@ export default function TextEditor(props: TextEditorProps) {
             });
 
             if (maxRefNum >= 0 && refNumInt > maxRefNum) {
-              // This new ref comes after all existing refs
               const maxNode = doc.nodeAt(maxRefPos);
               if (maxNode) {
                 insertPos = maxRefPos + maxNode.nodeSize;
@@ -2437,7 +2275,6 @@ export default function TextEditor(props: TextEditorProps) {
           const node = editorInstance.schema.nodeFromJSON(nodeData);
           tr.insert(insertPos, node);
 
-          // Update existingRefs map so subsequent inserts know about this one
           existingRefs.set(refNum, { pos: insertPos, isPlaceholder: true });
 
           hasChanges = true;
@@ -2479,7 +2316,6 @@ export default function TextEditor(props: TextEditorProps) {
     const doc = instance.state.doc;
     const { from } = instance.state.selection;
 
-    // Collect all existing references with their IDs and positions
     const refs: Array<{
       pos: number;
       refId: string;
@@ -2490,7 +2326,6 @@ export default function TextEditor(props: TextEditorProps) {
 
     doc.descendants((node: any, pos: number) => {
       if (node.isText && node.marks) {
-        // Check for new Reference marks
         const refMark = node.marks.find(
           (mark: any) => mark.type.name === "reference"
         );
@@ -2503,7 +2338,6 @@ export default function TextEditor(props: TextEditorProps) {
             isLegacy: false
           });
         } else {
-          // Check for legacy superscript references
           const hasSuperscript = node.marks.some(
             (mark: any) => mark.type.name === "superscript"
           );
@@ -2513,7 +2347,7 @@ export default function TextEditor(props: TextEditorProps) {
             if (match) {
               refs.push({
                 pos,
-                refId: `ref-legacy-${pos}`, // Temporary ID for legacy refs
+                refId: `ref-legacy-${pos}`,
                 refNum: parseInt(match[1]),
                 textLength: text.length,
                 isLegacy: true
@@ -2524,10 +2358,8 @@ export default function TextEditor(props: TextEditorProps) {
       }
     });
 
-    // Sort by position in document
     refs.sort((a, b) => a.pos - b.pos);
 
-    // Find where to insert (what number should this be?)
     let newRefNum = 1;
     let insertIndex = refs.length; // Default to end
 
@@ -2543,16 +2375,13 @@ export default function TextEditor(props: TextEditorProps) {
       newRefNum = refs.length + 1;
     }
 
-    // Generate unique ID for this reference
     const newRefId = `ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Insert the new reference
     instance.commands.setReference({
       refId: newRefId,
       refNum: newRefNum
     });
 
-    // Now renumber ALL references that come after the insertion point
     setTimeout(() => {
       const currentDoc = instance.state.doc;
       const allRefs: Array<{
@@ -2565,7 +2394,6 @@ export default function TextEditor(props: TextEditorProps) {
 
       currentDoc.descendants((node: any, pos: number) => {
         if (node.isText && node.marks) {
-          // Check for new Reference marks
           const refMark = node.marks.find(
             (mark: any) => mark.type.name === "reference"
           );
@@ -2578,7 +2406,6 @@ export default function TextEditor(props: TextEditorProps) {
               isLegacy: false
             });
           } else {
-            // Check for legacy superscript references
             const hasSuperscript = node.marks.some(
               (mark: any) => mark.type.name === "superscript"
             );
@@ -2599,10 +2426,8 @@ export default function TextEditor(props: TextEditorProps) {
         }
       });
 
-      // Sort by position
       allRefs.sort((a, b) => a.pos - b.pos);
 
-      // Build a single transaction with all updates (from end to start to avoid position shifts)
       const tr = instance.state.tr;
       let hasChanges = false;
 
@@ -2612,7 +2437,6 @@ export default function TextEditor(props: TextEditorProps) {
 
         if (ref.refNum !== correctNum) {
           if (ref.isLegacy) {
-            // Convert legacy to Reference mark while renumbering
             const newRefId = `ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${i}`;
             const newMark = instance.schema.marks.reference.create({
               refId: newRefId,
@@ -2624,7 +2448,6 @@ export default function TextEditor(props: TextEditorProps) {
               instance.schema.text(`[${correctNum}]`, [newMark])
             );
           } else {
-            // Update existing Reference mark
             const newMark = instance.schema.marks.reference.create({
               refId: ref.refId,
               refNum: correctNum
@@ -2638,7 +2461,6 @@ export default function TextEditor(props: TextEditorProps) {
 
           hasChanges = true;
         } else if (ref.isLegacy) {
-          // Even if number is correct, convert legacy to Reference mark
           const newRefId = `ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${i}`;
           const newMark = instance.schema.marks.reference.create({
             refId: newRefId,
@@ -2653,12 +2475,10 @@ export default function TextEditor(props: TextEditorProps) {
         }
       }
 
-      // Dispatch the single transaction with all changes
       if (hasChanges) {
         instance.view.dispatch(tr);
       }
 
-      // Update references section
       updateReferencesSection(instance);
     }, 10);
   };
@@ -3090,7 +2910,6 @@ export default function TextEditor(props: TextEditorProps) {
     const newFullscreenState = !isFullscreen();
     setIsFullscreen(newFullscreenState);
 
-    // Update URL search param to persist state
     setSearchParams({ fullscreen: newFullscreenState ? "true" : undefined });
     const navigationElement = document.getElementById("navigation");
     if (navigationElement) {
@@ -3840,7 +3659,6 @@ export default function TextEditor(props: TextEditorProps) {
                     );
                     if (newHeading && newHeading.trim()) {
                       setReferencesHeading(newHeading.trim());
-                      // Update existing section if it exists
                       const instance = editor();
                       if (instance) {
                         updateReferencesSection(instance);

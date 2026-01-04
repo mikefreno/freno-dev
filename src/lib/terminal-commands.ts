@@ -18,7 +18,6 @@ export interface CommandContext {
 }
 
 export const createTerminalCommands = (context: CommandContext) => {
-  // Define available routes
   const routes = [
     { path: "/", name: "home" },
     { path: "/blog", name: "blog" },
@@ -99,7 +98,6 @@ export const createTerminalCommands = (context: CommandContext) => {
     clear: {
       action: () => {
         context.addToHistory("clear", "", "info");
-        // Clear will be handled by the component
       },
       description: "Clear terminal history"
     },
@@ -231,7 +229,6 @@ export const createTerminalCommands = (context: CommandContext) => {
     }
   };
 
-  // Add all cd variants for each route
   routes.forEach((route) => {
     commands[`cd ${route.name}`] = {
       action: () => context.navigate(route.path),

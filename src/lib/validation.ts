@@ -8,14 +8,11 @@ import { VALIDATION_CONFIG } from "~/config";
  * Validate email format
  */
 export function isValidEmail(email: string): boolean {
-  // Basic email format check
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return false;
   }
 
-  // Additional checks for invalid patterns
-  // Reject consecutive dots
   if (email.includes("..")) {
     return false;
   }
@@ -39,24 +36,20 @@ export function validatePassword(password: string): {
   const errors: string[] = [];
   let includesSpecial = false;
 
-  // Minimum length from config
   if (password.length < VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
     errors.push(
       `Password must be at least ${VALIDATION_CONFIG.MIN_PASSWORD_LENGTH} characters long`
     );
   }
 
-  // Require uppercase letter (if configured)
   if (VALIDATION_CONFIG.PASSWORD_REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
     errors.push("Password must contain at least one uppercase letter");
   }
 
-  // Require lowercase letter (always required for balanced security)
   if (!/[a-z]/.test(password)) {
     errors.push("Password must contain at least one lowercase letter");
   }
 
-  // Require number (if configured)
   if (VALIDATION_CONFIG.PASSWORD_REQUIRE_NUMBER && !/[0-9]/.test(password)) {
     errors.push("Password must contain at least one number");
   }
@@ -64,12 +57,11 @@ export function validatePassword(password: string): {
   if (/[^A-Za-z0-9]/.test(password)) {
     includesSpecial = true;
   }
-  // Require special character (if configured)
+
   if (VALIDATION_CONFIG.PASSWORD_REQUIRE_SPECIAL && !includesSpecial) {
     errors.push("Password must contain at least one special character");
   }
 
-  // Check for common weak passwords
   const commonPasswords = [
     "password",
     "1234",
@@ -94,7 +86,6 @@ export function validatePassword(password: string): {
     }
   }
 
-  // Calculate password strength
   let strength: PasswordStrength = "weak";
 
   if (errors.length === 0) {

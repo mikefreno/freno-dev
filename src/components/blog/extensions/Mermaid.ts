@@ -13,13 +13,11 @@ export const Mermaid = Node.create({
       content: {
         default: "",
         parseHTML: (element) => {
-          // Try to get code element
           const code = element.querySelector("code");
           if (code) {
             // Get text content, which strips out all HTML tags (including spans from syntax highlighting)
             return code.textContent || "";
           }
-          // Fallback to element's own text content
           return element.textContent || "";
         },
         renderHTML: (attributes) => {
@@ -191,15 +189,12 @@ export const Mermaid = Node.create({
         }
 
         try {
-          // Dynamic import to avoid bundling issues
           const mermaid = (await import("mermaid")).default;
           await mermaid.parse(content);
-          // Valid - green indicator
           statusIndicator.className =
             "absolute top-2 left-2 w-3 h-3 rounded-full bg-green opacity-0 group-hover:opacity-100 transition-opacity duration-200";
           statusIndicator.title = "Valid mermaid syntax";
         } catch (err) {
-          // Invalid - red indicator
           statusIndicator.className =
             "absolute top-2 left-2 w-3 h-3 rounded-full bg-red opacity-0 group-hover:opacity-100 transition-opacity duration-200";
           statusIndicator.title = `Invalid syntax: ${
@@ -208,7 +203,6 @@ export const Mermaid = Node.create({
         }
       };
 
-      // Run validation
       validateSyntax();
 
       // Edit button overlay - visible on mobile tap/selection, hover on desktop
@@ -240,22 +234,18 @@ export const Mermaid = Node.create({
         const pos = getPos();
         const { from, to } = editor.state.selection;
 
-        // Check if this node is selected
         const nodeIsSelected = from === pos && to === pos + node.nodeSize;
 
         if (nodeIsSelected !== isSelected) {
           isSelected = nodeIsSelected;
           if (isSelected) {
-            // Show button when selected (for mobile)
             editBtn.style.opacity = "1";
           } else {
-            // Hide button when not selected (reset to CSS control)
             editBtn.style.opacity = "";
           }
         }
       };
 
-      // Listen for selection changes
       const plugin = editor.view.state.plugins.find(
         (p: any) => p.spec?.key === "mermaidSelection"
       );
@@ -266,10 +256,8 @@ export const Mermaid = Node.create({
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
-              // Check selection periodically when visible
               updateInterval = setInterval(updateButtonVisibility, 100);
             } else {
-              // Stop checking when not visible
               if (updateInterval) {
                 clearInterval(updateInterval);
                 updateInterval = null;
@@ -282,7 +270,6 @@ export const Mermaid = Node.create({
 
       observer.observe(dom);
 
-      // Also check on touch
       dom.addEventListener("touchstart", () => {
         setTimeout(updateButtonVisibility, 50);
       });
@@ -299,7 +286,6 @@ export const Mermaid = Node.create({
             return false;
           }
           code.textContent = updatedNode.attrs.content || "";
-          // Re-validate on update
           validateSyntax();
           updateButtonVisibility();
           return true;

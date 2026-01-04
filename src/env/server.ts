@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const serverEnvSchema = z.object({
-  // Server-side environment variables
   NODE_ENV: z.enum(["development", "test", "production"]),
   ADMIN_EMAIL: z.string().min(1),
   ADMIN_ID: z.string().min(1),
@@ -35,10 +34,8 @@ const serverEnvSchema = z.object({
   INFILL_BEARER_TOKEN: z.string().min(1)
 });
 
-// Type inference
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
-// Validation function for server-side with detailed error messages
 export const validateServerEnv = (
   envVars: Record<string, string | undefined>
 ): ServerEnv => {
@@ -91,7 +88,6 @@ export const validateServerEnv = (
   }
 };
 
-// Validate and export environment variables directly
 const validateAndExportEnv = (): ServerEnv => {
   try {
     const validated = validateServerEnv(process.env);

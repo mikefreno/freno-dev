@@ -1,24 +1,8 @@
-/**
- * Comment System Utility Functions
- *
- * Shared utility functions for:
- * - Comment sorting algorithms
- * - Comment filtering and tree building
- * - Debouncing
- */
-
 import type { Comment, CommentReaction, SortingMode } from "~/types/comment";
 import { getSQLFormattedDate } from "./date-utils";
 
 export { getSQLFormattedDate };
 
-// ============================================================================
-// Comment Tree Utilities
-// ============================================================================
-
-/**
- * Gets all child comments for a given parent comment ID
- */
 export function getChildComments(
   parentCommentID: number,
   allComments: Comment[] | undefined
@@ -30,9 +14,6 @@ export function getChildComments(
   );
 }
 
-/**
- * Counts the total number of comments including all nested children
- */
 export function getTotalCommentCount(
   topLevelComments: Comment[],
   allComments: Comment[]
@@ -40,10 +21,6 @@ export function getTotalCommentCount(
   return allComments.length;
 }
 
-/**
- * Gets the nesting level of a comment in the tree
- * Top-level comments (parent_comment_id = -1 or null) are level 0
- */
 export function getCommentLevel(
   comment: Comment,
   allComments: Comment[]
@@ -66,17 +43,9 @@ export function getCommentLevel(
   return level;
 }
 
-// ============================================================================
-// Comment Sorting Algorithms
-// ============================================================================
-
 /**
- * @deprecated Server-side sorting is now implemented in the blog post route.
- * Comments are sorted by SQL queries for better performance.
- * This function remains for backward compatibility only.
- *
- * Calculates "hot" score for a comment based on votes and time
- * Uses logarithmic decay for older comments
+ * @deprecated Server-side SQL sorting preferred for performance
+ * Logarithmic decay formula: score / log(age + 2)
  */
 function calculateHotScore(
   upvotes: number,
@@ -88,17 +57,11 @@ function calculateHotScore(
   const commentTime = new Date(date).getTime();
   const ageInHours = (now - commentTime) / (1000 * 60 * 60);
 
-  // Logarithmic decay: score / log(age + 2)
-  // Adding 2 prevents division by zero for very new comments
   return score / Math.log10(ageInHours + 2);
 }
 
 /**
- * @deprecated Server-side sorting is now implemented in the blog post route.
- * Use SQL-based sorting instead for better performance.
- * This function remains for backward compatibility only.
- *
- * Counts upvotes for a comment from reaction map
+ * @deprecated Server-side SQL sorting preferred for performance
  */
 function getUpvoteCount(
   commentID: number,
@@ -111,11 +74,7 @@ function getUpvoteCount(
 }
 
 /**
- * @deprecated Server-side sorting is now implemented in the blog post route.
- * Use SQL-based sorting instead for better performance.
- * This function remains for backward compatibility only.
- *
- * Counts downvotes for a comment from reaction map
+ * @deprecated Server-side SQL sorting preferred for performance
  */
 function getDownvoteCount(
   commentID: number,
@@ -128,18 +87,7 @@ function getDownvoteCount(
 }
 
 /**
- * @deprecated Server-side sorting is now implemented in the blog post route.
- * Comments are now sorted by SQL queries in src/routes/blog/[title]/index.tsx
- * for better performance and reduced client-side processing.
- * This function remains for backward compatibility only.
- *
- * Sorts comments based on the selected sorting mode
- *
- * Modes:
- * - newest: Most recent first
- * - oldest: Oldest first
- * - highest_rated: Most upvotes minus downvotes
- * - hot: Combines votes and recency (Reddit-style)
+ * @deprecated Use server-side SQL sorting in routes/blog/[title]/index.tsx for better performance
  */
 export function sortComments(
   comments: Comment[],
@@ -190,20 +138,10 @@ export function sortComments(
   }
 }
 
-// ============================================================================
-// Validation Utilities
-// ============================================================================
-
-/**
- * Validates that a comment body meets requirements
- */
 export function isValidCommentBody(body: string): boolean {
   return body.trim().length > 0 && body.length <= 10000;
 }
 
-/**
- * Checks if a user can modify (edit/delete) a comment
- */
 export function canModifyComment(
   userID: string,
   commenterID: string,
@@ -214,9 +152,6 @@ export function canModifyComment(
   return userID === commenterID;
 }
 
-/**
- * Checks if a user can delete with database-level deletion
- */
 export function canDatabaseDelete(
   privilegeLevel: "admin" | "user" | "anonymous"
 ): boolean {

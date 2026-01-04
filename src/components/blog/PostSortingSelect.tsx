@@ -19,7 +19,6 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  // Derive selected from URL params instead of local state
   const selected = () => {
     const sortParam = searchParams.sort || "newest";
     return sorting.find((s) => s.val === sortParam) || sorting[0];
@@ -28,7 +27,6 @@ export default function PostSortingSelect(props: PostSortingSelectProps) {
   const handleSelect = (sort: { val: string; label: string }) => {
     setIsOpen(false);
 
-    // Build new URL preserving all existing params
     const params = new URLSearchParams(searchParams as Record<string, string>);
     params.set("sort", sort.val);
 

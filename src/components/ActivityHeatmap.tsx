@@ -10,22 +10,18 @@ export const ActivityHeatmap: Component<{
   contributions: ContributionDay[] | undefined;
   title: string;
 }> = (props) => {
-  // Generate last 12 weeks of days
   const weeks = createMemo(() => {
     const today = new Date();
     const weeksData: { date: string; count: number }[][] = [];
 
-    // Start from 12 weeks ago
     const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - 84); // 12 weeks
+    startDate.setDate(startDate.getDate() - 84);
 
-    // Create a map for quick lookup
     const contributionMap = new Map<string, number>();
     props.contributions?.forEach((c) => {
       contributionMap.set(c.date, c.count);
     });
 
-    // Generate weeks
     for (let week = 0; week < 12; week++) {
       const weekData: { date: string; count: number }[] = [];
 
@@ -68,7 +64,6 @@ export const ActivityHeatmap: Component<{
         when={props.contributions && props.contributions.length > 0}
         fallback={
           <div class="relative">
-            {/* Skeleton grid matching heatmap dimensions */}
             <div class="flex gap-[2px]">
               <For each={Array(12)}>
                 {() => (
@@ -80,7 +75,6 @@ export const ActivityHeatmap: Component<{
                 )}
               </For>
             </div>
-            {/* Centered spinner overlay */}
             <div class="absolute inset-0 top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2">
               <SkeletonBox class="-ml-2 h-8 w-8" />
             </div>

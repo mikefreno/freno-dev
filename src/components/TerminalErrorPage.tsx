@@ -39,7 +39,6 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
   let inputRef: HTMLInputElement | undefined;
   let footerRef: HTMLDivElement | undefined;
 
-  // Auto-scroll to bottom when history changes
   createEffect(() => {
     if (history().length > 0) {
       setTimeout(() => {

@@ -152,7 +152,6 @@ export const userRouter = createTRPCRouter({
 
       const { oldPassword, newPassword, newPasswordConfirmation } = input;
 
-      // Schema already validates password match, but double check
       if (newPassword !== newPasswordConfirmation) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -226,7 +225,6 @@ export const userRouter = createTRPCRouter({
 
       const { newPassword, newPasswordConfirmation } = input;
 
-      // Schema already validates password match, but double check
       if (newPassword !== newPasswordConfirmation) {
         throw new TRPCError({
           code: "BAD_REQUEST",

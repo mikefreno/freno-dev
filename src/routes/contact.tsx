@@ -80,7 +80,6 @@ const sendContactEmail = action(async (formData: FormData) => {
     }
   }
 
-  // Send email
   const apiKey = env.SENDINBLUE_KEY;
   const apiUrl = "https://api.sendinblue.com/v3/smtp/email";
 
@@ -117,7 +116,6 @@ const sendContactEmail = action(async (formData: FormData) => {
       }
     );
 
-    // Set cooldown cookie
     const exp = new Date(Date.now() + COOLDOWN_TIMERS.CONTACT_REQUEST_MS);
     setCookie("contactRequestSent", exp.toUTCString(), {
       expires: exp,
@@ -186,7 +184,6 @@ export default function ContactPage() {
   onMount(() => {
     setJsEnabled(true);
 
-    // Initialize countdown from server data
     const serverData = contactData();
     if (serverData?.remainingTime) {
       setCountDown(serverData.remainingTime);
@@ -197,7 +194,6 @@ export default function ContactPage() {
       timerIdRef = setInterval(() => calcRemainder(timer), 1000);
     }
 
-    // Fetch user data if authenticated
     api.user.getProfile
       .query()
       .then((userData) => {
@@ -205,11 +201,8 @@ export default function ContactPage() {
           setUser(userData);
         }
       })
-      .catch(() => {
-        // User not authenticated, no problem
-      });
+      .catch(() => {});
 
-    // Clear URL params after reading them (for better UX on refresh)
     if (searchParams.success || searchParams.error) {
       const timer = setTimeout(() => {
         const newUrl =
@@ -230,9 +223,7 @@ export default function ContactPage() {
     });
   });
 
-  // Progressive enhancement: JS-enhanced form submission
   const sendEmailTrigger = async (e: Event) => {
-    // Only intercept if JS is enabled
     if (!jsEnabled()) return;
 
     e.preventDefault();

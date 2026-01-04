@@ -60,7 +60,6 @@ export default function RequestPasswordResetPage() {
 
     const email = emailRef.value;
 
-    // Validate email
     if (!isValidEmail(email)) {
       setError("Invalid email address");
       return;
@@ -81,7 +80,6 @@ export default function RequestPasswordResetPage() {
         setShowSuccessMessage(true);
         setError("");
 
-        // Start countdown timer
         const timer = getClientCookie("passwordResetRequested");
         if (timer) {
           if (timerInterval) {
@@ -95,15 +93,12 @@ export default function RequestPasswordResetPage() {
         const errorMsg = result.error?.message || "Failed to send reset email";
         const errorCode = result.error?.data?.code;
 
-        // Handle rate limiting
         if (
           errorCode === "TOO_MANY_REQUESTS" ||
           errorMsg.includes("Too many attempts")
         ) {
           setError(errorMsg);
-        }
-        // Handle countdown not expired
-        else if (errorMsg.includes("countdown not expired")) {
+        } else if (errorMsg.includes("countdown not expired")) {
           setError("Please wait before requesting another reset email");
         } else {
           setError(errorMsg);
@@ -141,7 +136,6 @@ export default function RequestPasswordResetPage() {
         class="mt-4 flex w-full justify-center"
       >
         <div class="flex flex-col justify-center">
-          {/* Email Input */}
           <div class="input-group mx-4">
             <input
               ref={emailRef}
@@ -157,7 +151,6 @@ export default function RequestPasswordResetPage() {
             <label class="underlinedInputLabel">Enter Email</label>
           </div>
 
-          {/* Countdown Timer or Submit Button */}
           <Show
             when={countDown() > 0}
             fallback={
@@ -191,7 +184,6 @@ export default function RequestPasswordResetPage() {
         </div>
       </form>
 
-      {/* Success Message */}
       <div
         class={`${
           showSuccessMessage() ? "" : "opacity-0 select-none"
@@ -200,7 +192,6 @@ export default function RequestPasswordResetPage() {
         If email exists, you will receive an email shortly!
       </div>
 
-      {/* Error Message */}
       <Show when={error()}>
         <div class="mt-4 flex justify-center">
           <div
@@ -230,7 +221,6 @@ export default function RequestPasswordResetPage() {
         </div>
       </Show>
 
-      {/* Back to Login Link */}
       <div class="mt-6 flex justify-center">
         <A
           href="/login"

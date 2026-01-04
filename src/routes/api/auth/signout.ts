@@ -5,14 +5,13 @@ export async function POST() {
   "use server";
   const event = getEvent()!;
 
-  // Clear the userIDToken cookie (the actual session cookie)
   setCookie(event, "userIDToken", "", {
     path: "/",
     httpOnly: true,
-    secure: true, // Always enforce secure cookies
+    secure: true,
     sameSite: "lax",
-    maxAge: 0, // Expire immediately
-    expires: new Date(0) // Set expiry to past date
+    maxAge: 0,
+    expires: new Date(0)
   });
 
   return new Response(null, {

@@ -4,7 +4,6 @@ export interface FeatureFlags {
 
 export function getFeatureFlags(): FeatureFlags {
   return {
-    // TODO: Add feature flags here
     "beta-features": process.env.ENABLE_BETA_FEATURES === "true",
     "new-editor": false,
     "premium-content": true,

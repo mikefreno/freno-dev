@@ -4,7 +4,6 @@ import { onCleanup, onMount } from "solid-js";
 export default function Resume() {
   let iframeRef: HTMLIFrameElement | undefined;
 
-  // this error kept happening in production, so I added this to prevent it, idk what was happening
   onMount(() => {
     const handleError = (e: ErrorEvent) => {
       if (e.filename?.includes("resume.pdf") || e.message === "Script error.") {

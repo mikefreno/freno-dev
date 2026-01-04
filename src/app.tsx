@@ -27,21 +27,18 @@ function AppLayout(props: { children: any }) {
 
   let lastScrollY = 0;
 
-  // Use onMount to avoid hydration issues - window operations are client-only
   onMount(() => {
     const windowWidth = createWindowWidth();
 
     createEffect(() => {
       const currentIsMobile = isMobile(windowWidth());
 
-      // Show bars when switching to desktop
       if (!currentIsMobile) {
         setLeftBarVisible(true);
         setRightBarVisible(true);
       }
     });
 
-    // Hide leftbar on mobile after 500ms with translation animation
     const currentIsMobile = isMobile(windowWidth());
     if (currentIsMobile) {
       setTimeout(() => {
@@ -50,7 +47,6 @@ function AppLayout(props: { children: any }) {
     }
   });
 
-  // Auto-hide on scroll (mobile only)
   onMount(() => {
     const windowWidth = createWindowWidth();
 
@@ -59,7 +55,6 @@ function AppLayout(props: { children: any }) {
       const currentIsMobile = isMobile(windowWidth());
 
       if (currentIsMobile && currentScrollY > MOBILE_CONFIG.SCROLL_THRESHOLD) {
-        // Scrolling down past threshold - hide left bar on mobile
         if (currentScrollY > lastScrollY) {
           setLeftBarVisible(false);
         }
@@ -75,7 +70,6 @@ function AppLayout(props: { children: any }) {
     });
   });
 
-  // ESC key to close sidebars on mobile
   onMount(() => {
     const windowWidth = createWindowWidth();
 
@@ -99,7 +93,6 @@ function AppLayout(props: { children: any }) {
     });
   });
 
-  // Global swipe gestures to reveal/hide bars
   onMount(() => {
     const windowWidth = createWindowWidth();
     let touchStartX = 0;
@@ -117,7 +110,6 @@ function AppLayout(props: { children: any }) {
       const deltaY = touchEndY - touchStartY;
       const currentIsMobile = isMobile(windowWidth());
 
-      // Only trigger if horizontal swipe is dominant
       if (currentIsMobile && Math.abs(deltaX) > Math.abs(deltaY)) {
         if (deltaX > MOBILE_CONFIG.SWIPE_THRESHOLD) {
           setLeftBarVisible(true);
@@ -140,7 +132,6 @@ function AppLayout(props: { children: any }) {
     if (typeof window === "undefined") return;
     const currentIsMobile = isMobile(window.innerWidth);
 
-    // Only hide left bar on mobile when it's visible
     if (currentIsMobile && leftBarVisible()) {
       const target = e.target as HTMLElement;
       const isInteractive = target.closest(

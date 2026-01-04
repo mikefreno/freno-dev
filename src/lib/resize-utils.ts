@@ -12,7 +12,6 @@ export function createWindowWidth(debounceMs?: number): Accessor<number> {
   const [width, setWidth] = createSignal(initialWidth);
 
   onMount(() => {
-    // Sync to actual client width immediately on mount to avoid hydration mismatch
     setWidth(window.innerWidth);
 
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -86,7 +85,6 @@ export async function resizeImage(
     img.onload = () => {
       let { width, height } = img;
 
-      // Calculate new dimensions maintaining aspect ratio
       if (width > maxWidth || height > maxHeight) {
         const aspectRatio = width / height;
 
@@ -102,10 +100,8 @@ export async function resizeImage(
       canvas.width = width;
       canvas.height = height;
 
-      // Draw image on canvas with new dimensions
       ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert canvas to blob
       canvas.toBlob(
         (blob) => {
           if (blob) {
@@ -123,7 +119,6 @@ export async function resizeImage(
       reject(new Error("Failed to load image"));
     };
 
-    // Load image from file
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {

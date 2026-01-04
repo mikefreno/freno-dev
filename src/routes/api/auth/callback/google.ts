@@ -22,11 +22,9 @@ export async function GET(event: APIEvent) {
   }
 
   try {
-    // Create tRPC caller to invoke the googleCallback procedure
     const ctx = await createTRPCContext(event);
     const caller = appRouter.createCaller(ctx);
 
-    // Call the Google callback handler
     const result = await caller.auth.googleCallback({ code });
 
     if (result.success) {

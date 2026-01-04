@@ -37,7 +37,6 @@ const getPostByTitle = query(
     const userID = await getUserID(event.nativeEvent);
     const conn = ConnectionFactory();
 
-    // Handle by-id route: lookup post by ID and redirect to title-based URL
     if (title === "by-id") {
       const url = new URL(event.request.url);
       const id = url.searchParams.get("id");
@@ -128,7 +127,6 @@ const getPostByTitle = query(
       };
     }
 
-    // Build conditional evaluation context
     const conditionalContext = {
       isAuthenticated: userID !== null,
       privilegeLevel: privilegeLevel,
@@ -143,14 +141,11 @@ const getPostByTitle = query(
         post.body = parseConditionals(post.body, conditionalContext);
       } catch (error) {
         console.error("Error parsing conditionals in post body:", error);
-        // Fall back to showing original content
       }
     }
 
-    // Fetch comments with sorting
     let commentQuery = "SELECT * FROM Comment WHERE post_id = ?";
 
-    // Build ORDER BY clause based on sortBy parameter
     switch (sortBy) {
       case "newest":
         commentQuery += " ORDER BY date DESC";
@@ -159,7 +154,6 @@ const getPostByTitle = query(
         commentQuery += " ORDER BY date ASC";
         break;
       case "highest_rated":
-        // Calculate net score (upvotes - downvotes) for each comment
         commentQuery = `
         SELECT c.*,
           COALESCE((
@@ -177,7 +171,6 @@ const getPostByTitle = query(
       `;
         break;
       case "hot":
-        // Calculate hot score: (upvotes - downvotes) / log10(age_in_hours + 2)
         commentQuery = `
         SELECT c.*,
           (COALESCE((
@@ -201,16 +194,13 @@ const getPostByTitle = query(
       await conn.execute({ sql: commentQuery, args: [post.id] })
     ).rows;
 
-    // Fetch likes
     const likeQuery = "SELECT * FROM PostLike WHERE post_id = ?";
     const likes = (await conn.execute({ sql: likeQuery, args: [post.id] }))
       .rows;
 
-    // Fetch tags
     const tagQuery = "SELECT * FROM Tag WHERE post_id = ?";
     const tags = (await conn.execute({ sql: tagQuery, args: [post.id] })).rows;
 
-    // Build commenter map
     const commenterToCommentIDMap = new Map<string, number[]>();
     comments.forEach((comment: any) => {
       const prev = commenterToCommentIDMap.get(comment.commenter_id) || [];
@@ -220,7 +210,6 @@ const getPostByTitle = query(
     const commenterQuery =
       "SELECT email, display_name, image FROM User WHERE id = ?";
 
-    // Convert to serializable array format
     const userCommentArray: Array<[UserPublicData, number[]]> = [];
 
     for (const [key, value] of commenterToCommentIDMap.entries()) {
@@ -231,7 +220,6 @@ const getPostByTitle = query(
       }
     }
 
-    // Get reaction map as serializable array
     const reactionArray: Array<[number, CommentReaction[]]> = [];
     for (const comment of comments) {
       const reactionQuery =
@@ -243,7 +231,6 @@ const getPostByTitle = query(
       reactionArray.push([(comment as any).id, res.rows as CommentReaction[]]);
     }
 
-    // Filter top-level comments (preserve sort order from SQL)
     const topLevelComments = comments.filter(
       (c: any) => c.parent_comment_id == null
     );
@@ -283,7 +270,6 @@ export default function PostPage() {
     { deferStream: true }
   );
 
-  // Increment read count when post loads
   createEffect(() => {
     const postData = data();
     if (postData?.post?.id) {
@@ -310,7 +296,6 @@ export default function PostPage() {
         }
       >
         {(loadedData) => {
-          // Handle redirect for by-id route
           if ("redirect" in loadedData()) {
             return <Navigate href={(loadedData() as any).redirect} />;
           }
@@ -323,7 +308,6 @@ export default function PostPage() {
               {(p) => {
                 const postData = loadedData();
 
-                // Convert arrays back to Maps for component
                 const userCommentMap = new Map<UserPublicData, number[]>(
                   postData.userCommentArray || []
                 );
@@ -345,7 +329,6 @@ export default function PostPage() {
                     />
 
                     <div class="blog-overide relative -mt-16 overflow-x-hidden">
-                      {/* Fixed banner image background */}
                       <div class="fixed inset-0 top-0 left-0 z-0 aspect-auto max-h-3/4 w-full overflow-hidden brightness-75 md:ml-62.5 md:max-h-[50vh] md:w-[calc(100vw-500px)]">
                         <img
                           src={p().banner_photo || "/blueprint.jpg"}
@@ -368,7 +351,6 @@ export default function PostPage() {
                       </div>
 
                       <div class="z-10 pt-80 backdrop-blur-[0.01px] sm:pt-96 md:pt-[50vh]">
-                        {/* Content that slides over the fixed image */}
                         <div class="bg-base relative pb-24">
                           <div class="flex w-full flex-col justify-center pt-8 lg:flex-row lg:items-start lg:justify-between">
                             <div class="flex flex-col gap-2 px-4 md:px-8">
@@ -465,24 +447,12 @@ export default function PostPage() {
                               </div>
                             </Show>
                           </div>
-                          {/* Post body */}
+
                           <PostBodyClient
                             body={p().body}
                             hasCodeBlock={hasCodeBlock(p().body)}
                           />
 
-                          <Show when={postData.privilegeLevel === "admin"}>
-                            <div class="flex justify-center">
-                              <A
-                                class="border-blue bg-blue z-10 h-fit rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out hover:brightness-125 active:scale-90"
-                                href={`/blog/edit/${p().id}`}
-                              >
-                                Edit
-                              </A>
-                            </div>
-                          </Show>
-
-                          {/* Comments section */}
                           <div
                             id="comments"
                             class="mx-4 pt-12 pb-12 md:mx-8 lg:mx-12"

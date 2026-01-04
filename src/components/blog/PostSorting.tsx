@@ -21,7 +21,6 @@ export default function PostSorting(props: PostSortingProps) {
   const filteredPosts = createMemo(() => {
     let filtered = props.posts;
 
-    // Apply publication status filter (admin only)
     if (props.privilegeLevel === "admin" && props.status) {
       if (props.status === "published") {
         filtered = filtered.filter((post) => post.published === 1);
@@ -30,24 +29,20 @@ export default function PostSorting(props: PostSortingProps) {
       }
     }
 
-    // Build map of post_id -> tags for that post
     const postTags = new Map<number, Set<string>>();
     props.tags.forEach((tag) => {
       if (!postTags.has(tag.post_id)) {
         postTags.set(tag.post_id, new Set());
       }
-      // Tag values in DB have # prefix, remove it for comparison
       const tagWithoutHash = tag.value.startsWith("#")
         ? tag.value.slice(1)
         : tag.value;
       postTags.get(tag.post_id)!.add(tagWithoutHash);
     });
 
-    // WHITELIST MODE: Only show posts that have at least one of the included tags
     if (props.include !== undefined) {
       const includeList = props.include.split("|").filter(Boolean);
 
-      // Empty whitelist means show nothing
       if (includeList.length === 0) {
         return [];
       }
@@ -58,7 +53,6 @@ export default function PostSorting(props: PostSortingProps) {
         const tags = postTags.get(post.id);
         if (!tags || tags.size === 0) return false;
 
-        // Post must have at least one tag from the include list
         for (const tag of tags) {
           if (includeSet.has(tag)) {
             return true;
@@ -68,11 +62,9 @@ export default function PostSorting(props: PostSortingProps) {
       });
     }
 
-    // BLACKLIST MODE: Hide posts that have ANY of the filtered tags
     if (props.filters !== undefined) {
       const filterList = props.filters.split("|").filter(Boolean);
 
-      // Empty blacklist means show everything
       if (filterList.length === 0) {
         return filtered;
       }
@@ -81,19 +73,17 @@ export default function PostSorting(props: PostSortingProps) {
 
       return filtered.filter((post) => {
         const tags = postTags.get(post.id);
-        if (!tags || tags.size === 0) return true; // Show posts with no tags
+        if (!tags || tags.size === 0) return true;
 
-        // Post must NOT have any blacklisted tags
         for (const tag of tags) {
           if (filterSet.has(tag)) {
-            return false; // Hide this post
+            return false;
           }
         }
-        return true; // Show this post
+        return true;
       });
     }
 
-    // No filters: show all posts
     return filtered;
   });
 
@@ -105,7 +95,6 @@ export default function PostSorting(props: PostSortingProps) {
         sorted.reverse(); // Posts come oldest first from DB
         break;
       case "oldest":
-        // Already in oldest order from DB
         break;
       case "most_liked":
         sorted.sort((a, b) => (b.total_likes || 0) - (a.total_likes || 0));

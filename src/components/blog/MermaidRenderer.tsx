@@ -32,14 +32,12 @@ export default function MermaidRenderer() {
         const id = `mermaid-${index}-${Math.random().toString(36).substr(2, 9)}`;
         const { svg } = await mermaid.render(id, content);
 
-        // Replace the pre/code with rendered SVG
         const wrapper = document.createElement("div");
         wrapper.className = "mermaid-rendered";
         wrapper.innerHTML = svg;
         pre.replaceWith(wrapper);
       } catch (err) {
         console.error("Failed to render mermaid diagram:", err);
-        // Keep the original code block if rendering fails
         pre.classList.add("mermaid-error");
       }
     });

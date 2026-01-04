@@ -31,9 +31,6 @@ type RouterSection = {
 };
 
 const routerSections: RouterSection[] = [
-  // ============================================================
-  // Example Router
-  // ============================================================
   {
     name: "Example Router",
     description:
@@ -66,9 +63,6 @@ const routerSections: RouterSection[] = [
     ]
   },
 
-  // ============================================================
-  // Auth Router
-  // ============================================================
   {
     name: "Auth Router",
     description: "OAuth callbacks and email-based authentication",
@@ -190,9 +184,6 @@ const routerSections: RouterSection[] = [
     ]
   },
 
-  // ============================================================
-  // Database Router
-  // ============================================================
   {
     name: "Database - Comment Reactions",
     description: "Add/remove reactions to comments",
@@ -385,9 +376,6 @@ const routerSections: RouterSection[] = [
     ]
   },
 
-  // ============================================================
-  // User Router
-  // ============================================================
   {
     name: "User Router",
     description: "User profile management and account operations",
@@ -464,9 +452,6 @@ const routerSections: RouterSection[] = [
     ]
   },
 
-  // ============================================================
-  // Misc Router
-  // ============================================================
   {
     name: "Misc - Downloads",
     description: "Generate signed URLs for downloadable assets",
@@ -546,9 +531,6 @@ const routerSections: RouterSection[] = [
     ]
   },
 
-  // ============================================================
-  // Lineage Router
-  // ============================================================
   {
     name: "Lineage - JSON Service",
     description: "Static game data - no authentication required",
@@ -896,7 +878,6 @@ export default function TestPage() {
         }
       }
 
-      // Navigate the router path (handles nested routers like "lineage.auth")
       const routerParts = endpoint.router.split(".");
       let currentRouter: any = api;
 
@@ -914,7 +895,6 @@ export default function TestPage() {
         );
       }
 
-      // Call the tRPC procedure with proper method
       const data =
         endpoint.method === "query"
           ? await procedure.query(input)
@@ -997,7 +977,6 @@ export default function TestPage() {
                         </div>
                       </button>
 
-                      {/* Section Content */}
                       <Show when={isExpanded()}>
                         <div class="border-base space-y-4 border-t p-6">
                           <For each={section.endpoints}>
@@ -1009,7 +988,6 @@ export default function TestPage() {
                                 if (inputEdits()[key]) {
                                   return inputEdits()[key];
                                 }
-                                // Handle primitive values (string, number, boolean)
                                 if (typeof endpoint.sampleInput === "string") {
                                   return `"${endpoint.sampleInput}"`;
                                 }
@@ -1019,7 +997,6 @@ export default function TestPage() {
                                 ) {
                                   return String(endpoint.sampleInput);
                                 }
-                                // Handle objects and arrays
                                 return JSON.stringify(
                                   endpoint.sampleInput,
                                   null,
@@ -1029,7 +1006,6 @@ export default function TestPage() {
 
                               return (
                                 <div class="bg-surface2 border-surface1 rounded-lg border p-4">
-                                  {/* Endpoint Header */}
                                   <div class="mb-3 flex items-start justify-between">
                                     <div class="flex-1">
                                       <div class="flex items-center gap-2">
@@ -1070,7 +1046,6 @@ export default function TestPage() {
                                     </button>
                                   </div>
 
-                                  {/* Input Editor */}
                                   <Show when={hasInput}>
                                     <div class="mb-3">
                                       <label class="text-text mb-1 block text-xs font-semibold">
@@ -1090,7 +1065,6 @@ export default function TestPage() {
                                     </div>
                                   </Show>
 
-                                  {/* Error Display */}
                                   <Show when={errors()[key]}>
                                     <div class="mb-3 rounded border border-red-200 bg-red-50 p-3">
                                       <p class="text-sm font-semibold text-red-800">
@@ -1102,7 +1076,6 @@ export default function TestPage() {
                                     </div>
                                   </Show>
 
-                                  {/* Results Display */}
                                   <Show when={results()[key]}>
                                     <div class="rounded bg-gray-900 p-3">
                                       <p class="mb-2 text-xs font-semibold text-green-400">
@@ -1129,7 +1102,6 @@ export default function TestPage() {
               </For>
             </div>
 
-            {/* Footer Instructions */}
             <div class="bg-overlay2 mt-6 rounded-lg p-6 shadow-lg">
               <h2 class="text-crust mb-4 text-2xl font-bold">Testing Guide</h2>
 

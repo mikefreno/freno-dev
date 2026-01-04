@@ -27,7 +27,6 @@ export default function CommentSortingSelect(props: CommentSortingSelectProps) {
     props.setSorting(mode);
     setIsOpen(false);
 
-    // Update URL with sortBy parameter
     const url = new URL(window.location.href);
     url.searchParams.set("sortBy", mode);
     navigate(`${location.pathname}?${url.searchParams.toString()}#comments`, {

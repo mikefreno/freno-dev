@@ -26,20 +26,14 @@ function formatDomainName(url: string): string {
   return withoutWww.charAt(0).toUpperCase() + withoutWww.slice(1);
 }
 
-/**
- * Converts a banner photo URL to its thumbnail version
- * Replaces the filename with -small variant (e.g., image.jpg -> image-small.jpg)
- */
 function getThumbnailUrl(bannerPhoto: string | null): string {
   if (!bannerPhoto) return "/blueprint.jpg";
 
-  // Check if URL contains a file extension
   const match = bannerPhoto.match(/^(.+)(\.[^.]+)$/);
   if (match) {
     return `${match[1]}-small${match[2]}`;
   }
 
-  // Fallback to original if no extension found
   return bannerPhoto;
 }
 
@@ -77,7 +71,6 @@ export function RightBarContent() {
   };
 
   onMount(() => {
-    // Fetch all data client-side only to avoid hydration mismatch
     const fetchData = async () => {
       try {
         const [ghCommits, gtCommits, ghActivity, gtActivity] =
@@ -101,7 +94,6 @@ export function RightBarContent() {
       }
     };
 
-    // Defer API calls to next tick to allow initial render to complete first
     setTimeout(() => {
       fetchData();
     }, 0);
@@ -168,7 +160,6 @@ export function RightBarContent() {
         </ul>
       </Typewriter>
 
-      {/* Git Activity Section */}
       <hr class="border-overlay0" />
       <div class="flex min-w-0 flex-col gap-6 px-4 pt-6">
         <RecentCommits
@@ -266,28 +257,22 @@ export function LeftBar() {
   onMount(() => {
     setIsMounted(true);
 
-    // Set up window resize listener for reactive styling
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
     };
     window.addEventListener("resize", handleResize);
 
-    // Terminal-style appearance animation for "Get Lost" button
     const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
     const originalText = "What's this?";
     let glitchInterval: NodeJS.Timeout;
 
-    // Delay appearance to match terminal vibe
     setTimeout(() => {
-      // Make visible immediately so typing animation is visible
       setGetLostVisible(true);
 
-      // Type-in animation with random characters resolving
       let currentIndex = 0;
       const typeInterval = setInterval(() => {
         if (currentIndex <= originalText.length) {
           let displayText = originalText.substring(0, currentIndex);
-          // Add random trailing characters
           if (currentIndex < originalText.length) {
             const remaining = originalText.length - currentIndex;
             for (let i = 0; i < remaining; i++) {
@@ -301,14 +286,11 @@ export function LeftBar() {
           clearInterval(typeInterval);
           setGetLostText(originalText);
 
-          // Start regular glitch effect after typing completes
           glitchInterval = setInterval(() => {
             if (Math.random() > 0.9) {
-              // 10% chance to glitch
               let glitched = "";
               for (let i = 0; i < originalText.length; i++) {
                 if (Math.random() > 0.7) {
-                  // 30% chance each character glitches
                   glitched +=
                     glitchChars[Math.floor(Math.random() * glitchChars.length)];
                 } else {
@@ -323,11 +305,10 @@ export function LeftBar() {
             }
           }, 150);
         }
-      }, 140); // Type speed (higher is slower)
-    }, 500); // Initial delay before appearing
+      }, 140);
+    }, 500);
 
     if (ref) {
-      // Focus trap for accessibility on mobile
       const handleKeyDown = (e: KeyboardEvent) => {
         const isMobile = window.innerWidth < BREAKPOINTS.MOBILE;
 
@@ -346,13 +327,11 @@ export function LeftBar() {
           ] as HTMLElement;
 
           if (e.shiftKey) {
-            // Shift+Tab - going backwards
             if (document.activeElement === firstElement) {
               e.preventDefault();
               lastElement.focus();
             }
           } else {
-            // Tab - going forwards
             if (document.activeElement === lastElement) {
               e.preventDefault();
               firstElement.focus();
@@ -392,12 +371,9 @@ export function LeftBar() {
     }, 0);
   });
 
-  // Refetch user info whenever location changes
   createEffect(() => {
-    // Track location changes
     location.pathname;
 
-    // Only refetch if component is mounted
     if (isMounted()) {
       fetchUserInfo();
     }
@@ -433,7 +409,6 @@ export function LeftBar() {
       }}
       style={getMainNavStyles()}
     >
-      {/* Hamburger menu button - positioned at right edge of navbar */}
       <button
         onClick={() => setLeftBarVisible(!leftBarVisible())}
         class="hamburger-menu-btn absolute top-4 -right-14 z-9999 rounded-md p-2 shadow-md backdrop-blur-2xl transition-transform duration-600 ease-in-out hover:scale-110"
@@ -442,7 +417,7 @@ export function LeftBar() {
         }}
         aria-label="Toggle navigation menu"
         style={{
-          display: "none" // Hidden by default, shown via media query for non-touch devices
+          display: "none"
         }}
       >
         <svg
@@ -507,7 +482,6 @@ export function LeftBar() {
                             alt="post-cover"
                             class="float-right mb-1 ml-2 h-12 w-16 rounded object-cover"
                             onError={(e) => {
-                              // Fallback to full banner if thumbnail doesn't exist
                               const img = e.currentTarget;
                               if (
                                 img.src !==
@@ -537,7 +511,6 @@ export function LeftBar() {
             </div>
           </div>
 
-          {/* Navigation Links */}
           <div class="mt-auto">
             <Typewriter keepAlive={false}>
               <ul class="flex flex-col gap-4 pt-6">
@@ -591,7 +564,6 @@ export function LeftBar() {
               </ul>
             </Typewriter>
 
-            {/* Get Lost button - outside Typewriter to allow glitch effect */}
             <ul class="pt-4 pb-6">
               <li
                 class="hover:text-subtext0 w-fit transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"

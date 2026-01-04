@@ -68,7 +68,6 @@ export default function PasswordStrengthMeter(
       });
     }
 
-    // Always show special character as optional/recommended
     reqs.push({
       label: "One special character\n(recommended)",
       test: (pwd) => /[^A-Za-z0-9]/.test(pwd),

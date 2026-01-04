@@ -29,7 +29,6 @@ export default function TagSelector(props: TagSelectorProps) {
   const currentInclude = () =>
     searchParams.include?.split("|").filter(Boolean) || [];
 
-  // Get currently selected tags based on mode
   const selectedTags = () => {
     if (filterMode() === "whitelist") {
       return currentInclude();
@@ -38,14 +37,12 @@ export default function TagSelector(props: TagSelectorProps) {
     }
   };
 
-  // Sync filter mode with URL params and ensure one is always present
   createEffect(() => {
     if ("include" in searchParams) {
       setFilterMode("whitelist");
     } else if ("filter" in searchParams) {
       setFilterMode("blacklist");
     } else {
-      // No filter param exists, default to blacklist mode with empty filter
       const params = new URLSearchParams(
         searchParams as Record<string, string>
       );
@@ -66,7 +63,6 @@ export default function TagSelector(props: TagSelectorProps) {
     Object.keys(props.tagMap).map((key) => key.slice(1))
   );
 
-  // Check if a tag is currently selected
   const isTagChecked = (tag: string) => {
     return selectedTags().includes(tag);
   };
@@ -106,26 +102,21 @@ export default function TagSelector(props: TagSelectorProps) {
     let newSelected: string[];
 
     if (isChecked) {
-      // Add tag to selection
       newSelected = [...currentSelected, tag];
     } else {
-      // Remove tag from selection
       newSelected = currentSelected.filter((t) => t !== tag);
     }
 
-    // Build URL preserving all existing params
     const params = new URLSearchParams(searchParams as Record<string, string>);
     const paramName = filterMode() === "whitelist" ? "include" : "filter";
     const otherParamName = filterMode() === "whitelist" ? "filter" : "include";
 
-    // Remove the other mode's param
     params.delete(otherParamName);
 
     if (newSelected.length > 0) {
       const paramValue = newSelected.join("|");
       params.set(paramName, paramValue);
     } else {
-      // Keep empty param to preserve mode (especially important for whitelist)
       params.set(paramName, "");
     }
 
@@ -137,14 +128,11 @@ export default function TagSelector(props: TagSelectorProps) {
     const paramName = filterMode() === "whitelist" ? "include" : "filter";
     const otherParamName = filterMode() === "whitelist" ? "filter" : "include";
 
-    // Remove the other mode's param
     params.delete(otherParamName);
 
     if (allChecked()) {
-      // Uncheck all: keep empty param to preserve mode
       params.set(paramName, "");
     } else {
-      // Check all: select all tags
       const allTags = allTagKeys().join("|");
       params.set(paramName, allTags);
     }
@@ -153,7 +141,6 @@ export default function TagSelector(props: TagSelectorProps) {
   };
 
   const toggleFilterMode = () => {
-    // Get current tags BEFORE changing mode
     const currentSelected = selectedTags();
 
     const newMode = filterMode() === "whitelist" ? "blacklist" : "whitelist";
@@ -164,14 +151,12 @@ export default function TagSelector(props: TagSelectorProps) {
     const newParamName = newMode === "whitelist" ? "include" : "filter";
     const oldParamName = newMode === "whitelist" ? "filter" : "include";
 
-    // Remove old param and set new one
     params.delete(oldParamName);
 
     if (currentSelected.length > 0) {
       const paramValue = currentSelected.join("|");
       params.set(newParamName, paramValue);
     } else {
-      // Always keep the param, even if empty
       params.set(newParamName, "");
     }
 

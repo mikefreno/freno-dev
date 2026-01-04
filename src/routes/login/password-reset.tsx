@@ -28,7 +28,6 @@ export default function PasswordResetPage() {
   let newPasswordRef: HTMLInputElement | undefined;
   let newPasswordConfRef: HTMLInputElement | undefined;
 
-  // Get token from URL
   const token = searchParams.token;
 
   createEffect(() => {
@@ -50,7 +49,6 @@ export default function PasswordResetPage() {
     const newPassword = newPasswordRef.value;
     const newPasswordConf = newPasswordConfRef.value;
 
-    // Validate password
     const passwordValidation = validatePassword(newPassword);
     if (!passwordValidation.isValid) {
       setError(passwordValidation.errors[0] || "Invalid password");
@@ -140,7 +138,6 @@ export default function PasswordResetPage() {
     passwordLengthBlurCheck();
   };
 
-  // Render countdown timer
   const renderTime = (timeRemaining: number) => {
     if (timeRemaining === 0) {
       navigate("/login");
@@ -171,7 +168,6 @@ export default function PasswordResetPage() {
           class="mt-4 flex w-full justify-center"
         >
           <div class="flex w-full max-w-md flex-col justify-center px-4">
-            {/* New Password Input */}
             <div class="flex justify-center">
               <div class="input-group mx-4 flex">
                 <input
@@ -218,7 +214,6 @@ export default function PasswordResetPage() {
               </button>
             </div>
 
-            {/* Password Length Warning */}
             <div
               class={`${
                 showPasswordLengthWarning() ? "" : "opacity-0 select-none"
@@ -228,7 +223,6 @@ export default function PasswordResetPage() {
               {VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
             </div>
 
-            {/* Password Confirmation Input */}
             <div class="-mt-4 flex justify-center">
               <div class="input-group mx-4 flex">
                 <input
@@ -275,7 +269,6 @@ export default function PasswordResetPage() {
               </button>
             </div>
 
-            {/* Password Mismatch Warning */}
             <div
               class={`${
                 !passwordsMatch() &&
@@ -290,7 +283,6 @@ export default function PasswordResetPage() {
               Passwords do not match!
             </div>
 
-            {/* Countdown Timer or Submit Button */}
             <Show
               when={countDown()}
               fallback={
@@ -323,14 +315,12 @@ export default function PasswordResetPage() {
           </div>
         </form>
 
-        {/* Error Message */}
         <Show when={error() && !showRequestNewEmail()}>
           <div class="mt-4 flex justify-center">
             <div class="text-red text-sm italic">{error()}</div>
           </div>
         </Show>
 
-        {/* Token Expired Message */}
         <div
           class={`${
             showRequestNewEmail() ? "" : "opacity-0 select-none"
@@ -345,7 +335,6 @@ export default function PasswordResetPage() {
           </A>
         </div>
 
-        {/* Back to Login Link */}
         <Show when={!countDown()}>
           <div class="mt-6 flex justify-center">
             <A

@@ -442,7 +442,6 @@ export const databaseRouter = createTRPCRouter({
       try {
         const conn = ConnectionFactory();
 
-        // Check if post is being published for the first time
         let shouldSetPublishDate = false;
         if (input.published !== undefined && input.published !== null) {
           const currentPostQuery = await conn.execute({
@@ -451,7 +450,6 @@ export const databaseRouter = createTRPCRouter({
           });
           const currentPost = currentPostQuery.rows[0] as any;
 
-          // Set publish date if transitioning from unpublished to published and date is null
           if (
             currentPost &&
             !currentPost.published &&
@@ -500,14 +498,12 @@ export const databaseRouter = createTRPCRouter({
           first = false;
         }
 
-        // Set date if publishing for the first time
         if (shouldSetPublishDate) {
           query += first ? "date = ?" : ", date = ?";
           params.push(new Date().toISOString());
           first = false;
         }
 
-        // Always update last_edited_date
         query += first ? "last_edited_date = ?" : ", last_edited_date = ?";
         params.push(new Date().toISOString());
         first = false;
@@ -581,10 +577,6 @@ export const databaseRouter = createTRPCRouter({
     }
   }),
 
-  // ============================================================
-  // Post Likes Routes
-  // ============================================================
-
   addPostLike: publicProcedure
     .input(togglePostLikeMutationSchema)
     .mutation(async ({ input }) => {
@@ -639,10 +631,6 @@ export const databaseRouter = createTRPCRouter({
         });
       }
     }),
-
-  // ============================================================
-  // User Routes
-  // ============================================================
 
   getUserById: publicProcedure
     .input(getUserByIdSchema)

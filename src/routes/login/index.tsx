@@ -40,7 +40,6 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Derive state directly from URL parameters (no signals needed)
   const register = () => searchParams.mode === "register";
   const usePassword = () => searchParams.auth === "password";
 
@@ -62,7 +61,6 @@ export default function LoginPage() {
   let rememberMeRef: HTMLInputElement | undefined;
   let timerInterval: number | undefined;
 
-  // Environment variables
   const googleClientId = env.VITE_GOOGLE_CLIENT_ID;
   const githubClientId = env.VITE_GITHUB_CLIENT_ID;
   const domain = env.VITE_DOMAIN || "https://www.freno.me";
@@ -124,7 +122,6 @@ export default function LoginPage() {
 
     try {
       if (register()) {
-        // Registration flow
         if (!emailRef || !passwordRef || !passwordConfRef) {
           setError("Please fill in all fields");
           setLoading(false);
@@ -154,7 +151,6 @@ export default function LoginPage() {
           return;
         }
 
-        // Call registration endpoint
         const response = await fetch("/api/trpc/auth.emailRegistration", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -176,15 +172,12 @@ export default function LoginPage() {
             "Registration failed";
           const errorCode = result.error?.data?.code;
 
-          // Check for rate limiting
           if (
             errorCode === "TOO_MANY_REQUESTS" ||
             errorMsg.includes("Too many attempts")
           ) {
             setError(errorMsg);
-          }
-          // Check for duplicate email
-          else if (
+          } else if (
             errorMsg.includes("duplicate") ||
             errorMsg.includes("already exists")
           ) {
@@ -194,7 +187,6 @@ export default function LoginPage() {
           }
         }
       } else if (usePassword()) {
-        // Password login flow
         if (!emailRef || !passwordRef || !rememberMeRef) {
           setError("Please fill in all fields");
           setLoading(false);
@@ -219,32 +211,25 @@ export default function LoginPage() {
             navigate("/account", { replace: true });
           }, 500);
         } else {
-          // Handle specific error types
           const errorMessage = result.error?.message || "";
           const errorCode = result.error?.data?.code;
 
-          // Check for rate limiting
           if (
             errorCode === "TOO_MANY_REQUESTS" ||
             errorMessage.includes("Too many attempts")
           ) {
             setError(errorMessage);
-          }
-          // Check for account lockout
-          else if (
+          } else if (
             errorCode === "FORBIDDEN" ||
             errorMessage.includes("Account locked") ||
             errorMessage.includes("Account is locked")
           ) {
             setError(errorMessage);
-          }
-          // Generic login failure
-          else {
+          } else {
             setShowPasswordError(true);
           }
         }
       } else {
-        // Email link login flow
         if (!emailRef || !rememberMeRef) {
           setError("Please enter your email");
           setLoading(false);
@@ -287,7 +272,6 @@ export default function LoginPage() {
             "Failed to send email";
           const errorCode = result.error?.data?.code;
 
-          // Check for rate limiting or countdown not expired
           if (
             errorCode === "TOO_MANY_REQUESTS" ||
             errorMsg.includes("countdown not expired") ||
@@ -342,9 +326,7 @@ export default function LoginPage() {
         content="Sign in to your account or register for a new account to access personalized features and manage your profile."
       />
       <div class="flex h-dvh flex-row justify-evenly">
-        {/* Main content */}
         <div class="relative pt-12 md:pt-24">
-          {/* Error message */}
           <Show when={error()}>
             <div class="border-maroon bg-red mb-4 w-full max-w-md rounded-lg border px-4 py-3 text-center">
               <Show when={error() === "passwordMismatch"}>
@@ -389,12 +371,10 @@ export default function LoginPage() {
             </div>
           </Show>
 
-          {/* Title */}
           <div class="py-2 pl-6 text-2xl md:pl-0">
             {register() ? "Register" : "Login"}
           </div>
 
-          {/* Toggle Register/Login */}
           <Show
             when={!register()}
             fallback={
@@ -420,9 +400,7 @@ export default function LoginPage() {
             </div>
           </Show>
 
-          {/* Form */}
           <form onSubmit={formHandler} class="flex flex-col px-2 py-4">
-            {/* Email input */}
             <div class="flex justify-center">
               <div class="input-group mx-4">
                 <input
@@ -438,7 +416,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Password input - shown for login with password or registration */}
             <Show when={usePassword() || register()}>
               <div class="-mt-4 flex justify-center">
                 <div class="input-group mx-4 flex">
@@ -485,14 +462,12 @@ export default function LoginPage() {
               </div>
             </Show>
 
-            {/* Password strength meter - shown only for registration */}
             <Show when={register()}>
               <div class="mx-auto flex justify-center px-4 py-2">
                 <PasswordStrengthMeter password={password()} />
               </div>
             </Show>
 
-            {/* Password confirmation - shown only for registration */}
             <Show when={register()}>
               <div class="flex justify-center">
                 <div class="input-group mx-4">
@@ -550,13 +525,11 @@ export default function LoginPage() {
               </div>
             </Show>
 
-            {/* Remember Me checkbox */}
             <div class="mx-auto flex pt-4">
               <input type="checkbox" class="my-auto" ref={rememberMeRef} />
               <div class="my-auto px-2 text-sm font-normal">Remember Me</div>
             </div>
 
-            {/* Error/Success messages */}
             <div
               class={`${
                 showPasswordError()
@@ -574,7 +547,6 @@ export default function LoginPage() {
               </Show>
             </div>
 
-            {/* Submit button or countdown timer */}
             <div class="flex justify-center py-4">
               <Show
                 when={!register() && !usePassword() && countDown() > 0}
@@ -607,7 +579,6 @@ export default function LoginPage() {
                 </CountdownCircleTimer>
               </Show>
 
-              {/* Toggle password/email link */}
               <Show when={!register() && !usePassword()}>
                 <A
                   href="/login?auth=password"
@@ -627,7 +598,6 @@ export default function LoginPage() {
             </div>
           </form>
 
-          {/* Password reset link */}
           <Show when={usePassword()}>
             <div class="pb-4 text-center text-sm">
               Trouble Logging In?{" "}
@@ -640,7 +610,6 @@ export default function LoginPage() {
             </div>
           </Show>
 
-          {/* Email sent confirmation */}
           <div
             class={`${
               emailSent() ? "" : "user-select opacity-0"
@@ -649,10 +618,8 @@ export default function LoginPage() {
             <Show when={emailSent()}>Email Sent!</Show>
           </div>
 
-          {/* Or divider */}
           <div class="rule-around text-center">Or</div>
 
-          {/* OAuth buttons */}
           <div class="my-2 flex justify-center">
             <div class="mx-auto mb-4 flex flex-col">
               {/* Google OAuth */}

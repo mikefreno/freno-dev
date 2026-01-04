@@ -28,10 +28,6 @@ const assets: Record<string, string> = {
 };
 
 export const miscRouter = createTRPCRouter({
-  // ============================================================
-  // Downloads endpoint
-  // ============================================================
-
   getDownloadUrl: publicProcedure
     .input(z.object({ asset_name: z.string() }))
     .query(async ({ input }) => {
@@ -73,10 +69,6 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  // ============================================================
-  // S3 Operations
-  // ============================================================
-
   getPreSignedURL: publicProcedure
     .input(
       z.object({
@@ -99,10 +91,10 @@ export const miscRouter = createTRPCRouter({
 
         const sanitizeForS3 = (str: string) => {
           return str
-            .replace(/\s+/g, "-") // Replace spaces with hyphens
-            .replace(/[^\w\-\.]/g, "") // Remove special characters except hyphens, dots, and word chars
-            .replace(/\-+/g, "-") // Replace multiple hyphens with single hyphen
-            .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+            .replace(/\s+/g, "-")
+            .replace(/[^\w\-\.]/g, "")
+            .replace(/\-+/g, "-")
+            .replace(/^-+|-+$/g, "");
         };
 
         const sanitizedTitle = sanitizeForS3(input.title);
@@ -210,10 +202,6 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  // ============================================================
-  // Password Hashing
-  // ============================================================
-
   hashPassword: publicProcedure
     .input(z.object({ password: z.string().min(8) }))
     .mutation(async ({ input }) => {
@@ -248,10 +236,6 @@ export const miscRouter = createTRPCRouter({
         });
       }
     }),
-
-  // ============================================================
-  // Contact Form
-  // ============================================================
 
   sendContactRequest: publicProcedure
     .input(
@@ -324,7 +308,6 @@ export const miscRouter = createTRPCRouter({
 
         return { message: "email sent" };
       } catch (error) {
-        // Provide specific error messages for different failure types
         if (error instanceof TimeoutError) {
           console.error("Contact form email timeout:", error.message);
           throw new TRPCError({
@@ -359,10 +342,6 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  // ============================================================
-  // Account Deletion Request
-  // ============================================================
-
   sendDeletionRequestEmail: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
@@ -384,7 +363,6 @@ export const miscRouter = createTRPCRouter({
       const apiKey = env.SENDINBLUE_KEY;
       const apiUrl = "https://api.sendinblue.com/v3/smtp/email";
 
-      // Email to admin
       const sendinblueMyData = {
         sender: {
           name: "freno.me",
@@ -395,7 +373,6 @@ export const miscRouter = createTRPCRouter({
         subject: "Life and Lineage Acct Deletion"
       };
 
-      // Email to user
       const sendinblueUserData = {
         sender: {
           name: "freno.me",
@@ -407,7 +384,6 @@ export const miscRouter = createTRPCRouter({
       };
 
       try {
-        // Send both emails with retry logic
         await Promise.all([
           fetchWithRetry(
             async () => {
@@ -459,7 +435,6 @@ export const miscRouter = createTRPCRouter({
 
         return { message: "request sent" };
       } catch (error) {
-        // Provide specific error messages
         if (error instanceof TimeoutError) {
           console.error("Deletion request email timeout:", error.message);
           throw new TRPCError({

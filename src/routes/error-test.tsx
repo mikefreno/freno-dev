@@ -3,7 +3,6 @@ import { createSignal, onMount } from "solid-js";
 export default function ErrorTest() {
   const [shouldCrash, setShouldCrash] = createSignal(false);
 
-  // Crash on mount if flag is set
   if (shouldCrash()) {
     throw new Error("Test error - Error boundary triggered!");
   }

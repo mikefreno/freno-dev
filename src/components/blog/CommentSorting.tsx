@@ -8,14 +8,12 @@ export default function CommentSorting(props: CommentSortingProps) {
     new Map(props.topLevelComments?.map((comment) => [comment.id, true]))
   );
 
-  // Update showing block when top level comments change
   createEffect(() => {
     setShowingBlock(
       new Map(props.topLevelComments?.map((comment) => [comment.id, true]))
     );
   });
 
-  // Reset clickedOnce after timeout
   createEffect(() => {
     if (clickedOnce()) {
       setTimeout(() => setClickedOnce(false), 300);
@@ -34,7 +32,6 @@ export default function CommentSorting(props: CommentSortingProps) {
     }
   };
 
-  // Comments are already sorted from server, no need for client-side sorting
   return (
     <For each={props.topLevelComments}>
       {(topLevelComment) => (

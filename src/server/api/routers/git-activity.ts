@@ -226,7 +226,6 @@ export const gitActivityRouter = createTRPCRouter({
       });
     }),
 
-  // Get GitHub contribution activity (for heatmap)
   getGitHubActivity: publicProcedure.query(async () => {
     return withCacheAndStale(
       "github-activity",
@@ -306,7 +305,6 @@ export const gitActivityRouter = createTRPCRouter({
     });
   }),
 
-  // Get Gitea contribution activity (for heatmap)
   getGiteaActivity: publicProcedure.query(async () => {
     return withCacheAndStale(
       "gitea-activity",

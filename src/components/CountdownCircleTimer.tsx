@@ -19,7 +19,6 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
     props.initialRemainingTime ?? props.duration
   );
 
-  // Calculate progress (0 to 1)
   const progress = () => remainingTime() / props.duration;
   const strokeDashoffset = () => circumference * (1 - progress());
 
@@ -62,7 +61,6 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
         height={props.size}
         style={{ transform: "rotate(-90deg)" }}
       >
-        {/* Background circle */}
         <circle
           cx={props.size / 2}
           cy={props.size / 2}
@@ -71,7 +69,6 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
           stroke="#e5e7eb"
           stroke-width={props.strokeWidth}
         />
-        {/* Progress circle */}
         <circle
           cx={props.size / 2}
           cy={props.size / 2}
@@ -84,7 +81,6 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
           stroke-linecap="round"
         />
       </svg>
-      {/* Timer text in center */}
       <div
         style={{
           position: "absolute",

@@ -21,7 +21,6 @@ export function Typewriter(props: {
 
     containerRef.style.position = "relative";
 
-    // FIRST: Walk DOM and split text into character spans
     const textNodes: { node: Text; text: string; startIndex: number }[] = [];
     let totalChars = 0;
 
@@ -36,12 +35,10 @@ export function Typewriter(props: {
           });
           totalChars += text.length;
 
-          // Replace text with spans for each character
           const span = document.createElement("span");
           text.split("").forEach((char, i) => {
             const charSpan = document.createElement("span");
             charSpan.textContent = char;
-            // Don't set opacity here - CSS will handle it based on data-typewriter state
             charSpan.setAttribute(
               "data-char-index",
               String(totalChars - text.length + i)
@@ -57,21 +54,18 @@ export function Typewriter(props: {
 
     walkDOM(containerRef);
 
-    // Mark as animated AFTER DOM manipulation - this triggers CSS to hide characters
     setAnimated(true);
 
     containerRef.setAttribute("data-typewriter-ready", "true");
 
-    // Listen for animation end to hide cursor
     const handleAnimationEnd = () => {
       setShouldHide(true);
       cursorRef?.removeEventListener("animationend", handleAnimationEnd);
     };
 
     const startReveal = () => {
-      setIsTyping(true); // Switch to typing cursor
+      setIsTyping(true);
 
-      // Animate revealing characters
       let currentIndex = 0;
       const speed = props.speed || 30;
 
@@ -88,7 +82,6 @@ export function Typewriter(props: {
               const rect = charSpan.getBoundingClientRect();
               const containerRect = containerRef.getBoundingClientRect();
 
-              // Position cursor at the end of the current character
               cursorRef.style.left = `${rect.right - containerRect.left}px`;
               cursorRef.style.top = `${rect.top - containerRect.top}px`;
               cursorRef.style.height = `${charSpan.offsetHeight}px`;
@@ -98,15 +91,11 @@ export function Typewriter(props: {
           currentIndex++;
           setTimeout(revealNextChar, 1000 / speed);
         } else {
-          // Typing finished, switch to block cursor
           setIsTyping(false);
 
-          // Start keepAlive timer if it's a number
           if (typeof keepAlive === "number") {
-            // Attach animation end listener
             cursorRef?.addEventListener("animationend", handleAnimationEnd);
 
-            // Trigger the animation with finite iteration count
             const durationSeconds = keepAlive / 1000;
             const iterations = Math.ceil(durationSeconds);
             if (cursorRef) {

@@ -427,7 +427,6 @@ export const lineageDatabaseRouter = createTRPCRouter({
                 `Failed to delete database ${db_name} in cron job:`,
                 error
               );
-              // Continue with other deletions even if one fails
             }
           }
         } else {
@@ -455,7 +454,6 @@ export const lineageDatabaseRouter = createTRPCRouter({
               `Failed to delete database ${db_name} in cron job:`,
               error
             );
-            // Continue with other deletions even if one fails
           }
         }
       }

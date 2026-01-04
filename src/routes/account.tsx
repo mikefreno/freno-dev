@@ -123,7 +123,6 @@ export default function AccountPage() {
     }
   });
 
-  // Profile image handlers
   const handleImageDrop = (acceptedFiles: File[]) => {
     acceptedFiles.forEach((file: File) => {
       setProfileImage(file);
@@ -184,7 +183,6 @@ export default function AccountPage() {
         setProfileImageStateChange(false);
         setTimeout(() => setShowImageSuccess(false), 3000);
 
-        // Update preSetHolder with new image
         setPreSetHolder(imageUrl || null);
       } else {
         alert("Error updating profile image!");
@@ -197,7 +195,6 @@ export default function AccountPage() {
     }
   };
 
-  // Email update handler
   const setEmailTrigger = async (e: Event) => {
     e.preventDefault();
     if (!emailRef) return;
@@ -231,7 +228,6 @@ export default function AccountPage() {
     }
   };
 
-  // Display name update handler
   const setDisplayNameTrigger = async (e: Event) => {
     e.preventDefault();
     if (!displayNameRef) return;
@@ -260,14 +256,12 @@ export default function AccountPage() {
     }
   };
 
-  // Password change/set handler
   const handlePasswordSubmit = async (e: Event) => {
     e.preventDefault();
     const userProfile = currentUser();
     if (!userProfile) return;
 
     if (userProfile.hasPassword) {
-      // Change password (requires old password)
       if (!oldPasswordRef || !newPasswordRef || !newPasswordConfRef) return;
 
       const oldPassword = oldPasswordRef.value;
@@ -316,7 +310,6 @@ export default function AccountPage() {
         setPasswordChangeLoading(false);
       }
     } else {
-      // Set password (first time for OAuth users)
       if (!newPasswordRef || !newPasswordConfRef) return;
 
       const newPassword = newPasswordRef.value;
@@ -348,7 +341,6 @@ export default function AccountPage() {
 
         const result = await response.json();
         if (response.ok && result.result?.data?.success) {
-          // Refresh user data to show hasPassword = true
           const profileResponse = await fetch("/api/trpc/user.getProfile");
           const profileResult = await profileResponse.json();
           if (profileResult.result?.data) {
@@ -370,7 +362,6 @@ export default function AccountPage() {
     }
   };
 
-  // Delete account handler
   const deleteAccountTrigger = async (e: Event) => {
     e.preventDefault();
     if (!deleteAccountPasswordRef) return;
@@ -400,7 +391,6 @@ export default function AccountPage() {
     }
   };
 
-  // Resend email verification
   const sendEmailVerification = async () => {
     const userProfile = currentUser();
     if (!userProfile?.email) return;
@@ -460,7 +450,6 @@ export default function AccountPage() {
     setPasswordBlurred(true);
   };
 
-  // Sign out handler
   const handleSignOut = async () => {
     setSignOutLoading(true);
     try {
@@ -472,7 +461,6 @@ export default function AccountPage() {
     }
   };
 
-  // Helper to get provider display name
   const getProviderName = (provider: UserProfile["provider"]) => {
     switch (provider) {
       case "google":
@@ -486,7 +474,6 @@ export default function AccountPage() {
     }
   };
 
-  // Helper to get provider icon color
   const getProviderColor = (provider: UserProfile["provider"]) => {
     switch (provider) {
       case "google":

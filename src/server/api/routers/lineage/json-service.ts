@@ -1,6 +1,5 @@
 import { createTRPCRouter, publicProcedure } from "../../utils";
 
-// Attack data imports
 import playerAttacks from "~/lineage-json/attack-route/playerAttacks.json";
 import mageBooks from "~/lineage-json/attack-route/mageBooks.json";
 import mageSpells from "~/lineage-json/attack-route/mageSpells.json";
@@ -12,21 +11,17 @@ import paladinBooks from "~/lineage-json/attack-route/paladinBooks.json";
 import paladinSpells from "~/lineage-json/attack-route/paladinSpells.json";
 import summons from "~/lineage-json/attack-route/summons.json";
 
-// Conditions data imports
 import conditions from "~/lineage-json/conditions-route/conditions.json";
 import debilitations from "~/lineage-json/conditions-route/debilitations.json";
 import sanityDebuffs from "~/lineage-json/conditions-route/sanityDebuffs.json";
 
-// Dungeon data imports
 import dungeons from "~/lineage-json/dungeon-route/dungeons.json";
 import specialEncounters from "~/lineage-json/dungeon-route/specialEncounters.json";
 
-// Enemy data imports
 import bosses from "~/lineage-json/enemy-route/bosses.json";
 import enemies from "~/lineage-json/enemy-route/enemy.json";
 import enemyAttacks from "~/lineage-json/enemy-route/enemyAttacks.json";
 
-// Item data imports
 import arrows from "~/lineage-json/item-route/arrows.json";
 import bows from "~/lineage-json/item-route/bows.json";
 import foci from "~/lineage-json/item-route/foci.json";
@@ -69,7 +64,7 @@ export const lineageJsonServiceRouter = createTRPCRouter({
       rangerSpells,
       paladinBooks,
       paladinSpells,
-      summons,
+      summons
     };
   }),
 
@@ -78,7 +73,7 @@ export const lineageJsonServiceRouter = createTRPCRouter({
       ok: true,
       conditions,
       debilitations,
-      sanityDebuffs,
+      sanityDebuffs
     };
   }),
 
@@ -86,7 +81,7 @@ export const lineageJsonServiceRouter = createTRPCRouter({
     return {
       ok: true,
       dungeons,
-      specialEncounters,
+      specialEncounters
     };
   }),
 
@@ -95,7 +90,7 @@ export const lineageJsonServiceRouter = createTRPCRouter({
       ok: true,
       bosses,
       enemies,
-      enemyAttacks,
+      enemyAttacks
     };
   }),
 
@@ -120,7 +115,7 @@ export const lineageJsonServiceRouter = createTRPCRouter({
       prefix,
       potions,
       poison,
-      staves,
+      staves
     };
   }),
 
@@ -134,7 +129,7 @@ export const lineageJsonServiceRouter = createTRPCRouter({
       otherOptions,
       healthOptions,
       sanityOptions,
-      pvpRewards,
+      pvpRewards
     };
-  }),
+  })
 });

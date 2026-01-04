@@ -105,10 +105,8 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       const pre = codeBlock.parentElement;
       if (!pre) return;
 
-      // Skip mermaid diagrams
       if (pre.dataset.type === "mermaid") return;
 
-      // Check if already processed (has header with copy button)
       const existingHeader = pre.previousElementSibling;
       if (
         existingHeader?.classList.contains("language-header") &&
@@ -117,53 +115,43 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         return;
       }
 
-      // Set off-black background for code block
       pre.style.backgroundColor = "#1a1a1a";
 
-      // Extract language from code block classes
       const classes = Array.from(codeBlock.classList);
       const languageClass = classes.find((cls) => cls.startsWith("language-"));
       const language = languageClass?.replace("language-", "") || "";
 
-      // Create language header if language is detected
       if (language) {
         const languageHeader = document.createElement("div");
         languageHeader.className = "language-header";
         languageHeader.style.backgroundColor = "#1a1a1a";
 
-        // Add language label
         const languageLabel = document.createElement("span");
         languageLabel.textContent = language;
         languageHeader.appendChild(languageLabel);
 
-        // Create copy button in header
         const copyButton = document.createElement("button");
         copyButton.className = "copy-button";
         copyButton.textContent = "Copy";
         copyButton.dataset.codeBlock = "true";
 
-        // Store reference to the code block for copying
         copyButton.dataset.codeBlockId = `code-${Math.random().toString(36).substr(2, 9)}`;
         codeBlock.dataset.codeBlockId = copyButton.dataset.codeBlockId;
 
         languageHeader.appendChild(copyButton);
 
-        // Insert header before pre element
         pre.parentElement?.insertBefore(languageHeader, pre);
       }
 
-      // Add line numbers
       const codeText = codeBlock.textContent || "";
       const lines = codeText.split("\n");
       const lineCount =
         lines[lines.length - 1] === "" ? lines.length - 1 : lines.length;
 
       if (lineCount > 0 && !pre.querySelector(".line-numbers")) {
-        // Create line numbers container
         const lineNumbers = document.createElement("div");
         lineNumbers.className = "line-numbers";
 
-        // Generate line numbers
         for (let i = 1; i <= lineCount; i++) {
           const lineNum = document.createElement("div");
           lineNum.textContent = i.toString();
@@ -214,7 +202,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       }
     });
 
-    // Look for the references section marker to get the custom heading name
     const marker = contentRef.querySelector(
       "span[id='references-section-start']"
     ) as HTMLElement | null;
@@ -233,13 +220,11 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     if (referencesSection) {
       referencesSection.className = "text-2xl font-bold mb-4 text-text";
 
-      // Find the parent container and add styling
       const parentDiv = referencesSection.parentElement;
       if (parentDiv) {
         parentDiv.classList.add("references-heading");
       }
 
-      // Find all paragraphs after the References heading that start with [n]
       let currentElement = referencesSection.nextElementSibling;
 
       while (currentElement) {
@@ -251,29 +236,22 @@ export default function PostBodyClient(props: PostBodyClientProps) {
             const refNumber = match[1];
             const refId = `ref-${refNumber}`;
 
-            // Set the ID for linking
             currentElement.id = refId;
 
-            // Add styling
             currentElement.className =
               "reference-item transition-colors duration-500 text-sm mb-3";
 
-            // Parse and style the content - get everything after [n]
             let refText = text.substring(match[0].length);
 
-            // Remove any existing "↑ Back" text (including various Unicode arrow variants)
             refText = refText.replace(/[↑⬆️]\s*Back\s*$/i, "").trim();
 
-            // Create styled content
             currentElement.innerHTML = "";
 
-            // Add bold reference number
             const refNumSpan = document.createElement("span");
             refNumSpan.className = "text-blue font-semibold";
             refNumSpan.textContent = `[${refNumber}]`;
             currentElement.appendChild(refNumSpan);
 
-            // Add reference text
             if (refText) {
               const refTextSpan = document.createElement("span");
               refTextSpan.className = "ml-2";
@@ -286,7 +264,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
               currentElement.appendChild(refTextSpan);
             }
 
-            // Add back button
             const backLink = document.createElement("a");
             backLink.href = `#ref-${refNumber}-back`;
             backLink.className =
@@ -297,7 +274,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
               const target = document.getElementById(`ref-${refNumber}-back`);
               if (target) {
                 target.scrollIntoView({ behavior: "smooth", block: "center" });
-                // Highlight the reference link briefly
                 target.style.backgroundColor = "rgba(203, 166, 247, 0.2)";
                 setTimeout(() => {
                   target.style.backgroundColor = "";
@@ -308,7 +284,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
           }
         }
 
-        // Check if we've reached another heading (end of references)
         if (
           currentElement.tagName.match(/^H[1-6]$/) &&
           currentElement !== referencesSection
@@ -321,14 +296,12 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     }
   };
 
-  // Load highlight.js only when needed
   createEffect(() => {
     if (props.hasCodeBlock && !hljs()) {
       loadHighlightJS().then(setHljs);
     }
   });
 
-  // Apply syntax highlighting when hljs loads and when body changes
   createEffect(() => {
     const hljsInstance = hljs();
     if (hljsInstance && props.hasCodeBlock && contentRef) {
@@ -339,7 +312,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     }
   });
 
-  // Process references after content is mounted and when body changes
   onMount(() => {
     setTimeout(() => {
       processReferences();
@@ -348,14 +320,11 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       }
     }, 150);
 
-    // Event delegation for copy buttons (single listener for all buttons)
     if (contentRef) {
       const handleCopyButtonInteraction = async (e: Event) => {
         const target = e.target as HTMLElement;
 
-        // Handle click
         if (e.type === "click" && target.classList.contains("copy-button")) {
-          // Find the code block using the stored ID
           const codeBlockId = target.dataset.codeBlockId;
           const codeBlock = codeBlockId
             ? contentRef?.querySelector(
@@ -389,13 +358,11 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         }
       };
 
-      // Single event listener for all copy button interactions
       contentRef.addEventListener("click", handleCopyButtonInteraction);
     }
   });
 
   createEffect(() => {
-    // Re-process when body changes
     if (props.body && contentRef) {
       setTimeout(() => {
         processReferences();

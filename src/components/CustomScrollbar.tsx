@@ -28,17 +28,14 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
     const scrollHeight = containerRef.scrollHeight;
     const clientHeight = containerRef.clientHeight;
 
-    // Calculate thumb height as percentage of visible area
     const viewportRatio = clientHeight / scrollHeight;
     const calculatedThumbHeight = Math.max(viewportRatio * 100, 5);
     setThumbHeight(calculatedThumbHeight);
 
-    // Calculate scroll percentage
     const maxScroll = scrollHeight - clientHeight;
     const percentage = maxScroll > 0 ? (scrollTop / maxScroll) * 100 : 0;
     setScrollPercentage(percentage);
 
-    // Show scrollbar on scroll if autoHide enabled
     if (props.autoHide) {
       setIsVisible(true);
       clearTimeout(hideTimeout);
@@ -106,10 +103,8 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
   onMount(() => {
     if (!containerRef) return;
 
-    // Initial update
     updateScrollbar();
 
-    // Update after delays to catch dynamically loaded content
     setTimeout(() => updateScrollbar(), 100);
     setTimeout(() => updateScrollbar(), 500);
 
@@ -118,7 +113,6 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
       updateScrollbar();
     };
 
-    // Debounced mutation observer
     let mutationTimeout: NodeJS.Timeout;
     const observer = new MutationObserver(() => {
       clearTimeout(mutationTimeout);
@@ -132,7 +126,6 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
       subtree: true
     });
 
-    // Use passive scroll listener for better performance
     containerRef.addEventListener("scroll", updateScrollbar, { passive: true });
     window.addEventListener("resize", handleResize);
 
@@ -159,7 +152,6 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
         "-ms-overflow-style": "none"
       }}
     >
-      {/* Hide default scrollbar */}
       <style>
         {`
           div::-webkit-scrollbar {
@@ -170,7 +162,6 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
 
       {props.children}
 
-      {/* Custom scrollbar */}
       <Show when={thumbHeight() < 100}>
         <div
           ref={scrollbarRef}

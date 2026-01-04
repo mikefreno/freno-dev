@@ -1,10 +1,3 @@
-/**
- * Database Initialization for Audit Logging
- * Run this script to create the AuditLog table in your database
- *
- * Usage: bun run src/server/init-audit-table.ts
- */
-
 import { ConnectionFactory } from "./database";
 
 async function initAuditTable() {
@@ -13,7 +6,6 @@ async function initAuditTable() {
   try {
     const conn = ConnectionFactory();
 
-    // Create AuditLog table
     await conn.execute({
       sql: `CREATE TABLE IF NOT EXISTS AuditLog (
         id TEXT PRIMARY KEY,
@@ -30,7 +22,6 @@ async function initAuditTable() {
 
     console.log("✅ AuditLog table created (or already exists)");
 
-    // Create indexes for performance
     console.log("🔧 Creating indexes...");
 
     await conn.execute({
@@ -51,7 +42,6 @@ async function initAuditTable() {
 
     console.log("✅ Indexes created");
 
-    // Verify table exists
     const result = await conn.execute({
       sql: `SELECT name FROM sqlite_master WHERE type='table' AND name='AuditLog'`
     });
@@ -59,7 +49,6 @@ async function initAuditTable() {
     if (result.rows.length > 0) {
       console.log("✅ AuditLog table verified - ready for use!");
 
-      // Check row count
       const countResult = await conn.execute({
         sql: `SELECT COUNT(*) as count FROM AuditLog`
       });
@@ -82,7 +71,6 @@ async function initAuditTable() {
   }
 }
 
-// Run if executed directly
 if (import.meta.main) {
   initAuditTable()
     .then(() => process.exit(0))

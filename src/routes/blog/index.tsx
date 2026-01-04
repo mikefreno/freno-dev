@@ -24,7 +24,6 @@ const getPosts = query(async () => {
     async () => {
       const conn = ConnectionFactory();
 
-      // Fetch all posts with aggregated data
       let postsQuery = `
       SELECT 
         p.id,

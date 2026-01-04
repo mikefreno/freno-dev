@@ -10,32 +10,25 @@ import { v4 as uuid } from "uuid";
  * Audit event types for security tracking
  */
 export type AuditEventType =
-  // Authentication events
   | "auth.login.success"
   | "auth.login.failed"
   | "auth.logout"
   | "auth.register.success"
   | "auth.register.failed"
-  // Password events
   | "auth.password.change"
   | "auth.password.reset.request"
   | "auth.password.reset.complete"
-  // Email verification
   | "auth.email.verify.request"
   | "auth.email.verify.complete"
-  // OAuth events
   | "auth.oauth.github.success"
   | "auth.oauth.github.failed"
   | "auth.oauth.google.success"
   | "auth.oauth.google.failed"
-  // Session management
   | "auth.session.revoke"
   | "auth.session.revokeAll"
-  // Security events
   | "security.rate_limit.exceeded"
   | "security.csrf.failed"
   | "security.suspicious.activity"
-  // Admin actions
   | "admin.action";
 
 /**
@@ -74,7 +67,6 @@ export async function logAuditEvent(entry: AuditLogEntry): Promise<void> {
       ]
     });
   } catch (error) {
-    // Never throw - logging failures shouldn't break auth flows
     console.error("Failed to write audit log:", error, entry);
   }
 }
@@ -186,7 +178,6 @@ export async function getFailedLoginAttempts(
 ): Promise<number | Array<Record<string, any>>> {
   const conn = ConnectionFactory();
 
-  // Aggregate query: getFailedLoginAttempts(24, 100) - get all failed logins in last 24 hours
   if (
     typeof identifierOrHours === "number" &&
     typeof identifierTypeOrLimit === "number"
@@ -216,7 +207,6 @@ export async function getFailedLoginAttempts(
     }));
   }
 
-  // Specific identifier query: getFailedLoginAttempts("user-123", "user_id", 15)
   const identifier = identifierOrHours as string;
   const identifierType = identifierTypeOrLimit as "user_id" | "ip_address";
   const column = identifierType === "user_id" ? "user_id" : "ip_address";
@@ -258,7 +248,6 @@ export async function getUserSecuritySummary(
 }> {
   const conn = ConnectionFactory();
 
-  // Get total events for user in time period
   const totalEventsResult = await conn.execute({
     sql: `SELECT COUNT(*) as count FROM AuditLog 
           WHERE user_id = ? 
@@ -267,7 +256,6 @@ export async function getUserSecuritySummary(
   });
   const totalEvents = (totalEventsResult.rows[0]?.count as number) || 0;
 
-  // Get successful events
   const successfulEventsResult = await conn.execute({
     sql: `SELECT COUNT(*) as count FROM AuditLog 
           WHERE user_id = ? 
@@ -278,7 +266,6 @@ export async function getUserSecuritySummary(
   const successfulEvents =
     (successfulEventsResult.rows[0]?.count as number) || 0;
 
-  // Get failed events
   const failedEventsResult = await conn.execute({
     sql: `SELECT COUNT(*) as count FROM AuditLog 
           WHERE user_id = ? 
@@ -288,7 +275,6 @@ export async function getUserSecuritySummary(
   });
   const failedEvents = (failedEventsResult.rows[0]?.count as number) || 0;
 
-  // Get unique event types
   const eventTypesResult = await conn.execute({
     sql: `SELECT DISTINCT event_type FROM AuditLog 
           WHERE user_id = ? 
@@ -299,7 +285,6 @@ export async function getUserSecuritySummary(
     (row) => row.event_type as string
   );
 
-  // Get unique IPs
   const uniqueIPsResult = await conn.execute({
     sql: `SELECT DISTINCT ip_address FROM AuditLog 
           WHERE user_id = ? 
@@ -309,7 +294,6 @@ export async function getUserSecuritySummary(
   });
   const uniqueIPs = uniqueIPsResult.rows.map((row) => row.ip_address as string);
 
-  // Get total successful logins
   const loginResult = await conn.execute({
     sql: `SELECT COUNT(*) as count FROM AuditLog 
           WHERE user_id = ? 
@@ -319,7 +303,6 @@ export async function getUserSecuritySummary(
   });
   const totalLogins = (loginResult.rows[0]?.count as number) || 0;
 
-  // Get failed login attempts
   const failedResult = await conn.execute({
     sql: `SELECT COUNT(*) as count FROM AuditLog 
           WHERE user_id = ? 
@@ -330,7 +313,6 @@ export async function getUserSecuritySummary(
   });
   const failedLogins = (failedResult.rows[0]?.count as number) || 0;
 
-  // Get last login info
   const lastLoginResult = await conn.execute({
     sql: `SELECT created_at, ip_address FROM AuditLog 
           WHERE user_id = ? 
@@ -342,7 +324,6 @@ export async function getUserSecuritySummary(
   });
   const lastLogin = lastLoginResult.rows[0];
 
-  // Get unique IP count
   const ipResult = await conn.execute({
     sql: `SELECT COUNT(DISTINCT ip_address) as count FROM AuditLog 
           WHERE user_id = ? 
@@ -353,7 +334,6 @@ export async function getUserSecuritySummary(
   });
   const uniqueIpCount = (ipResult.rows[0]?.count as number) || 0;
 
-  // Get recent sessions (last 24 hours)
   const sessionResult = await conn.execute({
     sql: `SELECT COUNT(*) as count FROM AuditLog 
           WHERE user_id = ? 

@@ -18,7 +18,6 @@ export default function DeletePostButton(props: DeletePostButtonProps) {
       setLoading(true);
       try {
         await api.database.deletePost.mutate({ id: props.postID });
-        // Refresh the page after successful deletion
         window.location.reload();
       } catch (error) {
         alert("Failed to delete post");

@@ -38,7 +38,6 @@ export function Btop(props: BtopProps) {
   const [isMobile, setIsMobile] = createSignal(false);
 
   onMount(() => {
-    // Check if mobile
     if (typeof window !== "undefined") {
       setIsMobile(window.innerWidth < BREAKPOINTS.MOBILE);
 
@@ -49,7 +48,6 @@ export function Btop(props: BtopProps) {
       onCleanup(() => window.removeEventListener("resize", handleResize));
     }
 
-    // Animate CPU usage
     const cpuInterval = setInterval(() => {
       setCpuUsage((prev) => {
         const change = (Math.random() - 0.5) * 10;
@@ -58,7 +56,6 @@ export function Btop(props: BtopProps) {
       });
     }, 1000);
 
-    // Animate memory usage
     const memInterval = setInterval(() => {
       setMemUsage((prev) => {
         const change = (Math.random() - 0.5) * 5;
@@ -67,13 +64,11 @@ export function Btop(props: BtopProps) {
       });
     }, 1500);
 
-    // Animate network
     const netInterval = setInterval(() => {
       setNetDown(Math.floor(Math.random() * 1000));
       setNetUp(Math.floor(Math.random() * 100));
     }, 800);
 
-    // Animate processes
     const procInterval = setInterval(() => {
       setProcesses((prev) =>
         prev.map((proc) => ({
@@ -90,12 +85,10 @@ export function Btop(props: BtopProps) {
       );
     }, 2000);
 
-    // Keyboard handler for :q
     const handleKeyPress = (e: KeyboardEvent) => {
       if (!isMobile() && e.key === "q" && e.shiftKey && e.key === ":") {
         props.onClose();
       }
-      // Simple 'q' press to quit
       if (!isMobile() && e.key === "q") {
         props.onClose();
       }
@@ -120,9 +113,7 @@ export function Btop(props: BtopProps) {
 
   return (
     <div class="bg-crust fixed inset-0 z-[10000] flex items-center justify-center p-4">
-      {/* Main btop container */}
       <div class="bg-mantle border-surface0 text-text relative h-full w-full max-w-6xl overflow-hidden rounded-lg border-2 font-mono text-sm shadow-2xl md:h-auto md:max-h-[90vh]">
-        {/* Header */}
         <div class="border-surface0 bg-surface0 border-b px-4 py-2">
           <div class="flex items-center justify-between">
             <span class="text-blue">
@@ -145,13 +136,10 @@ export function Btop(props: BtopProps) {
           </div>
         </div>
 
-        {/* Content */}
         <div class="space-y-4 p-4">
-          {/* System Stats */}
           <div class="border-surface0 bg-base rounded border p-3">
             <div class="text-green mb-2 font-bold">System Resources</div>
             <div class="space-y-2">
-              {/* CPU */}
               <div class="flex items-center gap-2">
                 <span class="text-subtext1 w-12">CPU</span>
                 <span class="text-blue">[{createBar(cpuUsage())}]</span>
@@ -159,7 +147,6 @@ export function Btop(props: BtopProps) {
                 <span class="text-subtext0">2.4 GHz</span>
               </div>
 
-              {/* Memory */}
               <div class="flex items-center gap-2">
                 <span class="text-subtext1 w-12">MEM</span>
                 <span class="text-blue">[{createBar(memUsage())}]</span>
@@ -169,7 +156,6 @@ export function Btop(props: BtopProps) {
                 </span>
               </div>
 
-              {/* Network */}
               <div class="flex items-center gap-2">
                 <span class="text-subtext1 w-12">NET</span>
                 <span class="text-green">↓ {netDown()} KB/s</span>
@@ -178,7 +164,6 @@ export function Btop(props: BtopProps) {
             </div>
           </div>
 
-          {/* Process List */}
           <div class="border-surface0 bg-base rounded border">
             <div class="border-surface0 border-b px-3 py-2">
               <span class="text-green font-bold">Processes</span>
@@ -224,7 +209,6 @@ export function Btop(props: BtopProps) {
             </div>
           </div>
 
-          {/* Footer info */}
           <div class="text-subtext1 text-center text-xs">
             <Show
               when={!isMobile()}
@@ -238,7 +222,6 @@ export function Btop(props: BtopProps) {
         </div>
       </div>
 
-      {/* Overlay background */}
       <div
         class="absolute inset-0 -z-10 bg-black/80 backdrop-blur-sm"
         onClick={props.onClose}

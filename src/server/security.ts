@@ -17,14 +17,10 @@ import {
  */
 function getCookieValue(event: H3Event, name: string): string | undefined {
   try {
-    // Try vinxi's getCookie first
     const value = getCookie(event, name);
     if (value) return value;
-  } catch (e) {
-    // vinxi's getCookie failed, will use fallback
-  }
+  } catch (e) {}
 
-  // Fallback for tests: parse cookie header manually
   try {
     const cookieHeader =
       event.headers?.get?.("cookie") ||
@@ -60,7 +56,6 @@ function setCookieValue(
   try {
     setCookie(event, name, value, options);
   } catch (e) {
-    // In tests, setCookie might fail - store in mock object
     if (!event.node) event.node = { req: { headers: {} } } as any;
     if (!event.node.res) event.node.res = {} as any;
     if (!event.node.res.cookies) event.node.res.cookies = {} as any;
@@ -73,18 +68,15 @@ function setCookieValue(
  */
 function getHeaderValue(event: H3Event, name: string): string | null {
   try {
-    // Try various header access patterns
     if (event.request?.headers?.get) {
       const val = event.request.headers.get(name);
       if (val !== null && val !== undefined) return val;
     }
     if (event.headers) {
-      // Check if it's a Headers object with .get method
       if (typeof (event.headers as any).get === "function") {
         const val = (event.headers as any).get(name);
         if (val !== null && val !== undefined) return val;
       }
-      // Or a plain object
       if (typeof event.headers === "object") {
         const val = (event.headers as any)[name];
         if (val !== undefined) return val;
@@ -115,7 +107,7 @@ export function setCSRFToken(event: H3Event): string {
   setCookieValue(event, "csrf-token", token, {
     maxAge: AUTH_CONFIG.CSRF_TOKEN_MAX_AGE,
     path: "/",
-    httpOnly: false, // Must be readable by client JS
+    httpOnly: false,
     secure: env.NODE_ENV === "production",
     sameSite: "lax"
   });
@@ -133,7 +125,6 @@ export function validateCSRFToken(event: H3Event): boolean {
     return false;
   }
 
-  // Constant-time comparison to prevent timing attacks
   return timingSafeEqual(headerToken, cookieToken);
 }
 
@@ -160,7 +151,6 @@ export const csrfProtection = t.middleware(async ({ ctx, next }) => {
   const isValid = validateCSRFToken(ctx.event.nativeEvent);
 
   if (!isValid) {
-    // Log CSRF failure
     const { ipAddress, userAgent } = getAuditContext(ctx.event.nativeEvent);
     await logAuditEvent({
       eventType: "security.csrf.failed",
@@ -191,8 +181,6 @@ export const csrfProtection = t.middleware(async ({ ctx, next }) => {
  */
 export const csrfProtectedProcedure = t.procedure.use(csrfProtection);
 
-// ========== Rate Limiting ==========
-
 interface RateLimitRecord {
   count: number;
   resetAt: number;
@@ -213,7 +201,6 @@ export async function clearRateLimitStore(): Promise<void> {
 
 /**
  * Cleanup expired rate limit entries every 5 minutes
- * Runs in background to prevent database bloat
  */
 setInterval(async () => {
   try {
@@ -255,7 +242,6 @@ export function getUserAgent(event: H3Event): string {
 
 /**
  * Extract audit context from H3Event
- * Convenience function for logging
  */
 export function getAuditContext(event: H3Event): {
   ipAddress: string;
@@ -288,14 +274,12 @@ export async function checkRateLimit(
   const now = Date.now();
   const resetAt = new Date(now + windowMs);
 
-  // Try to get existing record
   const result = await conn.execute({
     sql: "SELECT id, count, reset_at FROM RateLimit WHERE identifier = ?",
     args: [identifier]
   });
 
   if (result.rows.length === 0) {
-    // Create new record
     await conn.execute({
       sql: "INSERT INTO RateLimit (id, identifier, count, reset_at) VALUES (?, ?, ?, ?)",
       args: [uuid(), identifier, 1, resetAt.toISOString()]
@@ -306,9 +290,7 @@ export async function checkRateLimit(
   const record = result.rows[0];
   const recordResetAt = new Date(record.reset_at as string);
 
-  // Check if window has expired
   if (now > recordResetAt.getTime()) {
-    // Reset the record
     await conn.execute({
       sql: "UPDATE RateLimit SET count = 1, reset_at = ?, updated_at = datetime('now') WHERE identifier = ?",
       args: [resetAt.toISOString(), identifier]
@@ -318,12 +300,10 @@ export async function checkRateLimit(
 
   const count = record.count as number;
 
-  // Check if limit exceeded
   if (count >= maxAttempts) {
     const remainingMs = recordResetAt.getTime() - now;
     const remainingSec = Math.ceil(remainingMs / 1000);
 
-    // Log rate limit exceeded (fire-and-forget)
     if (event) {
       const { ipAddress, userAgent } = getAuditContext(event);
       logAuditEvent({
@@ -337,9 +317,7 @@ export async function checkRateLimit(
         ipAddress,
         userAgent,
         success: false
-      }).catch(() => {
-        // Ignore logging errors
-      });
+      }).catch(() => {});
     }
 
     throw new TRPCError({
@@ -348,7 +326,6 @@ export async function checkRateLimit(
     });
   }
 
-  // Increment count
   await conn.execute({
     sql: "UPDATE RateLimit SET count = count + 1, updated_at = datetime('now') WHERE identifier = ?",
     args: [identifier]
@@ -359,7 +336,6 @@ export async function checkRateLimit(
 
 /**
  * Rate limit configuration for different operations
- * Re-exported from config for backward compatibility
  */
 export const RATE_LIMITS = CONFIG_RATE_LIMITS;
 
@@ -371,7 +347,6 @@ export async function rateLimitLogin(
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  // Rate limit by IP
   await checkRateLimit(
     `login:ip:${clientIP}`,
     RATE_LIMITS.LOGIN_IP.maxAttempts,
@@ -379,7 +354,6 @@ export async function rateLimitLogin(
     event
   );
 
-  // Rate limit by email
   await checkRateLimit(
     `login:email:${email}`,
     RATE_LIMITS.LOGIN_EMAIL.maxAttempts,
@@ -433,19 +407,7 @@ export async function rateLimitEmailVerification(
   );
 }
 
-// ========== Account Lockout ==========
-
-/**
- * Account lockout configuration
- * Re-exported from config for backward compatibility
- */
 export const ACCOUNT_LOCKOUT = CONFIG_ACCOUNT_LOCKOUT;
-
-/**
- * Check if an account is locked
- * @param userId - User ID to check
- * @returns Object with isLocked status and remaining time if locked
- */
 export async function checkAccountLockout(userId: string): Promise<{
   isLocked: boolean;
   remainingMs?: number;
@@ -482,7 +444,6 @@ export async function checkAccountLockout(userId: string): Promise<{
     };
   }
 
-  // Lockout expired, clear it
   await conn.execute({
     sql: "UPDATE User SET locked_until = NULL, failed_attempts = 0 WHERE id = ?",
     args: [userId]
@@ -491,11 +452,6 @@ export async function checkAccountLockout(userId: string): Promise<{
   return { isLocked: false };
 }
 
-/**
- * Record a failed login attempt and lock account if threshold exceeded
- * @param userId - User ID
- * @returns Object with isLocked status and remaining time if locked
- */
 export async function recordFailedLogin(userId: string): Promise<{
   isLocked: boolean;
   remainingMs?: number;
@@ -504,7 +460,6 @@ export async function recordFailedLogin(userId: string): Promise<{
   const { ConnectionFactory } = await import("./database");
   const conn = ConnectionFactory();
 
-  // Increment failed attempts
   const result = await conn.execute({
     sql: `UPDATE User 
           SET failed_attempts = COALESCE(failed_attempts, 0) + 1 
@@ -515,7 +470,6 @@ export async function recordFailedLogin(userId: string): Promise<{
 
   const failedAttempts = (result.rows[0]?.failed_attempts as number) || 0;
 
-  // Check if we should lock the account
   if (failedAttempts >= ACCOUNT_LOCKOUT.MAX_FAILED_ATTEMPTS) {
     const lockedUntil = new Date(
       Date.now() + ACCOUNT_LOCKOUT.LOCKOUT_DURATION_MS
@@ -541,7 +495,6 @@ export async function recordFailedLogin(userId: string): Promise<{
 
 /**
  * Reset failed login attempts on successful login
- * @param userId - User ID
  */
 export async function resetFailedAttempts(userId: string): Promise<void> {
   const { ConnectionFactory } = await import("./database");
@@ -553,18 +506,10 @@ export async function resetFailedAttempts(userId: string): Promise<void> {
   });
 }
 
-// ========== Password Reset Token Management ==========
-
-/**
- * Password reset token configuration
- * Re-exported from config for backward compatibility
- */
 export const PASSWORD_RESET_CONFIG = CONFIG_PASSWORD_RESET;
 
 /**
  * Create a password reset token
- * @param userId - User ID
- * @returns The reset token and token ID
  */
 export async function createPasswordResetToken(userId: string): Promise<{
   token: string;
@@ -575,20 +520,17 @@ export async function createPasswordResetToken(userId: string): Promise<{
   const { v4: uuid } = await import("uuid");
   const conn = ConnectionFactory();
 
-  // Generate cryptographically secure token
   const token = crypto.randomUUID();
   const tokenId = uuid();
   const expiresAt = new Date(
     Date.now() + PASSWORD_RESET_CONFIG.TOKEN_EXPIRY_MS
   );
 
-  // Invalidate any existing unused tokens for this user
   await conn.execute({
     sql: "UPDATE PasswordResetToken SET used_at = datetime('now') WHERE user_id = ? AND used_at IS NULL",
     args: [userId]
   });
 
-  // Create new token
   await conn.execute({
     sql: `INSERT INTO PasswordResetToken (id, token, user_id, expires_at)
           VALUES (?, ?, ?, ?)`,
@@ -604,8 +546,6 @@ export async function createPasswordResetToken(userId: string): Promise<{
 
 /**
  * Validate and consume a password reset token
- * @param token - Reset token
- * @returns User ID if valid, null otherwise
  */
 export async function validatePasswordResetToken(
   token: string
@@ -626,12 +566,10 @@ export async function validatePasswordResetToken(
 
   const tokenRecord = result.rows[0];
 
-  // Check if already used
   if (tokenRecord.used_at) {
     return null;
   }
 
-  // Check if expired
   const expiresAt = new Date(tokenRecord.expires_at as string);
   if (expiresAt < new Date()) {
     return null;
@@ -645,7 +583,6 @@ export async function validatePasswordResetToken(
 
 /**
  * Mark a password reset token as used
- * @param tokenId - Token ID
  */
 export async function markPasswordResetTokenUsed(
   tokenId: string
@@ -661,7 +598,6 @@ export async function markPasswordResetTokenUsed(
 
 /**
  * Clean up expired password reset tokens
- * Should be run periodically (e.g., via cron job)
  */
 export async function cleanupExpiredPasswordResetTokens(): Promise<number> {
   const { ConnectionFactory } = await import("./database");

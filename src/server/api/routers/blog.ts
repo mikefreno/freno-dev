@@ -7,7 +7,6 @@ import { CACHE_CONFIG } from "~/config";
 
 const BLOG_CACHE_TTL = CACHE_CONFIG.BLOG_CACHE_TTL_MS;
 
-// Shared cache function for all blog posts
 const getAllPostsData = async (privilegeLevel: string) => {
   return withCacheAndStale(
     `blog-posts-${privilegeLevel}`,
@@ -15,7 +14,6 @@ const getAllPostsData = async (privilegeLevel: string) => {
     async () => {
       const conn = ConnectionFactory();
 
-      // Fetch all posts with aggregated data
       let postsQuery = `
         SELECT 
           p.id,
@@ -73,10 +71,8 @@ const getAllPostsData = async (privilegeLevel: string) => {
 
 export const blogRouter = createTRPCRouter({
   getRecentPosts: publicProcedure.query(async ({ ctx }) => {
-    // Always use public privilege level for recent posts (only show published)
     const allPostsData = await getAllPostsData("public");
 
-    // Return only the 3 most recent posts (already sorted DESC by date)
     return allPostsData.posts.slice(0, 3);
   }),
 

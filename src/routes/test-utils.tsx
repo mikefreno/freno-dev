@@ -8,10 +8,6 @@ import {
   passwordsMatch
 } from "~/lib/validation";
 
-/**
- * Test page to validate Task 01 components and utilities
- * Navigate to /test-utils to view
- */
 export default function TestUtilsPage() {
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
@@ -40,7 +36,6 @@ export default function TestUtilsPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     alert(`Form submitted!\nEmail: ${email()}\nPassword: ${password()}`);

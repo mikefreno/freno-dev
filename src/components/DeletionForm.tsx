@@ -9,11 +9,9 @@ export default function DeletionForm() {
   const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
 
-  // Form ref
   let emailRef: HTMLInputElement | undefined;
   let timerInterval: number | undefined;
 
-  // Calculate remaining time from cookie
   const calcRemainder = (timer: string) => {
     const expires = new Date(timer);
     const remaining = expires.getTime() - Date.now();
@@ -92,7 +90,6 @@ export default function DeletionForm() {
     }
   };
 
-  // Countdown timer render function
   const renderTime = ({ remainingTime }: { remainingTime: number }) => {
     return (
       <div class="timer">

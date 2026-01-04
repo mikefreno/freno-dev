@@ -1,16 +1,3 @@
-/**
- * Comment System Type Definitions
- *
- * - Comment and CommentReaction models
- * - WebSocket message types
- * - User data structures
- * - Component prop interfaces
- */
-
-// ============================================================================
-// Core Data Models
-// ============================================================================
-
 export interface Comment {
   id: number;
   body: string;
@@ -47,10 +34,6 @@ export interface UserPublicData {
   image?: string;
 }
 
-// ============================================================================
-// WebSocket Message Types
-// ============================================================================
-
 export interface WebSocketBroadcast {
   action:
     | "commentCreationBroadcast"
@@ -72,10 +55,6 @@ export interface BackupResponse {
   commentParent?: number | null;
 }
 
-// ============================================================================
-// Privilege and Sorting Types
-// ============================================================================
-
 export type PrivilegeLevel = "admin" | "user" | "anonymous";
 
 export type SortingMode = "newest" | "oldest" | "highest_rated" | "hot";
@@ -83,10 +62,6 @@ export type SortingMode = "newest" | "oldest" | "highest_rated" | "hot";
 export type DeletionType = "user" | "admin" | "database";
 
 export type ModificationType = "delete" | "edit";
-
-// ============================================================================
-// Component Props Interfaces
-// ============================================================================
 
 export interface CommentSectionWrapperProps {
   privilegeLevel: PrivilegeLevel;

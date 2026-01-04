@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const clientEnvSchema = z.object({
-  // Client-side environment variables (VITE_ prefixed)
   VITE_DOMAIN: z.string().min(1),
   VITE_AWS_BUCKET_STRING: z.string().min(1),
   VITE_GOOGLE_CLIENT_ID: z.string().min(1),
@@ -11,10 +10,8 @@ const clientEnvSchema = z.object({
   VITE_INFILL_ENDPOINT: z.string().min(1)
 });
 
-// Type inference
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
 
-// Validation function for client-side with detailed error messages
 export const validateClientEnv = (
   envVars: Record<string, string | undefined>
 ): ClientEnv => {
@@ -70,7 +67,6 @@ export const validateClientEnv = (
   }
 };
 
-// Validate and export environment variables directly
 const validateAndExportEnv = (): ClientEnv => {
   try {
     const validated = validateClientEnv(import.meta.env);

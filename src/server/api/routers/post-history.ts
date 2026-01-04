@@ -5,7 +5,6 @@ import { getUserID } from "~/server/auth";
 import { TRPCError } from "@trpc/server";
 import diff from "fast-diff";
 
-// Helper to create diff patch between two HTML strings
 export function createDiffPatch(
   oldContent: string,
   newContent: string
@@ -14,7 +13,6 @@ export function createDiffPatch(
   return JSON.stringify(changes);
 }
 
-// Helper to apply diff patch to content
 export function applyDiffPatch(baseContent: string, patchJson: string): string {
   const changes = JSON.parse(patchJson);
   let result = "";
@@ -34,12 +32,10 @@ export function applyDiffPatch(baseContent: string, patchJson: string): string {
   return result;
 }
 
-// Helper to reconstruct content from history chain
 async function reconstructContent(
   conn: ReturnType<typeof ConnectionFactory>,
   historyId: number
 ): Promise<string> {
-  // Get the full chain from root to this history entry
   const chain: Array<{
     id: number;
     parent_id: number | null;
@@ -70,7 +66,6 @@ async function reconstructContent(
     currentId = row.parent_id;
   }
 
-  // Apply patches in order
   let content = "";
   for (const entry of chain) {
     content = applyDiffPatch(content, entry.content);
@@ -80,7 +75,6 @@ async function reconstructContent(
 }
 
 export const postHistoryRouter = createTRPCRouter({
-  // Save a new history entry
   save: publicProcedure
     .input(
       z.object({
@@ -124,10 +118,8 @@ export const postHistoryRouter = createTRPCRouter({
         });
       }
 
-      // Create diff patch
       const diffPatch = createDiffPatch(input.previousContent, input.content);
 
-      // Insert history entry
       const result = await conn.execute({
         sql: `
           INSERT INTO PostHistory (post_id, parent_id, content, is_saved)
@@ -141,7 +133,6 @@ export const postHistoryRouter = createTRPCRouter({
         ]
       });
 
-      // Prune old history entries if we exceed 100
       const countResult = await conn.execute({
         sql: "SELECT COUNT(*) as count FROM PostHistory WHERE post_id = ?",
         args: [input.postId]
@@ -149,7 +140,6 @@ export const postHistoryRouter = createTRPCRouter({
 
       const count = (countResult.rows[0] as { count: number }).count;
       if (count > 100) {
-        // Get the oldest entries to delete (keep most recent 100)
         const toDelete = await conn.execute({
           sql: `
             SELECT id FROM PostHistory 
@@ -160,7 +150,6 @@ export const postHistoryRouter = createTRPCRouter({
           args: [input.postId, count - 100]
         });
 
-        // Delete old entries
         for (const row of toDelete.rows) {
           const entry = row as { id: number };
           await conn.execute({
@@ -176,7 +165,6 @@ export const postHistoryRouter = createTRPCRouter({
       };
     }),
 
-  // Get history for a post with reconstructed content
   getHistory: publicProcedure
     .input(z.object({ postId: z.number() }))
     .query(async ({ input, ctx }) => {
@@ -191,7 +179,6 @@ export const postHistoryRouter = createTRPCRouter({
 
       const conn = ConnectionFactory();
 
-      // Verify post exists and user is author
       const postCheck = await conn.execute({
         sql: "SELECT author_id FROM Post WHERE id = ?",
         args: [input.postId]
@@ -212,7 +199,6 @@ export const postHistoryRouter = createTRPCRouter({
         });
       }
 
-      // Get all history entries for this post
       const result = await conn.execute({
         sql: `
           SELECT id, parent_id, content, created_at, is_saved
@@ -231,7 +217,6 @@ export const postHistoryRouter = createTRPCRouter({
         is_saved: number;
       }>;
 
-      // Reconstruct content for each entry by applying diffs sequentially
       const historyWithContent: Array<{
         id: number;
         parent_id: number | null;
@@ -255,7 +240,6 @@ export const postHistoryRouter = createTRPCRouter({
       return historyWithContent;
     }),
 
-  // Restore content from a history entry
   restore: publicProcedure
     .input(z.object({ historyId: z.number() }))
     .query(async ({ input, ctx }) => {
@@ -270,7 +254,6 @@ export const postHistoryRouter = createTRPCRouter({
 
       const conn = ConnectionFactory();
 
-      // Get history entry and verify ownership
       const historyResult = await conn.execute({
         sql: `
           SELECT ph.post_id
@@ -288,12 +271,9 @@ export const postHistoryRouter = createTRPCRouter({
         });
       }
 
-      const historyEntry = historyResult.rows[0] as { post_id: number };
-
-      // Verify user is post author
       const postCheck = await conn.execute({
         sql: "SELECT author_id FROM Post WHERE id = ?",
-        args: [historyEntry.post_id]
+        args: [historyResult.post_id]
       });
 
       const post = postCheck.rows[0] as { author_id: string };
@@ -304,7 +284,6 @@ export const postHistoryRouter = createTRPCRouter({
         });
       }
 
-      // Reconstruct content from history chain
       const content = await reconstructContent(conn, input.historyId);
 
       return { content };

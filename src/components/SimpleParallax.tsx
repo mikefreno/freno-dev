@@ -52,7 +52,6 @@ function ParallaxLayer(props: ParallaxLayerProps) {
     "will-change": "transform"
   }));
 
-  // Set up animation when component mounts or when direction/speed changes
   createEffect(() => {
     if (!containerRef) return;
 

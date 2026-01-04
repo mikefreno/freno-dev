@@ -1,4 +1,3 @@
-// lineage User
 export interface User {
   id: string;
   email: string | null;
