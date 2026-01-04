@@ -64,13 +64,17 @@ const TEST_PAGES: PageTestConfig[] = [
   { name: "Home", path: "/" },
   { name: "About", path: "/about" },
   { name: "Blog Index", path: "/blog" },
+  { name: "Blog Post", path: "/blog/A_Journey_in_Self_Hosting" },
   { name: "Resume", path: "/resume" },
   { name: "Contact", path: "/contact" }
 ];
 
-// Add blog post path if provided
+// Add additional blog post path if provided
 if (process.env.TEST_BLOG_POST) {
-  TEST_PAGES.push({ name: "Blog Post", path: process.env.TEST_BLOG_POST });
+  TEST_PAGES.push({
+    name: "Custom Blog Post",
+    path: process.env.TEST_BLOG_POST
+  });
 }
 
 async function collectPerformanceMetrics(
