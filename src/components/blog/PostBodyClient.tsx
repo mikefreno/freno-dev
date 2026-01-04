@@ -105,6 +105,9 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       const pre = codeBlock.parentElement;
       if (!pre) return;
 
+      // Skip mermaid diagrams
+      if (pre.dataset.type === "mermaid") return;
+
       // Check if already processed (has header with copy button)
       const existingHeader = pre.previousElementSibling;
       if (
