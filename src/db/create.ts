@@ -63,6 +63,9 @@ export const model: { [key: string]: string } = {
       last_edited_date TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_posts_category ON Post (category);
+    CREATE INDEX IF NOT EXISTS idx_posts_published ON Post (published);
+    CREATE INDEX IF NOT EXISTS idx_posts_date ON Post (date);
+    CREATE INDEX IF NOT EXISTS idx_posts_published_date ON Post (published, date);
   `,
   PostLike: `
     CREATE TABLE PostLike 
@@ -72,6 +75,7 @@ export const model: { [key: string]: string } = {
       post_id INTEGER NOT NULL
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_likes_user_post ON PostLike (user_id, post_id);
+    CREATE INDEX IF NOT EXISTS idx_likes_post_id ON PostLike (post_id);
   `,
   Comment: `
     CREATE TABLE Comment 

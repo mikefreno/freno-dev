@@ -65,6 +65,8 @@ export default function Home() {
                   <div class="aspect-auto w-full overflow-hidden rounded-lg">
                     <video
                       src="/flexlove-scrollable.mp4"
+                      width={1280}
+                      height={1290}
                       class="h-full w-full object-cover"
                       autoplay
                       loop
@@ -75,6 +77,8 @@ export default function Home() {
                   <div class="aspect-auto w-full overflow-hidden rounded-lg">
                     <video
                       src="/flexlove-input.mp4"
+                      width={1148}
+                      height={140}
                       class="h-full w-full object-cover"
                       autoplay
                       loop
@@ -85,6 +89,8 @@ export default function Home() {
                   <div class="aspect-auto w-full overflow-hidden rounded-lg">
                     <video
                       src="/flexlove-slider.mp4"
+                      width={1256}
+                      height={134}
                       class="h-full w-full object-cover"
                       autoplay
                       loop
@@ -118,6 +124,8 @@ export default function Home() {
                   <div class="aspect-auto w-full overflow-hidden rounded-lg sm:col-span-1">
                     <video
                       src="/lineage-preview.mp4"
+                      width={886}
+                      height={1920}
                       class="h-full w-full object-cover"
                       autoplay
                       loop
@@ -130,6 +138,8 @@ export default function Home() {
                       <img
                         src="/lineage-home.png"
                         alt="Life and Lineage Home"
+                        width={1320}
+                        height={2868}
                         class="h-full w-full object-cover"
                       />
                     </div>
@@ -137,6 +147,8 @@ export default function Home() {
                       <img
                         src="/lineage-shops.png"
                         alt="Life and Lineage Shops"
+                        width={608}
+                        height={1322}
                         class="h-full w-full object-cover"
                       />
                     </div>

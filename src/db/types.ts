@@ -105,6 +105,21 @@ export interface PostWithCommentsAndLikes {
   total_comments: number;
   last_edited_date?: string | null;
 }
+
+export interface PostCardData {
+  id: number;
+  category: "blog" | "project";
+  title: string;
+  subtitle: string;
+  banner_photo: string;
+  date?: string | null;
+  published: number;
+  author_id: string;
+  reads: number;
+  attachments: string;
+  total_likes: number;
+  total_comments: number;
+}
 export interface PostWithTags {
   id: number;
   category: "blog" | "project"; // this is no longer used

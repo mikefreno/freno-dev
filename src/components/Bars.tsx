@@ -265,47 +265,60 @@ export function LeftBar() {
     const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
     const originalText = "What's this?";
     let glitchInterval: NodeJS.Timeout;
+    let animationFrame: number;
 
     setTimeout(() => {
       setGetLostVisible(true);
 
       let currentIndex = 0;
-      const typeInterval = setInterval(() => {
-        if (currentIndex <= originalText.length) {
-          let displayText = originalText.substring(0, currentIndex);
-          if (currentIndex < originalText.length) {
-            const remaining = originalText.length - currentIndex;
-            for (let i = 0; i < remaining; i++) {
-              displayText +=
-                glitchChars[Math.floor(Math.random() * glitchChars.length)];
-            }
-          }
-          setGetLostText(displayText);
-          currentIndex++;
-        } else {
-          clearInterval(typeInterval);
-          setGetLostText(originalText);
+      let lastUpdate = 0;
+      const updateInterval = 80; // ms between updates
 
-          glitchInterval = setInterval(() => {
-            if (Math.random() > 0.9) {
-              let glitched = "";
-              for (let i = 0; i < originalText.length; i++) {
-                if (Math.random() > 0.7) {
-                  glitched +=
-                    glitchChars[Math.floor(Math.random() * glitchChars.length)];
-                } else {
-                  glitched += originalText[i];
-                }
+      const revealAnimation = (timestamp: number) => {
+        if (timestamp - lastUpdate >= updateInterval) {
+          if (currentIndex <= originalText.length) {
+            let displayText = originalText.substring(0, currentIndex);
+            if (currentIndex < originalText.length) {
+              const remaining = originalText.length - currentIndex;
+              for (let i = 0; i < remaining; i++) {
+                displayText +=
+                  glitchChars[Math.floor(Math.random() * glitchChars.length)];
               }
-              setGetLostText(glitched);
-
-              setTimeout(() => {
-                setGetLostText(originalText);
-              }, 100);
             }
-          }, 150);
+            setGetLostText(displayText);
+            currentIndex++;
+            lastUpdate = timestamp;
+          } else {
+            setGetLostText(originalText);
+
+            // Occasional glitch effect after reveal
+            glitchInterval = setInterval(() => {
+              if (Math.random() > 0.92) {
+                let glitched = "";
+                for (let i = 0; i < originalText.length; i++) {
+                  if (Math.random() > 0.75) {
+                    glitched +=
+                      glitchChars[
+                        Math.floor(Math.random() * glitchChars.length)
+                      ];
+                  } else {
+                    glitched += originalText[i];
+                  }
+                }
+                setGetLostText(glitched);
+
+                setTimeout(() => {
+                  setGetLostText(originalText);
+                }, 80);
+              }
+            }, 200);
+            return;
+          }
         }
-      }, 140);
+        animationFrame = requestAnimationFrame(revealAnimation);
+      };
+
+      animationFrame = requestAnimationFrame(revealAnimation);
     }, 500);
 
     if (ref) {
@@ -345,11 +358,13 @@ export function LeftBar() {
       onCleanup(() => {
         ref?.removeEventListener("keydown", handleKeyDown);
         clearInterval(glitchInterval);
+        if (animationFrame) cancelAnimationFrame(animationFrame);
         window.removeEventListener("resize", handleResize);
       });
     } else {
       onCleanup(() => {
         clearInterval(glitchInterval);
+        if (animationFrame) cancelAnimationFrame(animationFrame);
         window.removeEventListener("resize", handleResize);
       });
     }
@@ -586,7 +601,8 @@ export function LeftBar() {
                     navigate(randomUrl);
                     handleLinkClick();
                   }}
-                  class="text-left font-mono"
+                  class="text-left font-mono transition-opacity duration-75"
+                  style={{ "will-change": "contents" }}
                 >
                   {getLostText()}
                 </button>

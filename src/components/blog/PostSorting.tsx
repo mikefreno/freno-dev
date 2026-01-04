@@ -1,6 +1,6 @@
 import { For, Show, createMemo } from "solid-js";
 import Card from "./Card";
-import { Post } from "~/db/types";
+import { PostCardData } from "~/db/types";
 
 export interface Tag {
   value: string;
@@ -8,7 +8,7 @@ export interface Tag {
 }
 
 export interface PostSortingProps {
-  posts: Post[];
+  posts: PostCardData[];
   tags: Tag[];
   privilegeLevel: "anonymous" | "admin" | "user";
   filters?: string;
@@ -133,9 +133,13 @@ export default function PostSorting(props: PostSortingProps) {
       }
     >
       <For each={sortedPosts()}>
-        {(post) => (
+        {(post, index) => (
           <div class="my-4">
-            <Card post={post} privilegeLevel={props.privilegeLevel} />
+            <Card
+              post={post}
+              privilegeLevel={props.privilegeLevel}
+              index={index()}
+            />
           </div>
         )}
       </For>

@@ -1,12 +1,14 @@
-import { Show } from "solid-js";
+import { Show, lazy } from "solid-js";
 import CardLinks from "./CardLinks";
-import DeletePostButton from "./DeletePostButton";
 import { Fire } from "~/components/icons/Fire";
-import { Post } from "~/db/types";
+import { PostCardData } from "~/db/types";
+
+const DeletePostButton = lazy(() => import("./DeletePostButton"));
 
 export interface CardProps {
-  post: Post;
+  post: PostCardData;
   privilegeLevel: "anonymous" | "admin" | "user";
+  index?: number;
 }
 
 export default function Card(props: CardProps) {
@@ -27,6 +29,12 @@ export default function Card(props: CardProps) {
       <img
         src={props.post.banner_photo ?? ""}
         alt={props.post.title.replaceAll("_", " ") + " banner"}
+        loading={
+          props.index !== undefined && props.index < 3 ? "eager" : "lazy"
+        }
+        fetchpriority={props.index === 0 ? "high" : "auto"}
+        width={1200}
+        height={630}
         class="h-full w-full object-cover"
       />
       <div class="border-opacity-20 bg-opacity-40 bg-crust border-text absolute bottom-0 w-full border-t px-2 py-4 backdrop-blur-md md:px-6">
