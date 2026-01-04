@@ -96,7 +96,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   let contentRef: HTMLDivElement | undefined;
   const [hljs, setHljs] = createSignal<HLJSApi | null>(null);
 
-  const addCopyButtons = () => {
+  const processCodeBlocks = () => {
     if (!contentRef) return;
 
     const codeBlocks = contentRef.querySelectorAll("pre code");
@@ -105,17 +105,51 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       const pre = codeBlock.parentElement;
       if (!pre || pre.querySelector(".copy-button")) return;
 
-      // Create wrapper for positioning
-      pre.style.position = "relative";
+      // Extract language from code block classes
+      const classes = Array.from(codeBlock.classList);
+      const languageClass = classes.find((cls) => cls.startsWith("language-"));
+      const language = languageClass?.replace("language-", "") || "";
+
+      // Create language header if language is detected and not already present
+      if (
+        language &&
+        pre.previousElementSibling?.classList.contains("language-header") ===
+          false
+      ) {
+        const languageHeader = document.createElement("div");
+        languageHeader.className = "language-header";
+        languageHeader.textContent = language;
+
+        // Insert header before pre element
+        pre.parentElement?.insertBefore(languageHeader, pre);
+      }
+
+      // Add line numbers
+      const codeText = codeBlock.textContent || "";
+      const lines = codeText.split("\n");
+      const lineCount =
+        lines[lines.length - 1] === "" ? lines.length - 1 : lines.length;
+
+      if (lineCount > 0 && !pre.querySelector(".line-numbers")) {
+        // Create line numbers container
+        const lineNumbers = document.createElement("div");
+        lineNumbers.className = "line-numbers";
+
+        // Generate line numbers
+        for (let i = 1; i <= lineCount; i++) {
+          const lineNum = document.createElement("div");
+          lineNum.textContent = i.toString();
+          lineNumbers.appendChild(lineNum);
+        }
+
+        pre.appendChild(lineNumbers);
+      }
 
       // Create copy button
       const copyButton = document.createElement("button");
-      copyButton.className =
-        "copy-button absolute top-2 right-2 px-3 py-1.5 text-xs font-medium rounded transition-all duration-200 z-10";
-      copyButton.style.cssText =
-        "background-color: var(--color-surface0); color: var(--color-text); border: 1px solid var(--color-overlay0);";
+      copyButton.className = "copy-button";
       copyButton.textContent = "Copy";
-      copyButton.dataset.codeBlock = "true"; // Mark for event delegation
+      copyButton.dataset.codeBlock = "true";
 
       pre.appendChild(copyButton);
     });
@@ -162,11 +196,18 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       }
     });
 
+    // Look for the references section marker to get the custom heading name
+    const marker = contentRef.querySelector(
+      "span[id='references-section-start']"
+    ) as HTMLElement | null;
+    const referencesHeadingText =
+      marker?.getAttribute("data-heading") || "References";
+
     const headings = contentRef.querySelectorAll("h2");
     let referencesSection: HTMLElement | null = null;
 
     headings.forEach((heading) => {
-      if (heading.textContent?.trim() === "References") {
+      if (heading.textContent?.trim() === referencesHeadingText) {
         referencesSection = heading;
       }
     });
@@ -278,7 +319,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     if (hljsInstance && props.hasCodeBlock && contentRef) {
       setTimeout(() => {
         hljsInstance.highlightAll();
-        addCopyButtons();
+        processCodeBlocks();
       }, 100);
     }
   });
@@ -288,7 +329,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     setTimeout(() => {
       processReferences();
       if (props.hasCodeBlock) {
-        addCopyButtons();
+        processCodeBlocks();
       }
     }, 150);
 
@@ -296,21 +337,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     if (contentRef) {
       const handleCopyButtonInteraction = async (e: Event) => {
         const target = e.target as HTMLElement;
-
-        // Handle mouseenter
-        if (
-          e.type === "mouseover" &&
-          target.classList.contains("copy-button")
-        ) {
-          target.style.backgroundColor = "var(--color-surface1)";
-        }
-
-        // Handle mouseleave
-        if (e.type === "mouseout" && target.classList.contains("copy-button")) {
-          if (target.textContent === "Copy") {
-            target.style.backgroundColor = "var(--color-surface0)";
-          }
-        }
 
         // Handle click
         if (e.type === "click" && target.classList.contains("copy-button")) {
@@ -323,22 +349,20 @@ export default function PostBodyClient(props: PostBodyClientProps) {
           try {
             await navigator.clipboard.writeText(code);
             target.textContent = "Copied!";
-            target.style.backgroundColor = "var(--color-green)";
-            target.style.color = "var(--color-base)";
+            target.classList.add("copied");
 
             setTimeout(() => {
               target.textContent = "Copy";
-              target.style.backgroundColor = "var(--color-surface0)";
-              target.style.color = "var(--color-text)";
+              target.classList.remove("copied");
             }, 2000);
           } catch (err) {
             console.error("Failed to copy code:", err);
             target.textContent = "Failed";
-            target.style.backgroundColor = "var(--color-red)";
+            target.classList.add("failed");
 
             setTimeout(() => {
               target.textContent = "Copy";
-              target.style.backgroundColor = "var(--color-surface0)";
+              target.classList.remove("failed");
             }, 2000);
           }
         }
@@ -346,8 +370,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
 
       // Single event listener for all copy button interactions
       contentRef.addEventListener("click", handleCopyButtonInteraction);
-      contentRef.addEventListener("mouseover", handleCopyButtonInteraction);
-      contentRef.addEventListener("mouseout", handleCopyButtonInteraction);
     }
   });
 
@@ -357,7 +379,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       setTimeout(() => {
         processReferences();
         if (props.hasCodeBlock) {
-          addCopyButtons();
+          processCodeBlocks();
         }
       }, 150);
     }

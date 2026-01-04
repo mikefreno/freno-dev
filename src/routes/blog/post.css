@@ -687,6 +687,106 @@ button:active,
 #post-content-body span#references-section-start {
   display: none !important;
 }
+/* Code block styles for published posts */
+#post-content-body pre {
+  position: relative;
+  overflow: auto;
+  max-height: 60vh;
+  background-color: var(--color-crust);
+  color: #fff;
+  font-family: "Source Code Pro", monospace;
+  border-radius: 0.5rem;
+
+  code {
+    overflow: visible;
+    max-height: none;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: 0.8rem;
+    display: block;
+    scrollbar-color: var(--color-text) transparent;
+  }
+}
+
+/* Language header */
+#post-content-body .language-header {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: var(--color-mantle);
+  color: var(--color-subtext1);
+  border-bottom: 1px solid var(--color-surface0);
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+  margin-bottom: 0;
+}
+
+/* Pre with language header - remove top border radius */
+#post-content-body .language-header + pre {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: 0;
+}
+
+/* Line numbers */
+#post-content-body .line-numbers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  padding: 1rem 0.75rem;
+  text-align: right;
+  user-select: none;
+  pointer-events: none;
+  background-color: var(--color-crust);
+  border-right: 1px solid var(--color-surface0);
+  color: var(--color-overlay0);
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  font-family: inherit;
+  min-width: 3rem;
+}
+
+/* Code with line numbers - add padding for line numbers column */
+#post-content-body pre:has(.line-numbers) code {
+  padding-left: 4rem;
+}
+
+/* Copy button */
+#post-content-body .copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  z-index: 10;
+  background-color: var(--color-surface0);
+  color: var(--color-text);
+  border: 1px solid var(--color-overlay0);
+  cursor: pointer;
+}
+
+#post-content-body .copy-button:hover {
+  background-color: var(--color-surface1);
+}
+
+#post-content-body .copy-button.copied {
+  background-color: var(--color-green);
+  color: var(--color-base);
+}
+
+#post-content-body .copy-button.failed {
+  background-color: var(--color-red);
+  color: var(--color-base);
+}
+
+/* Editor styles remain unchanged */
 pre {
   background: #0d0d0d;
   color: #fff;
