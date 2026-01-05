@@ -9,6 +9,7 @@
  * - Total Blocking Time (TBT)
  * - Cumulative Layout Shift (CLS)
  * - First Input Delay (FID)
+ * - Interaction to Next Paint (INP)
  * - Network requests and bundle sizes
  * - JavaScript execution time
  */
@@ -26,6 +27,7 @@ interface PerformanceMetrics {
   lcp: number;
   cls: number;
   fid: number;
+  inp: number;
   ttfb: number;
   domContentLoaded: number;
   loadComplete: number;
@@ -72,7 +74,9 @@ const TEST_PAGES: PageTestConfig[] = [
   { name: "Blog Post with large banner", path: "/blog/My_MacOS_rice." },
   { name: "Blog Post with Mermaid", path: "/blog/A_Journey_in_Self_Hosting" },
   { name: "Resume", path: "/resume" },
-  { name: "Contact", path: "/contact" }
+  { name: "Contact", path: "/contact" },
+  { name: "Login", path: "/login" },
+  { name: "404", path: "/404" }
 ];
 
 // Add additional blog post path if provided
@@ -89,11 +93,14 @@ async function setupPerformanceObservers(page: Page) {
       lcp: 0,
       cls: 0,
       fid: 0,
+      inp: 0,
       largestContentfulPaint: 0,
       cumulativeLayoutShift: 0,
       firstInputDelay: 0,
+      interactionToNextPaint: 0,
       layoutShifts: [] as number[],
-      longTasks: [] as number[]
+      longTasks: [] as number[],
+      interactions: [] as number[]
     };
 
     // Observe LCP
@@ -162,6 +169,34 @@ async function setupPerformanceObservers(page: Page) {
       } catch (e) {
         // Long tasks not supported
       }
+
+      // Observe INP (event timing for interactions)
+      try {
+        const inpObserver = new PerformanceObserver((entryList) => {
+          for (const entry of entryList.getEntries()) {
+            const eventEntry = entry as any;
+            if (eventEntry.interactionId) {
+              const interactionLatency = eventEntry.duration;
+              (window as any).__perfMetrics.interactions.push(
+                interactionLatency
+              );
+              // INP is the worst (98th percentile) interaction latency
+              const sortedInteractions = [
+                ...(window as any).__perfMetrics.interactions
+              ].sort((a: number, b: number) => b - a);
+              const p98Index = Math.floor(sortedInteractions.length * 0.02);
+              (window as any).__perfMetrics.inp =
+                sortedInteractions[p98Index] || sortedInteractions[0] || 0;
+              (window as any).__perfMetrics.interactionToNextPaint = (
+                window as any
+              ).__perfMetrics.inp;
+            }
+          }
+        });
+        inpObserver.observe({ type: "event", buffered: true });
+      } catch (e) {
+        // Event timing not supported
+      }
     }
   });
 }
@@ -193,13 +228,16 @@ async function collectPerformanceMetrics(
       lcp: 0,
       cls: 0,
       fid: 0,
-      longTasks: []
+      inp: 0,
+      longTasks: [],
+      interactions: []
     };
 
     // Fallback to direct API if observers didn't capture anything
     let lcp = observedMetrics.lcp;
     let cls = observedMetrics.cls;
     let fid = observedMetrics.fid;
+    let inp = observedMetrics.inp;
 
     if (lcp === 0) {
       const lcpEntries = performance.getEntriesByType(
@@ -219,6 +257,23 @@ async function collectPerformanceMetrics(
       cls = layoutShiftEntries
         .filter((entry: any) => !entry.hadRecentInput)
         .reduce((sum: number, entry: any) => sum + entry.value, 0);
+    }
+
+    // Calculate INP from event timing entries if not already captured
+    if (inp === 0) {
+      const eventEntries = performance.getEntriesByType("event") as any[];
+      const interactionLatencies = eventEntries
+        .filter((entry: any) => entry.interactionId)
+        .map((entry: any) => entry.duration);
+
+      if (interactionLatencies.length > 0) {
+        // INP is the 98th percentile of interaction latencies
+        const sorted = interactionLatencies.sort(
+          (a: number, b: number) => b - a
+        );
+        const p98Index = Math.floor(sorted.length * 0.02);
+        inp = sorted[p98Index] || sorted[0];
+      }
     }
 
     // Get resource timing
@@ -310,6 +365,7 @@ async function collectPerformanceMetrics(
       lcp,
       cls,
       fid,
+      inp,
       ttfb: perf.responseStart - perf.requestStart,
       domContentLoaded: perf.domContentLoadedEventEnd - perf.fetchStart,
       loadComplete: perf.loadEventEnd - perf.fetchStart,
@@ -470,14 +526,15 @@ function formatTime(ms: number): string {
 }
 
 function getWebVitalRating(
-  metric: "lcp" | "fcp" | "cls" | "fid",
+  metric: "lcp" | "fcp" | "cls" | "fid" | "inp",
   value: number
 ): string {
   const thresholds = {
     lcp: { good: 2500, needsImprovement: 4000 },
     fcp: { good: 1800, needsImprovement: 3000 },
     cls: { good: 0.1, needsImprovement: 0.25 },
-    fid: { good: 100, needsImprovement: 300 }
+    fid: { good: 100, needsImprovement: 300 },
+    inp: { good: 200, needsImprovement: 500 }
   };
 
   const t = thresholds[metric];
@@ -517,6 +574,9 @@ function printResults(results: TestResult[]) {
     );
     console.log(
       `    CLS (Cumulative Layout Shift):   ${result.median.cls.toFixed(3).padEnd(8)} | ${result.min.cls.toFixed(3)} → ${result.max.cls.toFixed(3)} ${getWebVitalRating("cls", result.median.cls)}`
+    );
+    console.log(
+      `    INP (Interaction to Next Paint): ${formatTime(result.median.inp).padEnd(8)} | ${formatTime(result.min.inp)} → ${formatTime(result.max.inp)} ${getWebVitalRating("inp", result.median.inp)}`
     );
 
     console.log("\n  Loading Metrics (Median):");
@@ -594,6 +654,7 @@ function printResults(results: TestResult[]) {
     lcp: results.reduce((sum, r) => sum + r.median.lcp, 0) / results.length,
     fcp: results.reduce((sum, r) => sum + r.median.fcp, 0) / results.length,
     cls: results.reduce((sum, r) => sum + r.median.cls, 0) / results.length,
+    inp: results.reduce((sum, r) => sum + r.median.inp, 0) / results.length,
     ttfb: results.reduce((sum, r) => sum + r.median.ttfb, 0) / results.length,
     totalBytes:
       results.reduce((sum, r) => sum + r.median.totalBytes, 0) / results.length,
@@ -608,6 +669,7 @@ function printResults(results: TestResult[]) {
   console.log(`    LCP:                ${formatTime(overallAverage.lcp)}`);
   console.log(`    FCP:                ${formatTime(overallAverage.fcp)}`);
   console.log(`    CLS:                ${overallAverage.cls.toFixed(3)}`);
+  console.log(`    INP:                ${formatTime(overallAverage.inp)}`);
   console.log(`    TTFB:               ${formatTime(overallAverage.ttfb)}`);
   console.log(
     `    Total Size:         ${formatBytes(overallAverage.totalBytes)}`
@@ -659,6 +721,14 @@ function printResults(results: TestResult[]) {
   if (highCLS.length > 0) {
     console.log(
       `    📐 ${highCLS.length} page(s) with CLS > 0.1 - add size attributes to images/elements`
+    );
+  }
+
+  // Find pages with high INP
+  const highINP = results.filter((r) => r.median.inp > 200);
+  if (highINP.length > 0) {
+    console.log(
+      `    ⚡ ${highINP.length} page(s) with INP > 200ms - optimize event handlers and reduce long tasks`
     );
   }
 
