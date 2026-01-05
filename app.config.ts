@@ -8,10 +8,26 @@ export default defineConfig({
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Split highlight.js into its own chunk
-            if (id.includes("highlight.js")) {
+            // Bundle highlight.js and lowlight together
+            if (id.includes("highlight.js") || id.includes("lowlight")) {
               return "highlight";
             }
+
+            // Bundle Mermaid separately (large library, only used on some posts)
+            if (id.includes("mermaid")) {
+              return "mermaid";
+            }
+
+            // Bundle all Tiptap extensions together (only used in editor)
+            if (id.includes("@tiptap") || id.includes("solid-tiptap")) {
+              return "tiptap";
+            }
+
+            // Bundle motion libraries
+            if (id.includes("motion") || id.includes("@motionone")) {
+              return "motion";
+            }
+
             // Split other large vendor libraries
             if (id.includes("node_modules")) {
               // Keep all solid-related packages together to avoid circular deps

@@ -1,0 +1,66 @@
+import { createLowlight } from "lowlight";
+import css from "highlight.js/lib/languages/css";
+import js from "highlight.js/lib/languages/javascript";
+import ts from "highlight.js/lib/languages/typescript";
+import ocaml from "highlight.js/lib/languages/ocaml";
+import rust from "highlight.js/lib/languages/rust";
+import python from "highlight.js/lib/languages/python";
+import java from "highlight.js/lib/languages/java";
+import go from "highlight.js/lib/languages/go";
+import c from "highlight.js/lib/languages/c";
+import cpp from "highlight.js/lib/languages/cpp";
+import csharp from "highlight.js/lib/languages/csharp";
+import sql from "highlight.js/lib/languages/sql";
+import bash from "highlight.js/lib/languages/bash";
+import json from "highlight.js/lib/languages/json";
+import yaml from "highlight.js/lib/languages/yaml";
+import markdown from "highlight.js/lib/languages/markdown";
+import xml from "highlight.js/lib/languages/xml";
+import php from "highlight.js/lib/languages/php";
+import ruby from "highlight.js/lib/languages/ruby";
+import swift from "highlight.js/lib/languages/swift";
+import kotlin from "highlight.js/lib/languages/kotlin";
+import dockerfile from "highlight.js/lib/languages/dockerfile";
+
+export function createConfiguredLowlight() {
+  const lowlight = createLowlight();
+
+  lowlight.register("css", css);
+  lowlight.register("js", js);
+  lowlight.register("javascript", js);
+  lowlight.register("ts", ts);
+  lowlight.register("typescript", ts);
+  lowlight.register("ocaml", ocaml);
+  lowlight.register("rust", rust);
+  lowlight.register("python", python);
+  lowlight.register("py", python);
+  lowlight.register("java", java);
+  lowlight.register("go", go);
+  lowlight.register("golang", go);
+  lowlight.register("c", c);
+  lowlight.register("cpp", cpp);
+  lowlight.register("c++", cpp);
+  lowlight.register("csharp", csharp);
+  lowlight.register("cs", csharp);
+  lowlight.register("sql", sql);
+  lowlight.register("bash", bash);
+  lowlight.register("shell", bash);
+  lowlight.register("sh", bash);
+  lowlight.register("json", json);
+  lowlight.register("yaml", yaml);
+  lowlight.register("yml", yaml);
+  lowlight.register("markdown", markdown);
+  lowlight.register("md", markdown);
+  lowlight.register("xml", xml);
+  lowlight.register("html", xml);
+  lowlight.register("php", php);
+  lowlight.register("ruby", ruby);
+  lowlight.register("rb", ruby);
+  lowlight.register("swift", swift);
+  lowlight.register("kotlin", kotlin);
+  lowlight.register("kt", kotlin);
+  lowlight.register("dockerfile", dockerfile);
+  lowlight.register("docker", dockerfile);
+
+  return lowlight;
+}
