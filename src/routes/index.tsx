@@ -182,7 +182,7 @@ export default function Home() {
               >
                 here
               </a>{" "}
-              - and also see the rest of my various dot files idk. There's a
+              - and also see the rest of my various dot files idk. There's a{" "}
               <a
                 href="/blog/My_MacOS_rice."
                 class="text-blue hover-underline-animation"
