@@ -50,6 +50,7 @@ const AVAILABLE_LANGUAGES = [
   { value: "javascript", label: "JavaScript" },
   { value: "json", label: "JSON" },
   { value: "kotlin", label: "Kotlin" },
+  { value: "lua", label: "Lua" },
   { value: "markdown", label: "Markdown" },
   { value: "ocaml", label: "OCaml" },
   { value: "php", label: "PHP" },
