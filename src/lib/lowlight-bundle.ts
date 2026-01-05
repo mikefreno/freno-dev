@@ -21,6 +21,7 @@ import ruby from "highlight.js/lib/languages/ruby";
 import swift from "highlight.js/lib/languages/swift";
 import kotlin from "highlight.js/lib/languages/kotlin";
 import dockerfile from "highlight.js/lib/languages/dockerfile";
+import lua from "highlight.js/lib/languages/lua";
 
 export function createConfiguredLowlight() {
   const lowlight = createLowlight();
@@ -61,6 +62,7 @@ export function createConfiguredLowlight() {
   lowlight.register("kt", kotlin);
   lowlight.register("dockerfile", dockerfile);
   lowlight.register("docker", dockerfile);
+  lowlight.register("lua", lua);
 
   return lowlight;
 }
