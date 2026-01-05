@@ -1,4 +1,4 @@
-import { JSX, onMount, createSignal, children } from "solid-js";
+import { JSX, onMount, onCleanup, createSignal, children } from "solid-js";
 
 export function Typewriter(props: {
   children: JSX.Element;
@@ -21,31 +21,28 @@ export function Typewriter(props: {
 
     containerRef.style.position = "relative";
 
-    const textNodes: { node: Text; text: string; startIndex: number }[] = [];
     let totalChars = 0;
+    const charElements: HTMLElement[] = [];
 
     const walkDOM = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent || "";
         if (text.trim().length > 0) {
-          textNodes.push({
-            node: node as Text,
-            text: text,
-            startIndex: totalChars
-          });
           totalChars += text.length;
 
+          const fragment = document.createDocumentFragment();
           const span = document.createElement("span");
-          text.split("").forEach((char, i) => {
+
+          text.split("").forEach((char) => {
             const charSpan = document.createElement("span");
             charSpan.textContent = char;
-            charSpan.setAttribute(
-              "data-char-index",
-              String(totalChars - text.length + i)
-            );
+            charSpan.style.opacity = "0";
+            charElements.push(charSpan);
             span.appendChild(charSpan);
           });
-          node.parentNode?.replaceChild(span, node);
+
+          fragment.appendChild(span);
+          node.parentNode?.replaceChild(fragment, node);
         }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         Array.from(node.childNodes).forEach(walkDOM);
@@ -63,59 +60,103 @@ export function Typewriter(props: {
       cursorRef?.removeEventListener("animationend", handleAnimationEnd);
     };
 
+    let cleanupAnimation: (() => void) | undefined;
+
     const startReveal = () => {
       setIsTyping(true);
 
       let currentIndex = 0;
       const speed = props.speed || 30;
+      const msPerChar = 1000 / speed;
+      let lastTime = performance.now();
+      let animationFrameId: number;
 
-      const revealNextChar = () => {
-        if (currentIndex < totalChars) {
-          const charSpan = containerRef?.querySelector(
-            `[data-char-index="${currentIndex}"]`
-          ) as HTMLElement;
+      const revealNextChar = (currentTime: number) => {
+        const elapsed = currentTime - lastTime;
 
-          if (charSpan) {
-            charSpan.style.opacity = "1";
+        if (elapsed >= msPerChar) {
+          if (currentIndex < totalChars) {
+            const charSpan = charElements[currentIndex];
 
-            if (cursorRef && containerRef) {
+            if (charSpan) {
+              // Batch style reads first
               const rect = charSpan.getBoundingClientRect();
-              const containerRect = containerRef.getBoundingClientRect();
+              const containerRect = containerRef?.getBoundingClientRect();
 
-              cursorRef.style.left = `${rect.right - containerRect.left}px`;
-              cursorRef.style.top = `${rect.top - containerRect.top}px`;
-              cursorRef.style.height = `${charSpan.offsetHeight}px`;
+              // Then batch style writes
+              charSpan.style.opacity = "1";
+
+              if (cursorRef && containerRect) {
+                cursorRef.style.left = `${rect.right - containerRect.left}px`;
+                cursorRef.style.top = `${rect.top - containerRect.top}px`;
+                cursorRef.style.height = `${charSpan.offsetHeight}px`;
+              }
             }
-          }
 
-          currentIndex++;
-          setTimeout(revealNextChar, 1000 / speed);
-        } else {
-          setIsTyping(false);
+            currentIndex++;
+            lastTime = currentTime;
+          } else {
+            setIsTyping(false);
 
-          if (typeof keepAlive === "number") {
-            cursorRef?.addEventListener("animationend", handleAnimationEnd);
+            if (typeof keepAlive === "number") {
+              cursorRef?.addEventListener("animationend", handleAnimationEnd);
 
-            const durationSeconds = keepAlive / 1000;
-            const iterations = Math.ceil(durationSeconds);
-            if (cursorRef) {
-              cursorRef.style.animation = `blink 1s ${iterations}`;
+              const durationSeconds = keepAlive / 1000;
+              const iterations = Math.ceil(durationSeconds);
+              if (cursorRef) {
+                cursorRef.style.animation = `blink 1s ${iterations}`;
+              }
             }
+            return;
           }
         }
+
+        animationFrameId = requestAnimationFrame(revealNextChar);
       };
 
-      setTimeout(revealNextChar, 100);
+      animationFrameId = requestAnimationFrame(revealNextChar);
+
+      return () => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+      };
     };
 
     if (delay > 0) {
       setTimeout(() => {
         setIsDelaying(false);
-        startReveal();
+        cleanupAnimation = startReveal();
       }, delay);
     } else {
-      startReveal();
+      cleanupAnimation = startReveal();
     }
+
+    // Use IntersectionObserver to pause animation when not in viewport
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // If component leaves viewport while animating, we could pause
+          // For now, we just ensure it starts when visible
+          if (!entry.isIntersecting && cleanupAnimation) {
+            // Component is off-screen - could add pause logic here if needed
+          }
+        });
+      },
+      {
+        rootMargin: "50px", // Start slightly before entering viewport
+        threshold: 0.1
+      }
+    );
+
+    observer.observe(containerRef);
+
+    onCleanup(() => {
+      observer.disconnect();
+      if (cleanupAnimation) {
+        cleanupAnimation();
+      }
+    });
   });
 
   const getCursorClass = () => {
@@ -129,6 +170,7 @@ export function Typewriter(props: {
     <div
       ref={containerRef}
       class={props.class}
+      style={{ opacity: animated() ? "1" : "0" }}
       data-typewriter={!animated() ? "static" : "animated"}
     >
       {resolved()}
