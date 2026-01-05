@@ -49,7 +49,7 @@ const getPosts = query(async () => {
       }
 
       postsQuery += ` GROUP BY p.id, p.title, p.subtitle, p.body, p.banner_photo, p.date, p.published, p.category, p.author_id, p.reads, p.attachments`;
-      postsQuery += ` ORDER BY p.date ASC;`;
+      postsQuery += ` ORDER BY p.date DESC;`;
 
       const postsResult = await conn.execute(postsQuery);
       const posts = postsResult.rows;
