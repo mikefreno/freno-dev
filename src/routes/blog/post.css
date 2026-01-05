@@ -779,7 +779,7 @@ button:active,
 
 /* Code with line numbers - add padding for line numbers column */
 #post-content-body pre:has(.line-numbers) code {
-  padding-left: 4rem;
+  padding-left: 2.5rem;
 }
 
 /* Copy button - now in header */
