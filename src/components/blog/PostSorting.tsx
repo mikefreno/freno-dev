@@ -18,6 +18,21 @@ export interface PostSortingProps {
 }
 
 export default function PostSorting(props: PostSortingProps) {
+  // Memoize postTags map separately since tags don't change with filters/sorts
+  const postTags = createMemo(() => {
+    const tagMap = new Map<number, Set<string>>();
+    props.tags.forEach((tag) => {
+      if (!tagMap.has(tag.post_id)) {
+        tagMap.set(tag.post_id, new Set());
+      }
+      const tagWithoutHash = tag.value.startsWith("#")
+        ? tag.value.slice(1)
+        : tag.value;
+      tagMap.get(tag.post_id)!.add(tagWithoutHash);
+    });
+    return tagMap;
+  });
+
   const filteredPosts = createMemo(() => {
     let filtered = props.posts;
 
@@ -29,16 +44,7 @@ export default function PostSorting(props: PostSortingProps) {
       }
     }
 
-    const postTags = new Map<number, Set<string>>();
-    props.tags.forEach((tag) => {
-      if (!postTags.has(tag.post_id)) {
-        postTags.set(tag.post_id, new Set());
-      }
-      const tagWithoutHash = tag.value.startsWith("#")
-        ? tag.value.slice(1)
-        : tag.value;
-      postTags.get(tag.post_id)!.add(tagWithoutHash);
-    });
+    const tags = postTags();
 
     if (props.include !== undefined) {
       const includeList = props.include.split("|").filter(Boolean);
@@ -50,10 +56,10 @@ export default function PostSorting(props: PostSortingProps) {
       const includeSet = new Set(includeList);
 
       return filtered.filter((post) => {
-        const tags = postTags.get(post.id);
-        if (!tags || tags.size === 0) return false;
+        const postTagSet = tags.get(post.id);
+        if (!postTagSet || postTagSet.size === 0) return false;
 
-        for (const tag of tags) {
+        for (const tag of postTagSet) {
           if (includeSet.has(tag)) {
             return true;
           }
@@ -72,10 +78,10 @@ export default function PostSorting(props: PostSortingProps) {
       const filterSet = new Set(filterList);
 
       return filtered.filter((post) => {
-        const tags = postTags.get(post.id);
-        if (!tags || tags.size === 0) return true;
+        const postTagSet = tags.get(post.id);
+        if (!postTagSet || postTagSet.size === 0) return true;
 
-        for (const tag of tags) {
+        for (const tag of postTagSet) {
           if (filterSet.has(tag)) {
             return false;
           }
@@ -92,9 +98,9 @@ export default function PostSorting(props: PostSortingProps) {
 
     switch (props.sort) {
       case "newest":
-        sorted.reverse(); // Posts come oldest first from DB
-        break;
+        break; // Posts already come newest first from DB (DESC order)
       case "oldest":
+        sorted.reverse(); // Reverse to get oldest first
         break;
       case "most_liked":
         sorted.sort((a, b) => (b.total_likes || 0) - (a.total_likes || 0));
@@ -108,7 +114,7 @@ export default function PostSorting(props: PostSortingProps) {
         );
         break;
       default:
-        sorted.reverse(); // Default to newest
+        break; // Default to newest (already DESC from DB)
     }
 
     return sorted;
