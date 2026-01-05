@@ -3,6 +3,7 @@ import Dropzone from "./Dropzone";
 import XCircle from "~/components/icons/XCircle";
 import AddImageToS3 from "~/lib/s3upload";
 import { env } from "~/env/client";
+import { api } from "~/lib/api";
 
 export interface AddAttachmentSectionProps {
   type: "blog" | "project";
@@ -12,73 +13,85 @@ export interface AddAttachmentSectionProps {
 }
 
 export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
-  const [images, setImages] = createSignal<File[]>([]);
-  const [imageHolder, setImageHolder] = createSignal<string[]>([]);
-  const [newImageHolder, setNewImageHolder] = createSignal<string[]>([]);
-  const [newImageHolderKeys, setNewImageHolderKeys] = createSignal<string[]>(
-    []
-  );
+  const [files, setFiles] = createSignal<File[]>([]);
+  const [s3Files, setS3Files] = createSignal<
+    Array<{ key: string; size: number; lastModified: string }>
+  >([]);
+  const [newFileHolder, setNewFileHolder] = createSignal<string[]>([]);
+  const [newFileHolderKeys, setNewFileHolderKeys] = createSignal<string[]>([]);
+  const [fileTypes, setFileTypes] = createSignal<string[]>([]);
+  const [loading, setLoading] = createSignal(false);
 
   createEffect(() => {
-    if (props.existingAttachments) {
-      const imgStringArr = props.existingAttachments.split(",");
-      setImageHolder(imgStringArr);
+    if (props.postTitle) {
+      loadAttachments();
     }
   });
+
+  const loadAttachments = async () => {
+    setLoading(true);
+    try {
+      const result = await api.misc.listAttachments.query({
+        type: props.type,
+        title: props.postTitle
+      });
+      setS3Files(result.files);
+    } catch (err) {
+      console.error("Failed to load attachments:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleImageDrop = async (acceptedFiles: File[]) => {
     if (props.postTitle) {
       for (const file of acceptedFiles) {
-        setImages((prev) => [...prev, file]);
+        setFiles((prev) => [...prev, file]);
 
         try {
           const key = await AddImageToS3(file, props.postTitle, props.type);
           if (key) {
-            setNewImageHolderKeys((prev) => [...prev, key]);
+            setNewFileHolderKeys((prev) => [...prev, key]);
 
             const reader = new FileReader();
             reader.onload = () => {
               const str = reader.result;
               if (str) {
-                setNewImageHolder((prev) => [...prev, str as string]);
+                setNewFileHolder((prev) => [...prev, str as string]);
+                setFileTypes((prev) => [...prev, file.type]);
               }
             };
             reader.readAsDataURL(file);
+
+            // Refresh the S3 file list
+            await loadAttachments();
           }
         } catch (err) {
-          console.error("Failed to upload image:", err);
+          console.error("Failed to upload file:", err);
         }
       }
     }
   };
 
-  const removeImage = async (index: number, key: string) => {
-    if (props.postId && props.existingAttachments) {
-      const imgStringArr = props.existingAttachments.split(",");
-      const newString = imgStringArr.filter((str) => str !== key).join(",");
+  const removeImage = async (key: string) => {
+    try {
+      await fetch("/api/trpc/misc.simpleDeleteImage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key })
+      });
 
-      try {
-        await fetch("/api/trpc/misc.deleteImage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            key,
-            newAttachmentString: newString,
-            type: props.type,
-            id: props.postId
-          })
-        });
-
-        setImageHolder((prev) => prev.filter((_, i) => i !== index));
-      } catch (err) {
-        console.error("Failed to delete image:", err);
-      }
+      // Refresh the S3 file list
+      await loadAttachments();
+    } catch (err) {
+      console.error("Failed to delete file:", err);
     }
   };
 
   const removeNewImage = async (index: number, key: string) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-    setNewImageHolder((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewFileHolder((prev) => prev.filter((_, i) => i !== index));
+    setFileTypes((prev) => prev.filter((_, i) => i !== index));
 
     try {
       await fetch("/api/trpc/misc.simpleDeleteImage", {
@@ -87,7 +100,7 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
         body: JSON.stringify({ key })
       });
     } catch (err) {
-      console.error("Failed to delete image:", err);
+      console.error("Failed to delete file:", err);
     }
   };
 
@@ -99,6 +112,15 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
     } catch (err) {
       console.error("Failed to copy text:", err);
     }
+  };
+
+  const getFileUrl = (key: string) => {
+    const bucketString = env.VITE_AWS_BUCKET_STRING || "";
+    return bucketString + key;
+  };
+
+  const isVideoFile = (url: string) => {
+    return url.match(/\.(mp4|webm|mov)$/i) !== null;
   };
 
   return (
@@ -114,19 +136,22 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
       <div class="flex justify-center">
         <Dropzone
           onDrop={handleImageDrop}
-          accept="image/jpg, image/jpeg, image/png"
+          accept="image/jpg, image/jpeg, image/png, video/mp4, video/webm, video/quicktime"
           fileHolder={null}
           preSet={null}
         />
       </div>
+      <Show when={loading()}>
+        <div class="text-subtext0 py-4 text-center">Loading attachments...</div>
+      </Show>
       <div class="-mx-24 grid grid-cols-6 gap-4">
-        <For each={imageHolder()}>
-          {(key, index) => (
+        <For each={s3Files()}>
+          {(file) => (
             <div>
               <button
                 type="button"
-                class="hover:bg-crust hover:bg-opacity-80 absolute ml-4 pb-[120px]"
-                onClick={() => removeImage(index(), key)}
+                class="hover:bg-crust hover:bg-opacity-80 absolute z-10 ml-4 pb-[120px]"
+                onClick={() => removeImage(file.key)}
               >
                 <XCircle
                   height={24}
@@ -135,19 +160,42 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
                   strokeWidth={1}
                 />
               </button>
-              <img src={key} class="mx-4 my-auto h-36 w-36" alt="attachment" />
+              <button
+                type="button"
+                onClick={() => copyToClipboard(file.key)}
+                class="relative"
+              >
+                <Show
+                  when={isVideoFile(file.key)}
+                  fallback={
+                    <img
+                      src={getFileUrl(file.key)}
+                      class="mx-4 my-auto h-36 w-36 object-cover"
+                      alt="attachment"
+                    />
+                  }
+                >
+                  <video
+                    src={getFileUrl(file.key)}
+                    class="mx-4 my-auto h-36 w-36 object-cover"
+                    controls
+                  />
+                </Show>
+              </button>
             </div>
           )}
         </For>
-        <div class="border-surface2 mx-auto border-r" />
-        <For each={newImageHolder()}>
-          {(img, index) => (
+        <Show when={newFileHolder().length > 0}>
+          <div class="border-surface2 mx-auto border-r" />
+        </Show>
+        <For each={newFileHolder()}>
+          {(file, index) => (
             <div>
               <button
                 type="button"
-                class="hover:bg-crust hover:bg-opacity-80 absolute ml-4 pb-[120px]"
+                class="hover:bg-crust hover:bg-opacity-80 absolute z-10 ml-4 pb-[120px]"
                 onClick={() =>
-                  removeNewImage(index(), newImageHolderKeys()[index()])
+                  removeNewImage(index(), newFileHolderKeys()[index()])
                 }
               >
                 <XCircle
@@ -160,14 +208,25 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
               <button
                 type="button"
                 onClick={() =>
-                  copyToClipboard(newImageHolderKeys()[index()] as string)
+                  copyToClipboard(newFileHolderKeys()[index()] as string)
                 }
               >
-                <img
-                  src={img}
-                  class="mx-4 my-auto h-36 w-36"
-                  alt="new attachment"
-                />
+                <Show
+                  when={fileTypes()[index()]?.startsWith("video/")}
+                  fallback={
+                    <img
+                      src={file}
+                      class="mx-4 my-auto h-36 w-36 object-cover"
+                      alt="new attachment"
+                    />
+                  }
+                >
+                  <video
+                    src={file}
+                    class="mx-4 my-auto h-36 w-36 object-cover"
+                    controls
+                  />
+                </Show>
               </button>
             </div>
           )}

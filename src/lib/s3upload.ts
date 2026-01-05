@@ -23,7 +23,17 @@ export default async function AddImageToS3(
     console.log("url: " + uploadURL, "key: " + key);
 
     const ext = /^.+\.([^.]+)$/.exec(filename);
-    const contentType = ext ? `image/${ext[1]}` : "application/octet-stream";
+    let contentType = "application/octet-stream";
+
+    if (ext) {
+      const extension = ext[1].toLowerCase();
+      if (["mp4", "webm", "mov", "quicktime"].includes(extension)) {
+        contentType =
+          extension === "mov" ? "video/quicktime" : `video/${extension}`;
+      } else {
+        contentType = `image/${extension}`;
+      }
+    }
 
     const uploadResponse = await fetch(uploadURL, {
       method: "PUT",
@@ -37,7 +47,9 @@ export default async function AddImageToS3(
       throw new Error("Failed to upload file to S3");
     }
 
-    if (type === "blog") {
+    // Only create thumbnails for images
+    const isImage = contentType.startsWith("image/");
+    if (type === "blog" && isImage) {
       try {
         const thumbnail = await resizeImage(file, 200, 200, 0.8);
 

@@ -4,7 +4,8 @@ import {
   S3Client,
   GetObjectCommand,
   PutObjectCommand,
-  DeleteObjectCommand
+  DeleteObjectCommand,
+  ListObjectsV2Command
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "~/env/server";
@@ -120,6 +121,64 @@ export const miscRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to generate pre-signed URL"
+        });
+      }
+    }),
+
+  listAttachments: publicProcedure
+    .input(
+      z.object({
+        type: z.string(),
+        title: z.string()
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const credentials = {
+          accessKeyId: env._AWS_ACCESS_KEY,
+          secretAccessKey: env._AWS_SECRET_KEY
+        };
+
+        const client = new S3Client({
+          region: env.AWS_REGION,
+          credentials: credentials
+        });
+
+        const sanitizeForS3 = (str: string) => {
+          return str
+            .replace(/\s+/g, "-")
+            .replace(/[^\w\-\.]/g, "")
+            .replace(/\-+/g, "-")
+            .replace(/^-+|-+$/g, "");
+        };
+
+        const sanitizedTitle = sanitizeForS3(input.title);
+        const prefix = `${input.type}/${sanitizedTitle}/`;
+
+        const command = new ListObjectsV2Command({
+          Bucket: env.AWS_S3_BUCKET_NAME,
+          Prefix: prefix
+        });
+
+        const response = await client.send(command);
+        const files =
+          response.Contents?.map((item) => ({
+            key: item.Key || "",
+            size: item.Size || 0,
+            lastModified: item.LastModified?.toISOString() || ""
+          })) || [];
+
+        // Filter out thumbnail files (ending with -small.ext)
+        const mainFiles = files.filter(
+          (file) => !file.key.match(/-small\.(jpg|jpeg|png|gif)$/i)
+        );
+
+        return { files: mainFiles };
+      } catch (error) {
+        console.error("Failed to list attachments:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to list attachments"
         });
       }
     }),
