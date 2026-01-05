@@ -183,8 +183,20 @@ export default function Home() {
                 here
               </a>{" "}
               - and also see the rest of my various dot files idk. There's a
-              macos and arch linux rice in there if you're into that kinda thing
-              and a home server setup too. Which I will write about soon™.
+              <a
+                href="/blog/My_MacOS_rice."
+                class="text-blue hover-underline-animation"
+              >
+                macos
+              </a>{" "}
+              arch linux rice in there if you're into that kinda thing and a{" "}
+              <a
+                href="/blog/A_Journey_in_Self_Hosting"
+                class="text-blue hover-underline-animation"
+              >
+                home server setup too
+              </a>
+              .
             </Typewriter>
           </div>
           <div class="flex flex-col items-end justify-center gap-4 pr-4">
