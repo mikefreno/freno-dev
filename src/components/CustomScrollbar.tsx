@@ -100,6 +100,43 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleThumbTouchStart = (e: TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+
+    const startY = e.touches[0].clientY;
+    const startScrollPercentage = scrollPercentage();
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!containerRef || !scrollbarRef) return;
+
+      const deltaY = moveEvent.touches[0].clientY - startY;
+      const trackHeight = scrollbarRef.getBoundingClientRect().height || 0;
+      const deltaPercentage = (deltaY / trackHeight) * 100;
+      const newPercentage = Math.max(
+        0,
+        Math.min(100, startScrollPercentage + deltaPercentage)
+      );
+
+      const scrollHeight = containerRef.scrollHeight;
+      const clientHeight = containerRef.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+
+      const targetScroll = (newPercentage / 100) * maxScroll;
+      containerRef.scrollTop = targetScroll;
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
+  };
+
   onMount(() => {
     if (!containerRef) return;
 
@@ -138,7 +175,8 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
       class="relative h-screen w-full overflow-x-hidden overflow-y-auto"
       style={{
         "scrollbar-width": "none",
-        "-ms-overflow-style": "none"
+        "-ms-overflow-style": "none",
+        "touch-action": "pan-y"
       }}
     >
       <style>
@@ -166,19 +204,32 @@ export default function CustomScrollbar(props: CustomScrollbarProps) {
           }}
           style={{
             right: `${getRightOffset()}px`,
-            "z-index": "9999"
+            "z-index": "9999",
+            "touch-action": "none"
           }}
         >
           <div
             ref={thumbRef}
             onMouseDown={handleThumbMouseDown}
-            class="bg-text absolute right-0.5 w-2 cursor-pointer rounded-full hover:w-2.5"
+            onTouchStart={handleThumbTouchStart}
+            class="absolute cursor-pointer"
             style={{
               height: `${Math.max(thumbHeight(), 5)}%`,
               top: `${(scrollPercentage() / 100) * (100 - thumbHeight())}%`,
-              transition: "width 0.15s, background 0.15s"
+              right: "-8px",
+              width: "24px",
+              padding: "0 8px",
+              "touch-action": "none"
             }}
-          />
+          >
+            <div
+              class="bg-text h-full w-2 rounded-full transition-all duration-150 hover:w-2.5"
+              style={{
+                "margin-left": "auto",
+                "margin-right": "8.5px"
+              }}
+            />
+          </div>
         </div>
       </Show>
     </div>
