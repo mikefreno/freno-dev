@@ -17,8 +17,46 @@ import { ActivityHeatmap } from "./ActivityHeatmap";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { SkeletonBox, SkeletonText } from "./SkeletonLoader";
 import { env } from "~/env/client";
-import { A, useNavigate, useLocation } from "@solidjs/router";
+import {
+  A,
+  useNavigate,
+  useLocation,
+  query,
+  createAsync
+} from "@solidjs/router";
 import { BREAKPOINTS } from "~/config";
+import { getRequestEvent } from "solid-js/web";
+
+const getUserState = query(async () => {
+  "use server";
+  const { getPrivilegeLevel, getUserID } = await import("~/server/utils");
+  const { ConnectionFactory } = await import("~/server/utils");
+  const event = getRequestEvent()!;
+  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
+  const userId = await getUserID(event.nativeEvent);
+
+  if (!userId) {
+    return {
+      isAuthenticated: false,
+      email: null,
+      privilegeLevel: "anonymous" as const
+    };
+  }
+
+  const conn = ConnectionFactory();
+  const res = await conn.execute({
+    sql: "SELECT email FROM User WHERE id = ?",
+    args: [userId]
+  });
+
+  const email = res.rows[0] ? (res.rows[0].email as string | null) : null;
+
+  return {
+    isAuthenticated: true,
+    email,
+    privilegeLevel
+  };
+}, "bars-user-state");
 
 function formatDomainName(url: string): string {
   const domain = url.split("://")[1]?.split(":")[0] ?? url;
@@ -157,6 +195,26 @@ export function RightBarContent() {
               <span>Resume</span>
             </a>
           </li>
+          <li>
+            <a
+              href="/downloads"
+              onClick={handleLinkClick}
+              class="hover:text-subtext0 flex items-center gap-3 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105"
+            >
+              <span class="shaker rounded-full p-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height={24}
+                  width={24}
+                  viewBox="0 0 512 512"
+                  class="fill-text"
+                >
+                  <path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z" />
+                </svg>
+              </span>
+              <span>Downloads</span>
+            </a>
+          </li>
         </ul>
       </Typewriter>
 
@@ -188,16 +246,12 @@ export function RightBarContent() {
 export function LeftBar() {
   const { leftBarVisible, setLeftBarVisible } = useBars();
   const location = useLocation();
+  const userState = createAsync(() => getUserState());
   let ref: HTMLDivElement | undefined;
 
   const [recentPosts, setRecentPosts] = createSignal<any[] | undefined>(
     undefined
   );
-
-  const [userInfo, setUserInfo] = createSignal<{
-    email: string | null;
-    isAuthenticated: boolean;
-  } | null>(null);
 
   const [isMounted, setIsMounted] = createSignal(false);
   const [signOutLoading, setSignOutLoading] = createSignal(false);
@@ -226,31 +280,6 @@ export function LeftBar() {
     } catch (error) {
       console.error("Sign out failed:", error);
       setSignOutLoading(false);
-    }
-  };
-
-  const fetchUserInfo = async () => {
-    try {
-      const response = await fetch("/api/trpc/user.getProfile", {
-        method: "GET"
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.result?.data) {
-          setUserInfo({
-            email: result.result.data.email,
-            isAuthenticated: true
-          });
-        } else {
-          setUserInfo({ email: null, isAuthenticated: false });
-        }
-      } else {
-        setUserInfo({ email: null, isAuthenticated: false });
-      }
-    } catch (error) {
-      console.error("Failed to fetch user info:", error);
-      setUserInfo({ email: null, isAuthenticated: false });
     }
   };
 
@@ -377,21 +406,11 @@ export function LeftBar() {
         console.error("Failed to fetch recent posts:", error);
         setRecentPosts([]);
       }
-
-      await fetchUserInfo();
     };
 
     setTimeout(() => {
       fetchData();
     }, 0);
-  });
-
-  createEffect(() => {
-    location.pathname;
-
-    if (isMounted()) {
-      fetchUserInfo();
-    }
   });
 
   const navigate = useNavigate();
@@ -539,6 +558,15 @@ export function LeftBar() {
                     Blog
                   </a>
                 </li>
+                <Show
+                  when={isMounted() && userState()?.privilegeLevel === "admin"}
+                >
+                  <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                    <a href="/analytics" onClick={handleLinkClick}>
+                      Analytics
+                    </a>
+                  </li>
+                </Show>
                 <li
                   class="hover:text-subtext0 w-fit cursor-pointer transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"
                   onClick={() => {
@@ -547,7 +575,7 @@ export function LeftBar() {
                   }}
                 >
                   <Show
-                    when={isMounted() && userInfo()?.isAuthenticated}
+                    when={isMounted() && userState()?.isAuthenticated}
                     fallback={
                       <a href="/login" onClick={handleLinkClick}>
                         Login
@@ -556,16 +584,16 @@ export function LeftBar() {
                   >
                     <A href="/account" onClick={handleLinkClick}>
                       Account
-                      <Show when={userInfo()?.email}>
+                      <Show when={userState()?.email}>
                         <span class="text-subtext0 text-sm font-normal">
                           {" "}
-                          ({userInfo()!.email})
+                          ({userState()!.email})
                         </span>
                       </Show>
                     </A>
                   </Show>
                 </li>
-                <Show when={isMounted() && userInfo()?.isAuthenticated}>
+                <Show when={isMounted() && userState()?.isAuthenticated}>
                   <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
                     <button
                       onClick={handleSignOut}
