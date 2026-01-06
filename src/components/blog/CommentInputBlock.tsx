@@ -1,5 +1,6 @@
 import { createEffect } from "solid-js";
 import type { CommentInputBlockProps } from "~/types/comment";
+import Button from "~/components/ui/Button";
 
 export default function CommentInputBlock(props: CommentInputBlockProps) {
   let bodyRef: HTMLTextAreaElement | undefined;
@@ -37,17 +38,13 @@ export default function CommentInputBlock(props: CommentInputBlockProps) {
               </label>
             </div>
             <div class="flex justify-end pt-2">
-              <button
+              <Button
                 type="submit"
-                disabled={props.commentSubmitLoading}
-                class={`${
-                  props.commentSubmitLoading
-                    ? "bg-surface2 opacity-50"
-                    : "border-sapphire bg-blue hover:brightness-125"
-                } rounded border px-4 py-2 text-base font-light shadow-md transition-all duration-300 ease-in-out active:scale-90`}
+                loading={props.commentSubmitLoading}
+                variant="primary"
               >
                 Submit
-              </button>
+              </Button>
             </div>
           </form>
         </div>

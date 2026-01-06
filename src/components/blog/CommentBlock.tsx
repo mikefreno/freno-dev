@@ -10,7 +10,8 @@ import ReplyIcon from "~/components/icons/ReplyIcon";
 import TrashIcon from "~/components/icons/TrashIcon";
 import EditIcon from "~/components/icons/EditIcon";
 import ThumbsUpEmoji from "~/components/icons/emojis/ThumbsUp";
-import LoadingSpinner from "~/components/LoadingSpinner";
+import Button from "~/components/ui/Button";
+import IconButton from "~/components/ui/IconButton";
 import CommentInputBlock from "./CommentInputBlock";
 import ReactionBar from "./ReactionBar";
 
@@ -254,32 +255,46 @@ export default function CommentBlock(props: CommentBlockProps) {
 
                 {/* Delete button */}
                 <Show when={canDelete()}>
-                  <button class="z-100" onClick={deleteCommentTrigger}>
-                    <Show
-                      when={!deletionLoading()}
-                      fallback={<LoadingSpinner height={24} width={24} />}
-                    >
+                  <IconButton
+                    icon={
                       <TrashIcon
                         height={24}
                         width={24}
                         stroke="var(--color-red)"
                         strokeWidth={1.5}
                       />
-                    </Show>
-                  </button>
+                    }
+                    variant="danger"
+                    loading={deletionLoading()}
+                    onClick={deleteCommentTrigger}
+                    aria-label="Delete comment"
+                    class="z-100"
+                  />
                 </Show>
               </div>
 
               {/* Edit and Reply buttons */}
               <div class="absolute flex">
                 <Show when={canEdit()}>
-                  <button onClick={editCommentTrigger} class="px-2">
-                    <EditIcon strokeWidth={1} height={24} width={24} />
-                  </button>
+                  <IconButton
+                    icon={<EditIcon strokeWidth={1} height={24} width={24} />}
+                    onClick={editCommentTrigger}
+                    aria-label="Edit comment"
+                    class="px-2"
+                  />
                 </Show>
-                <button onClick={toggleCommentReplyBox} class="z-30">
-                  <ReplyIcon color={replyIconColor()} height={24} width={24} />
-                </button>
+                <IconButton
+                  icon={
+                    <ReplyIcon
+                      color={replyIconColor()}
+                      height={24}
+                      width={24}
+                    />
+                  }
+                  onClick={toggleCommentReplyBox}
+                  aria-label="Reply to comment"
+                  class="z-30"
+                />
               </div>
 
               {/* Reaction bar */}

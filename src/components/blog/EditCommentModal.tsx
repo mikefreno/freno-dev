@@ -1,6 +1,7 @@
 import { createSignal, Show } from "solid-js";
 import type { EditCommentModalProps } from "~/types/comment";
 import Xmark from "~/components/icons/Xmark";
+import Button from "~/components/ui/Button";
 
 export default function EditCommentModal(props: EditCommentModalProps) {
   let bodyRef: HTMLTextAreaElement | undefined;
@@ -52,17 +53,13 @@ export default function EditCommentModal(props: EditCommentModalProps) {
               <label class="underlinedInputLabel">Edit Comment</label>
             </div>
             <div class="flex justify-end pt-2">
-              <button
+              <Button
                 type="submit"
-                disabled={props.editCommentLoading}
-                class={`${
-                  props.editCommentLoading
-                    ? "bg-surface2 opacity-50"
-                    : "border-sapphire bg-blue hover:brightness-125"
-                } rounded border px-4 py-2 text-base shadow-md transition-all duration-300 ease-in-out active:scale-90`}
+                loading={props.editCommentLoading}
+                variant="primary"
               >
                 Submit
-              </button>
+              </Button>
             </div>
           </form>
           <Show when={showNoChange()}>

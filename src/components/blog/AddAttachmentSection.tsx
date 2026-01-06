@@ -1,6 +1,6 @@
 import { createSignal, createEffect, For, Show } from "solid-js";
 import Dropzone from "./Dropzone";
-import XCircle from "~/components/icons/XCircle";
+import AttachmentThumbnail from "~/components/ui/AttachmentThumbnail";
 import AddImageToS3 from "~/lib/s3upload";
 import { env } from "~/env/client";
 import { api } from "~/lib/api";
@@ -147,42 +147,13 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
       <div class="-mx-24 grid grid-cols-6 gap-4">
         <For each={s3Files()}>
           {(file) => (
-            <div>
-              <button
-                type="button"
-                class="hover:bg-crust hover:bg-opacity-80 absolute z-10 ml-4 pb-[120px]"
-                onClick={() => removeImage(file.key)}
-              >
-                <XCircle
-                  height={24}
-                  width={24}
-                  stroke={"currentColor"}
-                  strokeWidth={1}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => copyToClipboard(file.key)}
-                class="relative"
-              >
-                <Show
-                  when={isVideoFile(file.key)}
-                  fallback={
-                    <img
-                      src={getFileUrl(file.key)}
-                      class="mx-4 my-auto h-36 w-36 object-cover"
-                      alt="attachment"
-                    />
-                  }
-                >
-                  <video
-                    src={getFileUrl(file.key)}
-                    class="mx-4 my-auto h-36 w-36 object-cover"
-                    controls
-                  />
-                </Show>
-              </button>
-            </div>
+            <AttachmentThumbnail
+              fileUrl={getFileUrl(file.key)}
+              isVideo={isVideoFile(file.key)}
+              onCopy={() => copyToClipboard(file.key)}
+              onRemove={() => removeImage(file.key)}
+              alt="attachment"
+            />
           )}
         </For>
         <Show when={newFileHolder().length > 0}>
@@ -190,45 +161,17 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
         </Show>
         <For each={newFileHolder()}>
           {(file, index) => (
-            <div>
-              <button
-                type="button"
-                class="hover:bg-crust hover:bg-opacity-80 absolute z-10 ml-4 pb-[120px]"
-                onClick={() =>
-                  removeNewImage(index(), newFileHolderKeys()[index()])
-                }
-              >
-                <XCircle
-                  height={24}
-                  width={24}
-                  stroke={"currentColor"}
-                  strokeWidth={1}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  copyToClipboard(newFileHolderKeys()[index()] as string)
-                }
-              >
-                <Show
-                  when={fileTypes()[index()]?.startsWith("video/")}
-                  fallback={
-                    <img
-                      src={file}
-                      class="mx-4 my-auto h-36 w-36 object-cover"
-                      alt="new attachment"
-                    />
-                  }
-                >
-                  <video
-                    src={file}
-                    class="mx-4 my-auto h-36 w-36 object-cover"
-                    controls
-                  />
-                </Show>
-              </button>
-            </div>
+            <AttachmentThumbnail
+              fileUrl={file}
+              isVideo={fileTypes()[index()]?.startsWith("video/") || false}
+              onCopy={() =>
+                copyToClipboard(newFileHolderKeys()[index()] as string)
+              }
+              onRemove={() =>
+                removeNewImage(index(), newFileHolderKeys()[index()])
+              }
+              alt="new attachment"
+            />
           )}
         </For>
       </div>

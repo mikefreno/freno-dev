@@ -9,6 +9,7 @@ import AddAttachmentSection from "~/components/blog/AddAttachmentSection";
 import XCircle from "~/components/icons/XCircle";
 import AddImageToS3 from "~/lib/s3upload";
 import Input from "~/components/ui/Input";
+import Button from "~/components/ui/Button";
 
 interface PostFormProps {
   mode: "create" | "edit";
@@ -542,23 +543,14 @@ export default function PostForm(props: PostFormProps) {
 
           {/* Submit button */}
           <div class="flex justify-end">
-            <button
+            <Button
               type="submit"
-              disabled={loading()}
-              class={`${
-                loading()
-                  ? "bg-surface2 cursor-not-allowed"
-                  : published()
-                    ? "bg-peach hover:brightness-125"
-                    : "bg-green hover:brightness-125"
-              } text-crust flex w-36 justify-center rounded py-3 transition-all duration-300 ease-out active:scale-90`}
+              loading={loading()}
+              variant={published() ? "primary" : "secondary"}
+              class="text-crust w-36"
             >
-              {loading()
-                ? "Loading..."
-                : published()
-                  ? "Publish!"
-                  : "Save as Draft"}
-            </button>
+              {published() ? "Publish!" : "Save as Draft"}
+            </Button>
           </div>
         </form>
       </div>

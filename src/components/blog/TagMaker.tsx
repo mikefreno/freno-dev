@@ -1,6 +1,7 @@
 import { For } from "solid-js";
 import InfoIcon from "~/components/icons/InfoIcon";
 import Xmark from "~/components/icons/Xmark";
+import IconButton from "~/components/ui/IconButton";
 
 export interface TagMakerProps {
   tagInputValue: string;
@@ -42,13 +43,20 @@ export default function TagMaker(props: TagMakerProps) {
               <div class="overflow-hidden text-base overflow-ellipsis whitespace-nowrap">
                 {tag}
               </div>
-              <button
-                type="button"
-                class="bg-mantle bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-xl opacity-0 group-hover:opacity-100"
+              <IconButton
+                icon={
+                  <Xmark
+                    strokeWidth={1}
+                    color={"white"}
+                    height={24}
+                    width={24}
+                  />
+                }
                 onClick={() => props.deleteTag(idx())}
-              >
-                <Xmark strokeWidth={1} color={"white"} height={24} width={24} />
-              </button>
+                aria-label={`Remove tag ${tag}`}
+                variant="danger"
+                class="bg-mantle bg-opacity-50 absolute inset-0 flex items-center justify-center rounded-xl opacity-0 group-hover:opacity-100"
+              />
             </div>
           )}
         </For>

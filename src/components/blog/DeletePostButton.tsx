@@ -1,7 +1,7 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 import { api } from "~/lib/api";
 import TrashIcon from "~/components/icons/TrashIcon";
-import LoadingSpinner from "~/components/LoadingSpinner";
+import Button from "~/components/ui/Button";
 
 export interface DeletePostButtonProps {
   type: string;
@@ -28,14 +28,14 @@ export default function DeletePostButton(props: DeletePostButtonProps) {
 
   return (
     <form onSubmit={deletePostTrigger} class="flex w-full justify-end">
-      <button type="submit" class="hover:cursor-pointer">
-        <Show
-          when={!loading()}
-          fallback={<LoadingSpinner height={24} width={24} />}
-        >
-          <TrashIcon height={24} width={24} strokeWidth={1.5} />
-        </Show>
-      </button>
+      <Button
+        type="submit"
+        variant="ghost"
+        loading={loading()}
+        class="hover:cursor-pointer"
+      >
+        <TrashIcon height={24} width={24} strokeWidth={1.5} />
+      </Button>
     </form>
   );
 }

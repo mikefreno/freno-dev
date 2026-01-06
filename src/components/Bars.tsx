@@ -1,13 +1,6 @@
 import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
-import {
-  onMount,
-  createSignal,
-  Show,
-  For,
-  onCleanup,
-  createEffect
-} from "solid-js";
+import { onMount, createSignal, Show, For, onCleanup } from "solid-js";
 import { api } from "~/lib/api";
 import { insertSoftHyphens } from "~/lib/client-utils";
 import GitHub from "./icons/GitHub";
@@ -102,7 +95,7 @@ export function RightBarContent() {
   const handleLinkClick = () => {
     if (
       typeof window !== "undefined" &&
-      window.innerWidth < BREAKPOINTS.MOBILE
+      window.innerWidth < BREAKPOINTS.MOBILE_MAX_WIDTH
     ) {
       setLeftBarVisible(false);
     }
