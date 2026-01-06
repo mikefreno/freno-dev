@@ -1,7 +1,5 @@
-import { useNavigate } from "@solidjs/router";
 import { createSignal, onCleanup, onMount } from "solid-js";
 import { TerminalErrorPage } from "~/components/TerminalErrorPage";
-import { useDarkMode } from "~/context/darkMode";
 import { glitchText } from "~/lib/client-utils";
 
 export interface ErrorBoundaryFallbackProps {
@@ -12,23 +10,6 @@ export interface ErrorBoundaryFallbackProps {
 export default function ErrorBoundaryFallback(
   props: ErrorBoundaryFallbackProps
 ) {
-  let navigate: ((path: string) => void) | undefined;
-  try {
-    navigate = useNavigate();
-  } catch (e) {
-    navigate = (path: string) => {
-      window.location.href = path;
-    };
-  }
-
-  let isDark: () => boolean;
-  try {
-    const darkMode = useDarkMode();
-    isDark = darkMode.isDark;
-  } catch (e) {
-    isDark = () => true;
-  }
-
   const [glitchError, setGlitchError] = createSignal("ERROR");
 
   onMount(() => {
@@ -83,12 +64,10 @@ export default function ErrorBoundaryFallback(
   );
 
   const quickActions = (
-    <div class="mb-8 w-full max-w-4xl space-y-3 font-mono text-sm">
-      <div class="text-subtext1">Quick actions:</div>
-
+    <>
       <button
         onClick={() => props.reset()}
-        class="group border-surface0 bg-mantle hover:border-yellow hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
+        class="group border-surface0 bg-mantle hover:border-yellow hover:bg-surface0 flex w-full cursor-pointer items-center gap-2 border px-4 py-3 text-left transition-all"
       >
         <span class="text-green">$</span>
         <span class="text-yellow group-hover:text-peach">./reset</span>
@@ -97,39 +76,11 @@ export default function ErrorBoundaryFallback(
           [Try again]
         </span>
       </button>
-
-      <button
-        onClick={() => navigate!("/")}
-        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
-      >
-        <span class="text-green">$</span>
-        <span class="text-blue group-hover:text-sky">cd</span>
-        <span class="text-text group-hover:text-blue">~</span>
-        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
-          [Return home]
-        </span>
-      </button>
-
-      <button
-        onClick={() => window.history.back()}
-        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
-      >
-        <span class="text-green">$</span>
-        <span class="text-blue group-hover:text-sky">cd</span>
-        <span class="text-text group-hover:text-blue">..</span>
-        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
-          [Go back]
-        </span>
-      </button>
-    </div>
+    </>
   );
 
   return (
     <TerminalErrorPage
-      navigate={navigate!}
-      location={{
-        pathname: typeof window !== "undefined" ? window.location.pathname : "/"
-      }}
       errorContent={errorContent}
       quickActions={quickActions}
       footer={
@@ -138,7 +89,6 @@ export default function ErrorBoundaryFallback(
           Runtime Exception
         </>
       }
-      commandContext={{ isDark }}
     />
   );
 }

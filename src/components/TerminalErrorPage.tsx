@@ -6,10 +6,10 @@ import {
   CommandContext
 } from "~/lib/terminal-commands";
 import { Btop } from "~/components/Btop";
+import { useLocation, useNavigate } from "@solidjs/router";
+import { useDarkMode } from "~/context/darkMode";
 
 interface TerminalErrorPageProps {
-  navigate: (path: string) => void;
-  location: { pathname: string };
   errorContent: JSX.Element;
   quickActions: JSX.Element;
   footer: JSX.Element;
@@ -24,6 +24,9 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
   const [btopOpen, setBtopOpen] = createSignal(false);
   let inputRef: HTMLInputElement | undefined;
   let footerRef: HTMLDivElement | undefined;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isDark } = useDarkMode();
 
   createEffect(() => {
     if (history().length > 0) {
@@ -46,10 +49,11 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
   };
 
   const commands = createTerminalCommands({
-    navigate: props.navigate,
-    location: props.location,
+    navigate,
+    location,
     addToHistory,
     openBtop: () => setBtopOpen(true),
+    isDark: isDark,
     ...props.commandContext
   });
 
@@ -98,12 +102,42 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
     inputRef?.focus();
   });
 
+  const quickActions = (
+    <div class="mb-8 w-full max-w-4xl space-y-3 font-mono text-sm">
+      <div class="text-subtext1">Quick actions:</div>
+      {props.quickActions}
+
+      <button
+        onClick={() => navigate!("/")}
+        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full cursor-pointer items-center gap-2 border px-4 py-3 text-left transition-all"
+      >
+        <span class="text-green">$</span>
+        <span class="text-blue group-hover:text-sky">cd</span>
+        <span class="text-text group-hover:text-blue">~</span>
+        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+          [Return home]
+        </span>
+      </button>
+
+      <button
+        onClick={() => window.history.back()}
+        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full cursor-pointer items-center gap-2 border px-4 py-3 text-left transition-all"
+      >
+        <span class="text-green">$</span>
+        <span class="text-blue group-hover:text-sky">cd</span>
+        <span class="text-text group-hover:text-blue">..</span>
+        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+          [Go back]
+        </span>
+      </button>
+    </div>
+  );
+
   return (
     <div
       class={`relative min-h-screen w-full overflow-hidden`}
       onClick={() => inputRef?.focus()}
     >
-      {/* Scanline effect */}
       <div class="pointer-events-none absolute inset-0 z-20 opacity-5">
         <div
           class="h-full w-full"
@@ -115,17 +149,9 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
         />
       </div>
 
-      {/* Main content */}
       <div class="relative z-10 flex min-h-screen flex-col items-start justify-start px-4 py-16 lg:px-16">
-        {/* Terminal header */}
-
-        {/* Error Content - passed as prop */}
         {props.errorContent}
-
-        {/* Quick Actions - passed as prop */}
-        {props.quickActions}
-
-        {/* Command history */}
+        {quickActions}
         <Show when={history().length > 0}>
           <div class="mb-4 w-full max-w-4xl font-mono text-sm">
             <For each={history()}>

@@ -1,22 +1,19 @@
 import { PageHead } from "~/components/PageHead";
 import { HttpStatusCode } from "@solidjs/start";
-import { useNavigate, useLocation } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import { TerminalErrorPage } from "~/components/TerminalErrorPage";
-import { useDarkMode } from "~/context/darkMode";
 import { glitchText } from "~/lib/client-utils";
 
-// Component that crashes when rendered
 function CrashComponent() {
   throw new Error("Terminal crash test - triggering error boundary");
 }
 
 export default function NotFound() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { isDark } = useDarkMode();
   const [glitch404, setGlitch404] = createSignal("404");
   const [shouldCrash, setShouldCrash] = createSignal(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   onMount(() => {
     const interval = glitchText(glitch404(), setGlitch404);
@@ -67,33 +64,7 @@ export default function NotFound() {
   );
 
   const quickActions = (
-    <div class="mb-8 w-full max-w-4xl space-y-3 font-mono text-sm">
-      <div class="text-subtext1">Quick commands:</div>
-
-      <button
-        onClick={() => navigate("/")}
-        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
-      >
-        <span class="text-green">$</span>
-        <span class="text-blue group-hover:text-sky">cd</span>
-        <span class="text-text group-hover:text-blue">~</span>
-        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
-          [Return home]
-        </span>
-      </button>
-
-      <button
-        onClick={() => window.history.back()}
-        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
-      >
-        <span class="text-green">$</span>
-        <span class="text-blue group-hover:text-sky">cd</span>
-        <span class="text-text group-hover:text-blue">..</span>
-        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
-          [Go back]
-        </span>
-      </button>
-
+    <>
       <button
         onClick={() => navigate("/blog")}
         class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
@@ -105,7 +76,7 @@ export default function NotFound() {
           [View blog]
         </span>
       </button>
-    </div>
+    </>
   );
 
   return (
@@ -120,20 +91,17 @@ export default function NotFound() {
       />
       <HttpStatusCode code={404} />
       <TerminalErrorPage
-        navigate={navigate}
-        location={location}
         errorContent={errorContent}
         quickActions={quickActions}
+        commandContext={{
+          triggerCrash: () => setShouldCrash(true)
+        }}
         footer={
           <>
             <span class="text-red">404</span>{" "}
             <span class="text-subtext0">|</span> Page Not Found
           </>
         }
-        commandContext={{
-          triggerCrash: () => setShouldCrash(true),
-          isDark: isDark
-        }}
       />
     </>
   );

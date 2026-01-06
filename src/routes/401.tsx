@@ -4,12 +4,10 @@ import { useLocation, useNavigate } from "@solidjs/router";
 import { createSignal, onMount, onCleanup } from "solid-js";
 import { glitchText } from "~/lib/client-utils";
 import { TerminalErrorPage } from "~/components/TerminalErrorPage";
-import { useDarkMode } from "~/context/darkMode";
 
 export default function Page_401() {
   const navigate = useNavigate();
   const [glitch401, setGlitch401] = createSignal("401");
-
   const location = useLocation();
 
   onMount(() => {
@@ -60,9 +58,8 @@ export default function Page_401() {
     </div>
   );
   const quickActions = (
-    <div class="mb-8 w-full max-w-4xl space-y-3 font-mono text-sm">
-      <div class="text-subtext1">Quick actions:</div>
-
+    <>
+      {" "}
       <button
         onClick={() => navigate("/login")}
         class="group border-surface0 bg-mantle hover:border-yellow hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
@@ -74,40 +71,9 @@ export default function Page_401() {
           [Login]
         </span>
       </button>
-
-      <button
-        onClick={() => navigate("/")}
-        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
-      >
-        <span class="text-green">$</span>
-        <span class="text-blue group-hover:text-sky">cd</span>
-        <span class="text-text group-hover:text-blue">~</span>
-        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
-          [Return home]
-        </span>
-      </button>
-
-      <button
-        onClick={() => window.history.back()}
-        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full items-center gap-2 border px-4 py-3 text-left transition-all"
-      >
-        <span class="text-green">$</span>
-        <span class="text-blue group-hover:text-sky">cd</span>
-        <span class="text-text group-hover:text-blue">..</span>
-        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
-          [Go back]
-        </span>
-      </button>
-    </div>
+    </>
   );
 
-  let isDark: () => boolean;
-  try {
-    const darkMode = useDarkMode();
-    isDark = darkMode.isDark;
-  } catch (e) {
-    isDark = () => true;
-  }
   return (
     <>
       <PageHead
@@ -116,8 +82,6 @@ export default function Page_401() {
       />
       <HttpStatusCode code={401} />
       <TerminalErrorPage
-        navigate={navigate}
-        location={location}
         errorContent={errorContent}
         quickActions={quickActions}
         disableTerminal
@@ -127,7 +91,6 @@ export default function Page_401() {
             <span class="text-subtext0">|</span> Unauthorized Access
           </>
         }
-        commandContext={{ isDark }}
       />
     </>
   );
