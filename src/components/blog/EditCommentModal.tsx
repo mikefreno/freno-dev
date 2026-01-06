@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js";
 import type { EditCommentModalProps } from "~/types/comment";
-import Xmark from "~/components/icons/Xmark";
+import Modal from "~/components/ui/Modal";
 import Button from "~/components/ui/Button";
 
 export default function EditCommentModal(props: EditCommentModalProps) {
@@ -22,51 +22,38 @@ export default function EditCommentModal(props: EditCommentModalProps) {
   };
 
   return (
-    <div class="z-100 flex justify-center">
-      <div class="fixed top-48 h-fit w-11/12 sm:w-4/5 md:w-2/3">
-        <div
-          id="edit_prompt"
-          class="fade-in bg-surface1 z-50 rounded-md px-8 py-4 shadow-lg"
-        >
-          <button class="absolute right-4" onClick={() => props.onClose()}>
-            <Xmark
-              strokeWidth={0.5}
-              color="var(--color-text)"
-              height={50}
-              width={50}
-            />
-          </button>
-          <div class="text-text py-4 text-center text-3xl tracking-wide">
-            Edit Comment
-          </div>
-          <form onSubmit={editCommentWrapper}>
-            <div class="textarea-group home">
-              <textarea
-                required
-                ref={bodyRef}
-                placeholder=" "
-                value={props.commentBody}
-                class="underlinedInput text-blue w-full bg-transparent"
-                rows={4}
-              />
-              <span class="bar" />
-              <label class="underlinedInputLabel">Edit Comment</label>
-            </div>
-            <div class="flex justify-end pt-2">
-              <Button
-                type="submit"
-                loading={props.editCommentLoading}
-                variant="primary"
-              >
-                Submit
-              </Button>
-            </div>
-          </form>
-          <Show when={showNoChange()}>
-            <div class="text-red text-center italic">No change detected</div>
-          </Show>
+    <Modal
+      open={props.isOpen}
+      onClose={props.onClose}
+      title="Edit Comment"
+      class="bg-surface1 w-11/12 max-w-none sm:w-4/5 md:w-2/3"
+    >
+      <form onSubmit={editCommentWrapper}>
+        <div class="textarea-group home">
+          <textarea
+            required
+            ref={bodyRef}
+            placeholder=" "
+            value={props.commentBody}
+            class="underlinedInput text-blue w-full bg-transparent"
+            rows={4}
+          />
+          <span class="bar" />
+          <label class="underlinedInputLabel">Edit Comment</label>
         </div>
-      </div>
-    </div>
+        <div class="flex justify-end pt-2">
+          <Button
+            type="submit"
+            loading={props.editCommentLoading}
+            variant="primary"
+          >
+            Submit
+          </Button>
+        </div>
+      </form>
+      <Show when={showNoChange()}>
+        <div class="text-red text-center italic">No change detected</div>
+      </Show>
+    </Modal>
   );
 }

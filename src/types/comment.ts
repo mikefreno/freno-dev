@@ -176,6 +176,7 @@ export interface ReactionBarProps {
 }
 
 export interface CommentDeletionPromptProps {
+  isOpen: boolean;
   privilegeLevel: PrivilegeLevel;
   commentID: number;
   commenterID: string;
@@ -192,6 +193,7 @@ export interface CommentDeletionPromptProps {
 }
 
 export interface EditCommentModalProps {
+  isOpen: boolean;
   commentID: number;
   commentBody: string;
   editComment: (body: string, comment_id: number) => Promise<void>;

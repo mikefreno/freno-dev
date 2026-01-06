@@ -634,42 +634,36 @@ export default function CommentSectionWrapper(
         commentReaction={commentReaction}
       />
 
-      <Show when={showingDeletionPrompt()}>
-        <div ref={deletePromptRef}>
-          <CommentDeletionPrompt
-            commentID={commentIDForModification()}
-            commenterID={commenterForModification()}
-            commenterImage={commenterImageForModification()}
-            commenterEmail={commenterEmailForModification()}
-            commenterDisplayName={commenterDisplayNameForModification()}
-            privilegeLevel={props.privilegeLevel}
-            commentDeletionLoading={commentDeletionLoading()}
-            deleteComment={deleteComment}
-            onClose={() => {
-              setShowingDeletionPrompt(false);
-              clearModificationPrompt();
-            }}
-          />
-        </div>
-      </Show>
+      <CommentDeletionPrompt
+        isOpen={showingDeletionPrompt()}
+        commentID={commentIDForModification()}
+        commenterID={commenterForModification()}
+        commenterImage={commenterImageForModification()}
+        commenterEmail={commenterEmailForModification()}
+        commenterDisplayName={commenterDisplayNameForModification()}
+        privilegeLevel={props.privilegeLevel}
+        commentDeletionLoading={commentDeletionLoading()}
+        deleteComment={deleteComment}
+        onClose={() => {
+          setShowingDeletionPrompt(false);
+          clearModificationPrompt();
+        }}
+      />
 
-      <Show when={showingCommentEdit()}>
-        <div ref={modificationPromptRef}>
-          <EditCommentModal
-            commentID={commentIDForModification()}
-            commentBody={commentBodyForModification()}
-            commenterImage={commenterImageForModification()}
-            commenterEmail={commenterEmailForModification()}
-            commenterDisplayName={commenterDisplayNameForModification()}
-            editCommentLoading={editCommentLoading()}
-            editComment={editComment}
-            onClose={() => {
-              setShowingCommentEdit(false);
-              clearModificationPrompt();
-            }}
-          />
-        </div>
-      </Show>
+      <EditCommentModal
+        isOpen={showingCommentEdit()}
+        commentID={commentIDForModification()}
+        commentBody={commentBodyForModification()}
+        commenterImage={commenterImageForModification()}
+        commenterEmail={commenterEmailForModification()}
+        commenterDisplayName={commenterDisplayNameForModification()}
+        editCommentLoading={editCommentLoading()}
+        editComment={editComment}
+        onClose={() => {
+          setShowingCommentEdit(false);
+          clearModificationPrompt();
+        }}
+      />
     </>
   );
 }
