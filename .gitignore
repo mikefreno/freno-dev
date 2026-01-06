@@ -20,6 +20,7 @@ app.config.timestamp_*.js
 *.launch
 .settings/
 tasks
+main.go
 
 # Temp
 gitignore

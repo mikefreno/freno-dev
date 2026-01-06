@@ -31,20 +31,22 @@ export default function Modal(props: ModalProps) {
   };
 
   onMount(() => {
-    if (props.open) {
+    if (props.open && typeof document !== "undefined") {
       document.addEventListener("keydown", handleEscapeKey);
     }
   });
 
   onCleanup(() => {
-    document.removeEventListener("keydown", handleEscapeKey);
+    if (typeof document !== "undefined") {
+      document.removeEventListener("keydown", handleEscapeKey);
+    }
   });
 
   return (
     <Show when={props.open}>
       <Portal>
         <div
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          class="fixed inset-0 z-500 flex items-center justify-center bg-black/50"
           onClick={handleBackdropClick}
           role="dialog"
           aria-modal="true"

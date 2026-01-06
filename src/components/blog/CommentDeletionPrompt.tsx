@@ -49,7 +49,7 @@ export default function CommentDeletionPrompt(
       open={props.isOpen}
       onClose={props.onClose}
       title="Comment Deletion"
-      class="bg-red brightness-110"
+      class="bg-crust brightness-110"
     >
       <div class="bg-surface0 mx-auto w-3/4 rounded px-6 py-4">
         <div class="flex overflow-x-auto overflow-y-hidden select-text">
@@ -99,9 +99,7 @@ export default function CommentDeletionPrompt(
               checked={adminDeleteChecked()}
               onChange={handleAdminDeleteCheckbox}
             />
-            <div class="my-auto px-2 text-sm font-normal">
-              Confirm Admin Delete?
-            </div>
+            <div class="my-auto px-2 text-sm font-normal">Admin Delete?</div>
           </div>
         </div>
         <div class="flex w-full justify-center">
@@ -112,9 +110,7 @@ export default function CommentDeletionPrompt(
               checked={fullDeleteChecked()}
               onChange={handleFullDeleteCheckbox}
             />
-            <div class="my-auto px-2 text-sm font-normal">
-              Confirm Full Delete (removal from database)?
-            </div>
+            <div class="my-auto px-2 text-sm font-normal">Database Delete?</div>
           </div>
         </div>
       </Show>

@@ -18,6 +18,9 @@ import { env } from "~/env/client";
 
 const MAX_RETRIES = 12;
 const RETRY_INTERVAL = 5000;
+const OPERATION_TIMEOUT = 10000; // 10 seconds timeout for operations
+
+type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
 export default function CommentSectionWrapper(
   props: CommentSectionWrapperProps
@@ -55,43 +58,106 @@ export default function CommentSectionWrapper(
   ] = createSignal<string | undefined>(undefined);
   const [commentBodyForModification, setCommentBodyForModification] =
     createSignal<string>("");
-
-  let userCommentMap: Map<UserPublicData, number[]> = props.userCommentMap;
+  const [operationError, setOperationError] = createSignal<string>("");
+  const [connectionState, setConnectionState] =
+    createSignal<ConnectionState>("disconnected");
+  const [userCommentMap, setUserCommentMap] = createSignal<
+    Map<UserPublicData, number[]>
+  >(props.userCommentMap);
   let deletePromptRef: HTMLDivElement | undefined;
   let modificationPromptRef: HTMLDivElement | undefined;
   let retryCount = 0;
   let socket: WebSocket | undefined;
+  let commentSubmitTimeoutId: number | undefined;
+  let editCommentTimeoutId: number | undefined;
+  let deleteCommentTimeoutId: number | undefined;
+  let reconnectTimeoutId: number | undefined;
+  let isMounted = true;
+  let intentionalDisconnect = false;
 
   createEffect(() => {
     const connect = () => {
-      if (socket) return;
+      // Don't connect if not mounted or intentionally disconnected
+      if (!isMounted || intentionalDisconnect) {
+        console.log(
+          "[WebSocket] Skipping connection: component unmounted or intentional disconnect"
+        );
+        return;
+      }
+
+      if (socket) {
+        console.log("[WebSocket] Socket already exists");
+        return;
+      }
+
       if (retryCount > MAX_RETRIES) {
-        console.error("Max retries exceeded!");
+        console.error("[WebSocket] Max retries exceeded!");
+        setConnectionState("error");
+        return;
+      }
+
+      // Validate we have required data before connecting
+      if (!props.id) {
+        console.warn("[WebSocket] No post ID available, skipping connection");
         return;
       }
 
       const websocketUrl = env.VITE_WEBSOCKET;
       if (!websocketUrl) {
-        console.error("VITE_WEBSOCKET environment variable not set");
+        console.error(
+          "[WebSocket] VITE_WEBSOCKET environment variable not set"
+        );
+        setConnectionState("error");
         return;
       }
+
+      console.log(
+        `[WebSocket] Connecting... (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`
+      );
+      setConnectionState("connecting");
 
       const newSocket = new WebSocket(websocketUrl);
 
       newSocket.onopen = () => {
+        console.log("[WebSocket] Connected successfully");
+        setConnectionState("connected");
         updateChannel();
         retryCount = 0;
       };
 
-      newSocket.onclose = () => {
-        retryCount += 1;
+      newSocket.onclose = (event) => {
+        console.log(
+          `[WebSocket] Connection closed (code: ${event.code}, reason: ${event.reason || "none"})`
+        );
         socket = undefined;
-        setTimeout(connect, RETRY_INTERVAL);
+        setConnectionState("disconnected");
+
+        // Only retry if still mounted and not intentional disconnect
+        if (isMounted && !intentionalDisconnect && retryCount <= MAX_RETRIES) {
+          retryCount += 1;
+          console.log(
+            `[WebSocket] Scheduling reconnect in ${RETRY_INTERVAL}ms (attempt ${retryCount}/${MAX_RETRIES + 1})`
+          );
+          reconnectTimeoutId = window.setTimeout(connect, RETRY_INTERVAL);
+        } else {
+          console.log("[WebSocket] Not reconnecting:", {
+            isMounted,
+            intentionalDisconnect,
+            retryCount
+          });
+        }
+      };
+
+      newSocket.onerror = (error) => {
+        console.error("[WebSocket] Connection error:", error);
+        setConnectionState("error");
       };
 
       newSocket.onmessage = (messageEvent) => {
         try {
           const parsed = JSON.parse(messageEvent.data) as WebSocketBroadcast;
+          console.log("[WebSocket] Message received:", parsed.action);
+
           switch (parsed.action) {
             case "commentCreationBroadcast":
               createCommentHandler(parsed);
@@ -106,10 +172,11 @@ export default function CommentSectionWrapper(
               commentReactionHandler(parsed);
               break;
             default:
+              console.log("[WebSocket] Unknown action:", parsed.action);
               break;
           }
         } catch (e) {
-          console.error(e);
+          console.error("[WebSocket] Error parsing message:", e);
         }
       };
 
@@ -119,20 +186,58 @@ export default function CommentSectionWrapper(
     connect();
 
     onCleanup(() => {
-      if (socket?.readyState === WebSocket.OPEN) {
-        socket.close();
-        socket = undefined;
+      console.log("[WebSocket] Component cleanup starting");
+      isMounted = false;
+      intentionalDisconnect = true;
+
+      // Clear reconnect timeout
+      if (reconnectTimeoutId) {
+        clearTimeout(reconnectTimeoutId);
+        reconnectTimeoutId = undefined;
       }
+
+      // Send disconnect message if connected
+      if (socket?.readyState === WebSocket.OPEN) {
+        try {
+          socket.send(
+            JSON.stringify({
+              action: "disconnect",
+              postType: "blog",
+              postID: props.id,
+              invokerID: props.currentUserID
+            })
+          );
+          console.log("[WebSocket] Disconnect message sent");
+        } catch (error) {
+          console.error("[WebSocket] Error sending disconnect message:", error);
+        }
+        socket.close(1000, "Component unmounted");
+      } else if (socket) {
+        socket.close();
+      }
+
+      socket = undefined;
+      setConnectionState("disconnected");
+
+      // Clear operation timeouts
+      if (commentSubmitTimeoutId) clearTimeout(commentSubmitTimeoutId);
+      if (editCommentTimeoutId) clearTimeout(editCommentTimeoutId);
+      if (deleteCommentTimeoutId) clearTimeout(deleteCommentTimeoutId);
+
+      console.log("[WebSocket] Component cleanup complete");
     });
   });
 
   const updateChannel = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.warn("[WebSocket] Cannot update channel: socket not ready");
       return;
     }
 
     if (!props.currentUserID || !props.id) {
-      console.warn("Cannot update channel: missing userID or postID");
+      console.warn(
+        "[WebSocket] Cannot update channel: missing userID or postID"
+      );
       return;
     }
 
@@ -142,24 +247,38 @@ export default function CommentSectionWrapper(
           action: "channelUpdate",
           postType: "blog",
           postID: props.id,
-          invoker_id: props.currentUserID
+          invokerID: props.currentUserID
         })
       );
+      console.log(`[WebSocket] Channel updated for post ${props.id}`);
     } catch (error) {
-      console.error("Error sending channel update:", error);
+      console.error("[WebSocket] Error sending channel update:", error);
     }
   };
 
   const newComment = async (commentBody: string, parentCommentID?: number) => {
     setCommentSubmitLoading(true);
 
+    // Clear any existing timeout
+    if (commentSubmitTimeoutId) {
+      clearTimeout(commentSubmitTimeoutId);
+    }
+
+    // Set timeout to clear loading state
+    commentSubmitTimeoutId = window.setTimeout(() => {
+      console.warn("Comment submission timed out");
+      setCommentSubmitLoading(false);
+      setOperationError("Comment submission timed out. Please try again.");
+    }, OPERATION_TIMEOUT);
+
     if (!props.currentUserID) {
       console.warn("Cannot create comment: user not authenticated");
+      clearTimeout(commentSubmitTimeoutId);
       setCommentSubmitLoading(false);
       return;
     }
 
-    if (commentBody && socket) {
+    if (commentBody && socket && socket.readyState === WebSocket.OPEN) {
       try {
         socket.send(
           JSON.stringify({
@@ -173,9 +292,11 @@ export default function CommentSectionWrapper(
         );
       } catch (error) {
         console.error("Error sending comment creation:", error);
+        clearTimeout(commentSubmitTimeoutId);
         await fallbackCommentCreation(commentBody, parentCommentID);
       }
     } else {
+      clearTimeout(commentSubmitTimeoutId);
       await fallbackCommentCreation(commentBody, parentCommentID);
     }
   };
@@ -205,9 +326,15 @@ export default function CommentSectionWrapper(
           commenterID: props.currentUserID,
           commentParent: parentCommentID
         });
+      } else {
+        throw new Error("Failed to create comment");
       }
     } catch (error) {
       console.error("Error in fallback comment creation:", error);
+      setOperationError("Failed to post comment. Please try again.");
+      if (commentSubmitTimeoutId) {
+        clearTimeout(commentSubmitTimeoutId);
+      }
       setCommentSubmitLoading(false);
     }
   };
@@ -215,49 +342,84 @@ export default function CommentSectionWrapper(
   const createCommentHandler = async (
     data: WebSocketBroadcast | BackupResponse
   ) => {
+    // Clear timeout since we received response
+    if (commentSubmitTimeoutId) {
+      clearTimeout(commentSubmitTimeoutId);
+    }
+    setOperationError("");
+
     const body = data.commentBody;
     const commenterID = data.commenterID;
     const parentCommentID = data.commentParent;
     const id = data.commentID;
 
+    console.log("[createCommentHandler] Received data:", {
+      body,
+      commenterID,
+      parentCommentID,
+      id
+    });
+
     if (body && commenterID && parentCommentID !== undefined && id) {
-      const domain = env.VITE_DOMAIN;
-      const res = await fetch(
-        `${domain}/api/database/user/public-data/${commenterID}`
-      );
-      const userData = (await res.json()) as UserPublicData;
+      try {
+        console.log(
+          "[createCommentHandler] Fetching user data for:",
+          commenterID
+        );
+        const userData = await api.database.getUserPublicData.query({
+          id: commenterID
+        });
 
-      const comment_date = getSQLFormattedDate();
-      const newComment: Comment = {
-        id: id,
-        body: body,
-        post_id: props.id,
-        parent_comment_id: parentCommentID,
-        commenter_id: commenterID,
-        edited: false,
-        date: comment_date
-      };
+        console.log("[createCommentHandler] User data response:", userData);
 
-      if (parentCommentID === -1 || parentCommentID === null) {
-        setTopLevelComments((prevComments) => [
-          ...(prevComments || []),
-          newComment
-        ]);
-      }
-      setAllComments((prevComments) => [...(prevComments || []), newComment]);
+        if (!userData) {
+          console.error(
+            "Failed to fetch user data for commenter:",
+            commenterID,
+            "- Comment will not be displayed in UI but is saved in database"
+          );
+          setCommentSubmitLoading(false);
+          return;
+        }
 
-      const existingIDs = Array.from(userCommentMap.entries()).find(
-        ([key, _]) =>
-          key.email === userData.email &&
-          key.display_name === userData.display_name &&
-          key.image === userData.image
-      );
+        const comment_date = getSQLFormattedDate();
+        const newComment: Comment = {
+          id: id,
+          body: body,
+          post_id: props.id,
+          parent_comment_id: parentCommentID,
+          commenter_id: commenterID,
+          edited: false,
+          date: comment_date
+        };
 
-      if (existingIDs) {
-        const [key, ids] = existingIDs;
-        userCommentMap.set(key, [...ids, id]);
-      } else {
-        userCommentMap.set(userData, [id]);
+        if (parentCommentID === -1 || parentCommentID === null) {
+          setTopLevelComments((prevComments) => [
+            ...(prevComments || []),
+            newComment
+          ]);
+        }
+        setAllComments((prevComments) => [...(prevComments || []), newComment]);
+
+        const existingIDs = Array.from(userCommentMap().entries()).find(
+          ([key, _]) =>
+            key.email === userData.email &&
+            key.display_name === userData.display_name &&
+            key.image === userData.image
+        );
+
+        if (existingIDs) {
+          const [key, ids] = existingIDs;
+          const newMap = new Map(userCommentMap());
+          newMap.set(key, [...ids, id]);
+          setUserCommentMap(newMap);
+        } else {
+          const newMap = new Map(userCommentMap());
+          newMap.set(userData, [id]);
+          setUserCommentMap(newMap);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     }
     setCommentSubmitLoading(false);
@@ -266,13 +428,26 @@ export default function CommentSectionWrapper(
   const editComment = async (body: string, comment_id: number) => {
     setCommentEditLoading(true);
 
+    // Clear any existing timeout
+    if (editCommentTimeoutId) {
+      clearTimeout(editCommentTimeoutId);
+    }
+
+    // Set timeout to clear loading state
+    editCommentTimeoutId = window.setTimeout(() => {
+      console.warn("Comment edit timed out");
+      setCommentEditLoading(false);
+      setOperationError("Comment edit timed out. Please try again.");
+    }, OPERATION_TIMEOUT);
+
     if (!props.currentUserID) {
       console.warn("Cannot edit comment: user not authenticated");
+      clearTimeout(editCommentTimeoutId);
       setCommentEditLoading(false);
       return;
     }
 
-    if (socket) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
       try {
         socket.send(
           JSON.stringify({
@@ -286,12 +461,25 @@ export default function CommentSectionWrapper(
         );
       } catch (error) {
         console.error("Error sending comment update:", error);
+        setOperationError("Failed to edit comment. Please try again.");
+        clearTimeout(editCommentTimeoutId);
         setCommentEditLoading(false);
       }
+    } else {
+      console.warn("WebSocket not available for edit, operation canceled");
+      setOperationError("Unable to edit comment. Please refresh the page.");
+      clearTimeout(editCommentTimeoutId);
+      setCommentEditLoading(false);
     }
   };
 
   const editCommentHandler = (data: WebSocketBroadcast) => {
+    // Clear timeout since we received response
+    if (editCommentTimeoutId) {
+      clearTimeout(editCommentTimeoutId);
+    }
+    setOperationError("");
+
     setAllComments((prev) =>
       prev.map((comment) => {
         if (comment.id === data.commentID) {
@@ -339,10 +527,23 @@ export default function CommentSectionWrapper(
 
     setCommentDeletionLoading(true);
 
+    // Clear any existing timeout
+    if (deleteCommentTimeoutId) {
+      clearTimeout(deleteCommentTimeoutId);
+    }
+
+    // Set timeout to clear loading state
+    deleteCommentTimeoutId = window.setTimeout(() => {
+      console.warn("Comment deletion timed out");
+      setCommentDeletionLoading(false);
+      setOperationError("Comment deletion timed out. Please try again.");
+    }, OPERATION_TIMEOUT);
+
     if (!props.currentUserID) {
       console.warn(
         "[deleteComment] Cannot delete comment: user not authenticated"
       );
+      clearTimeout(deleteCommentTimeoutId);
       setCommentDeletionLoading(false);
       return;
     }
@@ -365,12 +566,14 @@ export default function CommentSectionWrapper(
           "[deleteComment] WebSocket error, falling back to HTTP:",
           error
         );
+        clearTimeout(deleteCommentTimeoutId);
         await fallbackCommentDeletion(commentID, commenterID, deletionType);
       }
     } else {
       console.log(
         "[deleteComment] WebSocket not available, using HTTP fallback"
       );
+      clearTimeout(deleteCommentTimeoutId);
       await fallbackCommentDeletion(commentID, commenterID, deletionType);
     }
   };
@@ -404,11 +607,21 @@ export default function CommentSectionWrapper(
       });
     } catch (error) {
       console.error("[fallbackCommentDeletion] Error:", error);
+      setOperationError("Failed to delete comment. Please try again.");
+      if (deleteCommentTimeoutId) {
+        clearTimeout(deleteCommentTimeoutId);
+      }
       setCommentDeletionLoading(false);
     }
   };
 
   const deleteCommentHandler = (data: WebSocketBroadcast) => {
+    // Clear timeout since we received response
+    if (deleteCommentTimeoutId) {
+      clearTimeout(deleteCommentTimeoutId);
+    }
+    setOperationError("");
+
     if (data.commentBody) {
       // Soft delete (replace body with deletion message)
       setAllComments((prev) =>
@@ -620,6 +833,27 @@ export default function CommentSectionWrapper(
 
   return (
     <>
+      {/* Connection status indicator (dev mode only) */}
+      <Show when={import.meta.env.DEV && connectionState() !== "connected"}>
+        <div class="mx-auto mb-2 w-3/4 text-center text-xs italic opacity-60">
+          <Show when={connectionState() === "connecting"}>
+            <span>⚡ Connecting to live updates...</span>
+          </Show>
+          <Show when={connectionState() === "disconnected"}>
+            <span>📡 Live updates disconnected</span>
+          </Show>
+          <Show when={connectionState() === "error"}>
+            <span class="text-red">❌ Connection error</span>
+          </Show>
+        </div>
+      </Show>
+
+      <Show when={operationError()}>
+        <div class="bg-red/20 border-red text-red mx-auto mb-4 w-3/4 rounded-lg border px-4 py-3 text-center">
+          {operationError()}
+        </div>
+      </Show>
+
       <CommentSection
         privilegeLevel={props.privilegeLevel}
         allComments={allComments()}
@@ -627,7 +861,7 @@ export default function CommentSectionWrapper(
         postID={props.id}
         reactionMap={currentReactionMap()}
         currentUserID={props.currentUserID}
-        userCommentMap={userCommentMap}
+        userCommentMap={userCommentMap()}
         newComment={newComment}
         commentSubmitLoading={commentSubmitLoading()}
         toggleModification={toggleModification}

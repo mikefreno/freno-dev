@@ -26,7 +26,7 @@ export default function EditCommentModal(props: EditCommentModalProps) {
       open={props.isOpen}
       onClose={props.onClose}
       title="Edit Comment"
-      class="bg-surface1 w-11/12 max-w-none sm:w-4/5 md:w-2/3"
+      class="bg-crust w-11/12 max-w-none sm:w-4/5 md:w-2/3"
     >
       <form onSubmit={editCommentWrapper}>
         <div class="textarea-group home">

@@ -76,7 +76,6 @@ export default function CommentBlock(props: CommentBlockProps) {
 
   const deleteCommentTrigger = async (e: MouseEvent) => {
     e.stopPropagation();
-    console.log("Delete comment");
 
     setDeletionLoading(true);
     const user = userData();
