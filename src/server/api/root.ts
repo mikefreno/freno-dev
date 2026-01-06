@@ -1,5 +1,6 @@
 import { authRouter } from "./routers/auth";
 import { auditRouter } from "./routers/audit";
+import { analyticsRouter } from "./routers/analytics";
 import { databaseRouter } from "./routers/database";
 import { lineageRouter } from "./routers/lineage";
 import { miscRouter } from "./routers/misc";
@@ -13,6 +14,7 @@ import { createTRPCRouter } from "./utils";
 export const appRouter = createTRPCRouter({
   auth: authRouter,
   audit: auditRouter,
+  analytics: analyticsRouter,
   database: databaseRouter,
   lineage: lineageRouter,
   misc: miscRouter,

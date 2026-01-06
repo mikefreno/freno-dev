@@ -3,6 +3,8 @@ import type { APIEvent } from "@solidjs/start/server";
 import { getCookie, setCookie } from "vinxi/http";
 import { jwtVerify, type JWTPayload } from "jose";
 import { env } from "~/env/server";
+import { logVisit, enrichAnalyticsEntry } from "~/server/analytics";
+import { getRequestIP } from "vinxi/http";
 
 export type Context = {
   event: APIEvent;
@@ -32,6 +34,33 @@ async function createContextInner(event: APIEvent): Promise<Context> {
       });
     }
   }
+
+  const req = event.nativeEvent.node?.req || event.nativeEvent;
+  const path = req.url || event.request?.url || "unknown";
+  const method = req.method || event.request?.method || "GET";
+  const userAgent =
+    req.headers?.["user-agent"] ||
+    event.request?.headers?.get("user-agent") ||
+    undefined;
+  const referrer =
+    req.headers?.referer ||
+    req.headers?.referrer ||
+    event.request?.headers?.get("referer") ||
+    undefined;
+  const ipAddress = getRequestIP(event.nativeEvent) || undefined;
+  const sessionId = getCookie(event.nativeEvent, "session_id") || undefined;
+
+  logVisit(
+    enrichAnalyticsEntry({
+      userId,
+      path,
+      method,
+      userAgent,
+      referrer,
+      ipAddress,
+      sessionId
+    })
+  );
 
   return {
     event,

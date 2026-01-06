@@ -135,3 +135,29 @@ export interface PostWithTags {
   tags: Tag[];
   last_edited_date?: string | null;
 }
+
+export interface VisitorAnalytics {
+  id: string;
+  user_id?: string | null;
+  path: string;
+  method: string;
+  referrer?: string | null;
+  user_agent?: string | null;
+  ip_address?: string | null;
+  country?: string | null;
+  device_type?: string | null;
+  browser?: string | null;
+  os?: string | null;
+  session_id?: string | null;
+  duration_ms?: number | null;
+  created_at: string;
+}
+
+export interface AnalyticsQuery {
+  userId?: string;
+  path?: string;
+  startDate?: Date | string;
+  endDate?: Date | string;
+  limit?: number;
+  offset?: number;
+}

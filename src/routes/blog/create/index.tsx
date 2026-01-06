@@ -15,9 +15,8 @@ const getAuthState = query(async () => {
   const privilegeLevel = await getPrivilegeLevel(event);
   const userID = await getUserID(event);
 
-  // Return 401 for non-admin users
   if (privilegeLevel !== "admin") {
-    throw new Response("Unauthorized", { status: 401 });
+    throw redirect("/401");
   }
 
   return { privilegeLevel, userID };
