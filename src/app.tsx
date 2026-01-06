@@ -147,7 +147,7 @@ function AppLayout(props: { children: any }) {
 
   return (
     <>
-      <div class="flex max-w-screen flex-row">
+      <div class="flex max-w-screen flex-row overflow-x-hidden">
         <LeftBar />
         <div
           id="center-body"

@@ -227,6 +227,11 @@
   scrollbar-width: none;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--color-base);
   color: var(--color-text);
