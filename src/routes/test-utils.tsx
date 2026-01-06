@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import Input from "~/components/ui/Input";
 import Button from "~/components/ui/Button";
 import {
@@ -44,10 +44,9 @@ export default function TestUtilsPage() {
 
   return (
     <>
-      <Title>Utility Testing | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Testing page for form components and validation utilities."
+      <PageHead
+        title="Utility Testing"
+        description="Testing page for form components and validation utilities."
       />
       <main class="min-h-screen bg-gray-100 p-8">
         <div class="mx-auto max-w-2xl">

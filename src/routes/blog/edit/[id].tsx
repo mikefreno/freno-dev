@@ -1,6 +1,6 @@
 import { Show, lazy } from "solid-js";
-import { useParams, query } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { useParams, query, redirect } from "@solidjs/router";
+import { PageHead } from "~/components/PageHead";
 import { createAsync } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
 import "../post.css";
@@ -66,10 +66,9 @@ export default function EditPost() {
 
   return (
     <>
-      <Title>Edit Post | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Edit your blog post with rich text editing, image management, and tag updates."
+      <PageHead
+        title="Edit Post"
+        description="Edit your blog post with rich text editing, image management, and tag updates."
       />
 
       <Show

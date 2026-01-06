@@ -1,5 +1,5 @@
 import { createSignal, Show, For, createEffect, ErrorBoundary } from "solid-js";
-import { Title } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { redirect, query, createAsync, useNavigate } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
 import { api } from "~/lib/api";
@@ -128,7 +128,10 @@ export default function AnalyticsPage() {
 
   return (
     <>
-      <Title>Analytics Dashboard - Admin</Title>
+      <PageHead
+        title="Analytics Dashboard - Admin"
+        description="Visitor analytics and performance metrics"
+      />
       <div class="bg-base min-h-screen px-4 py-8">
         <div class="mx-auto max-w-7xl">
           <div class="mb-8">

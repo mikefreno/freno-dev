@@ -24,7 +24,7 @@ export default function PasswordInput(props: PasswordInputProps) {
   );
 
   return (
-    <>
+    <div class="flex flex-col items-center gap-2">
       <div class={local.containerClass || "input-group relative mx-4 mb-2"}>
         <Input
           {...inputProps}
@@ -36,7 +36,7 @@ export default function PasswordInput(props: PasswordInputProps) {
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword())}
-          class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
+          class="text-subtext0 absolute right-0 bottom-2 transition-all hover:brightness-125"
           aria-label={showPassword() ? "Hide password" : "Show password"}
         >
           <Show
@@ -56,10 +56,8 @@ export default function PasswordInput(props: PasswordInputProps) {
       </div>
 
       {local.showStrength && local.passwordValue !== undefined && (
-        <div class="px-4 pt-1">
-          <PasswordStrengthMeter password={local.passwordValue} />
-        </div>
+        <PasswordStrengthMeter password={local.passwordValue} />
       )}
-    </>
+    </div>
   );
 }

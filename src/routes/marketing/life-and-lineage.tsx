@@ -1,15 +1,14 @@
 import { A } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import SimpleParallax from "~/components/SimpleParallax";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
 
 export default function LifeAndLineageMarketing() {
   return (
     <>
-      <Title>Life and Lineage | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="A dark fantasy adventure mobile game. Download Life and Lineage on the App Store and Google Play."
+      <PageHead
+        title="Life and Lineage"
+        description="A dark fantasy adventure mobile game. Download Life and Lineage on the App Store and Google Play."
       />
       <SimpleParallax>
         <div class="flex h-full flex-col items-center justify-center text-white">

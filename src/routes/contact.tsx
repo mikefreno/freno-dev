@@ -6,15 +6,16 @@ import {
   query,
   createAsync
 } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
 import { A } from "@solidjs/router";
 import { action, redirect } from "@solidjs/router";
+import { PageHead } from "~/components/PageHead";
 import { api } from "~/lib/api";
 import { getClientCookie, setClientCookie } from "~/lib/cookies.client";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import RevealDropDown from "~/components/RevealDropDown";
 import Input from "~/components/ui/Input";
+import { Button } from "~/components/ui/Button";
 import type { UserProfile } from "~/types/user";
 import { getCookie, setCookie } from "vinxi/http";
 import { z } from "zod";
@@ -360,8 +361,7 @@ export default function ContactPage() {
 
   return (
     <>
-      <Title>Contact | Michael Freno</Title>
-      <Meta name="description" content="Contact Me" />
+      <PageHead title="Contact" description="Contact Me" />
 
       <div class="bg-base flex min-h-screen w-full justify-center">
         <div class="w-full max-w-4xl px-4 pt-[20vh]">
@@ -422,19 +422,9 @@ export default function ContactPage() {
                     countDown() > 0 || (contactData()?.remainingTime ?? 0) > 0
                   }
                   fallback={
-                    <button
-                      type="submit"
-                      disabled={loading()}
-                      class={`${
-                        loading()
-                          ? "bg-zinc-400"
-                          : "bg-blue hover:brightness-125 active:scale-90"
-                      } flex w-36 justify-center rounded py-3 text-base font-light transition-all duration-300 ease-out`}
-                    >
-                      <Show when={loading()} fallback="Send Message">
-                        <LoadingSpinner height={24} width={24} />
-                      </Show>
-                    </button>
+                    <Button type="submit" loading={loading()} class="w-36">
+                      Send Message
+                    </Button>
                   }
                 >
                   <Show

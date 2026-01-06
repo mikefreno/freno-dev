@@ -6,7 +6,7 @@ import {
   redirect,
   query
 } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { getEvent } from "vinxi/http";
 import GoogleLogo from "~/components/icons/GoogleLogo";
 import GitHub from "~/components/icons/GitHub";
@@ -18,6 +18,7 @@ import { env } from "~/env/client";
 import { VALIDATION_CONFIG, COUNTDOWN_CONFIG } from "~/config";
 import Input from "~/components/ui/Input";
 import PasswordInput from "~/components/ui/PasswordInput";
+import { Button } from "~/components/ui/Button";
 
 const checkAuth = query(async () => {
   "use server";
@@ -318,10 +319,9 @@ export default function LoginPage() {
 
   return (
     <>
-      <Title>Login | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Sign in to your account or register for a new account to access personalized features and manage your profile."
+      <PageHead
+        title="Login"
+        description="Sign in to your account or register for a new account to access personalized features and manage your profile."
       />
       <div class="flex h-dvh flex-row justify-evenly">
         <div class="relative pt-12 md:pt-24">
@@ -480,21 +480,13 @@ export default function LoginPage() {
               <Show
                 when={!register() && !usePassword() && countDown() > 0}
                 fallback={
-                  <button
-                    type="submit"
-                    disabled={loading()}
-                    class={`${
-                      loading()
-                        ? "bg-zinc-400"
-                        : "bg-blue hover:brightness-125 active:scale-90"
-                    } flex w-36 justify-center rounded py-3 text-white transition-all duration-300 ease-out`}
-                  >
+                  <Button type="submit" loading={loading()} class="w-36">
                     {register()
                       ? "Sign Up"
                       : usePassword()
                         ? "Sign In"
                         : "Get Link"}
-                  </button>
+                  </Button>
                 }
               >
                 <CountdownCircleTimer

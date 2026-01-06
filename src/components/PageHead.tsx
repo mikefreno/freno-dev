@@ -47,3 +47,6 @@ export default function PageHead(props: PageHeadProps) {
     </>
   );
 }
+
+// Named export for consistency
+export { PageHead };

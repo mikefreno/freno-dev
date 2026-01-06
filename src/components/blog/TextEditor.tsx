@@ -250,6 +250,9 @@ declare module "@tiptap/core" {
     iframe: {
       setIframe: (options: { src: string }) => ReturnType;
     };
+    video: {
+      setVideo: (options: { src: string }) => ReturnType;
+    };
   }
 }
 
@@ -298,24 +301,76 @@ const IframeEmbed = Node.create<IframeOptions>({
     return {
       setIframe:
         (options: { src: string }) =>
-        ({ tr, dispatch, editor }) => {
+        ({ tr, dispatch }) => {
           const { selection } = tr;
+          const node = this.type.create(options);
 
-          // Check if the src is a direct video file
-          const src = options.src || "";
-          const isVideoFile = /\.(mp4|mov|webm|ogg)(\?.*)?$/i.test(src);
-
-          if (isVideoFile) {
-            // Insert a proper video tag instead of iframe
-            if (dispatch) {
-              const videoHTML = `<video src="${src}" controls playsinline style="max-width: 100%; height: auto;"></video>`;
-              editor.commands.insertContent(videoHTML);
-            }
-            return true;
+          if (dispatch) {
+            tr.replaceRangeWith(selection.from, selection.to, node);
           }
 
-          // For non-video URLs, create iframe as normal
-          const node = this.type.create(options);
+          return true;
+        }
+    };
+  }
+});
+
+interface VideoOptions {
+  HTMLAttributes: {
+    [key: string]: any;
+  };
+}
+
+const Video = Node.create<VideoOptions>({
+  name: "video",
+  group: "block",
+  atom: true,
+
+  addOptions() {
+    return {
+      HTMLAttributes: {
+        class: "video-wrapper"
+      }
+    };
+  },
+
+  addAttributes() {
+    return {
+      src: {
+        default: null
+      },
+      controls: {
+        default: true
+      },
+      playsinline: {
+        default: true
+      }
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "video[src]"
+      }
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ["video", HTMLAttributes];
+  },
+
+  addCommands() {
+    return {
+      setVideo:
+        (options: { src: string }) =>
+        ({ tr, dispatch }) => {
+          const { selection } = tr;
+          const node = this.type.create({
+            src: options.src,
+            controls: true,
+            playsinline: true
+          });
 
           if (dispatch) {
             tr.replaceRangeWith(selection.from, selection.to, node);
@@ -1352,6 +1407,7 @@ export default function TextEditor(props: TextEditorProps) {
       }),
       Image,
       IframeEmbed,
+      Video,
       TaskList,
       TaskItem.configure({
         nested: true,
@@ -2454,9 +2510,19 @@ export default function TextEditor(props: TextEditorProps) {
     const instance = editor();
     if (!instance) return;
 
-    const url = window.prompt("URL");
+    const url = window.prompt("Embed URL (YouTube, etc.)");
     if (url) {
       instance.commands.setIframe({ src: url });
+    }
+  };
+
+  const addVideo = () => {
+    const instance = editor();
+    if (!instance) return;
+
+    const url = window.prompt("Video URL (direct link to .mp4, .webm, etc.)");
+    if (url) {
+      instance.commands.setVideo({ src: url });
     }
   };
 
@@ -3792,11 +3858,19 @@ export default function TextEditor(props: TextEditorProps) {
                 </button>
                 <button
                   type="button"
+                  onClick={addVideo}
+                  class="touch-manipulation rounded px-2 py-1 text-xs select-none"
+                  title="Add Video"
+                >
+                  🎬 Video
+                </button>
+                <button
+                  type="button"
                   onClick={addIframe}
                   class="touch-manipulation rounded px-2 py-1 text-xs select-none"
-                  title="Add Iframe"
+                  title="Add Iframe Embed"
                 >
-                  📺 Iframe
+                  📺 Embed
                 </button>
                 <button
                   type="button"

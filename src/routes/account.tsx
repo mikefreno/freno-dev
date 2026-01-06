@@ -1,5 +1,5 @@
 import { createSignal, Show, createEffect } from "solid-js";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { useNavigate, redirect, query, createAsync } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
 import XCircle from "~/components/icons/XCircle";
@@ -486,10 +486,9 @@ export default function AccountPage() {
 
   return (
     <>
-      <Title>Account | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Manage your account settings, update profile information, and configure preferences."
+      <PageHead
+        title="Account"
+        description="Manage your account settings, update profile information, and configure preferences."
       />
 
       <div class="bg-base mx-8 min-h-screen md:mx-24 lg:mx-36">
@@ -683,23 +682,17 @@ export default function AccountPage() {
                       </div>
                     </Show>
                     <div class="flex justify-end">
-                      <button
+                      <Button
                         type="submit"
                         disabled={
-                          emailButtonLoading() ||
-                          (userProfile().email !== null &&
-                            !userProfile().emailVerified)
+                          userProfile().email !== null &&
+                          !userProfile().emailVerified
                         }
-                        class={`${
-                          emailButtonLoading() ||
-                          (userProfile().email !== null &&
-                            !userProfile().emailVerified)
-                            ? "bg-blue cursor-not-allowed brightness-75"
-                            : "bg-blue hover:brightness-125 active:scale-90"
-                        } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                        loading={emailButtonLoading()}
+                        class="mt-2"
                       >
-                        {emailButtonLoading() ? "Submitting..." : "Submit"}
-                      </button>
+                        Submit
+                      </Button>
                     </div>
                     <Show when={showEmailSuccess()}>
                       <div class="text-green mt-2 text-center text-sm">
@@ -740,19 +733,13 @@ export default function AccountPage() {
                       containerClass="input-group mx-4"
                     />
                     <div class="flex justify-end">
-                      <button
+                      <Button
                         type="submit"
-                        disabled={displayNameButtonLoading()}
-                        class={`${
-                          displayNameButtonLoading()
-                            ? "bg-blue cursor-not-allowed brightness-75"
-                            : "bg-blue hover:brightness-125 active:scale-90"
-                        } mt-2 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                        loading={displayNameButtonLoading()}
+                        class="mt-2"
                       >
-                        {displayNameButtonLoading()
-                          ? "Submitting..."
-                          : "Submit"}
-                      </button>
+                        Submit
+                      </Button>
                     </div>
                     <Show when={showDisplayNameSuccess()}>
                       <div class="text-green mt-2 text-center text-sm">
@@ -838,17 +825,14 @@ export default function AccountPage() {
                       </div>
                     </Show>
 
-                    <button
+                    <Button
                       type="submit"
-                      disabled={passwordChangeLoading() || !passwordsMatch()}
-                      class={`${
-                        passwordChangeLoading() || !passwordsMatch()
-                          ? "bg-blue cursor-not-allowed brightness-75"
-                          : "bg-blue hover:brightness-125 active:scale-90"
-                      } my-6 flex justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+                      disabled={!passwordsMatch()}
+                      loading={passwordChangeLoading()}
+                      class="my-6"
                     >
-                      {passwordChangeLoading() ? "Setting..." : "Set"}
-                    </button>
+                      Set
+                    </Button>
 
                     <Show when={passwordError()}>
                       <div class="text-red text-center text-sm">
@@ -871,18 +855,15 @@ export default function AccountPage() {
 
                 {/* Sign Out Section */}
                 <div class="mx-auto max-w-md py-4">
-                  <button
+                  <Button
                     type="button"
                     onClick={handleSignOut}
-                    disabled={signOutLoading()}
-                    class={`${
-                      signOutLoading()
-                        ? "bg-overlay0 cursor-not-allowed opacity-75"
-                        : "bg-overlay0 hover:bg-overlay1"
-                    } w-full rounded px-4 py-2 transition-all`}
+                    loading={signOutLoading()}
+                    variant="secondary"
+                    class="w-full"
                   >
-                    {signOutLoading() ? "Signing Out..." : "Sign Out"}
-                  </button>
+                    Sign Out
+                  </Button>
                 </div>
 
                 <hr class="mt-8 mb-8" />
@@ -938,19 +919,14 @@ export default function AccountPage() {
                           />
                         </div>
 
-                        <button
+                        <Button
                           type="submit"
-                          disabled={deleteAccountButtonLoading()}
-                          class={`${
-                            deleteAccountButtonLoading()
-                              ? "bg-red cursor-not-allowed brightness-75"
-                              : "bg-red hover:brightness-125 active:scale-90"
-                          } border-text mx-auto mt-4 flex justify-center rounded border px-4 py-2 text-base transition-all duration-300 ease-out`}
+                          loading={deleteAccountButtonLoading()}
+                          variant="danger"
+                          class="border-text mx-auto mt-4 border"
                         >
-                          {deleteAccountButtonLoading()
-                            ? "Deleting..."
-                            : "Delete Account"}
-                        </button>
+                          Delete Account
+                        </Button>
 
                         <Show when={passwordDeletionError()}>
                           <div class="text-red mt-2 text-center text-sm">

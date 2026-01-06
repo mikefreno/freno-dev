@@ -23,7 +23,7 @@ export default function Button(props: ButtonProps) {
   const size = () => local.size || "md";
 
   const baseClasses =
-    "flex justify-center items-center rounded transition-all duration-300 ease-out";
+    "flex justify-center cursor-pointer items-center rounded transition-all duration-300 ease-out";
 
   const variantClasses = () => {
     const isDisabledOrLoading = local.disabled || local.loading;
@@ -77,3 +77,6 @@ export default function Button(props: ButtonProps) {
     </button>
   );
 }
+
+// Named export for consistency
+export { Button };

@@ -1,13 +1,12 @@
 import { A } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 
 export default function PrivacyPolicy() {
   return (
     <>
-      <Title>Privacy Policy - Life and Lineage | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Privacy policy for Life and Lineage mobile game, outlining data collection, usage, and user rights."
+      <PageHead
+        title="Privacy Policy - Life and Lineage"
+        description="Privacy policy for Life and Lineage mobile game, outlining data collection, usage, and user rights."
       />
       <div class="min-h-screen px-[8vw] py-[10vh]">
         <div class="py-4 text-xl">Life and Lineage&apos;s Privacy Policy</div>

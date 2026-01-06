@@ -1,4 +1,4 @@
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { HttpStatusCode } from "@solidjs/start";
 import { useNavigate, useLocation } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
@@ -101,10 +101,9 @@ export default function NotFound() {
         {/*@ts-ignore (intentional crash)*/}
         <CrashComponent />
       </Show>
-      <Title>404 Not Found | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="404 - Page not found. The page you're looking for doesn't exist."
+      <PageHead
+        title="404 Not Found"
+        description="404 - Page not found. The page you're looking for doesn't exist."
       />
       <HttpStatusCode code={404} />
       <TerminalErrorPage

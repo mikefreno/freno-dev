@@ -1,11 +1,12 @@
 import { createSignal, createEffect, onCleanup, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { isValidEmail } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
 import { COUNTDOWN_CONFIG } from "~/config";
 import Input from "~/components/ui/Input";
+import { Button } from "~/components/ui/Button";
 
 export default function RequestPasswordResetPage() {
   const navigate = useNavigate();
@@ -123,10 +124,9 @@ export default function RequestPasswordResetPage() {
 
   return (
     <>
-      <Title>Request Password Reset | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Request a password reset link to regain access to your account. Enter your email to receive reset instructions."
+      <PageHead
+        title="Request Password Reset"
+        description="Request a password reset link to regain access to your account. Enter your email to receive reset instructions."
       />
       <div class="pt-24 text-center text-xl font-semibold">
         Password Reset Request
@@ -152,17 +152,9 @@ export default function RequestPasswordResetPage() {
           <Show
             when={countDown() > 0}
             fallback={
-              <button
-                type="submit"
-                disabled={loading()}
-                class={`${
-                  loading()
-                    ? "bg-zinc-400"
-                    : "bg-blue hover:brightness-125 active:scale-90"
-                } my-6 flex justify-center rounded px-4 py-2 font-medium text-white transition-all duration-300 ease-out`}
-              >
-                {loading() ? "Sending..." : "Request Password Reset"}
-              </button>
+              <Button type="submit" loading={loading()} class="my-6">
+                Request Password Reset
+              </Button>
             }
           >
             <div class="mx-auto pt-4">

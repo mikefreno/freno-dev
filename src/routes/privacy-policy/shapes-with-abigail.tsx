@@ -1,13 +1,12 @@
 import { A } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 
 export default function PrivacyPolicy() {
   return (
     <>
-      <Title>Privacy Policy - Shapes with Abigail | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Privacy policy for Shapes with Abigail app, explaining our commitment to child safety and non-collection of personal data."
+      <PageHead
+        title="Privacy Policy - Shapes with Abigail"
+        description="Privacy policy for Shapes with Abigail app, explaining our commitment to child safety and non-collection of personal data."
       />
       <div class="bg-base">
         <div class="min-h-screen px-[8vw] py-[8vh]">

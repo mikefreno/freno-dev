@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 import { useSearchParams, A, query } from "@solidjs/router";
-import { Title } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import PostSortingSelect from "~/components/blog/PostSortingSelect";
@@ -91,7 +91,10 @@ export default function BlogIndex() {
 
   return (
     <>
-      <Title>Blog | Michael Freno</Title>
+      <PageHead
+        title="Blog"
+        description="Technical blog posts about web development, programming, and software engineering."
+      />
 
       <div class="mx-auto py-16 pb-24">
         <Show when={data()} fallback={<TerminalSplash />}>

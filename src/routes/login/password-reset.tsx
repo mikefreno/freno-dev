@@ -1,12 +1,13 @@
 import { createSignal, createEffect, Show } from "solid-js";
 import { A, useNavigate, useSearchParams } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { validatePassword } from "~/lib/validation";
 import { api } from "~/lib/api";
 import { VALIDATION_CONFIG, COUNTDOWN_CONFIG } from "~/config";
 import PasswordInput from "~/components/ui/PasswordInput";
 import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
+import { Button } from "~/components/ui/Button";
 
 export default function PasswordResetPage() {
   const navigate = useNavigate();
@@ -153,10 +154,9 @@ export default function PasswordResetPage() {
 
   return (
     <>
-      <Title>Reset Password | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Set a new password for your account to regain access to your profile and personalized features."
+      <PageHead
+        title="Reset Password"
+        description="Set a new password for your account to regain access to your profile and personalized features."
       />
       <div>
         <div class="pt-24 text-center text-xl font-semibold">
@@ -222,17 +222,14 @@ export default function PasswordResetPage() {
             <Show
               when={countDown()}
               fallback={
-                <button
+                <Button
                   type="submit"
-                  disabled={passwordChangeLoading() || !passwordsMatch()}
-                  class={`${
-                    passwordChangeLoading() || !passwordsMatch()
-                      ? "cursor-not-allowed bg-zinc-400"
-                      : "bg-blue hover:brightness-125 active:scale-90"
-                  } my-6 flex justify-center rounded px-4 py-2 text-base font-medium transition-all duration-300 ease-out`}
+                  disabled={!passwordsMatch()}
+                  loading={passwordChangeLoading()}
+                  class="my-6"
                 >
-                  {passwordChangeLoading() ? "Setting..." : "Set New Password"}
-                </button>
+                  Set New Password
+                </Button>
               }
             >
               <div class="mx-auto pt-4">

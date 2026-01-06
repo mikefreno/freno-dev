@@ -1,5 +1,5 @@
-import { Title, Meta } from "@solidjs/meta";
 import { onCleanup, onMount } from "solid-js";
+import { PageHead } from "~/components/PageHead";
 
 export default function Resume() {
   let iframeRef: HTMLIFrameElement | undefined;
@@ -25,10 +25,9 @@ export default function Resume() {
 
   return (
     <>
-      <Title>Resume | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="View Michael Freno's resume - Software Engineer."
+      <PageHead
+        title="Resume"
+        description="View Michael Freno's resume - Software Engineer."
       />
 
       <main class="flex h-screen w-full flex-col">

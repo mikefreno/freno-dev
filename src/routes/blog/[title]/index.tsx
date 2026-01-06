@@ -6,7 +6,7 @@ import {
   query,
   useSearchParams
 } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import SessionDependantLike from "~/components/blog/SessionDependantLike";
@@ -316,12 +316,9 @@ export default function PostPage() {
 
               return (
                 <>
-                  <Title>
-                    {p().title.replaceAll("_", " ")} | Michael Freno
-                  </Title>
-                  <Meta
-                    name="description"
-                    content={
+                  <PageHead
+                    title={p().title.replaceAll("_", " ")}
+                    description={
                       p().subtitle ||
                       `Read ${p().title.replaceAll("_", " ")} by Michael Freno on the freno.me blog.`
                     }

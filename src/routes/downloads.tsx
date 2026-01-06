@@ -1,4 +1,4 @@
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { A } from "@solidjs/router";
 import { createSignal, onMount, onCleanup } from "solid-js";
 import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
@@ -50,10 +50,9 @@ export default function DownloadsPage() {
 
   return (
     <>
-      <Title>Downloads | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Download Life and Lineage, Shapes with Abigail, and Cork for macOS. Available on iOS, Android, and macOS."
+      <PageHead
+        title="Downloads"
+        description="Download Life and Lineage, Shapes with Abigail, and Cork for macOS. Available on iOS, Android, and macOS."
       />
 
       <div class="bg-base relative min-h-screen overflow-hidden px-4 pt-[15vh] pb-12 md:px-8">

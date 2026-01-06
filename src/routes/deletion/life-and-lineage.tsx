@@ -1,13 +1,12 @@
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import DeletionForm from "~/components/DeletionForm";
 
 export default function LifeAndLinageDeletionForm() {
   return (
     <>
-      <Title>Account Deletion - Life and Lineage | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Request account deletion for Life and Lineage. Remove all your data from our system with a 24-hour grace period."
+      <PageHead
+        title="Account Deletion - Life and Lineage"
+        description="Request account deletion for Life and Lineage. Remove all your data from our system with a 24-hour grace period."
       />
       <div class="pt-20">
         <div class="mx-auto p-4 md:p-6 lg:p-12">

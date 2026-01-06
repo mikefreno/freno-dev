@@ -1,14 +1,13 @@
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { DarkModeToggle } from "~/components/DarkModeToggle";
 import { Typewriter } from "~/components/Typewriter";
 
 export default function Home() {
   return (
     <>
-      <Title>Home | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Michael Freno - Software Engineer based in Brooklyn, NY"
+      <PageHead
+        title="Home"
+        description="Michael Freno - Software Engineer based in Brooklyn, NY"
       />
 
       <main class="flex h-full flex-col gap-8 px-4 py-16 text-xl">

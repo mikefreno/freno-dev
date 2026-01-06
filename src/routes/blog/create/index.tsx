@@ -1,6 +1,6 @@
 import { Show, lazy } from "solid-js";
 import { query, redirect } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { createAsync } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
 import { Spinner } from "~/components/Spinner";
@@ -31,10 +31,9 @@ export default function CreatePost() {
 
   return (
     <>
-      <Title>Create Blog Post | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="Create a new blog post with rich text editing, image uploads, and tag management."
+      <PageHead
+        title="Create Blog Post"
+        description="Create a new blog post with rich text editing, image uploads, and tag management."
       />
 
       <Show when={authState()?.userID} fallback={<Spinner />}>

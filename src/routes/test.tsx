@@ -1,6 +1,6 @@
 import { createSignal, For, Show } from "solid-js";
 import { query, createAsync } from "@solidjs/router";
-import { Title, Meta } from "@solidjs/meta";
+import { PageHead } from "~/components/PageHead";
 import { getRequestEvent } from "solid-js/web";
 import { api } from "~/lib/api";
 
@@ -914,10 +914,9 @@ export default function TestPage() {
 
   return (
     <>
-      <Title>API Testing | Michael Freno</Title>
-      <Meta
-        name="description"
-        content="tRPC API testing dashboard for developers to test endpoints and verify functionality."
+      <PageHead
+        title="API Testing"
+        description="tRPC API testing dashboard for developers to test endpoints and verify functionality."
       />
       <Show
         when={authState()?.privilegeLevel === "admin"}
