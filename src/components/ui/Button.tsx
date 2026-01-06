@@ -1,4 +1,5 @@
 import { JSX, splitProps, Show } from "solid-js";
+import LoadingSpinner from "~/components/LoadingSpinner";
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
@@ -22,18 +23,28 @@ export default function Button(props: ButtonProps) {
   const size = () => local.size || "md";
 
   const baseClasses =
-    "flex justify-center items-center rounded font-semibold transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed";
+    "flex justify-center items-center rounded transition-all duration-300 ease-out";
 
   const variantClasses = () => {
+    const isDisabledOrLoading = local.disabled || local.loading;
+
     switch (variant()) {
       case "primary":
-        return "bg-blue-400 hover:bg-blue-500 active:scale-90 dark:bg-blue-600 dark:hover:bg-blue-700 text-white shadow-lg shadow-blue-300 dark:shadow-blue-700";
+        return isDisabledOrLoading
+          ? "bg-blue cursor-not-allowed brightness-75"
+          : "bg-blue hover:brightness-125 active:scale-90";
       case "secondary":
-        return "bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white";
+        return isDisabledOrLoading
+          ? "bg-surface0 cursor-not-allowed brightness-75"
+          : "bg-surface0 hover:brightness-125 active:scale-90";
       case "danger":
-        return "bg-red-500 hover:bg-red-600 active:scale-90 text-white shadow-lg shadow-red-300 dark:shadow-red-700";
+        return isDisabledOrLoading
+          ? "bg-red cursor-not-allowed brightness-75"
+          : "bg-red hover:brightness-125 active:scale-90";
       case "ghost":
-        return "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300";
+        return isDisabledOrLoading
+          ? "cursor-not-allowed opacity-50"
+          : "hover:brightness-125 active:scale-90";
       default:
         return "";
     }
@@ -61,27 +72,7 @@ export default function Button(props: ButtonProps) {
       class={`${baseClasses} ${variantClasses()} ${sizeClasses()} ${widthClass()} ${local.class || ""}`}
     >
       <Show when={local.loading} fallback={local.children}>
-        <svg
-          class="mr-2 h-5 w-5 animate-spin"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          />
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
-        Loading...
+        <LoadingSpinner height={24} width={24} />
       </Show>
     </button>
   );

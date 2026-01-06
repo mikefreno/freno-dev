@@ -1,0 +1,65 @@
+import { JSX, splitProps, createSignal, Show } from "solid-js";
+import Input, { InputProps } from "./Input";
+import Eye from "~/components/icons/Eye";
+import EyeSlash from "~/components/icons/EyeSlash";
+import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
+
+export interface PasswordInputProps extends Omit<InputProps, "type"> {
+  showStrength?: boolean;
+  defaultVisible?: boolean;
+  passwordValue?: string;
+}
+
+export default function PasswordInput(props: PasswordInputProps) {
+  const [local, inputProps] = splitProps(props, [
+    "showStrength",
+    "defaultVisible",
+    "passwordValue",
+    "class",
+    "containerClass"
+  ]);
+
+  const [showPassword, setShowPassword] = createSignal(
+    local.defaultVisible || false
+  );
+
+  return (
+    <>
+      <div class={local.containerClass || "input-group relative mx-4 mb-2"}>
+        <Input
+          {...inputProps}
+          type={showPassword() ? "text" : "password"}
+          class={`w-full pr-10 ${local.class || ""}`}
+          containerClass=""
+        />
+
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword())}
+          class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
+          aria-label={showPassword() ? "Hide password" : "Show password"}
+        >
+          <Show
+            when={showPassword()}
+            fallback={
+              <EyeSlash
+                height={24}
+                width={24}
+                strokeWidth={1}
+                class="stroke-text"
+              />
+            }
+          >
+            <Eye height={24} width={24} strokeWidth={1} class="stroke-text" />
+          </Show>
+        </button>
+      </div>
+
+      {local.showStrength && local.passwordValue !== undefined && (
+        <div class="px-4 pt-1">
+          <PasswordStrengthMeter password={local.passwordValue} />
+        </div>
+      )}
+    </>
+  );
+}

@@ -10,14 +10,14 @@ import { Title, Meta } from "@solidjs/meta";
 import { getEvent } from "vinxi/http";
 import GoogleLogo from "~/components/icons/GoogleLogo";
 import GitHub from "~/components/icons/GitHub";
-import Eye from "~/components/icons/Eye";
-import EyeSlash from "~/components/icons/EyeSlash";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
 import { isValidEmail, validatePassword } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
 import { env } from "~/env/client";
 import { VALIDATION_CONFIG, COUNTDOWN_CONFIG } from "~/config";
+import Input from "~/components/ui/Input";
+import PasswordInput from "~/components/ui/PasswordInput";
 
 const checkAuth = query(async () => {
   "use server";
@@ -49,8 +49,6 @@ export default function LoginPage() {
   const [emailSent, setEmailSent] = createSignal(false);
   const [showPasswordError, setShowPasswordError] = createSignal(false);
   const [showPasswordSuccess, setShowPasswordSuccess] = createSignal(false);
-  const [showPasswordInput, setShowPasswordInput] = createSignal(false);
-  const [showPasswordConfInput, setShowPasswordConfInput] = createSignal(false);
   const [passwordsMatch, setPasswordsMatch] = createSignal(false);
   const [password, setPassword] = createSignal("");
   const [passwordConf, setPasswordConf] = createSignal("");
@@ -402,116 +400,47 @@ export default function LoginPage() {
 
           <form onSubmit={formHandler} class="flex flex-col px-2 py-4">
             <div class="flex justify-center">
-              <div class="input-group mx-4">
-                <input
-                  type="email"
-                  required
-                  ref={emailRef}
-                  placeholder=" "
-                  title="Please enter a valid email address"
-                  class="underlinedInput bg-transparent"
-                />
-                <span class="bar"></span>
-                <label class="underlinedInputLabel">Email</label>
-              </div>
+              <Input
+                type="email"
+                required
+                ref={emailRef}
+                title="Please enter a valid email address"
+                label="Email"
+                containerClass="input-group mx-4"
+              />
             </div>
 
             <Show when={usePassword() || register()}>
               <div class="-mt-4 flex justify-center">
-                <div class="input-group mx-4 flex">
-                  <input
-                    type={showPasswordInput() ? "text" : "password"}
-                    required
-                    minLength={8}
-                    ref={passwordRef}
-                    onInput={register() ? handlePasswordChange : undefined}
-                    placeholder=" "
-                    title="Password must be at least 8 characters"
-                    class="underlinedInput bg-transparent"
-                  />
-                  <span class="bar"></span>
-                  <label class="underlinedInputLabel">Password</label>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowPasswordInput(!showPasswordInput());
-                    passwordRef?.focus();
-                  }}
-                  class="absolute mt-14 ml-60"
-                  type="button"
-                >
-                  <Show
-                    when={showPasswordInput()}
-                    fallback={
-                      <EyeSlash
-                        height={24}
-                        width={24}
-                        strokeWidth={1}
-                        class="stroke-text"
-                      />
-                    }
-                  >
-                    <Eye
-                      height={24}
-                      width={24}
-                      strokeWidth={1}
-                      class="stroke-text"
-                    />
-                  </Show>
-                </button>
-              </div>
-            </Show>
-
-            <Show when={register()}>
-              <div class="mx-auto flex justify-center px-4 py-2">
-                <PasswordStrengthMeter password={password()} />
+                <PasswordInput
+                  required
+                  minLength={8}
+                  ref={passwordRef}
+                  onInput={register() ? handlePasswordChange : undefined}
+                  title="Password must be at least 8 characters"
+                  label="Password"
+                  containerClass="input-group mx-4 flex"
+                  showStrength={register()}
+                  passwordValue={register() ? password() : undefined}
+                />
               </div>
             </Show>
 
             <Show when={register()}>
               <div class="flex justify-center">
-                <div class="input-group mx-4">
-                  <input
-                    type={showPasswordConfInput() ? "text" : "password"}
-                    required
-                    minLength={8}
-                    ref={passwordConfRef}
-                    onInput={handlePasswordConfChange}
-                    placeholder=" "
-                    title="Password must be at least 8 characters and match the password above"
-                    class="underlinedInput bg-transparent"
-                  />
-                  <span class="bar"></span>
-                  <label class="underlinedInputLabel">Confirm Password</label>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowPasswordConfInput(!showPasswordConfInput());
-                    passwordConfRef?.focus();
-                  }}
-                  class="absolute mt-14 ml-60"
-                  type="button"
-                >
-                  <Show
-                    when={showPasswordConfInput()}
-                    fallback={
-                      <EyeSlash
-                        height={24}
-                        width={24}
-                        strokeWidth={1}
-                        class="stroke-text"
-                      />
-                    }
-                  >
-                    <Eye
-                      height={24}
-                      width={24}
-                      strokeWidth={1}
-                      class="stroke-text"
-                    />
-                  </Show>
-                </button>
+                <PasswordInput
+                  required
+                  minLength={8}
+                  ref={passwordConfRef}
+                  onInput={handlePasswordConfChange}
+                  title="Password must be at least 8 characters and match the password above"
+                  label="Confirm Password"
+                  containerClass="input-group mx-4"
+                />
               </div>
+            </Show>
+
+            <Show when={register()}>
               <div
                 class={`${
                   !passwordsMatch() &&

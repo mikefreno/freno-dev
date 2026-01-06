@@ -5,6 +5,7 @@ import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { isValidEmail } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
 import { COUNTDOWN_CONFIG } from "~/config";
+import Input from "~/components/ui/Input";
 
 export default function RequestPasswordResetPage() {
   const navigate = useNavigate();
@@ -136,20 +137,17 @@ export default function RequestPasswordResetPage() {
         class="mt-4 flex w-full justify-center"
       >
         <div class="flex flex-col justify-center">
-          <div class="input-group mx-4">
-            <input
-              ref={emailRef}
-              name="email"
-              type="email"
-              required
-              disabled={loading()}
-              placeholder=" "
-              title="Please enter a valid email address"
-              class="underlinedInput w-full bg-transparent"
-            />
-            <span class="bar"></span>
-            <label class="underlinedInputLabel">Enter Email</label>
-          </div>
+          <Input
+            ref={emailRef}
+            name="email"
+            type="email"
+            required
+            disabled={loading()}
+            title="Please enter a valid email address"
+            label="Enter Email"
+            containerClass="input-group mx-4"
+            class="w-full"
+          />
 
           <Show
             when={countDown() > 0}

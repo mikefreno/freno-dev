@@ -8,6 +8,7 @@ import TagMaker from "~/components/blog/TagMaker";
 import AddAttachmentSection from "~/components/blog/AddAttachmentSection";
 import XCircle from "~/components/icons/XCircle";
 import AddImageToS3 from "~/lib/s3upload";
+import Input from "~/components/ui/Input";
 
 interface PostFormProps {
   mode: "create" | "edit";
@@ -435,32 +436,26 @@ export default function PostForm(props: PostFormProps) {
         <form onSubmit={handleSubmit} class="w-full max-w-full px-4">
           <div class="mx-auto w-full md:w-3/4 xl:w-1/2">
             {/* Title */}
-            <div class="input-group mx-4">
-              <input
-                type="text"
-                value={title()}
-                onInput={(e) => setTitle(e.currentTarget.value)}
-                name="title"
-                placeholder=" "
-                class="underlinedInput w-full bg-transparent"
-              />
-              <span class="bar"></span>
-              <label class="underlinedInputLabel">Title</label>
-            </div>
+            <Input
+              type="text"
+              value={title()}
+              onInput={(e) => setTitle(e.currentTarget.value)}
+              name="title"
+              label="Title"
+              containerClass="input-group mx-4"
+              class="w-full"
+            />
 
             {/* Subtitle */}
-            <div class="input-group mx-4">
-              <input
-                type="text"
-                value={subtitle()}
-                onInput={(e) => setSubtitle(e.currentTarget.value)}
-                name="subtitle"
-                placeholder=" "
-                class="underlinedInput w-full bg-transparent"
-              />
-              <span class="bar"></span>
-              <label class="underlinedInputLabel">Subtitle</label>
-            </div>
+            <Input
+              type="text"
+              value={subtitle()}
+              onInput={(e) => setSubtitle(e.currentTarget.value)}
+              name="subtitle"
+              label="Subtitle"
+              containerClass="input-group mx-4"
+              class="w-full"
+            />
 
             {/* Banner */}
             <div class="pt-8 text-center text-xl">Banner</div>

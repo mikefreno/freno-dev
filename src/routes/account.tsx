@@ -2,8 +2,6 @@ import { createSignal, Show, createEffect } from "solid-js";
 import { Title, Meta } from "@solidjs/meta";
 import { useNavigate, redirect, query, createAsync } from "@solidjs/router";
 import { getEvent } from "vinxi/http";
-import Eye from "~/components/icons/Eye";
-import EyeSlash from "~/components/icons/EyeSlash";
 import XCircle from "~/components/icons/XCircle";
 import GoogleLogo from "~/components/icons/GoogleLogo";
 import GitHub from "~/components/icons/GitHub";
@@ -14,6 +12,9 @@ import { validatePassword, isValidEmail } from "~/lib/validation";
 import { TerminalSplash } from "~/components/TerminalSplash";
 import { VALIDATION_CONFIG } from "~/config";
 import { api } from "~/lib/api";
+import Input from "~/components/ui/Input";
+import PasswordInput from "~/components/ui/PasswordInput";
+import Button from "~/components/ui/Button";
 
 import type { UserProfile } from "~/types/user";
 import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
@@ -86,10 +87,6 @@ export default function AccountPage() {
   const [passwordError, setPasswordError] = createSignal(false);
   const [passwordDeletionError, setPasswordDeletionError] = createSignal(false);
   const [newPassword, setNewPassword] = createSignal("");
-
-  const [showOldPasswordInput, setShowOldPasswordInput] = createSignal(false);
-  const [showPasswordInput, setShowPasswordInput] = createSignal(false);
-  const [showPasswordConfInput, setShowPasswordConfInput] = createSignal(false);
 
   const [showImageSuccess, setShowImageSuccess] = createSignal(false);
   const [showEmailSuccess, setShowEmailSuccess] = createSignal(false);
@@ -662,25 +659,19 @@ export default function AccountPage() {
                         JavaScript required to update email
                       </div>
                     </noscript>
-                    <div class="input-group mx-4">
-                      <input
-                        ref={emailRef}
-                        type="email"
-                        required
-                        disabled={
-                          emailButtonLoading() ||
-                          (userProfile().email !== null &&
-                            !userProfile().emailVerified)
-                        }
-                        placeholder=" "
-                        title="Please enter a valid email address"
-                        class="underlinedInput bg-transparent"
-                      />
-                      <span class="bar"></span>
-                      <label class="underlinedInputLabel">
-                        {userProfile().email ? "Update Email" : "Add Email"}
-                      </label>
-                    </div>
+                    <Input
+                      ref={emailRef}
+                      type="email"
+                      required
+                      disabled={
+                        emailButtonLoading() ||
+                        (userProfile().email !== null &&
+                          !userProfile().emailVerified)
+                      }
+                      title="Please enter a valid email address"
+                      label={userProfile().email ? "Update Email" : "Add Email"}
+                      containerClass="input-group mx-4"
+                    />
                     <Show
                       when={
                         userProfile().provider !== "email" &&
@@ -739,22 +730,15 @@ export default function AccountPage() {
                         JavaScript required to update display name
                       </div>
                     </noscript>
-                    <div class="input-group mx-4">
-                      <input
-                        ref={displayNameRef}
-                        type="text"
-                        required
-                        disabled={displayNameButtonLoading()}
-                        placeholder=" "
-                        title="Please enter your display name"
-                        class="underlinedInput bg-transparent"
-                      />
-                      <span class="bar"></span>
-                      <label class="underlinedInputLabel">
-                        Set {userProfile().displayName ? "New " : ""}Display
-                        Name
-                      </label>
-                    </div>
+                    <Input
+                      ref={displayNameRef}
+                      type="text"
+                      required
+                      disabled={displayNameButtonLoading()}
+                      title="Please enter your display name"
+                      label={`Set ${userProfile().displayName ? "New " : ""}Display Name`}
+                      containerClass="input-group mx-4"
+                    />
                     <div class="flex justify-end">
                       <button
                         type="submit"
@@ -806,136 +790,40 @@ export default function AccountPage() {
                     </Show>
 
                     <Show when={userProfile().hasPassword}>
-                      <div class="input-group relative mx-4 mb-6">
-                        <input
-                          ref={oldPasswordRef}
-                          type={showOldPasswordInput() ? "text" : "password"}
-                          required
-                          minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
-                          disabled={passwordChangeLoading()}
-                          placeholder=" "
-                          title="Password must be at least 8 characters"
-                          class="underlinedInput w-full bg-transparent pr-10"
-                        />
-                        <span class="bar"></span>
-                        <label class="underlinedInputLabel">Old Password</label>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowOldPasswordInput(!showOldPasswordInput())
-                          }
-                          class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
-                        >
-                          <Show
-                            when={showOldPasswordInput()}
-                            fallback={
-                              <EyeSlash
-                                height={24}
-                                width={24}
-                                strokeWidth={1}
-                                class="stroke-text"
-                              />
-                            }
-                          >
-                            <Eye
-                              height={24}
-                              width={24}
-                              strokeWidth={1}
-                              class="stroke-text"
-                            />
-                          </Show>
-                        </button>
-                      </div>
+                      <PasswordInput
+                        ref={oldPasswordRef}
+                        required
+                        minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
+                        disabled={passwordChangeLoading()}
+                        title="Password must be at least 8 characters"
+                        label="Old Password"
+                        containerClass="input-group relative mx-4 mb-6"
+                      />
                     </Show>
 
-                    <div class="input-group relative mx-4 mb-2">
-                      <input
-                        ref={newPasswordRef}
-                        type={showPasswordInput() ? "text" : "password"}
-                        required
-                        minlength="8"
-                        onInput={handleNewPasswordChange}
-                        onBlur={handlePasswordBlur}
-                        disabled={passwordChangeLoading()}
-                        placeholder=" "
-                        title="Password must be at least 8 characters"
-                        class="underlinedInput w-full bg-transparent pr-10"
-                      />
-                      <span class="bar"></span>
-                      <label class="underlinedInputLabel">New Password</label>
-                      <div class="pt-1">
-                        <PasswordStrengthMeter password={newPassword()} />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPasswordInput(!showPasswordInput())
-                        }
-                        class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
-                      >
-                        <Show
-                          when={showPasswordInput()}
-                          fallback={
-                            <EyeSlash
-                              height={24}
-                              width={24}
-                              strokeWidth={1}
-                              class="stroke-text"
-                            />
-                          }
-                        >
-                          <Eye
-                            height={24}
-                            width={24}
-                            strokeWidth={1}
-                            class="stroke-text"
-                          />
-                        </Show>
-                      </button>
-                    </div>
-                    <div class="input-group relative mx-4 mb-2">
-                      <input
-                        ref={newPasswordConfRef}
-                        type={showPasswordConfInput() ? "text" : "password"}
-                        required
-                        minlength="8"
-                        onInput={handlePasswordConfChange}
-                        disabled={passwordChangeLoading()}
-                        placeholder=" "
-                        title="Password must be at least 8 characters"
-                        class="underlinedInput w-full bg-transparent pr-10"
-                      />
-                      <span class="bar"></span>
-                      <label class="underlinedInputLabel">
-                        New Password Confirmation
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPasswordConfInput(!showPasswordConfInput())
-                        }
-                        class="text-subtext0 absolute top-2 right-0 transition-all hover:brightness-125"
-                      >
-                        <Show
-                          when={showPasswordConfInput()}
-                          fallback={
-                            <EyeSlash
-                              height={24}
-                              width={24}
-                              strokeWidth={1}
-                              class="stroke-text"
-                            />
-                          }
-                        >
-                          <Eye
-                            height={24}
-                            width={24}
-                            strokeWidth={1}
-                            class="stroke-text"
-                          />
-                        </Show>
-                      </button>
-                    </div>
+                    <PasswordInput
+                      ref={newPasswordRef}
+                      required
+                      minlength="8"
+                      onInput={handleNewPasswordChange}
+                      onBlur={handlePasswordBlur}
+                      disabled={passwordChangeLoading()}
+                      title="Password must be at least 8 characters"
+                      label="New Password"
+                      showStrength
+                      passwordValue={newPassword()}
+                      containerClass="input-group relative mx-4 mb-2"
+                    />
+                    <PasswordInput
+                      ref={newPasswordConfRef}
+                      required
+                      minlength="8"
+                      onInput={handlePasswordConfChange}
+                      disabled={passwordChangeLoading()}
+                      title="Password must be at least 8 characters"
+                      label="New Password Confirmation"
+                      containerClass="input-group relative mx-4 mb-2"
+                    />
 
                     <Show
                       when={
@@ -1039,22 +927,15 @@ export default function AccountPage() {
                     >
                       <form onSubmit={deleteAccountTrigger}>
                         <div class="flex w-full justify-center">
-                          <div class="input-group delete mx-4">
-                            <input
-                              ref={deleteAccountPasswordRef}
-                              type="password"
-                              required
-                              minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
-                              disabled={deleteAccountButtonLoading()}
-                              placeholder=" "
-                              title="Enter your password to confirm account deletion"
-                              class="underlinedInput bg-transparent"
-                            />
-                            <span class="bar"></span>
-                            <label class="underlinedInputLabel">
-                              Enter Password
-                            </label>
-                          </div>
+                          <PasswordInput
+                            ref={deleteAccountPasswordRef}
+                            required
+                            minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
+                            disabled={deleteAccountButtonLoading()}
+                            title="Enter your password to confirm account deletion"
+                            label="Enter Password"
+                            containerClass="input-group delete mx-4"
+                          />
                         </div>
 
                         <button

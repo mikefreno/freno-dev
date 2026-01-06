@@ -72,3 +72,32 @@ export function insertSoftHyphens(
     })
     .join(" ");
 }
+
+export function glitchText(
+  originalText: string,
+  setter: (text: string) => void,
+  glitchInterval: number = 300,
+  glitchLength: number = 80
+) {
+  const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
+
+  const interval = setInterval(() => {
+    if (Math.random() > 0.9) {
+      let glitched = "";
+      for (let i = 0; i < originalText.length; i++) {
+        if (Math.random() > 0.8) {
+          glitched +=
+            glitchChars[Math.floor(Math.random() * glitchChars.length)];
+        } else {
+          glitched += originalText[i];
+        }
+      }
+      setter(glitched);
+
+      setTimeout(() => {
+        setter(originalText);
+      }, glitchLength);
+    }
+  }, glitchInterval);
+  return interval;
+}

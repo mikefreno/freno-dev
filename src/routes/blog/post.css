@@ -852,3 +852,6 @@ pre {
     scrollbar-color: var(--color-text) transparent;
   }
 }
+img {
+  max-height: 50vh !important;
+}

@@ -2,11 +2,11 @@ import { createSignal, createEffect, Show } from "solid-js";
 import { A, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
-import Eye from "~/components/icons/Eye";
-import EyeSlash from "~/components/icons/EyeSlash";
 import { validatePassword } from "~/lib/validation";
 import { api } from "~/lib/api";
 import { VALIDATION_CONFIG, COUNTDOWN_CONFIG } from "~/config";
+import PasswordInput from "~/components/ui/PasswordInput";
+import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
 
 export default function PasswordResetPage() {
   const navigate = useNavigate();
@@ -22,8 +22,7 @@ export default function PasswordResetPage() {
   const [showRequestNewEmail, setShowRequestNewEmail] = createSignal(false);
   const [countDown, setCountDown] = createSignal(false);
   const [error, setError] = createSignal("");
-  const [showPasswordInput, setShowPasswordInput] = createSignal(false);
-  const [showPasswordConfInput, setShowPasswordConfInput] = createSignal(false);
+  const [newPassword, setNewPassword] = createSignal("");
 
   let newPasswordRef: HTMLInputElement | undefined;
   let newPasswordConfRef: HTMLInputElement | undefined;
@@ -121,6 +120,7 @@ export default function PasswordResetPage() {
 
   const handleNewPasswordChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
+    setNewPassword(target.value);
     checkPasswordLength(target.value);
     if (newPasswordConfRef) {
       checkForMatch(target.value, newPasswordConfRef.value);
@@ -169,49 +169,19 @@ export default function PasswordResetPage() {
         >
           <div class="flex w-full max-w-md flex-col justify-center px-4">
             <div class="flex justify-center">
-              <div class="input-group mx-4 flex">
-                <input
-                  ref={newPasswordRef}
-                  name="newPassword"
-                  type={showPasswordInput() ? "text" : "password"}
-                  required
-                  autofocus
-                  onInput={handleNewPasswordChange}
-                  onBlur={handlePasswordBlur}
-                  disabled={passwordChangeLoading()}
-                  placeholder=" "
-                  class="underlinedInput bg-transparent"
-                />
-                <span class="bar"></span>
-                <label class="underlinedInputLabel">New Password</label>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPasswordInput(!showPasswordInput());
-                  newPasswordRef?.focus();
-                }}
-                class="absolute mt-14 ml-60"
-              >
-                <Show
-                  when={showPasswordInput()}
-                  fallback={
-                    <EyeSlash
-                      height={24}
-                      width={24}
-                      strokeWidth={1}
-                      class="stroke-text"
-                    />
-                  }
-                >
-                  <Eye
-                    height={24}
-                    width={24}
-                    strokeWidth={1}
-                    class="stroke-text"
-                  />
-                </Show>
-              </button>
+              <PasswordInput
+                ref={newPasswordRef}
+                name="newPassword"
+                required
+                autofocus
+                onInput={handleNewPasswordChange}
+                onBlur={handlePasswordBlur}
+                disabled={passwordChangeLoading()}
+                label="New Password"
+                containerClass="input-group mx-4 flex"
+                showStrength
+                passwordValue={newPassword()}
+              />
             </div>
 
             <div
@@ -224,49 +194,15 @@ export default function PasswordResetPage() {
             </div>
 
             <div class="-mt-4 flex justify-center">
-              <div class="input-group mx-4 flex">
-                <input
-                  ref={newPasswordConfRef}
-                  name="newPasswordConf"
-                  onInput={handlePasswordConfChange}
-                  type={showPasswordConfInput() ? "text" : "password"}
-                  required
-                  disabled={passwordChangeLoading()}
-                  placeholder=" "
-                  class="underlinedInput bg-transparent"
-                />
-                <span class="bar"></span>
-                <label class="underlinedInputLabel">
-                  Password Confirmation
-                </label>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPasswordConfInput(!showPasswordConfInput());
-                  newPasswordConfRef?.focus();
-                }}
-                class="absolute mt-14 ml-60"
-              >
-                <Show
-                  when={showPasswordConfInput()}
-                  fallback={
-                    <EyeSlash
-                      height={24}
-                      width={24}
-                      strokeWidth={1}
-                      class="stroke-text"
-                    />
-                  }
-                >
-                  <Eye
-                    height={24}
-                    width={24}
-                    strokeWidth={1}
-                    class="stroke-text"
-                  />
-                </Show>
-              </button>
+              <PasswordInput
+                ref={newPasswordConfRef}
+                name="newPasswordConf"
+                onInput={handlePasswordConfChange}
+                required
+                disabled={passwordChangeLoading()}
+                label="Password Confirmation"
+                containerClass="input-group mx-4 flex"
+              />
             </div>
 
             <div

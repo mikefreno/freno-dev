@@ -14,6 +14,7 @@ import { getClientCookie, setClientCookie } from "~/lib/cookies.client";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import RevealDropDown from "~/components/RevealDropDown";
+import Input from "~/components/ui/Input";
 import type { UserProfile } from "~/types/user";
 import { getCookie, setCookie } from "vinxi/http";
 import { z } from "zod";
@@ -379,32 +380,26 @@ export default function ContactPage() {
           >
             <div class="flex w-full flex-col justify-evenly">
               <div class="mx-auto w-full justify-evenly md:flex md:flex-row">
-                <div class="input-group md:mx-4">
-                  <input
-                    type="text"
-                    required
-                    name="name"
-                    value={user()?.displayName ?? ""}
-                    placeholder=" "
-                    title="Please enter your name"
-                    class="underlinedInput w-full bg-transparent"
-                  />
-                  <span class="bar"></span>
-                  <label class="underlinedInputLabel">Name</label>
-                </div>
-                <div class="input-group md:mx-4">
-                  <input
-                    type="email"
-                    required
-                    name="email"
-                    value={user()?.email ?? ""}
-                    placeholder=" "
-                    title="Please enter a valid email address"
-                    class="underlinedInput w-full bg-transparent"
-                  />
-                  <span class="bar"></span>
-                  <label class="underlinedInputLabel">Email</label>
-                </div>
+                <Input
+                  type="text"
+                  required
+                  name="name"
+                  value={user()?.displayName ?? ""}
+                  title="Please enter your name"
+                  label="Name"
+                  containerClass="input-group md:mx-4"
+                  class="w-full"
+                />
+                <Input
+                  type="email"
+                  required
+                  name="email"
+                  value={user()?.email ?? ""}
+                  title="Please enter a valid email address"
+                  label="Email"
+                  containerClass="input-group md:mx-4"
+                  class="w-full"
+                />
               </div>
               <div class="mx-auto w-full pt-6 md:pt-12">
                 <div class="textarea-group">
