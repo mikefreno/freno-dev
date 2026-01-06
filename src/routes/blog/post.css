@@ -852,6 +852,13 @@ pre {
     scrollbar-color: var(--color-text) transparent;
   }
 }
-img {
-  max-height: 50vh !important;
+img,
+video {
+  max-height: 60vh !important;
+}
+@media (max-width: 767px) {
+  img,
+  video {
+    max-height: 80vh !important;
+  }
 }
