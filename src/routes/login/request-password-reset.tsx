@@ -7,6 +7,7 @@ import { getClientCookie } from "~/lib/cookies.client";
 import { COUNTDOWN_CONFIG } from "~/config";
 import Input from "~/components/ui/Input";
 import { Button } from "~/components/ui/Button";
+import FormFeedback from "~/components/ui/FormFeedback";
 
 export default function RequestPasswordResetPage() {
   const navigate = useNavigate();
@@ -174,42 +175,18 @@ export default function RequestPasswordResetPage() {
         </div>
       </form>
 
-      <div
-        class={`${
-          showSuccessMessage() ? "" : "opacity-0 select-none"
-        } text-green flex justify-center italic transition-opacity duration-300 ease-in-out`}
-      >
-        If email exists, you will receive an email shortly!
-      </div>
+      <FormFeedback
+        type="success"
+        message="If email exists, you will receive an email shortly!"
+        show={showSuccessMessage()}
+      />
 
-      <Show when={error()}>
-        <div class="mt-4 flex justify-center">
-          <div
-            class={`${
-              error().includes("Too many attempts") ||
-              error().includes("wait before requesting")
-                ? "border-maroon bg-red rounded-lg border px-4 py-3"
-                : ""
-            } max-w-md text-center`}
-          >
-            <Show when={error().includes("Too many attempts")}>
-              <div class="mb-1 text-base font-semibold">
-                ⏱️ Rate Limit Exceeded
-              </div>
-            </Show>
-            <div
-              class={`${
-                error().includes("Too many attempts") ||
-                error().includes("wait before requesting")
-                  ? "text-sm"
-                  : "text-red text-sm italic"
-              }`}
-            >
-              {error()}
-            </div>
-          </div>
-        </div>
-      </Show>
+      <FormFeedback
+        type="error"
+        message={error()}
+        show={error() !== ""}
+        class="mt-4"
+      />
 
       <div class="mt-6 flex justify-center">
         <A

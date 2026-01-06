@@ -15,6 +15,7 @@ import { api } from "~/lib/api";
 import Input from "~/components/ui/Input";
 import PasswordInput from "~/components/ui/PasswordInput";
 import Button from "~/components/ui/Button";
+import FormFeedback from "~/components/ui/FormFeedback";
 
 import type { UserProfile } from "~/types/user";
 import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
@@ -611,11 +612,12 @@ export default function AccountPage() {
                           : "Set Image"}
                       </button>
                     </form>
-                    <Show when={showImageSuccess()}>
-                      <div class="text-green mt-2 text-center text-sm">
-                        Profile image updated!
-                      </div>
-                    </Show>
+                    <FormFeedback
+                      type="success"
+                      message="Profile image updated!"
+                      show={showImageSuccess()}
+                      class="mt-2"
+                    />
                   </div>
                 </div>
 
@@ -694,11 +696,12 @@ export default function AccountPage() {
                         Submit
                       </Button>
                     </div>
-                    <Show when={showEmailSuccess()}>
-                      <div class="text-green mt-2 text-center text-sm">
-                        Email updated!
-                      </div>
-                    </Show>
+                    <FormFeedback
+                      type="success"
+                      message="Email updated!"
+                      show={showEmailSuccess()}
+                      class="mt-2"
+                    />
                   </form>
 
                   {/* Display Name Section */}
@@ -741,11 +744,12 @@ export default function AccountPage() {
                         Submit
                       </Button>
                     </div>
-                    <Show when={showDisplayNameSuccess()}>
-                      <div class="text-green mt-2 text-center text-sm">
-                        Display name updated!
-                      </div>
-                    </Show>
+                    <FormFeedback
+                      type="success"
+                      message="Display name updated!"
+                      show={showDisplayNameSuccess()}
+                      class="mt-2"
+                    />
                   </form>
                 </div>
 
@@ -817,9 +821,11 @@ export default function AccountPage() {
                         newPasswordConfRef.value.length >= 6
                       }
                     >
-                      <div class="text-red mb-4 text-center text-sm">
-                        Passwords do not match!
-                      </div>
+                      <FormFeedback
+                        type="error"
+                        message="Passwords do not match!"
+                        class="mb-4"
+                      />
                     </Show>
 
                     <Button
@@ -831,20 +837,21 @@ export default function AccountPage() {
                       Set
                     </Button>
 
-                    <Show when={passwordError()}>
-                      <div class="text-red text-center text-sm">
-                        {userProfile().hasPassword
+                    <FormFeedback
+                      type="error"
+                      message={
+                        userProfile().hasPassword
                           ? "Password did not match record"
-                          : "Error setting password"}
-                      </div>
-                    </Show>
+                          : "Must have email & password provider linked or set password first"
+                      }
+                      show={passwordError()}
+                    />
 
-                    <Show when={showPasswordSuccess()}>
-                      <div class="text-green text-center text-sm">
-                        Password {userProfile().hasPassword ? "changed" : "set"}{" "}
-                        successfully!
-                      </div>
-                    </Show>
+                    <FormFeedback
+                      type="success"
+                      message={`Password ${userProfile().hasPassword ? "changed" : "set"} successfully!`}
+                      show={showPasswordSuccess()}
+                    />
                   </div>
                 </form>
 
@@ -924,11 +931,12 @@ export default function AccountPage() {
                           Delete Account
                         </Button>
 
-                        <Show when={passwordDeletionError()}>
-                          <div class="text-red mt-2 text-center text-sm">
-                            Password did not match record
-                          </div>
-                        </Show>
+                        <FormFeedback
+                          type="error"
+                          message="Password did not match record"
+                          show={passwordDeletionError()}
+                          class="mt-2"
+                        />
                       </form>
                     </Show>
                   </div>
