@@ -1,7 +1,8 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { TerminalErrorPage } from "~/components/TerminalErrorPage";
 import { useDarkMode } from "~/context/darkMode";
+import { glitchText } from "~/lib/client-utils";
 
 export interface ErrorBoundaryFallbackProps {
   error: Error;
@@ -28,9 +29,15 @@ export default function ErrorBoundaryFallback(
     isDark = () => true;
   }
 
-  const [glitchText, setGlitchText] = createSignal("ERROR");
+  const [glitchError, setGlitchError] = createSignal("ERROR");
 
-  console.error(props.error);
+  onMount(() => {
+    const interval = glitchText(glitchError(), setGlitchError);
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
 
   const errorContent = (
     <div class="mb-8 w-full max-w-4xl font-mono">
@@ -43,7 +50,7 @@ export default function ErrorBoundaryFallback(
         <div class="mb-2 flex items-start gap-2">
           <span class="text-red text-xl">✗</span>
           <div class="flex-1">
-            <div class="text-red mb-2 text-lg">{glitchText()}</div>
+            <div class="text-red mb-2 text-lg">{glitchError()}</div>
             <div class="text-text">
               Application encountered an unexpected error
             </div>
@@ -119,11 +126,6 @@ export default function ErrorBoundaryFallback(
 
   return (
     <TerminalErrorPage
-      glitchText="ERROR"
-      glitchChars={"!@#$%^&*()_+-=[]{}|;':\",./<>?~`"}
-      glitchSpeed={150}
-      glitchThreshold={0.8}
-      glitchIntensity={0.6}
       navigate={navigate!}
       location={{
         pathname: typeof window !== "undefined" ? window.location.pathname : "/"
@@ -136,7 +138,6 @@ export default function ErrorBoundaryFallback(
           Runtime Exception
         </>
       }
-      onGlitchTextChange={setGlitchText}
       commandContext={{ isDark }}
     />
   );

@@ -1,9 +1,10 @@
 import { PageHead } from "~/components/PageHead";
 import { HttpStatusCode } from "@solidjs/start";
 import { useNavigate, useLocation } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import { TerminalErrorPage } from "~/components/TerminalErrorPage";
 import { useDarkMode } from "~/context/darkMode";
+import { glitchText } from "~/lib/client-utils";
 
 // Component that crashes when rendered
 function CrashComponent() {
@@ -14,14 +15,26 @@ export default function NotFound() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useDarkMode();
-  const [glitchText, setGlitchText] = createSignal("404");
+  const [glitch404, setGlitch404] = createSignal("404");
   const [shouldCrash, setShouldCrash] = createSignal(false);
+
+  onMount(() => {
+    const interval = glitchText(glitch404(), setGlitch404);
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
 
   const errorContent = (
     <div class="mb-8 w-full max-w-4xl font-mono">
       <div class="mb-4 flex items-center gap-2">
-        <span class="text-red">error:</span>
-        <span class="text-text">HTTP {glitchText()} - Not Found</span>
+        <span class="text-red text-3xl font-bold">{glitch404()}</span>
+        <div class="border-overlay0 h-8 border-l" />
+        <div class="flex flex-col">
+          <span class="text-red font-mono text-sm">error:</span>
+          <span class="text-text font-mono">Not Found</span>
+        </div>
       </div>
 
       <div class="border-red bg-mantle mb-6 border-l-4 p-4 text-sm">
@@ -107,11 +120,6 @@ export default function NotFound() {
       />
       <HttpStatusCode code={404} />
       <TerminalErrorPage
-        glitchText="404"
-        glitchChars={"!@#$%^&*()_+-=[]{}|;':\",./<>?~`0123456789"}
-        glitchSpeed={150}
-        glitchThreshold={0.85}
-        glitchIntensity={0.7}
         navigate={navigate}
         location={location}
         errorContent={errorContent}
@@ -122,7 +130,6 @@ export default function NotFound() {
             <span class="text-subtext0">|</span> Page Not Found
           </>
         }
-        onGlitchTextChange={setGlitchText}
         commandContext={{
           triggerCrash: () => setShouldCrash(true),
           isDark: isDark

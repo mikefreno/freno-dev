@@ -1,12 +1,4 @@
-import {
-  createSignal,
-  createEffect,
-  onMount,
-  onCleanup,
-  For,
-  Show,
-  JSX
-} from "solid-js";
+import { createSignal, createEffect, onMount, For, Show, JSX } from "solid-js";
 import {
   CommandHistoryItem,
   createTerminalCommands,
@@ -16,22 +8,16 @@ import {
 import { Btop } from "~/components/Btop";
 
 interface TerminalErrorPageProps {
-  glitchText: string;
-  glitchChars: string;
-  glitchSpeed?: number;
-  glitchThreshold?: number;
-  glitchIntensity?: number;
   navigate: (path: string) => void;
   location: { pathname: string };
   errorContent: JSX.Element;
   quickActions: JSX.Element;
   footer: JSX.Element;
-  onGlitchTextChange?: (text: string) => void;
   commandContext?: Partial<CommandContext>;
+  disableTerminal?: boolean;
 }
 
 export function TerminalErrorPage(props: TerminalErrorPageProps) {
-  const [glitchText, setGlitchText] = createSignal(props.glitchText);
   const [command, setCommand] = createSignal("");
   const [history, setHistory] = createSignal<CommandHistoryItem[]>([]);
   const [historyIndex, setHistoryIndex] = createSignal(-1);
@@ -109,38 +95,7 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
   };
 
   onMount(() => {
-    const originalText = props.glitchText;
-    const glitchChars = props.glitchChars;
-    const glitchSpeed = props.glitchSpeed || 300;
-    const glitchThreshold = props.glitchThreshold || 0.85;
-    const glitchIntensity = props.glitchIntensity || 0.7;
-
-    const glitchInterval = setInterval(() => {
-      if (Math.random() > glitchThreshold) {
-        let glitched = "";
-        for (let i = 0; i < originalText.length; i++) {
-          if (Math.random() > glitchIntensity) {
-            glitched +=
-              glitchChars[Math.floor(Math.random() * glitchChars.length)];
-          } else {
-            glitched += originalText[i];
-          }
-        }
-        setGlitchText(glitched);
-        props.onGlitchTextChange?.(glitched);
-
-        setTimeout(() => {
-          setGlitchText(originalText);
-          props.onGlitchTextChange?.(originalText);
-        }, 100);
-      }
-    }, glitchSpeed);
-
     inputRef?.focus();
-
-    onCleanup(() => {
-      clearInterval(glitchInterval);
-    });
   });
 
   return (
@@ -198,27 +153,27 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
             </For>
           </div>
         </Show>
-
-        {/* Interactive input */}
-        <div class="w-full max-w-4xl font-mono text-sm">
-          <div class="flex items-center gap-2">
-            <span class="text-green">freno@terminal</span>
-            <span class="text-subtext1">:</span>
-            <span class="text-blue">~</span>
-            <span class="text-subtext1">$</span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={command()}
-              onInput={(e) => setCommand(e.currentTarget.value)}
-              onKeyDown={handleKeyDown}
-              class="text-text caret-text ml-1 flex-1 border-none bg-transparent outline-none"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck={false}
-            />
+        <Show when={!props.disableTerminal}>
+          <div class="w-full max-w-4xl font-mono text-sm">
+            <div class="flex items-center gap-2">
+              <span class="text-green">freno@terminal</span>
+              <span class="text-subtext1">:</span>
+              <span class="text-blue">~</span>
+              <span class="text-subtext1">$</span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={command()}
+                onInput={(e) => setCommand(e.currentTarget.value)}
+                onKeyDown={handleKeyDown}
+                class="text-text caret-text ml-1 flex-1 border-none bg-transparent outline-none"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck={false}
+              />
+            </div>
           </div>
-        </div>
+        </Show>
 
         {/* Footer */}
         <div
