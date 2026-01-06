@@ -1,4 +1,4 @@
-import { createSignal, onMount, onCleanup, Show } from "solid-js";
+import { createSignal, onMount, createEffect, Show } from "solid-js";
 import {
   useSearchParams,
   useNavigate,
@@ -15,6 +15,7 @@ import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import RevealDropDown from "~/components/RevealDropDown";
 import Input from "~/components/ui/Input";
 import { Button } from "~/components/ui/Button";
+import { useCountdown } from "~/lib/useCountdown";
 import type { UserProfile } from "~/types/user";
 import { getCookie, setCookie } from "vinxi/http";
 import { z } from "zod";
@@ -154,7 +155,6 @@ export default function ContactPage() {
     deferStream: true
   });
 
-  const [countDown, setCountDown] = createSignal<number>(0);
   const [emailSent, setEmailSent] = createSignal<boolean>(
     searchParams.success === "true"
   );
@@ -165,35 +165,10 @@ export default function ContactPage() {
   const [user, setUser] = createSignal<UserProfile | null>(null);
   const [jsEnabled, setJsEnabled] = createSignal<boolean>(false);
 
-  let timerIdRef: ReturnType<typeof setInterval> | null = null;
-
-  const calcRemainder = (timer: string) => {
-    const expires = new Date(timer);
-    const remaining = expires.getTime() - Date.now();
-    const remainingInSeconds = remaining / 1000;
-
-    if (remainingInSeconds <= 0) {
-      setCountDown(0);
-      if (timerIdRef !== null) {
-        clearInterval(timerIdRef);
-      }
-    } else {
-      setCountDown(remainingInSeconds);
-    }
-  };
+  const { remainingTime, startCountdown, setRemainingTime } = useCountdown();
 
   onMount(() => {
     setJsEnabled(true);
-
-    const serverData = contactData();
-    if (serverData?.remainingTime) {
-      setCountDown(serverData.remainingTime);
-    }
-
-    const timer = getClientCookie("contactRequestSent");
-    if (timer) {
-      timerIdRef = setInterval(() => calcRemainder(timer), 1000);
-    }
 
     api.user.getProfile
       .query()
@@ -203,25 +178,28 @@ export default function ContactPage() {
         }
       })
       .catch(() => {});
+  });
 
-    if (searchParams.success || searchParams.error) {
-      const timer = setTimeout(() => {
-        const newUrl =
-          location.pathname +
-          (viewer() !== "default" ? `?viewer=${viewer()}` : "");
-        navigate(newUrl, { replace: true });
-        setEmailSent(false);
-        setError("");
-      }, 5000);
-
-      onCleanup(() => clearTimeout(timer));
+  createEffect(() => {
+    // Try server data first (more accurate)
+    const serverData = contactData();
+    if (serverData?.remainingTime && serverData.remainingTime > 0) {
+      const expirationTime = new Date(
+        Date.now() + serverData.remainingTime * 1000
+      );
+      startCountdown(expirationTime);
+      return;
     }
 
-    onCleanup(() => {
-      if (timerIdRef !== null) {
-        clearInterval(timerIdRef);
+    // Fall back to client cookie if server data not available yet
+    const timer = getClientCookie("contactRequestSent");
+    if (timer) {
+      try {
+        startCountdown(timer);
+      } catch (e) {
+        console.error("Failed to start countdown from cookie:", e);
       }
-    });
+    }
   });
 
   const sendEmailTrigger = async (e: Event) => {
@@ -251,13 +229,11 @@ export default function ContactPage() {
           setError("");
           (e.target as HTMLFormElement).reset();
 
-          const timer = getClientCookie("contactRequestSent");
-          if (timer) {
-            if (timerIdRef !== null) {
-              clearInterval(timerIdRef);
-            }
-            timerIdRef = setInterval(() => calcRemainder(timer), 1000);
-          }
+          // Set countdown directly - cookie might not be readable immediately
+          const expirationTime = new Date(
+            Date.now() + COOLDOWN_TIMERS.CONTACT_REQUEST_MS
+          );
+          startCountdown(expirationTime);
         }
       } catch (err: any) {
         setError(err.message || "An error occurred");
@@ -351,9 +327,10 @@ export default function ContactPage() {
   };
 
   const renderTime = ({ remainingTime }: { remainingTime: number }) => {
+    const time = isNaN(remainingTime) ? 0 : Math.max(0, remainingTime);
     return (
       <div class="timer">
-        <div class="value">{remainingTime.toFixed(0)}</div>
+        <div class="value">{time.toFixed(0)}</div>
       </div>
     );
   };
@@ -418,7 +395,8 @@ export default function ContactPage() {
               <div class="mx-auto flex w-full justify-end pt-4">
                 <Show
                   when={
-                    countDown() > 0 || (contactData()?.remainingTime ?? 0) > 0
+                    remainingTime() > 0 ||
+                    (contactData()?.remainingTime ?? 0) > 0
                   }
                   fallback={
                     <Button type="submit" loading={loading()} class="w-36">
@@ -438,11 +416,11 @@ export default function ContactPage() {
                   >
                     <CountdownCircleTimer
                       duration={COUNTDOWN_CONFIG.CONTACT_FORM_DURATION_S}
-                      initialRemainingTime={countDown()}
+                      initialRemainingTime={remainingTime()}
                       size={48}
                       strokeWidth={6}
                       colors={"#60a5fa"}
-                      onComplete={() => setCountDown(0)}
+                      onComplete={() => setRemainingTime(0)}
                     >
                       {renderTime}
                     </CountdownCircleTimer>

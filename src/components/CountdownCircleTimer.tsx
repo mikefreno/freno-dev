@@ -1,4 +1,4 @@
-import { Component, createSignal, onMount, onCleanup } from "solid-js";
+import { Component, createSignal, createEffect, onCleanup } from "solid-js";
 
 interface CountdownCircleTimerProps {
   duration: number;
@@ -19,33 +19,65 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
     props.initialRemainingTime ?? props.duration
   );
 
-  const progress = () => remainingTime() / props.duration;
-  const strokeDashoffset = () => circumference * (1 - progress());
+  const progress = () => {
+    const time = remainingTime();
+    if (isNaN(time) || !props.duration) return 0;
+    return Math.max(0, Math.min(1, time / props.duration));
+  };
 
-  onMount(() => {
-    const startTime = Date.now();
-    const initialTime = remainingTime();
-    let animationFrameId: number;
+  const strokeDashoffset = () => {
+    const prog = progress();
+    if (isNaN(prog)) return 0;
+    return circumference * (1 - prog);
+  };
 
-    const animate = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const newTime = Math.max(0, initialTime - elapsed);
+  // If isPlaying is set, manage countdown internally
+  createEffect(() => {
+    if (props.isPlaying !== undefined && props.isPlaying) {
+      const startTime = Date.now();
+      const initialTime = props.initialRemainingTime ?? props.duration;
+      setRemainingTime(initialTime);
 
-      setRemainingTime(newTime);
+      let animationFrameId: number;
 
-      if (newTime <= 0) {
-        props.onComplete?.();
-        return;
-      }
+      const animate = () => {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const newTime = Math.max(0, initialTime - elapsed);
+
+        setRemainingTime(newTime);
+
+        if (newTime <= 0) {
+          props.onComplete?.();
+          return;
+        }
+
+        animationFrameId = requestAnimationFrame(animate);
+      };
 
       animationFrameId = requestAnimationFrame(animate);
-    };
 
-    animationFrameId = requestAnimationFrame(animate);
+      onCleanup(() => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+      });
 
-    onCleanup(() => {
-      cancelAnimationFrame(animationFrameId);
-    });
+      return;
+    }
+
+    // Otherwise, just sync with the prop value - parent controls the countdown
+    const newTime = props.initialRemainingTime ?? props.duration;
+
+    if (isNaN(newTime)) {
+      setRemainingTime(0);
+      return;
+    }
+
+    setRemainingTime(newTime);
+
+    if (newTime <= 0) {
+      props.onComplete?.();
+    }
   });
 
   return (

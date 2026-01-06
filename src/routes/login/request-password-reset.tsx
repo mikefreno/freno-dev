@@ -1,4 +1,4 @@
-import { createSignal, createEffect, onCleanup, Show } from "solid-js";
+import { createSignal, createEffect, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
@@ -8,47 +8,24 @@ import { COUNTDOWN_CONFIG } from "~/config";
 import Input from "~/components/ui/Input";
 import { Button } from "~/components/ui/Button";
 import FormFeedback from "~/components/ui/FormFeedback";
+import { useCountdown } from "~/lib/useCountdown";
 
 export default function RequestPasswordResetPage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = createSignal(false);
-  const [countDown, setCountDown] = createSignal(0);
   const [showSuccessMessage, setShowSuccessMessage] = createSignal(false);
   const [error, setError] = createSignal("");
 
+  const { remainingTime, startCountdown } = useCountdown();
+
   let emailRef: HTMLInputElement | undefined;
-  let timerInterval: number | undefined;
-
-  const calcRemainder = (timer: string) => {
-    const expires = new Date(timer);
-    const remaining = expires.getTime() - Date.now();
-    const remainingInSeconds = remaining / 1000;
-
-    if (remainingInSeconds <= 0) {
-      setCountDown(0);
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-    } else {
-      setCountDown(remainingInSeconds);
-    }
-  };
 
   createEffect(() => {
     const timer = getClientCookie("passwordResetRequested");
     if (timer) {
-      timerInterval = setInterval(
-        () => calcRemainder(timer),
-        1000
-      ) as unknown as number;
+      startCountdown(timer);
     }
-
-    onCleanup(() => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-    });
   });
 
   const requestPasswordResetTrigger = async (e: Event) => {
@@ -85,12 +62,7 @@ export default function RequestPasswordResetPage() {
 
         const timer = getClientCookie("passwordResetRequested");
         if (timer) {
-          if (timerInterval) {
-            clearInterval(timerInterval);
-          }
-          timerInterval = setInterval(() => {
-            calcRemainder(timer);
-          }, 1000) as unknown as number;
+          startCountdown(timer);
         }
       } else {
         const errorMsg = result.error?.message || "Failed to send reset email";
@@ -151,7 +123,7 @@ export default function RequestPasswordResetPage() {
           />
 
           <Show
-            when={countDown() > 0}
+            when={remainingTime() > 0}
             fallback={
               <Button type="submit" loading={loading()} class="my-6">
                 Request Password Reset
@@ -162,7 +134,7 @@ export default function RequestPasswordResetPage() {
               <CountdownCircleTimer
                 isPlaying={true}
                 duration={COUNTDOWN_CONFIG.PASSWORD_RESET_DURATION_S}
-                initialRemainingTime={countDown()}
+                initialRemainingTime={remainingTime()}
                 size={48}
                 strokeWidth={6}
                 colors="#60a5fa"
