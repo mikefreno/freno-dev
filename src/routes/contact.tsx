@@ -12,7 +12,6 @@ import { PageHead } from "~/components/PageHead";
 import { api } from "~/lib/api";
 import { getClientCookie, setClientCookie } from "~/lib/cookies.client";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
-import LoadingSpinner from "~/components/LoadingSpinner";
 import RevealDropDown from "~/components/RevealDropDown";
 import Input from "~/components/ui/Input";
 import { Button } from "~/components/ui/Button";

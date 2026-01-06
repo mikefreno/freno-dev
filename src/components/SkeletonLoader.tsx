@@ -27,15 +27,3 @@ export function SkeletonText(props: SkeletonProps) {
     </div>
   );
 }
-
-export function SkeletonCircle(props: SkeletonProps) {
-  return (
-    <div
-      class={`bg-surface0 flex items-center justify-center rounded-full ${props.class || ""}`}
-      aria-label="Loading..."
-      role="status"
-    >
-      <Spinner size="md" />
-    </div>
-  );
-}

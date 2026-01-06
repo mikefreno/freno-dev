@@ -1,38 +1,23 @@
 import { PageHead } from "~/components/PageHead";
 import { HttpStatusCode } from "@solidjs/start";
 import { useNavigate } from "@solidjs/router";
-import { createEffect, createSignal, For } from "solid-js";
+import { createEffect, createSignal, For, onCleanup } from "solid-js";
 import { ERROR_PAGE_CONFIG } from "~/config";
+import { glitchText } from "~/lib/client-utils";
 
 export default function Page_401() {
   const navigate = useNavigate();
   const [glitchText, setGlitchText] = createSignal("401");
 
   createEffect(() => {
-    const glitchChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?~`";
-    const originalText = "401";
+    const interval = glitchText(
+      "401",
+      setGlitchText,
+      ERROR_PAGE_CONFIG.GLITCH_INTERVAL_MS,
+      ERROR_PAGE_CONFIG.GLITCH_DURATION_MS
+    );
 
-    const glitchInterval = setInterval(() => {
-      if (Math.random() > 0.85) {
-        let glitched = "";
-        for (let i = 0; i < originalText.length; i++) {
-          if (Math.random() > 0.7) {
-            glitched +=
-              glitchChars[Math.floor(Math.random() * glitchChars.length)];
-          } else {
-            glitched += originalText[i];
-          }
-        }
-        setGlitchText(glitched);
-
-        setTimeout(
-          () => setGlitchText(originalText),
-          ERROR_PAGE_CONFIG.GLITCH_DURATION_MS
-        );
-      }
-    }, ERROR_PAGE_CONFIG.GLITCH_INTERVAL_MS);
-
-    return () => clearInterval(glitchInterval);
+    onCleanup(() => clearInterval(interval));
   });
 
   const createParticles = () => {

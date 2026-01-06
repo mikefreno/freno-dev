@@ -9,6 +9,7 @@ import {
 } from "solid-js";
 import { useSearchParams, useNavigate } from "@solidjs/router";
 import { api } from "~/lib/api";
+import { formatRelativeTime } from "~/lib/date-utils";
 import { createTiptapEditor } from "solid-tiptap";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -1151,21 +1152,6 @@ export default function TextEditor(props: TextEditorProps) {
   const parseUTCDateTime = (utcDateString: string): Date => {
     const isoString = utcDateString.replace(" ", "T") + "Z";
     return new Date(isoString);
-  };
-
-  const formatRelativeTime = (date: Date): string => {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHour = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHour / 24);
-
-    if (diffSec < 60) return `${diffSec} seconds ago`;
-    if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
-    if (diffHour < 24)
-      return `${diffHour} hour${diffHour === 1 ? "" : "s"} ago`;
-    return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
   };
 
   const restoreHistory = (index: number) => {
@@ -4237,7 +4223,10 @@ export default function TextEditor(props: TextEditorProps) {
                             {isCurrent ? `>${index() + 1}<` : index() + 1}
                           </span>
                           <span class="text-text text-sm">
-                            {formatRelativeTime(node.timestamp)}
+                            {formatRelativeTime(node.timestamp, {
+                              style: "long",
+                              includeSeconds: true
+                            })}
                           </span>
                         </div>
                         <Show when={isCurrent}>

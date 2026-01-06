@@ -2,7 +2,7 @@ import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
 import { onMount, createSignal, Show, For, onCleanup } from "solid-js";
 import { api } from "~/lib/api";
-import { insertSoftHyphens } from "~/lib/client-utils";
+import { insertSoftHyphens, glitchText } from "~/lib/client-utils";
 import GitHub from "./icons/GitHub";
 import LinkedIn from "./icons/LinkedIn";
 import { RecentCommits } from "./RecentCommits";
@@ -314,26 +314,7 @@ export function LeftBar() {
             setGetLostText(originalText);
 
             // Occasional glitch effect after reveal
-            glitchInterval = setInterval(() => {
-              if (Math.random() > 0.92) {
-                let glitched = "";
-                for (let i = 0; i < originalText.length; i++) {
-                  if (Math.random() > 0.75) {
-                    glitched +=
-                      glitchChars[
-                        Math.floor(Math.random() * glitchChars.length)
-                      ];
-                  } else {
-                    glitched += originalText[i];
-                  }
-                }
-                setGetLostText(glitched);
-
-                setTimeout(() => {
-                  setGetLostText(originalText);
-                }, 80);
-              }
-            }, 200);
+            glitchInterval = glitchText(originalText, setGetLostText, 200, 80);
             return;
           }
         }

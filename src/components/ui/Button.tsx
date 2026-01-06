@@ -1,5 +1,5 @@
 import { JSX, splitProps, Show } from "solid-js";
-import LoadingSpinner from "~/components/LoadingSpinner";
+import { Spinner } from "~/components/Spinner";
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
@@ -72,7 +72,7 @@ export default function Button(props: ButtonProps) {
       class={`${baseClasses} ${variantClasses()} ${sizeClasses()} ${widthClass()} ${local.class || ""}`}
     >
       <Show when={local.loading} fallback={local.children}>
-        <LoadingSpinner height={24} width={24} />
+        <Spinner size={24} />
       </Show>
     </button>
   );

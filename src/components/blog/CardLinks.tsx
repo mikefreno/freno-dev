@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js";
 import { A } from "@solidjs/router";
-import LoadingSpinner from "~/components/LoadingSpinner";
+import { Spinner } from "~/components/Spinner";
 
 export interface CardLinksProps {
   postTitle: string;
@@ -22,7 +22,7 @@ export default function CardLinks(props: CardLinksProps) {
         } mx-auto mb-1 flex rounded px-4 py-2 text-base font-light shadow transition-all duration-300 ease-out active:scale-90`}
       >
         <Show when={readLoading()} fallback="Read">
-          <LoadingSpinner height={24} width={24} />
+          <Spinner size={24} />
         </Show>
       </A>
       <Show when={props.privilegeLevel === "admin"}>
@@ -34,7 +34,7 @@ export default function CardLinks(props: CardLinksProps) {
           } mx-auto flex rounded px-4 py-2 text-base font-light shadow transition-all duration-300 ease-out active:scale-90`}
         >
           <Show when={editLoading()} fallback="Edit">
-            <LoadingSpinner height={24} width={24} />
+            <Spinner size={24} />
           </Show>
         </A>
       </Show>

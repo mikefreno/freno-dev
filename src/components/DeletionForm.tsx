@@ -1,6 +1,6 @@
 import { createSignal, createEffect, onCleanup, Show } from "solid-js";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
-import LoadingSpinner from "~/components/LoadingSpinner";
+import { Spinner } from "~/components/Spinner";
 import { getClientCookie } from "~/lib/cookies.client";
 
 export default function DeletionForm() {
@@ -133,7 +133,7 @@ export default function DeletionForm() {
                     } shadow-maroon flex w-36 justify-center rounded py-3 font-light text-white shadow-lg transition-all duration-300 ease-out`}
                   >
                     <Show when={loading()} fallback="Send Deletion Request">
-                      <LoadingSpinner height={24} width={24} />
+                      <Spinner size={24} />
                     </Show>
                   </button>
                 }
