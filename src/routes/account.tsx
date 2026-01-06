@@ -784,7 +784,6 @@ export default function AccountPage() {
                         disabled={passwordChangeLoading()}
                         title="Password must be at least 8 characters"
                         label="Old Password"
-                        containerClass="input-group relative mx-4 mb-6"
                       />
                     </Show>
 
@@ -799,7 +798,6 @@ export default function AccountPage() {
                       label="New Password"
                       showStrength
                       passwordValue={newPassword()}
-                      containerClass="input-group relative mx-4 mb-2"
                     />
                     <PasswordInput
                       ref={newPasswordConfRef}
@@ -808,8 +806,7 @@ export default function AccountPage() {
                       onInput={handlePasswordConfChange}
                       disabled={passwordChangeLoading()}
                       title="Password must be at least 8 characters"
-                      label="New Password Confirmation"
-                      containerClass="input-group relative mx-4 mb-2"
+                      label="New Password Conf."
                     />
 
                     <Show
@@ -907,7 +904,7 @@ export default function AccountPage() {
                       }
                     >
                       <form onSubmit={deleteAccountTrigger}>
-                        <div class="flex w-full justify-center">
+                        <div class="delete flex w-full justify-center">
                           <PasswordInput
                             ref={deleteAccountPasswordRef}
                             required
@@ -915,7 +912,6 @@ export default function AccountPage() {
                             disabled={deleteAccountButtonLoading()}
                             title="Enter your password to confirm account deletion"
                             label="Enter Password"
-                            containerClass="input-group delete mx-4"
                           />
                         </div>
 

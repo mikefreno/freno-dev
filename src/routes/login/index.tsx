@@ -11,7 +11,6 @@ import { getEvent } from "vinxi/http";
 import GoogleLogo from "~/components/icons/GoogleLogo";
 import GitHub from "~/components/icons/GitHub";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
-import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
 import { isValidEmail, validatePassword } from "~/lib/validation";
 import { getClientCookie } from "~/lib/cookies.client";
 import { env } from "~/env/client";
@@ -399,45 +398,36 @@ export default function LoginPage() {
           </Show>
 
           <form onSubmit={formHandler} class="flex flex-col px-2 py-4">
-            <div class="flex justify-center">
-              <Input
-                type="email"
-                required
-                ref={emailRef}
-                title="Please enter a valid email address"
-                label="Email"
-                containerClass="input-group mx-4"
-              />
-            </div>
+            <Input
+              type="email"
+              required
+              ref={emailRef}
+              title="Please enter a valid email address"
+              label="Email"
+            />
 
             <Show when={usePassword() || register()}>
-              <div class="-mt-4 flex justify-center">
-                <PasswordInput
-                  required
-                  minLength={8}
-                  ref={passwordRef}
-                  onInput={register() ? handlePasswordChange : undefined}
-                  title="Password must be at least 8 characters"
-                  label="Password"
-                  containerClass="input-group mx-4 flex"
-                  showStrength={register()}
-                  passwordValue={register() ? password() : undefined}
-                />
-              </div>
+              <PasswordInput
+                required
+                minLength={8}
+                ref={passwordRef}
+                onInput={register() ? handlePasswordChange : undefined}
+                title="Password must be at least 8 characters"
+                label="Password"
+                showStrength={register()}
+                passwordValue={register() ? password() : undefined}
+              />
             </Show>
 
             <Show when={register()}>
-              <div class="flex justify-center">
-                <PasswordInput
-                  required
-                  minLength={8}
-                  ref={passwordConfRef}
-                  onInput={handlePasswordConfChange}
-                  title="Password must be at least 8 characters and match the password above"
-                  label="Confirm Password"
-                  containerClass="input-group mx-4"
-                />
-              </div>
+              <PasswordInput
+                required
+                minLength={8}
+                ref={passwordConfRef}
+                onInput={handlePasswordConfChange}
+                title="Password must be at least 8 characters and match the password above"
+                label="Confirm Password"
+              />
             </Show>
 
             <Show when={register()}>

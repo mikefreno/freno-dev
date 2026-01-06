@@ -4,7 +4,6 @@ export interface InputProps extends JSX.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
-  containerClass?: string;
   ref?: HTMLInputElement | ((el: HTMLInputElement) => void);
 }
 
@@ -13,18 +12,16 @@ export default function Input(props: InputProps) {
     "label",
     "error",
     "helperText",
-    "class",
-    "containerClass",
     "ref"
   ]);
 
   return (
-    <div class={local.containerClass || "input-group"}>
+    <div class="input-group">
       <input
         {...others}
         ref={local.ref}
         placeholder=" "
-        class={`underlinedInput bg-transparent ${local.class || ""}`}
+        class={`underlinedInput w-full bg-transparent pr-10`}
         aria-invalid={!!local.error}
         aria-describedby={local.error ? `${others.id}-error` : undefined}
       />

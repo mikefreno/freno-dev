@@ -280,7 +280,7 @@ body {
 .input-group,
 .textarea-group {
   position: relative;
-  margin-top: 45px;
+  margin-top: 30px;
 }
 
 input.underlinedInput,
@@ -343,10 +343,10 @@ textarea.underlinedInput:not(:placeholder-shown) ~ label {
   color: var(--color-blue);
 }
 
-.delete input.underlinedInput:focus ~ label,
-.delete input.underlinedInput:not(:placeholder-shown) ~ label,
-.delete textarea.underlinedInput:focus ~ label,
-.delete textarea.underlinedInput:not(:placeholder-shown) ~ label {
+.delete > input.underlinedInput:focus ~ label,
+.delete > input.underlinedInput:not(:placeholder-shown) ~ label,
+.delete > textarea.underlinedInput:focus ~ label,
+.delete > textarea.underlinedInput:not(:placeholder-shown) ~ label {
   color: var(--color-red);
 }
 

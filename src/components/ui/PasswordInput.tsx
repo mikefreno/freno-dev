@@ -14,9 +14,7 @@ export default function PasswordInput(props: PasswordInputProps) {
   const [local, inputProps] = splitProps(props, [
     "showStrength",
     "defaultVisible",
-    "passwordValue",
-    "class",
-    "containerClass"
+    "passwordValue"
   ]);
 
   const [showPassword, setShowPassword] = createSignal(
@@ -24,13 +22,12 @@ export default function PasswordInput(props: PasswordInputProps) {
   );
 
   return (
-    <div class="flex flex-col items-center gap-2">
-      <div class={local.containerClass || "input-group relative mx-4 mb-2"}>
+    <div class="flex flex-col gap-2">
+      <div class={"input-group relative"}>
         <Input
           {...inputProps}
           type={showPassword() ? "text" : "password"}
-          class={`w-full pr-10 ${local.class || ""}`}
-          containerClass=""
+          class={``}
         />
 
         <button
