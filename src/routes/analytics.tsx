@@ -30,13 +30,13 @@ interface PerformanceTarget {
 }
 
 const PERFORMANCE_TARGETS: Record<string, PerformanceTarget> = {
-  lcp: { good: 2500, acceptable: 4000, label: "LCP", unit: "ms" },
-  fcp: { good: 1800, acceptable: 3000, label: "FCP", unit: "ms" },
-  ttfb: { good: 800, acceptable: 1800, label: "TTFB", unit: "ms" },
-  cls: { good: 0.1, acceptable: 0.25, label: "CLS", unit: "" },
+  lcp: { good: 1500, acceptable: 2500, label: "LCP", unit: "ms" },
+  fcp: { good: 1000, acceptable: 1800, label: "FCP", unit: "ms" },
+  ttfb: { good: 500, acceptable: 800, label: "TTFB", unit: "ms" },
+  cls: { good: 0.05, acceptable: 0.1, label: "CLS", unit: "" },
   avgDuration: {
-    good: 3000,
-    acceptable: 5000,
+    good: 2000,
+    acceptable: 3000,
     label: "Avg Duration",
     unit: "ms"
   }
@@ -57,22 +57,22 @@ function getPerformanceRating(
 function getRatingColor(rating: "good" | "acceptable" | "poor"): string {
   switch (rating) {
     case "good":
-      return "text-green-600 dark:text-green-400";
+      return "text-green";
     case "acceptable":
-      return "text-yellow-600 dark:text-yellow-400";
+      return "text-yellow";
     case "poor":
-      return "text-red-600 dark:text-red-400";
+      return "text-red";
   }
 }
 
 function getRatingBgColor(rating: "good" | "acceptable" | "poor"): string {
   switch (rating) {
     case "good":
-      return "bg-green-100 dark:bg-green-900/30";
+      return "bg-green/10";
     case "acceptable":
-      return "bg-yellow-100 dark:bg-yellow-900/30";
+      return "bg-yellow/10";
     case "poor":
-      return "bg-red-100 dark:bg-red-900/30";
+      return "bg-red/10";
   }
 }
 
@@ -87,8 +87,6 @@ function formatNumber(num: number): string {
 }
 
 export default function AnalyticsPage() {
-  const adminCheck = createAsync(() => checkAdmin());
-
   const [timeWindow, setTimeWindow] = createSignal(7);
   const [selectedPath, setSelectedPath] = createSignal<string | null>(null);
   const [error, setError] = createSignal<string | null>(null);
@@ -99,6 +97,17 @@ export default function AnalyticsPage() {
       return await api.analytics.getSummary.query({ days: timeWindow() });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load analytics");
+      return null;
+    }
+  });
+
+  const performanceStats = createAsync(async () => {
+    try {
+      return await api.analytics.getPerformanceStats.query({
+        days: timeWindow()
+      });
+    } catch (e) {
+      console.error("Failed to load performance stats:", e);
       return null;
     }
   });
@@ -120,13 +129,13 @@ export default function AnalyticsPage() {
   return (
     <>
       <Title>Analytics Dashboard - Admin</Title>
-      <div class="min-h-screen bg-gray-50 px-4 py-8 dark:bg-gray-900">
+      <div class="bg-base min-h-screen px-4 py-8">
         <div class="mx-auto max-w-7xl">
           <div class="mb-8">
-            <h1 class="mb-2 text-4xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 class="text-text mb-2 text-4xl font-bold">
               Analytics Dashboard
             </h1>
-            <p class="text-gray-600 dark:text-gray-400">
+            <p class="text-subtext0">
               Visitor analytics and performance metrics
             </p>
           </div>
@@ -139,8 +148,8 @@ export default function AnalyticsPage() {
                   onClick={() => setTimeWindow(days)}
                   class={`rounded-lg px-4 py-2 font-medium transition-colors ${
                     timeWindow() === days
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      ? "bg-blue text-base"
+                      : "bg-surface0 text-text hover:bg-surface1 border-surface1 border"
                   }`}
                 >
                   {days === 1 ? "24h" : `${days}d`}
@@ -150,7 +159,7 @@ export default function AnalyticsPage() {
           </div>
 
           <Show when={error()}>
-            <div class="mb-6 rounded-lg bg-red-100 p-4 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+            <div class="bg-red/20 border-red text-red mb-6 rounded-lg border p-4">
               <p class="font-semibold">Error loading analytics</p>
               <p class="text-sm">{error()}</p>
             </div>
@@ -161,53 +170,218 @@ export default function AnalyticsPage() {
               <>
                 {/* Overview Cards */}
                 <div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-                    <div class="mb-1 text-sm text-gray-600 dark:text-gray-400">
-                      Total Requests
-                    </div>
-                    <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                  <div class="bg-surface0 border-surface1 rounded-lg border p-6 shadow">
+                    <div class="text-subtext0 mb-1 text-sm">Total Requests</div>
+                    <div class="text-text text-3xl font-bold">
                       {formatNumber(data().totalVisits)}
                     </div>
-                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-subtext1 mt-1 text-xs">
                       {formatNumber(data().totalPageVisits)} pages,{" "}
                       {formatNumber(data().totalApiCalls)} API
                     </div>
                   </div>
 
-                  <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-                    <div class="mb-1 text-sm text-gray-600 dark:text-gray-400">
+                  <div class="bg-surface0 border-surface1 rounded-lg border p-6 shadow">
+                    <div class="text-subtext0 mb-1 text-sm">
                       Unique Visitors
                     </div>
-                    <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    <div class="text-text text-3xl font-bold">
                       {formatNumber(data().uniqueVisitors)}
                     </div>
                   </div>
 
-                  <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-                    <div class="mb-1 text-sm text-gray-600 dark:text-gray-400">
+                  <div class="bg-surface0 border-surface1 rounded-lg border p-6 shadow">
+                    <div class="text-subtext0 mb-1 text-sm">
                       Authenticated Users
                     </div>
-                    <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    <div class="text-text text-3xl font-bold">
                       {formatNumber(data().uniqueUsers)}
                     </div>
                   </div>
 
-                  <div class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-                    <div class="mb-1 text-sm text-gray-600 dark:text-gray-400">
+                  <div class="bg-surface0 border-surface1 rounded-lg border p-6 shadow">
+                    <div class="text-subtext0 mb-1 text-sm">
                       Avg. Visits/Day
                     </div>
-                    <div class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    <div class="text-text text-3xl font-bold">
                       {formatNumber(data().totalVisits / timeWindow())}
                     </div>
                   </div>
                 </div>
 
-                {/* Top Pages */}
-                <div class="mb-8 rounded-lg bg-white shadow dark:bg-gray-800">
-                  <div class="border-b border-gray-200 p-6 dark:border-gray-700">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      Top Pages
+                {/* Performance Metrics Section */}
+                <Show
+                  when={
+                    performanceStats() &&
+                    performanceStats()!.totalWithMetrics > 0
+                  }
+                >
+                  <div class="mb-8">
+                    <h2 class="text-text mb-4 text-2xl font-bold">
+                      Core Web Vitals
                     </h2>
+
+                    {/* Performance Overview Cards */}
+                    <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                      <Show when={performanceStats()?.avgLcp != null}>
+                        <div
+                          class={`border-surface1 rounded-lg border p-6 shadow ${getRatingBgColor(getPerformanceRating("lcp", performanceStats()!.avgLcp!))}`}
+                        >
+                          <div class="text-subtext0 mb-1 text-sm font-medium">
+                            LCP (Largest Contentful Paint)
+                          </div>
+                          <div
+                            class={`text-3xl font-bold ${getRatingColor(getPerformanceRating("lcp", performanceStats()!.avgLcp!))}`}
+                          >
+                            {Math.round(performanceStats()!.avgLcp!)}ms
+                          </div>
+                          <div class="text-subtext1 mt-1 text-xs">
+                            Target: &lt;1.5s (good), &lt;2.5s (ok)
+                          </div>
+                        </div>
+                      </Show>
+
+                      <Show when={performanceStats()?.avgFcp != null}>
+                        <div
+                          class={`border-surface1 rounded-lg border p-6 shadow ${getRatingBgColor(getPerformanceRating("fcp", performanceStats()!.avgFcp!))}`}
+                        >
+                          <div class="text-subtext0 mb-1 text-sm font-medium">
+                            FCP (First Contentful Paint)
+                          </div>
+                          <div
+                            class={`text-3xl font-bold ${getRatingColor(getPerformanceRating("fcp", performanceStats()!.avgFcp!))}`}
+                          >
+                            {Math.round(performanceStats()!.avgFcp!)}ms
+                          </div>
+                          <div class="text-subtext1 mt-1 text-xs">
+                            Target: &lt;1s (good), &lt;1.8s (ok)
+                          </div>
+                        </div>
+                      </Show>
+
+                      <Show when={performanceStats()?.avgCls != null}>
+                        <div
+                          class={`border-surface1 rounded-lg border p-6 shadow ${getRatingBgColor(getPerformanceRating("cls", performanceStats()!.avgCls!))}`}
+                        >
+                          <div class="text-subtext0 mb-1 text-sm font-medium">
+                            CLS (Cumulative Layout Shift)
+                          </div>
+                          <div
+                            class={`text-3xl font-bold ${getRatingColor(getPerformanceRating("cls", performanceStats()!.avgCls!))}`}
+                          >
+                            {performanceStats()!.avgCls!.toFixed(3)}
+                          </div>
+                          <div class="text-subtext1 mt-1 text-xs">
+                            Target: &lt;0.05 (good), &lt;0.1 (ok)
+                          </div>
+                        </div>
+                      </Show>
+
+                      <Show when={performanceStats()?.avgTtfb != null}>
+                        <div
+                          class={`border-surface1 rounded-lg border p-6 shadow ${getRatingBgColor(getPerformanceRating("ttfb", performanceStats()!.avgTtfb!))}`}
+                        >
+                          <div class="text-subtext0 mb-1 text-sm font-medium">
+                            TTFB (Time to First Byte)
+                          </div>
+                          <div
+                            class={`text-3xl font-bold ${getRatingColor(getPerformanceRating("ttfb", performanceStats()!.avgTtfb!))}`}
+                          >
+                            {Math.round(performanceStats()!.avgTtfb!)}ms
+                          </div>
+                          <div class="text-subtext1 mt-1 text-xs">
+                            Target: &lt;500ms (good), &lt;800ms (ok)
+                          </div>
+                        </div>
+                      </Show>
+                    </div>
+
+                    {/* Performance by Page */}
+                    <Show
+                      when={
+                        performanceStats()?.byPath &&
+                        performanceStats()!.byPath.length > 0
+                      }
+                    >
+                      <div class="bg-surface0 border-surface1 rounded-lg border shadow">
+                        <div class="border-surface1 border-b p-6">
+                          <h3 class="text-text text-xl font-bold">
+                            Performance by Page
+                          </h3>
+                          <p class="text-subtext0 mt-1 text-sm">
+                            {performanceStats()!.totalWithMetrics} page loads
+                            with performance data
+                          </p>
+                        </div>
+                        <div class="p-6">
+                          <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                              <thead class="border-surface1 border-b">
+                                <tr class="text-subtext0 text-left">
+                                  <th class="pr-4 pb-3 font-medium">Page</th>
+                                  <th class="pr-4 pb-3 text-right font-medium">
+                                    LCP
+                                  </th>
+                                  <th class="pr-4 pb-3 text-right font-medium">
+                                    FCP
+                                  </th>
+                                  <th class="pr-4 pb-3 text-right font-medium">
+                                    CLS
+                                  </th>
+                                  <th class="pr-4 pb-3 text-right font-medium">
+                                    TTFB
+                                  </th>
+                                  <th class="pb-3 text-right font-medium">
+                                    Samples
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <For each={performanceStats()!.byPath || []}>
+                                  {(page) => (
+                                    <tr class="border-surface1 border-b">
+                                      <td class="text-text py-3 pr-4 font-mono text-xs">
+                                        {page.path}
+                                      </td>
+                                      <td
+                                        class={`py-3 pr-4 text-right font-medium ${getRatingColor(getPerformanceRating("lcp", page.avgLcp))}`}
+                                      >
+                                        {Math.round(page.avgLcp)}ms
+                                      </td>
+                                      <td
+                                        class={`py-3 pr-4 text-right font-medium ${getRatingColor(getPerformanceRating("fcp", page.avgFcp))}`}
+                                      >
+                                        {Math.round(page.avgFcp)}ms
+                                      </td>
+                                      <td
+                                        class={`py-3 pr-4 text-right font-medium ${getRatingColor(getPerformanceRating("cls", page.avgCls))}`}
+                                      >
+                                        {page.avgCls.toFixed(3)}
+                                      </td>
+                                      <td
+                                        class={`py-3 pr-4 text-right font-medium ${getRatingColor(getPerformanceRating("ttfb", page.avgTtfb))}`}
+                                      >
+                                        {Math.round(page.avgTtfb)}ms
+                                      </td>
+                                      <td class="text-subtext0 py-3 text-right">
+                                        {page.count}
+                                      </td>
+                                    </tr>
+                                  )}
+                                </For>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </Show>
+                  </div>
+                </Show>
+
+                {/* Top Pages */}
+                <div class="bg-surface0 border-surface1 mb-8 rounded-lg border shadow">
+                  <div class="border-surface1 border-b p-6">
+                    <h2 class="text-text text-2xl font-bold">Top Pages</h2>
                   </div>
                   <div class="p-6">
                     <div class="space-y-3">
@@ -217,24 +391,24 @@ export default function AnalyticsPage() {
                             (pathData.count / data().totalPageVisits) * 100;
                           return (
                             <div
-                              class="cursor-pointer rounded-lg p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                              class="hover:bg-surface1 cursor-pointer rounded-lg p-3 transition-colors"
                               onClick={() => setSelectedPath(pathData.path)}
                             >
                               <div class="mb-2 flex items-center justify-between">
-                                <span class="font-mono text-sm text-gray-900 dark:text-gray-100">
+                                <span class="text-text font-mono text-sm">
                                   {pathData.path}
                                 </span>
-                                <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                <span class="text-text text-sm font-semibold">
                                   {formatNumber(pathData.count)} visits
                                 </span>
                               </div>
-                              <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                              <div class="bg-surface1 h-2 w-full rounded-full">
                                 <div
                                   class="h-2 rounded-full bg-blue-600"
                                   style={{ width: `${percentage}%` }}
                                 />
                               </div>
-                              <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              <div class="text-subtext1 mt-1 text-xs">
                                 {percentage.toFixed(1)}% of page traffic
                               </div>
                             </div>
@@ -246,11 +420,9 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Top API Calls */}
-                <div class="mb-8 rounded-lg bg-white shadow dark:bg-gray-800">
-                  <div class="border-b border-gray-200 p-6 dark:border-gray-700">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      Top API Calls
-                    </h2>
+                <div class="bg-surface0 border-surface1 mb-8 rounded-lg border shadow">
+                  <div class="border-surface1 border-b p-6">
+                    <h2 class="text-text text-2xl font-bold">Top API Calls</h2>
                   </div>
                   <div class="p-6">
                     <div class="space-y-3">
@@ -261,20 +433,20 @@ export default function AnalyticsPage() {
                           return (
                             <div class="rounded-lg p-3">
                               <div class="mb-2 flex items-center justify-between">
-                                <span class="font-mono text-xs break-all text-gray-900 dark:text-gray-100">
+                                <span class="text-text font-mono text-xs break-all">
                                   {apiData.path}
                                 </span>
-                                <span class="ml-4 text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-gray-100">
+                                <span class="text-text ml-4 text-sm font-semibold whitespace-nowrap">
                                   {formatNumber(apiData.count)}
                                 </span>
                               </div>
-                              <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                              <div class="bg-surface1 h-2 w-full rounded-full">
                                 <div
                                   class="h-2 rounded-full bg-purple-600"
                                   style={{ width: `${percentage}%` }}
                                 />
                               </div>
-                              <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              <div class="text-subtext1 mt-1 text-xs">
                                 {percentage.toFixed(1)}% of API traffic
                               </div>
                             </div>
@@ -288,11 +460,9 @@ export default function AnalyticsPage() {
                 {/* Device & Browser Stats */}
                 <div class="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
                   {/* Device Types */}
-                  <div class="rounded-lg bg-white shadow dark:bg-gray-800">
-                    <div class="border-b border-gray-200 p-6 dark:border-gray-700">
-                      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        Device Types
-                      </h2>
+                  <div class="bg-surface0 border-surface1 rounded-lg border shadow">
+                    <div class="border-surface1 border-b p-6">
+                      <h2 class="text-text text-2xl font-bold">Device Types</h2>
                     </div>
                     <div class="p-6">
                       <div class="space-y-4">
@@ -312,12 +482,12 @@ export default function AnalyticsPage() {
                                   <span class="text-sm font-medium text-gray-700 capitalize dark:text-gray-300">
                                     {device.type}
                                   </span>
-                                  <span class="text-sm text-gray-600 dark:text-gray-400">
+                                  <span class="text-subtext0 text-sm">
                                     {formatNumber(device.count)} (
                                     {percentage.toFixed(1)}%)
                                   </span>
                                 </div>
-                                <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                                <div class="bg-surface1 h-2 w-full rounded-full">
                                   <div
                                     class="h-2 rounded-full bg-purple-600"
                                     style={{ width: `${percentage}%` }}
@@ -332,11 +502,9 @@ export default function AnalyticsPage() {
                   </div>
 
                   {/* Browsers */}
-                  <div class="rounded-lg bg-white shadow dark:bg-gray-800">
-                    <div class="border-b border-gray-200 p-6 dark:border-gray-700">
-                      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        Browsers
-                      </h2>
+                  <div class="bg-surface0 border-surface1 rounded-lg border shadow">
+                    <div class="border-surface1 border-b p-6">
+                      <h2 class="text-text text-2xl font-bold">Browsers</h2>
                     </div>
                     <div class="p-6">
                       <div class="space-y-4">
@@ -356,12 +524,12 @@ export default function AnalyticsPage() {
                                   <span class="text-sm font-medium text-gray-700 capitalize dark:text-gray-300">
                                     {browser.browser}
                                   </span>
-                                  <span class="text-sm text-gray-600 dark:text-gray-400">
+                                  <span class="text-subtext0 text-sm">
                                     {formatNumber(browser.count)} (
                                     {percentage.toFixed(1)}%)
                                   </span>
                                 </div>
-                                <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                                <div class="bg-surface1 h-2 w-full rounded-full">
                                   <div
                                     class="h-2 rounded-full bg-green-600"
                                     style={{ width: `${percentage}%` }}
@@ -378,9 +546,9 @@ export default function AnalyticsPage() {
 
                 {/* Top Referrers */}
                 <Show when={data().topReferrers.length > 0}>
-                  <div class="mb-8 rounded-lg bg-white shadow dark:bg-gray-800">
-                    <div class="border-b border-gray-200 p-6 dark:border-gray-700">
-                      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  <div class="bg-surface0 border-surface1 mb-8 rounded-lg border shadow">
+                    <div class="border-surface1 border-b p-6">
+                      <h2 class="text-text text-2xl font-bold">
                         Top Referrers
                       </h2>
                     </div>
@@ -388,11 +556,11 @@ export default function AnalyticsPage() {
                       <div class="space-y-2">
                         <For each={data().topReferrers}>
                           {(referrer) => (
-                            <div class="flex justify-between border-b border-gray-100 py-2 dark:border-gray-700">
-                              <span class="max-w-md truncate text-sm text-gray-700 dark:text-gray-300">
+                            <div class="border-surface1 flex justify-between border-b py-2">
+                              <span class="text-text max-w-md truncate text-sm">
                                 {referrer.referrer}
                               </span>
-                              <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              <span class="text-text text-sm font-semibold">
                                 {formatNumber(referrer.count)}
                               </span>
                             </div>
@@ -409,14 +577,14 @@ export default function AnalyticsPage() {
           {/* Path Details Modal/Section */}
           <Show when={selectedPath() && pathStats()}>
             {(stats) => (
-              <div class="mb-8 rounded-lg bg-white shadow dark:bg-gray-800">
-                <div class="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
-                  <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <div class="bg-surface0 border-surface1 mb-8 rounded-lg border shadow">
+                <div class="border-surface1 flex items-center justify-between border-b p-6">
+                  <h2 class="text-text text-2xl font-bold">
                     Path Details: {selectedPath()}
                   </h2>
                   <button
                     onClick={() => setSelectedPath(null)}
-                    class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    class="text-subtext0 hover:text-text"
                   >
                     ✕
                   </button>
@@ -424,26 +592,20 @@ export default function AnalyticsPage() {
                 <div class="p-6">
                   <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
-                      <div class="text-sm text-gray-600 dark:text-gray-400">
-                        Total Visits
-                      </div>
-                      <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      <div class="text-subtext0 text-sm">Total Visits</div>
+                      <div class="text-text text-2xl font-bold">
                         {formatNumber(stats().totalVisits)}
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm text-gray-600 dark:text-gray-400">
-                        Unique Visitors
-                      </div>
-                      <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      <div class="text-subtext0 text-sm">Unique Visitors</div>
+                      <div class="text-text text-2xl font-bold">
                         {formatNumber(stats().uniqueVisitors)}
                       </div>
                     </div>
                     <div>
-                      <div class="text-sm text-gray-600 dark:text-gray-400">
-                        Avg. Duration
-                      </div>
-                      <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      <div class="text-subtext0 text-sm">Avg. Duration</div>
+                      <div class="text-text text-2xl font-bold">
                         {stats().avgDurationMs
                           ? `${(stats().avgDurationMs! / 1000).toFixed(1)}s`
                           : "N/A"}
@@ -454,7 +616,7 @@ export default function AnalyticsPage() {
                   {/* Visits by Day */}
                   <Show when={stats().visitsByDay.length > 0}>
                     <div class="mt-6">
-                      <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      <h3 class="text-text mb-4 text-lg font-semibold">
                         Visits by Day
                       </h3>
                       <div class="space-y-2">
@@ -467,14 +629,14 @@ export default function AnalyticsPage() {
                             return (
                               <div>
                                 <div class="mb-1 flex justify-between">
-                                  <span class="text-sm text-gray-700 dark:text-gray-300">
+                                  <span class="text-text text-sm">
                                     {new Date(day.date).toLocaleDateString()}
                                   </span>
-                                  <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                  <span class="text-text text-sm font-semibold">
                                     {formatNumber(day.count)}
                                   </span>
                                 </div>
-                                <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                                <div class="bg-surface1 h-2 w-full rounded-full">
                                   <div
                                     class="h-2 rounded-full bg-blue-600"
                                     style={{ width: `${percentage}%` }}

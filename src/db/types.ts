@@ -150,6 +150,14 @@ export interface VisitorAnalytics {
   os?: string | null;
   session_id?: string | null;
   duration_ms?: number | null;
+  fcp?: number | null;
+  lcp?: number | null;
+  cls?: number | null;
+  fid?: number | null;
+  inp?: number | null;
+  ttfb?: number | null;
+  dom_load?: number | null;
+  load_complete?: number | null;
   created_at: string;
 }
 

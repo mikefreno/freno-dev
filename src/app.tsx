@@ -17,6 +17,7 @@ import { DarkModeProvider } from "./context/darkMode";
 import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 import { MOBILE_CONFIG } from "./config";
 import CustomScrollbar from "./components/CustomScrollbar";
+import { initPerformanceTracking } from "~/lib/performance-tracking";
 
 function AppLayout(props: { children: any }) {
   const {
@@ -29,6 +30,9 @@ function AppLayout(props: { children: any }) {
   let lastScrollY = 0;
 
   onMount(() => {
+    // Initialize performance tracking
+    initPerformanceTracking();
+
     const windowWidth = createWindowWidth();
 
     createEffect(() => {

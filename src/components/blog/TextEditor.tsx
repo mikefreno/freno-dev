@@ -298,8 +298,23 @@ const IframeEmbed = Node.create<IframeOptions>({
     return {
       setIframe:
         (options: { src: string }) =>
-        ({ tr, dispatch }) => {
+        ({ tr, dispatch, editor }) => {
           const { selection } = tr;
+
+          // Check if the src is a direct video file
+          const src = options.src || "";
+          const isVideoFile = /\.(mp4|mov|webm|ogg)(\?.*)?$/i.test(src);
+
+          if (isVideoFile) {
+            // Insert a proper video tag instead of iframe
+            if (dispatch) {
+              const videoHTML = `<video src="${src}" controls playsinline style="max-width: 100%; height: auto;"></video>`;
+              editor.commands.insertContent(videoHTML);
+            }
+            return true;
+          }
+
+          // For non-video URLs, create iframe as normal
           const node = this.type.create(options);
 
           if (dispatch) {

@@ -15,6 +15,14 @@ export interface AnalyticsEntry {
   os?: string | null;
   sessionId?: string | null;
   durationMs?: number | null;
+  fcp?: number | null;
+  lcp?: number | null;
+  cls?: number | null;
+  fid?: number | null;
+  inp?: number | null;
+  ttfb?: number | null;
+  domLoad?: number | null;
+  loadComplete?: number | null;
 }
 
 export async function logVisit(entry: AnalyticsEntry): Promise<void> {
@@ -23,8 +31,9 @@ export async function logVisit(entry: AnalyticsEntry): Promise<void> {
     await conn.execute({
       sql: `INSERT INTO VisitorAnalytics (
         id, user_id, path, method, referrer, user_agent, ip_address, 
-        country, device_type, browser, os, session_id, duration_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        country, device_type, browser, os, session_id, duration_ms,
+        fcp, lcp, cls, fid, inp, ttfb, dom_load, load_complete
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         uuid(),
         entry.userId || null,
@@ -38,7 +47,15 @@ export async function logVisit(entry: AnalyticsEntry): Promise<void> {
         entry.browser || null,
         entry.os || null,
         entry.sessionId || null,
-        entry.durationMs || null
+        entry.durationMs || null,
+        entry.fcp || null,
+        entry.lcp || null,
+        entry.cls || null,
+        entry.fid || null,
+        entry.inp || null,
+        entry.ttfb || null,
+        entry.domLoad || null,
+        entry.loadComplete || null
       ]
     });
   } catch (error) {
@@ -305,6 +322,121 @@ export async function getPathAnalytics(
     uniqueVisitors,
     avgDurationMs,
     visitsByDay
+  };
+}
+
+export async function getPerformanceStats(days: number = 30): Promise<{
+  avgLcp: number | null;
+  avgFcp: number | null;
+  avgCls: number | null;
+  avgInp: number | null;
+  avgTtfb: number | null;
+  avgDomLoad: number | null;
+  avgLoadComplete: number | null;
+  p75Lcp: number | null;
+  p75Fcp: number | null;
+  totalWithMetrics: number;
+  byPath: Array<{
+    path: string;
+    avgLcp: number;
+    avgFcp: number;
+    avgCls: number;
+    avgTtfb: number;
+    count: number;
+  }>;
+}> {
+  const conn = ConnectionFactory();
+
+  // Get average metrics
+  const avgResult = await conn.execute({
+    sql: `SELECT 
+      AVG(lcp) as avgLcp,
+      AVG(fcp) as avgFcp,
+      AVG(cls) as avgCls,
+      AVG(inp) as avgInp,
+      AVG(ttfb) as avgTtfb,
+      AVG(dom_load) as avgDomLoad,
+      AVG(load_complete) as avgLoadComplete,
+      COUNT(*) as total
+    FROM VisitorAnalytics 
+    WHERE created_at >= datetime('now', '-${days} days')
+    AND fcp IS NOT NULL`,
+    args: []
+  });
+
+  const avgRow = avgResult.rows[0] as any;
+
+  // Get 75th percentile for LCP and FCP (approximation using median)
+  const p75LcpResult = await conn.execute({
+    sql: `SELECT lcp as p75
+    FROM VisitorAnalytics 
+    WHERE created_at >= datetime('now', '-${days} days')
+    AND lcp IS NOT NULL
+    ORDER BY lcp
+    LIMIT 1 OFFSET (
+      SELECT COUNT(*) * 75 / 100 
+      FROM VisitorAnalytics 
+      WHERE created_at >= datetime('now', '-${days} days')
+      AND lcp IS NOT NULL
+    )`,
+    args: []
+  });
+
+  const p75FcpResult = await conn.execute({
+    sql: `SELECT fcp as p75
+    FROM VisitorAnalytics 
+    WHERE created_at >= datetime('now', '-${days} days')
+    AND fcp IS NOT NULL
+    ORDER BY fcp
+    LIMIT 1 OFFSET (
+      SELECT COUNT(*) * 75 / 100 
+      FROM VisitorAnalytics 
+      WHERE created_at >= datetime('now', '-${days} days')
+      AND fcp IS NOT NULL
+    )`,
+    args: []
+  });
+
+  // Get performance by path (only for non-API paths)
+  const byPathResult = await conn.execute({
+    sql: `SELECT 
+      path,
+      AVG(lcp) as avgLcp,
+      AVG(fcp) as avgFcp,
+      AVG(cls) as avgCls,
+      AVG(ttfb) as avgTtfb,
+      COUNT(*) as count
+    FROM VisitorAnalytics 
+    WHERE created_at >= datetime('now', '-${days} days')
+    AND fcp IS NOT NULL
+    AND path NOT LIKE '/api/%'
+    GROUP BY path
+    ORDER BY count DESC
+    LIMIT 20`,
+    args: []
+  });
+
+  const byPath = byPathResult.rows.map((row: any) => ({
+    path: row.path,
+    avgLcp: row.avgLcp || 0,
+    avgFcp: row.avgFcp || 0,
+    avgCls: row.avgCls || 0,
+    avgTtfb: row.avgTtfb || 0,
+    count: row.count
+  }));
+
+  return {
+    avgLcp: avgRow?.avgLcp || null,
+    avgFcp: avgRow?.avgFcp || null,
+    avgCls: avgRow?.avgCls || null,
+    avgInp: avgRow?.avgInp || null,
+    avgTtfb: avgRow?.avgTtfb || null,
+    avgDomLoad: avgRow?.avgDomLoad || null,
+    avgLoadComplete: avgRow?.avgLoadComplete || null,
+    p75Lcp: (p75LcpResult.rows[0] as any)?.p75 || null,
+    p75Fcp: (p75FcpResult.rows[0] as any)?.p75 || null,
+    totalWithMetrics: avgRow?.total || 0,
+    byPath
   };
 }
 

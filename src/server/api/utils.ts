@@ -50,17 +50,20 @@ async function createContextInner(event: APIEvent): Promise<Context> {
   const ipAddress = getRequestIP(event.nativeEvent) || undefined;
   const sessionId = getCookie(event.nativeEvent, "session_id") || undefined;
 
-  logVisit(
-    enrichAnalyticsEntry({
-      userId,
-      path,
-      method,
-      userAgent,
-      referrer,
-      ipAddress,
-      sessionId
-    })
-  );
+  // Don't log the performance logging endpoint itself to avoid circular tracking
+  if (!path.includes("analytics.logPerformance")) {
+    logVisit(
+      enrichAnalyticsEntry({
+        userId,
+        path,
+        method,
+        userAgent,
+        referrer,
+        ipAddress,
+        sessionId
+      })
+    );
+  }
 
   return {
     event,
