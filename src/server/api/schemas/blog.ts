@@ -7,6 +7,15 @@ import { z } from "zod";
  */
 
 // ============================================================================
+// Post Category and Status
+// ============================================================================
+
+/**
+ * Post category enum (deprecated but kept for backward compatibility)
+ */
+export const postCategorySchema = z.enum(["blog", "project"]);
+
+// ============================================================================
 // Post Creation and Updates
 // ============================================================================
 
