@@ -56,6 +56,11 @@ import {
 import { checkAuthStatus } from "~/server/auth";
 import { v4 as uuidV4 } from "uuid";
 import { jwtVerify, SignJWT } from "jose";
+import {
+  generateLoginLinkEmail,
+  generatePasswordResetEmail,
+  generateEmailVerificationEmail
+} from "~/server/email-templates";
 
 /**
  * Safely extract H3Event from Context
@@ -552,18 +557,34 @@ export const authRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { email, token, rememberMe } = input;
+      const { email, token } = input;
 
       try {
+        console.log("[Email Login] Attempting login for:", email);
+
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const { payload } = await jwtVerify(token, secret);
 
+        console.log("[Email Login] JWT verified successfully. Payload:", {
+          email: payload.email,
+          rememberMe: payload.rememberMe,
+          exp: payload.exp
+        });
+
         if (payload.email !== email) {
+          console.error("[Email Login] Email mismatch:", {
+            payloadEmail: payload.email,
+            inputEmail: email
+          });
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Email mismatch"
           });
         }
+
+        // Use rememberMe from JWT payload (source of truth)
+        const rememberMe = (payload.rememberMe as boolean) || false;
+        console.log("[Email Login] Using rememberMe from JWT:", rememberMe);
 
         const conn = ConnectionFactory();
         const query = `SELECT * FROM User WHERE email = ?`;
@@ -571,6 +592,7 @@ export const authRouter = createTRPCRouter({
         const res = await conn.execute({ sql: query, args: params });
 
         if (!res.rows[0]) {
+          console.error("[Email Login] User not found for email:", email);
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "User not found"
@@ -580,14 +602,18 @@ export const authRouter = createTRPCRouter({
         const userId = (res.rows[0] as unknown as User).id;
         const isAdmin = userId === env.ADMIN_ID;
 
+        console.log("[Email Login] User found:", { userId, isAdmin });
+
         // Create session with Vinxi (handles DB + encrypted cookie)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
+
+        console.log("[Email Login] Creating auth session...");
         await createAuthSession(
           getH3Event(ctx),
           userId,
           isAdmin,
-          rememberMe || false,
+          rememberMe,
           clientIP,
           userAgent
         );
@@ -595,11 +621,13 @@ export const authRouter = createTRPCRouter({
         // Set CSRF token for authenticated session
         setCSRFToken(getH3Event(ctx));
 
+        console.log("[Email Login] Session created successfully");
+
         // Log successful email link login
         await logAuditEvent({
           userId,
           eventType: "auth.login.success",
-          eventData: { method: "email_link", rememberMe: rememberMe || false },
+          eventData: { method: "email_link", rememberMe },
           ipAddress: clientIP,
           userAgent,
           success: true
@@ -610,6 +638,8 @@ export const authRouter = createTRPCRouter({
           redirectTo: "/account"
         };
       } catch (error) {
+        console.error("[Email Login] Error during login:", error);
+
         // Log failed email link login
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
@@ -617,7 +647,12 @@ export const authRouter = createTRPCRouter({
           eventData: {
             method: "email_link",
             email: input.email,
-            reason: error instanceof TRPCError ? error.message : "unknown"
+            reason:
+              error instanceof TRPCError
+                ? error.message
+                : error instanceof Error
+                  ? error.message
+                  : "unknown"
           },
           ipAddress,
           userAgent,
@@ -627,7 +662,157 @@ export const authRouter = createTRPCRouter({
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error("Email login failed:", error);
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Authentication failed"
+        });
+      }
+    }),
+
+  emailCodeLogin: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        code: z.string().length(6),
+        rememberMe: z.boolean().optional()
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { email, code, rememberMe } = input;
+
+      try {
+        console.log(
+          "[Email Code Login] Attempting login for:",
+          email,
+          "with code:",
+          code
+        );
+
+        const conn = ConnectionFactory();
+        const res = await conn.execute({
+          sql: "SELECT * FROM User WHERE email = ?",
+          args: [email]
+        });
+
+        if (!res.rows[0]) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found"
+          });
+        }
+
+        // Check if there's a valid JWT token with this code
+        // We need to find the token that was generated for this email
+        // Since we can't store tokens in DB efficiently, we'll verify against the cookie
+        const requested = getCookie(getH3Event(ctx), "emailLoginLinkRequested");
+        if (!requested) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "No login request found. Please request a new code."
+          });
+        }
+
+        // Get the token from cookie (we'll store it when sending email)
+        const storedToken = getCookie(getH3Event(ctx), "emailLoginToken");
+        if (!storedToken) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "No login token found. Please request a new code."
+          });
+        }
+
+        // Verify the JWT and check the code
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        let payload;
+        try {
+          const result = await jwtVerify(storedToken, secret);
+          payload = result.payload;
+        } catch (jwtError) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Code expired. Please request a new one."
+          });
+        }
+
+        if (payload.email !== email) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Email mismatch"
+          });
+        }
+
+        if (payload.code !== code) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid code"
+          });
+        }
+
+        const userId = (res.rows[0] as unknown as User).id;
+        const isAdmin = userId === env.ADMIN_ID;
+
+        // Use rememberMe from JWT if not provided in input
+        const shouldRemember =
+          rememberMe ?? (payload.rememberMe as boolean) ?? false;
+
+        console.log("[Email Code Login] Code verified, creating session");
+
+        // Create session
+        const clientIP = getClientIP(getH3Event(ctx));
+        const userAgent = getUserAgent(getH3Event(ctx));
+        await createAuthSession(
+          getH3Event(ctx),
+          userId,
+          isAdmin,
+          shouldRemember,
+          clientIP,
+          userAgent
+        );
+
+        // Set CSRF token
+        setCSRFToken(getH3Event(ctx));
+
+        console.log("[Email Code Login] Session created successfully");
+
+        // Log successful code login
+        await logAuditEvent({
+          userId,
+          eventType: "auth.login.success",
+          eventData: { method: "email_code", rememberMe: shouldRemember },
+          ipAddress: clientIP,
+          userAgent,
+          success: true
+        });
+
+        return {
+          success: true,
+          redirectTo: "/account"
+        };
+      } catch (error) {
+        console.error("[Email Code Login] Error during login:", error);
+
+        // Log failed code login
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          eventType: "auth.login.failed",
+          eventData: {
+            method: "email_code",
+            email: input.email,
+            reason:
+              error instanceof TRPCError
+                ? error.message
+                : error instanceof Error
+                  ? error.message
+                  : "unknown"
+          },
+          ipAddress,
+          userAgent,
+          success: false
+        });
+
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Authentication failed"
@@ -995,53 +1180,29 @@ export const authRouter = createTRPCRouter({
           });
         }
 
+        // Generate 6-digit code
+        const loginCode = Math.floor(
+          100000 + Math.random() * 900000
+        ).toString();
+
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({
           email,
-          rememberMe: rememberMe ?? false
+          rememberMe: rememberMe ?? false,
+          code: loginCode
         })
           .setProtectedHeader({ alg: "HS256" })
           .setExpirationTime(AUTH_CONFIG.EMAIL_LOGIN_LINK_EXPIRY)
           .sign(secret);
 
         const domain = env.VITE_DOMAIN || "https://freno.me";
-        const htmlContent = `<html>
-<head>
-    <style>
-        .center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            color: #ffffff;
-            background-color: #007BFF;
-            border-radius: 6px;
-            transition: background-color 0.3s;
-        }
-        .button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <div class="center">
-        <p>Click the button below to log in</p>
-    </div>
-    <br/>
-    <div class="center">
-        <a href="${domain}/api/auth/email-login-callback?email=${email}&token=${token}&rememberMe=${rememberMe}" class="button">Log In</a>
-    </div>
-    <div class="center">
-        <p>You can ignore this if you did not request this email, someone may have requested it in error</p>
-    </div>
-</body>
-</html>`;
+        const loginUrl = `${domain}/api/auth/email-login-callback?email=${email}&token=${token}&rememberMe=${rememberMe}`;
+
+        const htmlContent = generateLoginLinkEmail({
+          email,
+          loginUrl,
+          loginCode
+        });
 
         await sendEmail(email, "freno.me login link", htmlContent);
 
@@ -1055,6 +1216,15 @@ export const authRouter = createTRPCRouter({
             path: "/"
           }
         );
+
+        // Store the token in a cookie so it can be verified with the code later
+        setCookie(getH3Event(ctx), "emailLoginToken", token, {
+          maxAge: COOLDOWN_TIMERS.EMAIL_LOGIN_LINK_COOKIE_MAX_AGE,
+          httpOnly: true,
+          secure: env.NODE_ENV === "production",
+          sameSite: "strict",
+          path: "/"
+        });
 
         return { success: true, message: "email sent" };
       } catch (error) {
@@ -1120,46 +1290,9 @@ export const authRouter = createTRPCRouter({
         const { token } = await createPasswordResetToken(user.id);
 
         const domain = env.VITE_DOMAIN || "https://freno.me";
-        const htmlContent = `<html>
-<head>
-    <style>
-        .center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            color: #ffffff;
-            background-color: #007BFF;
-            border-radius: 6px;
-            transition: background-color 0.3s;
-        }
-        .button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <div class="center">
-        <p>Click the button below to reset password</p>
-    </div>
-    <br/>
-    <div class="center">
-        <a href="${domain}/login/password-reset?token=${token}" class="button">Reset Password</a>
-    </div>
-    <div class="center">
-        <p>This link will expire in 1 hour and can only be used once.</p>
-    </div>
-    <div class="center">
-        <p>You can ignore this if you did not request this email, someone may have requested it in error</p>
-    </div>
-</body>
-</html>`;
+        const resetUrl = `${domain}/login/password-reset?token=${token}`;
+
+        const htmlContent = generatePasswordResetEmail({ resetUrl });
 
         await sendEmail(email, "password reset", htmlContent);
 
@@ -1377,40 +1510,9 @@ export const authRouter = createTRPCRouter({
           .sign(secret);
 
         const domain = env.VITE_DOMAIN || "https://freno.me";
-        const htmlContent = `<html>
-<head>
-    <style>
-        .center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            color: #ffffff;
-            background-color: #007BFF;
-            border-radius: 6px;
-            transition: background-color 0.3s;
-        }
-        .button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <div class="center">
-        <p>Click the button below to verify email</p>
-    </div>
-    <br/>
-    <div class="center">
-        <a href="${domain}/api/auth/email-verification-callback?email=${email}&token=${token}" class="button">Verify Email</a>
-    </div>
-</body>
-</html>`;
+        const verificationUrl = `${domain}/api/auth/email-verification-callback?email=${email}&token=${token}`;
+
+        const htmlContent = generateEmailVerificationEmail({ verificationUrl });
 
         await sendEmail(email, "freno.me email verification", htmlContent);
 

@@ -419,7 +419,6 @@ export default function ContactPage() {
                       initialRemainingTime={remainingTime()}
                       size={48}
                       strokeWidth={6}
-                      colors={"#60a5fa"}
                       onComplete={() => setRemainingTime(0)}
                     >
                       {renderTime}

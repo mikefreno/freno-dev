@@ -137,7 +137,6 @@ export default function RequestPasswordResetPage() {
                 initialRemainingTime={remainingTime()}
                 size={48}
                 strokeWidth={6}
-                colors="#60a5fa"
                 onComplete={() => false}
               >
                 {renderTime}

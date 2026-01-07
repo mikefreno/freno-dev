@@ -143,7 +143,6 @@ export default function DeletionForm() {
                   initialRemainingTime={countDown()}
                   size={48}
                   strokeWidth={6}
-                  colors="#60a5fa"
                 >
                   {renderTime}
                 </CountdownCircleTimer>

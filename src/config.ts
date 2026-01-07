@@ -130,7 +130,7 @@ export const PASSWORD_RESET_CONFIG = {
 // ============================================================
 
 export const COOLDOWN_TIMERS = {
-  EMAIL_LOGIN_LINK_MS: 2 * 60 * 1000,
+  EMAIL_LOGIN_LINK_MS: 30 * 1000,
   EMAIL_LOGIN_LINK_COOKIE_MAX_AGE: 2 * 60,
   PASSWORD_RESET_REQUEST_MS: 5 * 60 * 1000,
   PASSWORD_RESET_REQUEST_COOKIE_MAX_AGE: 5 * 60,
@@ -185,7 +185,7 @@ export const TYPEWRITER_CONFIG = {
 // ============================================================
 
 export const COUNTDOWN_CONFIG = {
-  EMAIL_LOGIN_LINK_DURATION_S: 120,
+  EMAIL_LOGIN_LINK_DURATION_S: 30,
   PASSWORD_RESET_DURATION_S: 300,
   CONTACT_FORM_DURATION_S: 60,
   PASSWORD_RESET_SUCCESS_DURATION_S: 5,

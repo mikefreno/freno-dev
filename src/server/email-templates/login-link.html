@@ -1,0 +1,67 @@
+<html>
+  <head>
+    <style>
+      .center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        flex-direction: column;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        color: #ffffff;
+        background-color: #007bff;
+        border-radius: 6px;
+        transition: background-color 0.3s;
+        margin: 10px 0;
+      }
+      .button:hover {
+        background-color: #0056b3;
+      }
+      .code {
+        font-size: 32px;
+        font-weight: bold;
+        letter-spacing: 8px;
+        color: #007bff;
+        margin: 20px 0;
+        font-family: monospace;
+      }
+      .divider {
+        margin: 30px 0;
+        color: #666;
+      }
+      .expiry {
+        color: #666;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="center">
+      <h2>Login to freno.me</h2>
+      <p>Click the button below to log in automatically:</p>
+      <a href="{{LOGIN_URL}}" class="button">Log In</a>
+      <p class="expiry">Link expires in {{EXPIRY_TIME}}</p>
+    </div>
+
+    <div class="center divider">
+      <p>── OR ──</p>
+    </div>
+
+    <div class="center">
+      <p>Enter this code on the login page:</p>
+      <div class="code">{{LOGIN_CODE}}</div>
+      <p class="expiry">Code expires in {{EXPIRY_TIME}}</p>
+    </div>
+
+    <div class="center" style="margin-top: 30px">
+      <p style="color: #666; font-size: 12px">
+        You can ignore this if you did not request this email
+      </p>
+    </div>
+  </body>
+</html>

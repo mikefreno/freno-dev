@@ -5,7 +5,6 @@ interface CountdownCircleTimerProps {
   initialRemainingTime?: number;
   size: number;
   strokeWidth: number;
-  colors: string;
   children: (props: { remainingTime: number }) => any;
   onComplete?: () => void;
   isPlaying?: boolean;
@@ -106,7 +105,7 @@ const CountdownCircleTimer: Component<CountdownCircleTimerProps> = (props) => {
           cy={props.size / 2}
           r={radius}
           fill="none"
-          stroke={props.colors}
+          stroke={`var(--color-blue)`}
           stroke-width={props.strokeWidth}
           stroke-dasharray={`${circumference}`}
           stroke-dashoffset={`${strokeDashoffset()}`}

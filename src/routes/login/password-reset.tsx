@@ -238,7 +238,6 @@ export default function PasswordResetPage() {
                   duration={COUNTDOWN_CONFIG.PASSWORD_RESET_SUCCESS_DURATION_S}
                   size={200}
                   strokeWidth={12}
-                  colors="var(--color-blue)"
                   onComplete={() => false}
                 >
                   {({ remainingTime }) => renderTime(remainingTime)}
