@@ -1,16 +1,13 @@
 import { createSignal, For, Show } from "solid-js";
 import { query, createAsync } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
-import { getRequestEvent } from "solid-js/web";
 import { api } from "~/lib/api";
+import { getUserState } from "~/lib/auth-query";
 
-const getAuthState = query(async () => {
+const checkAdminAccess = query(async () => {
   "use server";
-  const { getPrivilegeLevel } = await import("~/server/utils");
-  const event = getRequestEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
-
-  return { privilegeLevel };
+  const userState = await getUserState();
+  return { privilegeLevel: userState.privilegeLevel };
 }, "test-auth-state");
 
 type EndpointTest = {
@@ -840,7 +837,7 @@ const routerSections: RouterSection[] = [
 ];
 
 export default function TestPage() {
-  const authState = createAsync(() => getAuthState());
+  const authState = createAsync(() => checkAdminAccess());
 
   const [expandedSections, setExpandedSections] = createSignal<Set<string>>(
     new Set()

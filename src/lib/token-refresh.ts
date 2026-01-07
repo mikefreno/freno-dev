@@ -6,6 +6,7 @@
 import { api } from "~/lib/api";
 import { getClientCookie } from "~/lib/cookies.client";
 import { getTimeUntilExpiry } from "~/lib/client-utils";
+import { revalidateAuth } from "~/lib/auth-query";
 
 class TokenRefreshManager {
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -108,6 +109,7 @@ class TokenRefreshManager {
 
       if (result.success) {
         console.log("[Token Refresh] Token refreshed successfully");
+        revalidateAuth(); // Refresh auth state after token refresh
         this.scheduleNextRefresh(); // Schedule next refresh
         return true;
       } else {

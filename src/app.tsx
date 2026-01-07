@@ -14,6 +14,7 @@ import { MetaProvider } from "@solidjs/meta";
 import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
 import { BarsProvider, useBars } from "./context/bars";
 import { DarkModeProvider } from "./context/darkMode";
+import { AuthProvider } from "./context/auth";
 import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 import { MOBILE_CONFIG } from "./config";
 import CustomScrollbar from "./components/CustomScrollbar";
@@ -210,7 +211,13 @@ export default function App() {
       >
         <DarkModeProvider>
           <BarsProvider>
-            <Router root={(props) => <AppLayout>{props.children}</AppLayout>}>
+            <Router
+              root={(props) => (
+                <AuthProvider>
+                  <AppLayout>{props.children}</AppLayout>
+                </AuthProvider>
+              )}
+            >
               <FileRoutes />
             </Router>
           </BarsProvider>

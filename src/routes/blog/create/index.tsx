@@ -2,32 +2,30 @@ import { Show, lazy } from "solid-js";
 import { query, redirect } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
 import { createAsync } from "@solidjs/router";
-import { getEvent } from "vinxi/http";
+import { getUserState } from "~/lib/auth-query";
 import { Spinner } from "~/components/Spinner";
 import "../post.css";
 
 const PostForm = lazy(() => import("~/components/blog/PostForm"));
 
-const getAuthState = query(async () => {
+const checkAdminAccess = query(async () => {
   "use server";
-  const { getPrivilegeLevel, getUserID } = await import("~/server/utils");
-  const event = getEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event);
-  const userID = await getUserID(event);
+  // Reuse shared auth query for consistency
+  const userState = await getUserState();
 
-  if (privilegeLevel !== "admin") {
+  if (userState.privilegeLevel !== "admin") {
     throw redirect("/401");
   }
 
-  return { privilegeLevel, userID };
-}, "create-post-auth");
+  return { userID: userState.userId! };
+}, "create-post-admin-check");
 
 export const route = {
-  load: () => getAuthState()
+  load: () => checkAdminAccess()
 };
 
 export default function CreatePost() {
-  const authState = createAsync(() => getAuthState());
+  const authState = createAsync(() => checkAdminAccess());
 
   return (
     <>

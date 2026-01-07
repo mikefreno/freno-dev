@@ -1,17 +1,14 @@
 import { createSignal, Show, For, createEffect, ErrorBoundary } from "solid-js";
 import { PageHead } from "~/components/PageHead";
 import { redirect, query, createAsync, useNavigate } from "@solidjs/router";
-import { getEvent } from "vinxi/http";
 import { api } from "~/lib/api";
 
 const checkAdmin = query(async (): Promise<boolean> => {
   "use server";
-  const { getUserID } = await import("~/server/auth");
-  const { env } = await import("~/env/server");
-  const event = getEvent()!;
-  const userId = await getUserID(event);
+  const { getUserState } = await import("~/lib/auth-query");
+  const userState = await getUserState();
 
-  if (!userId || userId !== env.ADMIN_ID) {
+  if (userState.privilegeLevel !== "admin") {
     throw redirect("/");
   }
 

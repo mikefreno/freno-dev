@@ -1,5 +1,7 @@
 import { Typewriter } from "./Typewriter";
 import { useBars } from "~/context/bars";
+import { useAuth } from "~/context/auth";
+import { revalidateAuth } from "~/lib/auth-query";
 import { onMount, createSignal, Show, For, onCleanup } from "solid-js";
 import { api } from "~/lib/api";
 import { insertSoftHyphens, glitchText } from "~/lib/client-utils";
@@ -10,54 +12,8 @@ import { ActivityHeatmap } from "./ActivityHeatmap";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { SkeletonBox, SkeletonText } from "./SkeletonLoader";
 import { env } from "~/env/client";
-import {
-  A,
-  useNavigate,
-  useLocation,
-  query,
-  createAsync,
-  revalidate
-} from "@solidjs/router";
+import { A, useNavigate, useLocation } from "@solidjs/router";
 import { BREAKPOINTS } from "~/config";
-import { getRequestEvent } from "solid-js/web";
-
-const getUserState = query(async () => {
-  "use server";
-  const { getPrivilegeLevel, getUserID } = await import("~/server/utils");
-  const { ConnectionFactory } = await import("~/server/utils");
-  const event = getRequestEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
-  const userId = await getUserID(event.nativeEvent);
-
-  if (!userId) {
-    return {
-      isAuthenticated: false,
-      email: null,
-      privilegeLevel: "anonymous" as const
-    };
-  }
-
-  const conn = ConnectionFactory();
-  const res = await conn.execute({
-    sql: "SELECT email FROM User WHERE id = ?",
-    args: [userId]
-  });
-
-  const email = res.rows[0] ? (res.rows[0].email as string | null) : null;
-
-  return {
-    isAuthenticated: true,
-    email,
-    privilegeLevel
-  };
-}, "bars-user-state");
-
-/**
- * Call this function after login/logout to refresh the user state in the sidebar
- */
-export function revalidateUserState() {
-  revalidate(getUserState.key);
-}
 
 function formatDomainName(url: string): string {
   const domain = url.split("://")[1]?.split(":")[0] ?? url;
@@ -247,7 +203,7 @@ export function RightBarContent() {
 export function LeftBar() {
   const { leftBarVisible, setLeftBarVisible } = useBars();
   const location = useLocation();
-  const userState = createAsync(() => getUserState());
+  const { isAuthenticated, email, isAdmin } = useAuth();
   let ref: HTMLDivElement | undefined;
 
   const [recentPosts, setRecentPosts] = createSignal<any[] | undefined>(
@@ -277,6 +233,7 @@ export function LeftBar() {
     setSignOutLoading(true);
     try {
       await api.auth.signOut.mutate();
+      revalidateAuth(); // Clear auth state immediately
       window.location.href = "/";
     } catch (error) {
       console.error("Sign out failed:", error);
@@ -540,9 +497,7 @@ export function LeftBar() {
                     Blog
                   </a>
                 </li>
-                <Show
-                  when={isMounted() && userState()?.privilegeLevel === "admin"}
-                >
+                <Show when={isMounted() && isAdmin()}>
                   <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
                     <a href="/analytics" onClick={handleLinkClick}>
                       Analytics
@@ -557,7 +512,7 @@ export function LeftBar() {
                   }}
                 >
                   <Show
-                    when={isMounted() && userState()?.isAuthenticated}
+                    when={isMounted() && isAuthenticated()}
                     fallback={
                       <a href="/login" onClick={handleLinkClick}>
                         Login
@@ -566,16 +521,16 @@ export function LeftBar() {
                   >
                     <A href="/account" onClick={handleLinkClick}>
                       Account
-                      <Show when={userState()?.email}>
+                      <Show when={email()}>
                         <span class="text-subtext0 text-sm font-normal">
                           {" "}
-                          ({userState()!.email})
+                          ({email()})
                         </span>
                       </Show>
                     </A>
                   </Show>
                 </li>
-                <Show when={isMounted() && userState()?.isAuthenticated}>
+                <Show when={isMounted() && isAuthenticated()}>
                   <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
                     <button
                       onClick={handleSignOut}

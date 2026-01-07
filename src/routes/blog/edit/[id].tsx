@@ -2,20 +2,17 @@ import { Show, lazy } from "solid-js";
 import { useParams, query, redirect } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
 import { createAsync } from "@solidjs/router";
-import { getEvent } from "vinxi/http";
 import "../post.css";
 
 const PostForm = lazy(() => import("~/components/blog/PostForm"));
 
 const getPostForEdit = query(async (id: string) => {
   "use server";
-  const { getPrivilegeLevel, getUserID, ConnectionFactory } =
-    await import("~/server/utils");
-  const event = getEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event);
-  const userID = await getUserID(event);
+  const { getUserState } = await import("~/lib/auth-query");
+  const { ConnectionFactory } = await import("~/server/utils");
+  const userState = await getUserState();
 
-  if (privilegeLevel !== "admin") {
+  if (userState.privilegeLevel !== "admin") {
     throw redirect("/401");
   }
 
@@ -35,7 +32,12 @@ const getPostForEdit = query(async (id: string) => {
   const post = results.rows[0];
   const tags = tagRes.rows;
 
-  return { post, tags, privilegeLevel, userID };
+  return {
+    post,
+    tags,
+    privilegeLevel: userState.privilegeLevel,
+    userID: userState.userId
+  };
 }, "post-for-edit");
 
 export const route = {

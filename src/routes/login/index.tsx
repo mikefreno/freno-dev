@@ -7,7 +7,7 @@ import {
   query
 } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
-import { revalidateUserState } from "~/components/Bars";
+import { revalidateAuth } from "~/lib/auth-query";
 import { getEvent } from "vinxi/http";
 import GoogleLogo from "~/components/icons/GoogleLogo";
 import GitHub from "~/components/icons/GitHub";
@@ -206,7 +206,7 @@ export default function LoginPage() {
 
         if (response.ok && result.result?.data?.success) {
           setShowPasswordSuccess(true);
-          revalidateUserState(); // Refresh user state in sidebar
+          revalidateAuth(); // Refresh auth state globally
           setTimeout(() => {
             navigate("/account", { replace: true });
           }, 500);
