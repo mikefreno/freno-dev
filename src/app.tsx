@@ -192,16 +192,6 @@ function AppLayout(props: { children: any }) {
 }
 
 export default function App() {
-  onMount(() => {
-    // Start token refresh monitoring
-    tokenRefreshManager.start();
-  });
-
-  onCleanup(() => {
-    // Cleanup token refresh on unmount
-    tokenRefreshManager.stop();
-  });
-
   return (
     <MetaProvider>
       <ErrorBoundary

@@ -1,8 +1,3 @@
-/**
- * Application Configuration
- * Central location for all configurable values including timeouts, limits, durations, etc.
- */
-
 // ============================================================
 // AUTHENTICATION & SESSION
 // ============================================================
@@ -16,31 +11,26 @@
  * - Token rotation: Each refresh invalidates old token and issues new pair
  * - Breach detection: Reusing invalidated token revokes entire token family
  *
+ * Cookie Behavior:
+ * - rememberMe = false: Session cookies (no maxAge) - expire when browser closes
+ * - rememberMe = true: Persistent cookies (with maxAge) - survive browser restart
+ *
  * Timing Decisions:
  * - 15m access: Balance between security (short exposure) and UX (not too frequent refreshes)
- * - 7d refresh: Conservative default, users re-auth weekly
- * - 90d remember: Extended convenience for trusted devices
+ * - 1d session: DB cleanup for session-only logins (cookie expires on browser close anyway)
+ * - 90d remember: Extended convenience for trusted devices (both DB and cookie persist)
  * - 5s reuse window: Handles race conditions in distributed systems
- *
- * References:
- * - OWASP: https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
- * - RFC 6819: https://datatracker.ietf.org/doc/html/rfc6819#section-5.2
  */
 export const AUTH_CONFIG = {
   // Access Token (JWT in cookie)
   ACCESS_TOKEN_EXPIRY: "15m" as const, // 15 minutes (short-lived)
-  ACCESS_TOKEN_EXPIRY_DEV: "3m" as const, // 3 minutes for testing
+  ACCESS_TOKEN_EXPIRY_DEV: "2m" as const, // 2 minutes for faster testing
 
   // Refresh Token (opaque token in separate cookie)
-  REFRESH_TOKEN_EXPIRY_SHORT: "7d" as const, // 7 days (no remember me)
-  REFRESH_TOKEN_EXPIRY_LONG: "90d" as const, // 90 days (remember me)
+  REFRESH_TOKEN_EXPIRY_SHORT: "1d" as const, // 1 day (DB expiry, cookie is session-only - non-remember me)
+  REFRESH_TOKEN_EXPIRY_LONG: "90d" as const, // 90 days (remember me - both DB and cookie persist)
 
-  // Cookie MaxAge (in seconds - must match token lifetime)
-  ACCESS_COOKIE_MAX_AGE: 15 * 60, // 15 minutes
-  ACCESS_COOKIE_MAX_AGE_DEV: 60 * 60, // 1 hour in dev
-  REFRESH_COOKIE_MAX_AGE_SHORT: 60 * 60 * 24 * 7, // 7 days
-  REFRESH_COOKIE_MAX_AGE_LONG: 60 * 60 * 24 * 90, // 90 days
-
+  // Security Settings
   REFRESH_TOKEN_ROTATION_ENABLED: true, // Enable token rotation
   MAX_ROTATION_COUNT: 100, // Max rotations before forcing re-login
   REFRESH_TOKEN_REUSE_WINDOW_MS: 5000, // 5s grace period for race conditions
@@ -66,12 +56,37 @@ export function getAccessTokenExpiry(): string {
 }
 
 /**
+ * Convert expiry string to seconds for cookie Max-Age
+ * @param expiry - Expiry string like "15m", "7d", "90d"
+ * @returns Seconds as number
+ */
+export function expiryToSeconds(expiry: string): number {
+  if (expiry.endsWith("m")) {
+    return parseInt(expiry) * 60;
+  } else if (expiry.endsWith("h")) {
+    return parseInt(expiry) * 60 * 60;
+  } else if (expiry.endsWith("d")) {
+    return parseInt(expiry) * 60 * 60 * 24;
+  }
+  throw new Error(`Invalid expiry format: ${expiry}`);
+}
+
+/**
  * Get access cookie maxAge based on environment (in seconds)
  */
 export function getAccessCookieMaxAge(): number {
-  return process.env.NODE_ENV === "production"
-    ? AUTH_CONFIG.ACCESS_COOKIE_MAX_AGE
-    : AUTH_CONFIG.ACCESS_COOKIE_MAX_AGE_DEV;
+  return expiryToSeconds(getAccessTokenExpiry());
+}
+
+/**
+ * Get refresh cookie maxAge based on rememberMe preference (in seconds)
+ */
+export function getRefreshCookieMaxAge(rememberMe: boolean): number {
+  return expiryToSeconds(
+    rememberMe
+      ? AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG
+      : AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_SHORT
+  );
 }
 
 /**

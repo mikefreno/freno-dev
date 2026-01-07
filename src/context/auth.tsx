@@ -14,11 +14,13 @@ import {
   createSignal,
   onMount,
   onCleanup,
+  createEffect,
   Accessor,
   ParentComponent
 } from "solid-js";
 import { createAsync, revalidate } from "@solidjs/router";
 import { getUserState, type UserState } from "~/lib/auth-query";
+import { tokenRefreshManager } from "~/lib/token-refresh";
 
 interface AuthContextType {
   /** Current user state (for UI display) */
@@ -67,6 +69,9 @@ export const AuthProvider: ParentComponent = (props) => {
     setRefreshTrigger((prev) => prev + 1); // Trigger re-fetch
   };
 
+  // Server-side refresh in getUserState() handles auto-signin during SSR
+  // No client-side fallback needed - server handles everything with httpOnly cookies
+
   // Listen for auth refresh events from external sources (token refresh, etc.)
   onMount(() => {
     if (typeof window === "undefined") return;
@@ -90,6 +95,41 @@ export const AuthProvider: ParentComponent = (props) => {
   const userId = () => serverAuth()?.userId ?? null;
   const isAdmin = () => serverAuth()?.privilegeLevel === "admin";
   const isEmailVerified = () => serverAuth()?.emailVerified ?? false;
+
+  // Start/stop token refresh manager based on auth state
+  let previousAuth: boolean | undefined = undefined;
+  createEffect(() => {
+    const authenticated = isAuthenticated();
+
+    console.log(
+      `[AuthContext] createEffect triggered - authenticated: ${authenticated}, previousAuth: ${previousAuth}`
+    );
+
+    // Only act if auth state actually changed
+    if (authenticated === previousAuth) {
+      console.log("[AuthContext] Auth state unchanged, skipping");
+      return;
+    }
+
+    previousAuth = authenticated;
+
+    if (authenticated) {
+      console.log(
+        "[AuthContext] User authenticated, starting token refresh manager"
+      );
+      tokenRefreshManager.start(true);
+    } else {
+      console.log(
+        "[AuthContext] User not authenticated, stopping token refresh manager"
+      );
+      tokenRefreshManager.stop();
+    }
+  });
+
+  // Cleanup on unmount
+  onCleanup(() => {
+    tokenRefreshManager.stop();
+  });
 
   const value: AuthContextType = {
     userState: serverAuth,

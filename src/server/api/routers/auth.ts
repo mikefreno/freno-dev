@@ -39,6 +39,7 @@ import {
   checkAccountLockout,
   recordFailedLogin,
   resetFailedAttempts,
+  resetLoginRateLimits,
   createPasswordResetToken,
   validatePasswordResetToken,
   markPasswordResetTokenUsed
@@ -51,7 +52,8 @@ import {
   NETWORK_CONFIG,
   COOLDOWN_TIMERS,
   getAccessTokenExpiry,
-  getAccessCookieMaxAge
+  getAccessCookieMaxAge,
+  getRefreshCookieMaxAge
 } from "~/config";
 import { randomBytes, createHash, timingSafeEqual } from "crypto";
 
@@ -177,6 +179,7 @@ async function validateRefreshToken(
  */
 async function invalidateSession(sessionId: string): Promise<void> {
   const conn = ConnectionFactory();
+  console.log(`[Session] Invalidating session ${sessionId}`);
   await conn.execute({
     sql: "UPDATE Session SET revoked = 1 WHERE id = ?",
     args: [sessionId]
@@ -202,6 +205,9 @@ async function revokeTokenFamily(
   });
 
   // Revoke all sessions in family
+  console.log(
+    `[Token Family] Revoking entire family ${tokenFamily} (reason: ${reason}). Sessions affected: ${sessions.rows.length}`
+  );
   await conn.execute({
     sql: "UPDATE Session SET revoked = 1 WHERE token_family = ?",
     args: [tokenFamily]
@@ -255,14 +261,14 @@ async function detectTokenReuse(sessionId: string): Promise<boolean> {
   // Grace period for race conditions (e.g., slow network, retries)
   if (timeSinceRotation < AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS) {
     console.warn(
-      `Token reuse within grace period (${timeSinceRotation}ms), allowing`
+      `[Token Reuse] Within grace period (${timeSinceRotation}ms < ${AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS}ms), allowing for session ${sessionId}`
     );
     return false;
   }
 
   // Reuse detected outside grace period - this is a breach!
   console.error(
-    `Token reuse detected! Session ${sessionId} rotated ${timeSinceRotation}ms ago`
+    `[Token Reuse] BREACH DETECTED! Session ${sessionId} rotated ${timeSinceRotation}ms ago (grace period: ${AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS}ms). Child session: ${childSession.id}`
   );
 
   // Get token family and revoke entire family
@@ -316,27 +322,48 @@ async function rotateRefreshToken(
   refreshToken: string;
   sessionId: string;
 } | null> {
+  console.log(`[Token Rotation] Starting rotation for session ${oldSessionId}`);
+
   // Step 1: Validate old refresh token
   const oldSession = await validateRefreshToken(oldRefreshToken, oldSessionId);
 
   if (!oldSession) {
-    console.warn("Invalid refresh token during rotation");
+    console.warn(
+      `[Token Rotation] Invalid refresh token during rotation for session ${oldSessionId}`
+    );
     return null;
   }
+
+  console.log(
+    `[Token Rotation] Refresh token validated for session ${oldSessionId}`
+  );
 
   // Step 2: Detect token reuse (breach detection)
   const reuseDetected = await detectTokenReuse(oldSessionId);
   if (reuseDetected) {
+    console.error(
+      `[Token Rotation] Token reuse detected for session ${oldSessionId}`
+    );
     // Token family already revoked by detectTokenReuse
     return null;
   }
 
+  console.log(
+    `[Token Rotation] No token reuse detected for session ${oldSessionId}`
+  );
+
   // Step 3: Check rotation limit
   if (oldSession.rotation_count >= AUTH_CONFIG.MAX_ROTATION_COUNT) {
-    console.warn(`Max rotation count reached for session ${oldSessionId}`);
+    console.warn(
+      `[Token Rotation] Max rotation count reached for session ${oldSessionId}`
+    );
     await invalidateSession(oldSessionId);
     return null;
   }
+
+  console.log(
+    `[Token Rotation] Rotation count OK (${oldSession.rotation_count}/${AUTH_CONFIG.MAX_ROTATION_COUNT})`
+  );
 
   // Step 4: Generate new tokens
   const newRefreshToken = generateRefreshToken();
@@ -549,28 +576,42 @@ function setAuthCookies(
   rememberMe: boolean = false
 ) {
   // Access token cookie (short-lived, always same duration)
-  const accessMaxAge = getAccessCookieMaxAge();
-
-  setCookie(event, ACCESS_TOKEN_COOKIE_NAME, accessToken, {
-    maxAge: accessMaxAge,
+  // Session cookies (no maxAge) vs persistent cookies (with maxAge)
+  const accessCookieOptions: any = {
     path: "/",
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "strict"
-  });
+  };
 
-  // Refresh token cookie (long-lived, varies based on rememberMe)
-  const refreshMaxAge = rememberMe
-    ? AUTH_CONFIG.REFRESH_COOKIE_MAX_AGE_LONG
-    : AUTH_CONFIG.REFRESH_COOKIE_MAX_AGE_SHORT;
+  if (rememberMe) {
+    // Persistent cookie - survives browser restart
+    accessCookieOptions.maxAge = getAccessCookieMaxAge();
+  }
+  // else: session cookie - expires when browser closes (no maxAge)
 
-  setCookie(event, REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-    maxAge: refreshMaxAge,
+  setCookie(event, ACCESS_TOKEN_COOKIE_NAME, accessToken, accessCookieOptions);
+
+  // Refresh token cookie (varies based on rememberMe)
+  const refreshCookieOptions: any = {
     path: "/",
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "strict"
-  });
+  };
+
+  if (rememberMe) {
+    // Persistent cookie - long-lived (90 days)
+    refreshCookieOptions.maxAge = getRefreshCookieMaxAge(true);
+  }
+  // else: session cookie - expires when browser closes (no maxAge)
+
+  setCookie(
+    event,
+    REFRESH_TOKEN_COOKIE_NAME,
+    refreshToken,
+    refreshCookieOptions
+  );
 
   // CSRF token for authenticated session
   setCSRFToken(event);
@@ -611,6 +652,119 @@ async function sendEmail(to: string, subject: string, htmlContent: string) {
       retryDelay: NETWORK_CONFIG.RETRY_DELAY_MS
     }
   );
+}
+
+/**
+ * Attempt server-side token refresh for SSR
+ * Called from getUserState() when access token is expired but refresh token exists
+ * @param event - H3Event from SSR
+ * @param refreshToken - Refresh token from httpOnly cookie
+ * @returns true if refresh succeeded, false otherwise
+ */
+export async function attemptTokenRefresh(
+  event: H3Event,
+  refreshToken: string
+): Promise<boolean> {
+  try {
+    // Step 1: Find session by refresh token hash
+    // (Access token may not exist if user closed browser and returned later)
+    const conn = ConnectionFactory();
+    const tokenHash = hashRefreshToken(refreshToken);
+
+    const sessionResult = await conn.execute({
+      sql: `SELECT id, user_id, expires_at, revoked 
+            FROM Session 
+            WHERE refresh_token_hash = ? 
+            AND revoked = 0`,
+      args: [tokenHash]
+    });
+
+    if (sessionResult.rows.length === 0) {
+      console.warn(
+        "[Token Refresh SSR] No valid session found for refresh token"
+      );
+      return false;
+    }
+
+    const session = sessionResult.rows[0];
+    const sessionId = session.id as string;
+
+    // Check if session is expired
+    const expiresAt = new Date(session.expires_at as string);
+    if (expiresAt < new Date()) {
+      console.warn("[Token Refresh SSR] Session expired");
+      return false;
+    }
+
+    // Step 2: Determine rememberMe from existing session
+    const now = new Date();
+    const daysUntilExpiry =
+      (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    // If expires in > 30 days, assume rememberMe was true
+    const rememberMe = daysUntilExpiry > 30;
+
+    // Step 3: Get client info
+    const clientIP = getClientIP(event);
+    const userAgent = getUserAgent(event);
+
+    // Step 4: Rotate tokens
+    console.log(`[Token Refresh SSR] Rotating tokens for session ${sessionId}`);
+    const rotated = await rotateRefreshToken(
+      refreshToken,
+      sessionId,
+      rememberMe,
+      clientIP,
+      userAgent
+    );
+
+    if (!rotated) {
+      console.warn("[Token Refresh SSR] Token rotation failed");
+      return false;
+    }
+
+    // Step 5: Set new cookies
+    const accessCookieOptions: any = {
+      path: "/",
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "strict"
+    };
+
+    if (rememberMe) {
+      accessCookieOptions.maxAge = getAccessCookieMaxAge();
+    }
+
+    setCookie(
+      event,
+      ACCESS_TOKEN_COOKIE_NAME,
+      rotated.accessToken,
+      accessCookieOptions
+    );
+
+    const refreshCookieOptions: any = {
+      path: "/",
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "strict"
+    };
+
+    if (rememberMe) {
+      refreshCookieOptions.maxAge = getRefreshCookieMaxAge(true);
+    }
+
+    setCookie(
+      event,
+      REFRESH_TOKEN_COOKIE_NAME,
+      rotated.refreshToken,
+      refreshCookieOptions
+    );
+
+    console.log("[Token Refresh SSR] Token refresh successful");
+    return true;
+  } catch (error) {
+    console.error("[Token Refresh SSR] Error:", error);
+    return false;
+  }
 }
 
 export const authRouter = createTRPCRouter({
@@ -1405,6 +1559,9 @@ export const authRouter = createTRPCRouter({
         // Reset failed attempts on successful login
         await resetFailedAttempts(user.id);
 
+        // Reset rate limits on successful login
+        await resetLoginRateLimits(email, clientIP);
+
         // Determine token expiry based on rememberMe
         const accessExpiry = getAccessTokenExpiry(); // Always 15m
         const refreshExpiry = rememberMe
@@ -2098,37 +2255,46 @@ export const authRouter = createTRPCRouter({
         }
 
         // Step 6: Set new access token cookie
-        const accessCookieMaxAge = getAccessCookieMaxAge();
+        // Session cookies (no maxAge) vs persistent cookies (with maxAge)
+        const accessCookieOptions: any = {
+          path: "/",
+          httpOnly: true,
+          secure: env.NODE_ENV === "production",
+          sameSite: "strict"
+        };
+
+        if (rememberMe) {
+          // Persistent cookie - survives browser restart
+          accessCookieOptions.maxAge = getAccessCookieMaxAge();
+        }
+        // else: session cookie - expires when browser closes (no maxAge)
 
         setCookie(
           getH3Event(ctx),
           ACCESS_TOKEN_COOKIE_NAME,
           rotated.accessToken,
-          {
-            maxAge: accessCookieMaxAge,
-            path: "/",
-            httpOnly: true,
-            secure: env.NODE_ENV === "production",
-            sameSite: "strict"
-          }
+          accessCookieOptions
         );
 
         // Step 7: Set new refresh token cookie
-        const refreshCookieMaxAge = rememberMe
-          ? AUTH_CONFIG.REFRESH_COOKIE_MAX_AGE_LONG
-          : AUTH_CONFIG.REFRESH_COOKIE_MAX_AGE_SHORT;
+        const refreshCookieOptions: any = {
+          path: "/",
+          httpOnly: true,
+          secure: env.NODE_ENV === "production",
+          sameSite: "strict"
+        };
+
+        if (rememberMe) {
+          // Persistent cookie - long-lived (90 days)
+          refreshCookieOptions.maxAge = getRefreshCookieMaxAge(true);
+        }
+        // else: session cookie - expires when browser closes (no maxAge)
 
         setCookie(
           getH3Event(ctx),
           REFRESH_TOKEN_COOKIE_NAME,
           rotated.refreshToken,
-          {
-            maxAge: refreshCookieMaxAge,
-            path: "/",
-            httpOnly: true,
-            secure: env.NODE_ENV === "production",
-            sameSite: "strict"
-          }
+          refreshCookieOptions
         );
 
         // Step 8: Refresh CSRF token
@@ -2242,6 +2408,10 @@ export const authRouter = createTRPCRouter({
       path: "/"
     });
     setCookie(getH3Event(ctx), "emailToken", "", {
+      maxAge: 0,
+      path: "/"
+    });
+    setCookie(getH3Event(ctx), "csrf-token", "", {
       maxAge: 0,
       path: "/"
     });

@@ -164,7 +164,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div class="flex justify-between text-center">
+          <div class="flex justify-between pb-8 text-center">
             <Typewriter
               speed={120}
               class="mx-auto max-w-3/4 pt-8 md:max-w-1/2"

@@ -28,9 +28,61 @@ export const getUserState = query(async (): Promise<UserState> => {
   "use server";
   const { getPrivilegeLevel, getUserID } = await import("~/server/auth");
   const { ConnectionFactory } = await import("~/server/utils");
+  const { getCookie, setCookie } = await import("vinxi/http");
   const event = getRequestEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
-  const userId = await getUserID(event.nativeEvent);
+
+  let privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
+  let userId = await getUserID(event.nativeEvent);
+
+  // If no userId but refresh token exists, attempt server-side token refresh
+  // Use a flag cookie to prevent infinite loops (only try once per request)
+  if (!userId) {
+    const refreshToken = getCookie(event.nativeEvent, "refreshToken");
+    const refreshAttempted = getCookie(event.nativeEvent, "_refresh_attempted");
+
+    if (refreshToken && !refreshAttempted) {
+      console.log(
+        "[Auth-Query] Access token expired but refresh token exists, attempting server-side refresh"
+      );
+
+      // Set flag to prevent retry loops (expires immediately, just for this request)
+      setCookie(event.nativeEvent, "_refresh_attempted", "1", {
+        maxAge: 1,
+        path: "/",
+        httpOnly: true
+      });
+
+      try {
+        // Import token rotation function
+        const { attemptTokenRefresh } =
+          await import("~/server/api/routers/auth");
+
+        // Attempt to refresh tokens server-side
+        const refreshed = await attemptTokenRefresh(
+          event.nativeEvent,
+          refreshToken
+        );
+
+        if (refreshed) {
+          console.log("[Auth-Query] Server-side token refresh successful");
+          // Re-check auth state with new tokens
+          privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
+          userId = await getUserID(event.nativeEvent);
+        } else {
+          console.log("[Auth-Query] Server-side token refresh failed");
+        }
+      } catch (error) {
+        console.error(
+          "[Auth-Query] Error during server-side token refresh:",
+          error
+        );
+      }
+    } else if (refreshAttempted) {
+      console.log(
+        "[Auth-Query] Refresh already attempted this request, skipping"
+      );
+    }
+  }
 
   if (!userId) {
     return {
@@ -82,5 +134,11 @@ export function revalidateAuth() {
   // Dispatch browser event to trigger UI updates (client-side only)
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("auth-state-changed"));
+
+    // Reset token refresh timer when auth state changes
+    // This ensures the timer is synchronized with fresh tokens
+    import("~/lib/token-refresh").then(({ tokenRefreshManager }) => {
+      tokenRefreshManager.reset();
+    });
   }
 }

@@ -200,9 +200,11 @@ export async function clearRateLimitStore(): Promise<void> {
 }
 
 /**
- * Cleanup expired rate limit entries every 5 minutes
+ * Opportunistic cleanup of expired rate limit entries
+ * Called probabilistically during rate limit checks (serverless-friendly)
+ * Note: setInterval is not reliable in serverless environments
  */
-setInterval(async () => {
+async function cleanupExpiredRateLimits(): Promise<void> {
   try {
     const { ConnectionFactory } = await import("./database");
     const conn = ConnectionFactory();
@@ -212,9 +214,10 @@ setInterval(async () => {
       args: [now]
     });
   } catch (error) {
+    // Silent fail - cleanup is opportunistic
     console.error("Failed to cleanup expired rate limits:", error);
   }
-}, RATE_LIMIT_CLEANUP_INTERVAL_MS);
+}
 
 /**
  * Get client IP address from request headers
@@ -273,6 +276,11 @@ export async function checkRateLimit(
   const conn = ConnectionFactory();
   const now = Date.now();
   const resetAt = new Date(now + windowMs);
+
+  // Opportunistic cleanup (10% chance) - serverless-friendly
+  if (Math.random() < 0.1) {
+    cleanupExpiredRateLimits().catch(() => {}); // Fire and forget
+  }
 
   const result = await conn.execute({
     sql: "SELECT id, count, reset_at FROM RateLimit WHERE identifier = ?",
@@ -503,6 +511,22 @@ export async function resetFailedAttempts(userId: string): Promise<void> {
   await conn.execute({
     sql: "UPDATE User SET failed_attempts = 0, locked_until = NULL WHERE id = ?",
     args: [userId]
+  });
+}
+
+/**
+ * Reset login rate limits on successful login
+ */
+export async function resetLoginRateLimits(
+  email: string,
+  clientIP: string
+): Promise<void> {
+  const { ConnectionFactory } = await import("./database");
+  const conn = ConnectionFactory();
+
+  await conn.execute({
+    sql: "DELETE FROM RateLimit WHERE identifier IN (?, ?)",
+    args: [`login:ip:${clientIP}`, `login:email:${email}`]
   });
 }
 

@@ -31,7 +31,8 @@ const serverEnvSchema = z.object({
   VITE_GITHUB_CLIENT_ID: z.string().min(1),
   VITE_WEBSOCKET: z.string().min(1),
   VITE_INFILL_ENDPOINT: z.string().min(1),
-  INFILL_BEARER_TOKEN: z.string().min(1)
+  INFILL_BEARER_TOKEN: z.string().min(1),
+  REDIS_URL: z.string().min(1)
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -135,7 +136,8 @@ export const getMissingEnvVars = (): string[] => {
     "VITE_GOOGLE_CLIENT_ID",
     "VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE",
     "VITE_GITHUB_CLIENT_ID",
-    "VITE_WEBSOCKET"
+    "VITE_WEBSOCKET",
+    "REDIS_URL"
   ];
 
   return requiredServerVars.filter((varName) => isMissingEnvVar(varName));

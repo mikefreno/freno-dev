@@ -413,7 +413,7 @@ export const databaseRouter = createTRPCRouter({
           await conn.execute(tagQuery);
         }
 
-        cache.deleteByPrefix("blog-");
+        await cache.deleteByPrefix("blog-");
 
         return { data: results.lastInsertRowid };
       } catch (error) {
@@ -529,7 +529,7 @@ export const databaseRouter = createTRPCRouter({
           await conn.execute(tagQuery);
         }
 
-        cache.deleteByPrefix("blog-");
+        await cache.deleteByPrefix("blog-");
 
         return { data: results.lastInsertRowid };
       } catch (error) {
@@ -565,7 +565,7 @@ export const databaseRouter = createTRPCRouter({
         args: [input.id]
       });
 
-      cache.deleteByPrefix("blog-");
+      await cache.deleteByPrefix("blog-");
 
       return { success: true };
     } catch (error) {
