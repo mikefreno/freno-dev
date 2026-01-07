@@ -17,6 +17,23 @@ interface TerminalErrorPageProps {
   disableTerminal?: boolean;
 }
 
+// Safe router hook wrappers that return undefined if outside Route context
+function useSafeNavigate() {
+  try {
+    return useNavigate();
+  } catch {
+    return undefined;
+  }
+}
+
+function useSafeLocation() {
+  try {
+    return useLocation();
+  } catch {
+    return undefined;
+  }
+}
+
 export function TerminalErrorPage(props: TerminalErrorPageProps) {
   const [command, setCommand] = createSignal("");
   const [history, setHistory] = createSignal<CommandHistoryItem[]>([]);
@@ -24,8 +41,8 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
   const [btopOpen, setBtopOpen] = createSignal(false);
   let inputRef: HTMLInputElement | undefined;
   let footerRef: HTMLDivElement | undefined;
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useSafeNavigate();
+  const location = useSafeLocation();
   const { isDark } = useDarkMode();
 
   createEffect(() => {
@@ -107,17 +124,19 @@ export function TerminalErrorPage(props: TerminalErrorPageProps) {
       <div class="text-subtext1">Quick actions:</div>
       {props.quickActions}
 
-      <button
-        onClick={() => navigate!("/")}
-        class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full cursor-pointer items-center gap-2 border px-4 py-3 text-left transition-all"
-      >
-        <span class="text-green">$</span>
-        <span class="text-blue group-hover:text-sky">cd</span>
-        <span class="text-text group-hover:text-blue">~</span>
-        <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
-          [Return home]
-        </span>
-      </button>
+      <Show when={navigate}>
+        <button
+          onClick={() => navigate!("/")}
+          class="group border-surface0 bg-mantle hover:border-blue hover:bg-surface0 flex w-full cursor-pointer items-center gap-2 border px-4 py-3 text-left transition-all"
+        >
+          <span class="text-green">$</span>
+          <span class="text-blue group-hover:text-sky">cd</span>
+          <span class="text-text group-hover:text-blue">~</span>
+          <span class="text-subtext1 ml-auto opacity-0 transition-opacity group-hover:opacity-100">
+            [Return home]
+          </span>
+        </button>
+      </Show>
 
       <button
         onClick={() => window.history.back()}

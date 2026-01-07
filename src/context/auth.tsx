@@ -51,26 +51,25 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>();
 
 export const AuthProvider: ParentComponent = (props) => {
-  // Signal to force re-fetch when auth state changes
-  const [refreshTrigger, setRefreshTrigger] = createSignal(0);
+  // Get server state using createAsync which works with cache()
+  const serverAuth = createAsync(() => getUserState(), { deferStream: true });
 
-  // Get server state via SolidStart query - tracks refreshTrigger for reactivity
-  const serverAuth = createAsync(
-    () => {
-      refreshTrigger(); // Track the signal to force re-run
-      return getUserState();
-    },
-    { deferStream: true }
-  );
-
-  // Refresh callback that invalidates cache and forces re-fetch
+  // Refresh callback that forces re-fetch
   const refreshAuth = () => {
-    revalidate(getUserState.key);
-    setRefreshTrigger((prev) => prev + 1); // Trigger re-fetch
+    // Manually trigger a re-fetch by calling the revalidate function
+    revalidate(["user-auth-state"]);
   };
 
-  // Server-side refresh in getUserState() handles auto-signin during SSR
-  // No client-side fallback needed - server handles everything with httpOnly cookies
+  // Convenience accessors with safe defaults - MUST BE DEFINED BEFORE onMount
+  const isAuthenticated = () => serverAuth()?.isAuthenticated ?? false;
+  const email = () => serverAuth()?.email ?? null;
+  const displayName = () => serverAuth()?.displayName ?? null;
+  const userId = () => serverAuth()?.userId ?? null;
+  const isAdmin = () => serverAuth()?.privilegeLevel === "admin";
+  const isEmailVerified = () => serverAuth()?.emailVerified ?? false;
+
+  // Server handles all token refresh logic
+  // Client just displays the current auth state from server
 
   // Listen for auth refresh events from external sources (token refresh, etc.)
   onMount(() => {
@@ -87,14 +86,6 @@ export const AuthProvider: ParentComponent = (props) => {
       window.removeEventListener("auth-state-changed", handleAuthRefresh);
     });
   });
-
-  // Convenience accessors with safe defaults
-  const isAuthenticated = () => serverAuth()?.isAuthenticated ?? false;
-  const email = () => serverAuth()?.email ?? null;
-  const displayName = () => serverAuth()?.displayName ?? null;
-  const userId = () => serverAuth()?.userId ?? null;
-  const isAdmin = () => serverAuth()?.privilegeLevel === "admin";
-  const isEmailVerified = () => serverAuth()?.emailVerified ?? false;
 
   // Start/stop token refresh manager based on auth state
   let previousAuth: boolean | undefined = undefined;

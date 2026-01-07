@@ -36,16 +36,3 @@ export function toUserProfile(user: User): UserProfile {
     hasPassword: !!user.password_hash
   };
 }
-
-export interface SessionPayload {
-  id: string;
-  email?: string;
-}
-
-export interface EmailVerificationPayload {
-  email: string;
-}
-
-export interface PasswordResetPayload {
-  email: string;
-}

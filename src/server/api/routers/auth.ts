@@ -1,7 +1,6 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { v4 as uuidV4 } from "uuid";
 import { env } from "~/env/server";
 import {
   ConnectionFactory,
@@ -9,7 +8,6 @@ import {
   checkPassword,
   checkPasswordSafe
 } from "~/server/utils";
-import { SignJWT, jwtVerify } from "jose";
 import { setCookie, getCookie } from "vinxi/http";
 import type { User } from "~/db/types";
 import {
@@ -47,15 +45,17 @@ import {
 import { logAuditEvent } from "~/server/audit";
 import type { H3Event } from "vinxi/http";
 import type { Context } from "../utils";
+import { AUTH_CONFIG, NETWORK_CONFIG, COOLDOWN_TIMERS } from "~/config";
 import {
-  AUTH_CONFIG,
-  NETWORK_CONFIG,
-  COOLDOWN_TIMERS,
-  getAccessTokenExpiry,
-  getAccessCookieMaxAge,
-  getRefreshCookieMaxAge
-} from "~/config";
-import { randomBytes, createHash, timingSafeEqual } from "crypto";
+  createAuthSession,
+  getAuthSession,
+  invalidateAuthSession,
+  rotateAuthSession,
+  revokeTokenFamily
+} from "~/server/session-helpers";
+import { checkAuthStatus } from "~/server/auth";
+import { v4 as uuidV4 } from "uuid";
+import { jwtVerify, SignJWT } from "jose";
 
 /**
  * Safely extract H3Event from Context
@@ -71,551 +71,10 @@ function getH3Event(ctx: Context): H3Event {
   return ctx.event as unknown as H3Event;
 }
 
-// Cookie name constants
-const REFRESH_TOKEN_COOKIE_NAME = "refreshToken" as const;
-const ACCESS_TOKEN_COOKIE_NAME = "userIDToken" as const;
-
 // Zod schemas
 const refreshTokenSchema = z.object({
   rememberMe: z.boolean().optional().default(false)
 });
-
-/**
- * Generate a cryptographically secure refresh token
- * @returns Base64URL-encoded random token (32 bytes = 256 bits)
- */
-function generateRefreshToken(): string {
-  return randomBytes(32).toString("base64url");
-}
-
-/**
- * Hash refresh token for storage (one-way hash)
- * Using SHA-256 since refresh tokens are high-entropy random values
- * @param token - Plaintext refresh token
- * @returns Hex-encoded hash
- */
-function hashRefreshToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
-}
-
-/**
- * Validate refresh token against database
- * Uses timing-safe comparison to prevent timing attacks
- * @param token - Plaintext refresh token from client
- * @param sessionId - Session ID to validate against
- * @returns Session record if valid, null otherwise
- */
-async function validateRefreshToken(
-  token: string,
-  sessionId: string
-): Promise<{
-  id: string;
-  user_id: string;
-  token_family: string;
-  parent_session_id: string | null;
-  rotation_count: number;
-  expires_at: string;
-  revoked: number;
-} | null> {
-  const conn = ConnectionFactory();
-  const tokenHash = hashRefreshToken(token);
-
-  try {
-    const result = await conn.execute({
-      sql: `SELECT id, user_id, token_family, parent_session_id, 
-                   rotation_count, expires_at, revoked, refresh_token_hash
-            FROM Session 
-            WHERE id = ?`,
-      args: [sessionId]
-    });
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    const session = result.rows[0];
-    const storedHash = session.refresh_token_hash as string;
-
-    // Timing-safe comparison to prevent timing attacks
-    if (
-      !timingSafeEqual(
-        Buffer.from(tokenHash, "hex"),
-        Buffer.from(storedHash, "hex")
-      )
-    ) {
-      return null;
-    }
-
-    // Check if revoked
-    if (session.revoked === 1) {
-      return null;
-    }
-
-    // Check if expired
-    const expiresAt = new Date(session.expires_at as string);
-    if (expiresAt < new Date()) {
-      return null;
-    }
-
-    return {
-      id: session.id as string,
-      user_id: session.user_id as string,
-      token_family: session.token_family as string,
-      parent_session_id: session.parent_session_id as string | null,
-      rotation_count: session.rotation_count as number,
-      expires_at: session.expires_at as string,
-      revoked: session.revoked as number
-    };
-  } catch (error) {
-    console.error("Refresh token validation error:", error);
-    return null;
-  }
-}
-
-/**
- * Invalidate a specific session
- * Sets revoked flag without deleting (for audit trail)
- * @param sessionId - Session ID to invalidate
- */
-async function invalidateSession(sessionId: string): Promise<void> {
-  const conn = ConnectionFactory();
-  console.log(`[Session] Invalidating session ${sessionId}`);
-  await conn.execute({
-    sql: "UPDATE Session SET revoked = 1 WHERE id = ?",
-    args: [sessionId]
-  });
-}
-
-/**
- * Revoke all sessions in a token family
- * Used when breach is detected (token reuse)
- * @param tokenFamily - Token family ID to revoke
- * @param reason - Reason for revocation (for audit)
- */
-async function revokeTokenFamily(
-  tokenFamily: string,
-  reason: string = "breach_detected"
-): Promise<void> {
-  const conn = ConnectionFactory();
-
-  // Get all sessions in family for audit log
-  const sessions = await conn.execute({
-    sql: "SELECT id, user_id FROM Session WHERE token_family = ? AND revoked = 0",
-    args: [tokenFamily]
-  });
-
-  // Revoke all sessions in family
-  console.log(
-    `[Token Family] Revoking entire family ${tokenFamily} (reason: ${reason}). Sessions affected: ${sessions.rows.length}`
-  );
-  await conn.execute({
-    sql: "UPDATE Session SET revoked = 1 WHERE token_family = ?",
-    args: [tokenFamily]
-  });
-
-  // Log audit events for each affected session
-  for (const session of sessions.rows) {
-    await logAuditEvent({
-      userId: session.user_id as string,
-      eventType: "auth.token_family_revoked",
-      eventData: {
-        tokenFamily,
-        sessionId: session.id as string,
-        reason
-      },
-      success: true
-    });
-  }
-
-  console.warn(`Token family ${tokenFamily} revoked: ${reason}`);
-}
-
-/**
- * Detect if a token is being reused after rotation
- * Implements grace period for race conditions
- * @param sessionId - Session ID being validated
- * @returns true if reuse detected (and revocation occurred), false otherwise
- */
-async function detectTokenReuse(sessionId: string): Promise<boolean> {
-  const conn = ConnectionFactory();
-
-  // Check if this session has already been rotated (has child session)
-  const childCheck = await conn.execute({
-    sql: `SELECT id, created_at FROM Session 
-          WHERE parent_session_id = ? 
-          ORDER BY created_at DESC 
-          LIMIT 1`,
-    args: [sessionId]
-  });
-
-  if (childCheck.rows.length === 0) {
-    // No child session, this is legitimate first use
-    return false;
-  }
-
-  const childSession = childCheck.rows[0];
-  const childCreatedAt = new Date(childSession.created_at as string);
-  const now = new Date();
-  const timeSinceRotation = now.getTime() - childCreatedAt.getTime();
-
-  // Grace period for race conditions (e.g., slow network, retries)
-  if (timeSinceRotation < AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS) {
-    console.warn(
-      `[Token Reuse] Within grace period (${timeSinceRotation}ms < ${AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS}ms), allowing for session ${sessionId}`
-    );
-    return false;
-  }
-
-  // Reuse detected outside grace period - this is a breach!
-  console.error(
-    `[Token Reuse] BREACH DETECTED! Session ${sessionId} rotated ${timeSinceRotation}ms ago (grace period: ${AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS}ms). Child session: ${childSession.id}`
-  );
-
-  // Get token family and revoke entire family
-  const sessionInfo = await conn.execute({
-    sql: "SELECT token_family, user_id FROM Session WHERE id = ?",
-    args: [sessionId]
-  });
-
-  if (sessionInfo.rows.length > 0) {
-    const tokenFamily = sessionInfo.rows[0].token_family as string;
-    const userId = sessionInfo.rows[0].user_id as string;
-
-    await revokeTokenFamily(tokenFamily, "token_reuse_detected");
-
-    // Log critical security event
-    await logAuditEvent({
-      userId,
-      eventType: "auth.token_reuse_detected",
-      eventData: {
-        sessionId,
-        tokenFamily,
-        timeSinceRotation
-      },
-      success: false
-    });
-
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Rotate refresh token: invalidate old, issue new tokens
- * Implements automatic breach detection
- * @param oldRefreshToken - Current refresh token from client
- * @param oldSessionId - Current session ID from JWT
- * @param rememberMe - Whether to extend session lifetime
- * @param ipAddress - Client IP address for new session
- * @param userAgent - Client user agent for new session
- * @returns New tokens or null if rotation fails
- */
-async function rotateRefreshToken(
-  oldRefreshToken: string,
-  oldSessionId: string,
-  rememberMe: boolean,
-  ipAddress: string,
-  userAgent: string
-): Promise<{
-  accessToken: string;
-  refreshToken: string;
-  sessionId: string;
-} | null> {
-  console.log(`[Token Rotation] Starting rotation for session ${oldSessionId}`);
-
-  // Step 1: Validate old refresh token
-  const oldSession = await validateRefreshToken(oldRefreshToken, oldSessionId);
-
-  if (!oldSession) {
-    console.warn(
-      `[Token Rotation] Invalid refresh token during rotation for session ${oldSessionId}`
-    );
-    return null;
-  }
-
-  console.log(
-    `[Token Rotation] Refresh token validated for session ${oldSessionId}`
-  );
-
-  // Step 2: Detect token reuse (breach detection)
-  const reuseDetected = await detectTokenReuse(oldSessionId);
-  if (reuseDetected) {
-    console.error(
-      `[Token Rotation] Token reuse detected for session ${oldSessionId}`
-    );
-    // Token family already revoked by detectTokenReuse
-    return null;
-  }
-
-  console.log(
-    `[Token Rotation] No token reuse detected for session ${oldSessionId}`
-  );
-
-  // Step 3: Check rotation limit
-  if (oldSession.rotation_count >= AUTH_CONFIG.MAX_ROTATION_COUNT) {
-    console.warn(
-      `[Token Rotation] Max rotation count reached for session ${oldSessionId}`
-    );
-    await invalidateSession(oldSessionId);
-    return null;
-  }
-
-  console.log(
-    `[Token Rotation] Rotation count OK (${oldSession.rotation_count}/${AUTH_CONFIG.MAX_ROTATION_COUNT})`
-  );
-
-  // Step 4: Generate new tokens
-  const newRefreshToken = generateRefreshToken();
-  const refreshExpiry = rememberMe
-    ? AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG
-    : AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_SHORT;
-
-  // Step 5: Create new session (linked to old via parent_session_id)
-  const { sessionId: newSessionId, tokenFamily } = await createSession(
-    oldSession.user_id,
-    refreshExpiry,
-    ipAddress,
-    userAgent,
-    newRefreshToken,
-    oldSessionId, // parent session for audit trail
-    oldSession.token_family // reuse family
-  );
-
-  // Step 6: Create new access token
-  const newAccessToken = await createJWT(
-    oldSession.user_id,
-    newSessionId,
-    getAccessTokenExpiry()
-  );
-
-  // Step 7: Invalidate old session (after new one is created successfully)
-  await invalidateSession(oldSessionId);
-
-  // Step 8: Log rotation event
-  await logAuditEvent({
-    userId: oldSession.user_id,
-    eventType: "auth.token_rotated",
-    eventData: {
-      oldSessionId,
-      newSessionId,
-      tokenFamily,
-      rotationCount: oldSession.rotation_count + 1
-    },
-    success: true
-  });
-
-  return {
-    accessToken: newAccessToken,
-    refreshToken: newRefreshToken,
-    sessionId: newSessionId
-  };
-}
-
-/**
- * Extract session ID from access token (JWT)
- * @param accessToken - JWT access token
- * @returns Session ID or null if invalid
- */
-async function getSessionIdFromToken(
-  accessToken: string
-): Promise<string | null> {
-  try {
-    const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-    const { payload } = await jwtVerify(accessToken, secret);
-    return (payload.sid as string) || null;
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
- * Create JWT with session tracking
- * @param userId - User ID
- * @param sessionId - Session ID for revocation tracking
- * @param expiresIn - Token expiration time (e.g., "14d", "12h")
- */
-async function createJWT(
-  userId: string,
-  sessionId: string,
-  expiresIn: string = AUTH_CONFIG.JWT_EXPIRY
-): Promise<string> {
-  const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-  const token = await new SignJWT({
-    id: userId,
-    sid: sessionId, // Session ID for revocation
-    iat: Math.floor(Date.now() / 1000)
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(expiresIn)
-    .sign(secret);
-  return token;
-}
-
-/**
- * Create a new session in the database with refresh token support
- * @param userId - User ID
- * @param expiresIn - Refresh token expiration (e.g., "7d", "90d")
- * @param ipAddress - Client IP address
- * @param userAgent - Client user agent string
- * @param refreshToken - Plaintext refresh token to hash and store
- * @param parentSessionId - ID of parent session if this is a rotation (null for new sessions)
- * @param tokenFamily - Token family UUID for rotation chain (generated if null)
- * @returns Object with sessionId and tokenFamily
- */
-async function createSession(
-  userId: string,
-  expiresIn: string,
-  ipAddress: string,
-  userAgent: string,
-  refreshToken: string,
-  parentSessionId: string | null = null,
-  tokenFamily: string | null = null
-): Promise<{ sessionId: string; tokenFamily: string }> {
-  const conn = ConnectionFactory();
-  const sessionId = uuidV4();
-  const family = tokenFamily || uuidV4();
-  const tokenHash = hashRefreshToken(refreshToken);
-
-  // Calculate refresh token expiration
-  const expiresAt = new Date();
-  if (expiresIn.endsWith("d")) {
-    const days = parseInt(expiresIn);
-    expiresAt.setDate(expiresAt.getDate() + days);
-  } else if (expiresIn.endsWith("h")) {
-    const hours = parseInt(expiresIn);
-    expiresAt.setHours(expiresAt.getHours() + hours);
-  } else if (expiresIn.endsWith("m")) {
-    const minutes = parseInt(expiresIn);
-    expiresAt.setMinutes(expiresAt.getMinutes() + minutes);
-  }
-
-  // Calculate access token expiry (always shorter than refresh token)
-  const accessExpiresAt = new Date();
-  const accessExpiry = getAccessTokenExpiry();
-  if (accessExpiry.endsWith("m")) {
-    const minutes = parseInt(accessExpiry);
-    accessExpiresAt.setMinutes(accessExpiresAt.getMinutes() + minutes);
-  } else if (accessExpiry.endsWith("h")) {
-    const hours = parseInt(accessExpiry);
-    accessExpiresAt.setHours(accessExpiresAt.getHours() + hours);
-  }
-
-  // Get rotation count from parent if exists
-  let rotationCount = 0;
-  if (parentSessionId) {
-    const parentResult = await conn.execute({
-      sql: "SELECT rotation_count FROM Session WHERE id = ?",
-      args: [parentSessionId]
-    });
-    if (parentResult.rows.length > 0) {
-      rotationCount = (parentResult.rows[0].rotation_count as number) + 1;
-    }
-  }
-
-  await conn.execute({
-    sql: `INSERT INTO Session 
-          (id, user_id, token_family, refresh_token_hash, parent_session_id,
-           rotation_count, expires_at, access_token_expires_at, ip_address, user_agent)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [
-      sessionId,
-      userId,
-      family,
-      tokenHash,
-      parentSessionId,
-      rotationCount,
-      expiresAt.toISOString(),
-      accessExpiresAt.toISOString(),
-      ipAddress,
-      userAgent
-    ]
-  });
-
-  return { sessionId, tokenFamily: family };
-}
-
-/**
- * TEMPORARY WRAPPER: Backward compatibility for old session creation
- * TODO: Remove this after migrating all callers to use refresh tokens (Tasks 05-06)
- * @deprecated Use createSession with refresh tokens instead
- */
-async function createSessionLegacy(
-  userId: string,
-  expiresIn: string,
-  ipAddress: string,
-  userAgent: string
-): Promise<string> {
-  // Generate a temporary refresh token for legacy sessions
-  const refreshToken = generateRefreshToken();
-  const { sessionId } = await createSession(
-    userId,
-    expiresIn,
-    ipAddress,
-    userAgent,
-    refreshToken
-  );
-  return sessionId;
-}
-
-/**
- * Helper to set authentication cookies including CSRF token
- */
-/**
- * Helper to set authentication cookies including CSRF token
- * Sets both access token (short-lived) and refresh token (long-lived)
- * @param event - H3Event
- * @param accessToken - JWT access token
- * @param refreshToken - Refresh token
- * @param rememberMe - Whether to use extended refresh token expiry
- */
-function setAuthCookies(
-  event: any,
-  accessToken: string,
-  refreshToken: string,
-  rememberMe: boolean = false
-) {
-  // Access token cookie (short-lived, always same duration)
-  // Session cookies (no maxAge) vs persistent cookies (with maxAge)
-  const accessCookieOptions: any = {
-    path: "/",
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "strict"
-  };
-
-  if (rememberMe) {
-    // Persistent cookie - survives browser restart
-    accessCookieOptions.maxAge = getAccessCookieMaxAge();
-  }
-  // else: session cookie - expires when browser closes (no maxAge)
-
-  setCookie(event, ACCESS_TOKEN_COOKIE_NAME, accessToken, accessCookieOptions);
-
-  // Refresh token cookie (varies based on rememberMe)
-  const refreshCookieOptions: any = {
-    path: "/",
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "strict"
-  };
-
-  if (rememberMe) {
-    // Persistent cookie - long-lived (90 days)
-    refreshCookieOptions.maxAge = getRefreshCookieMaxAge(true);
-  }
-  // else: session cookie - expires when browser closes (no maxAge)
-
-  setCookie(
-    event,
-    REFRESH_TOKEN_COOKIE_NAME,
-    refreshToken,
-    refreshCookieOptions
-  );
-
-  // CSRF token for authenticated session
-  setCSRFToken(event);
-}
 
 async function sendEmail(to: string, subject: string, htmlContent: string) {
   const apiKey = env.SENDINBLUE_KEY;
@@ -658,112 +117,48 @@ async function sendEmail(to: string, subject: string, htmlContent: string) {
  * Attempt server-side token refresh for SSR
  * Called from getUserState() when access token is expired but refresh token exists
  * @param event - H3Event from SSR
- * @param refreshToken - Refresh token from httpOnly cookie
- * @returns true if refresh succeeded, false otherwise
+ * @param refreshToken - Refresh token from httpOnly cookie (unused, kept for API compatibility)
+ * @returns userId if refresh succeeded, null otherwise
  */
 export async function attemptTokenRefresh(
   event: H3Event,
   refreshToken: string
-): Promise<boolean> {
+): Promise<string | null> {
   try {
-    // Step 1: Find session by refresh token hash
-    // (Access token may not exist if user closed browser and returned later)
-    const conn = ConnectionFactory();
-    const tokenHash = hashRefreshToken(refreshToken);
+    console.log("[Token Refresh SSR] Attempting server-side refresh");
 
-    const sessionResult = await conn.execute({
-      sql: `SELECT id, user_id, expires_at, revoked 
-            FROM Session 
-            WHERE refresh_token_hash = ? 
-            AND revoked = 0`,
-      args: [tokenHash]
-    });
-
-    if (sessionResult.rows.length === 0) {
-      console.warn(
-        "[Token Refresh SSR] No valid session found for refresh token"
-      );
-      return false;
+    // Step 1: Get current session from Vinxi
+    const session = await getAuthSession(event);
+    if (!session) {
+      console.warn("[Token Refresh SSR] No valid session found");
+      return null;
     }
 
-    const session = sessionResult.rows[0];
-    const sessionId = session.id as string;
-
-    // Check if session is expired
-    const expiresAt = new Date(session.expires_at as string);
-    if (expiresAt < new Date()) {
-      console.warn("[Token Refresh SSR] Session expired");
-      return false;
-    }
-
-    // Step 2: Determine rememberMe from existing session
-    const now = new Date();
-    const daysUntilExpiry =
-      (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-    // If expires in > 30 days, assume rememberMe was true
-    const rememberMe = daysUntilExpiry > 30;
-
-    // Step 3: Get client info
+    // Step 2: Get client info for rotation
     const clientIP = getClientIP(event);
     const userAgent = getUserAgent(event);
 
-    // Step 4: Rotate tokens
-    console.log(`[Token Refresh SSR] Rotating tokens for session ${sessionId}`);
-    const rotated = await rotateRefreshToken(
-      refreshToken,
-      sessionId,
-      rememberMe,
+    // Step 3: Rotate session (includes validation, breach detection, cookie update)
+    console.log(
+      `[Token Refresh SSR] Rotating tokens for session ${session.sessionId}`
+    );
+    const newSession = await rotateAuthSession(
+      event,
+      session,
       clientIP,
       userAgent
     );
 
-    if (!rotated) {
+    if (!newSession) {
       console.warn("[Token Refresh SSR] Token rotation failed");
-      return false;
+      return null;
     }
-
-    // Step 5: Set new cookies
-    const accessCookieOptions: any = {
-      path: "/",
-      httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "strict"
-    };
-
-    if (rememberMe) {
-      accessCookieOptions.maxAge = getAccessCookieMaxAge();
-    }
-
-    setCookie(
-      event,
-      ACCESS_TOKEN_COOKIE_NAME,
-      rotated.accessToken,
-      accessCookieOptions
-    );
-
-    const refreshCookieOptions: any = {
-      path: "/",
-      httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "strict"
-    };
-
-    if (rememberMe) {
-      refreshCookieOptions.maxAge = getRefreshCookieMaxAge(true);
-    }
-
-    setCookie(
-      event,
-      REFRESH_TOKEN_COOKIE_NAME,
-      rotated.refreshToken,
-      refreshCookieOptions
-    );
 
     console.log("[Token Refresh SSR] Token refresh successful");
-    return true;
+    return newSession.userId;
   } catch (error) {
     console.error("[Token Refresh SSR] Error:", error);
-    return false;
+    return null;
   }
 }
 
@@ -895,34 +290,22 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        // Determine token expiry (OAuth defaults to long expiry for better UX)
-        const accessExpiry = getAccessTokenExpiry();
-        const refreshExpiry = AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG;
+        const isAdmin = userId === env.ADMIN_ID;
 
-        // Generate refresh token
-        const refreshToken = generateRefreshToken();
-
-        // Create session with client info
+        // Create session with Vinxi (OAuth defaults to remember me)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
-        const { sessionId } = await createSession(
-          userId,
-          refreshExpiry,
-          clientIP,
-          userAgent,
-          refreshToken
-        );
-
-        // Create access token
-        const accessToken = await createJWT(userId, sessionId, accessExpiry);
-
-        // Set cookies
-        setAuthCookies(
+        await createAuthSession(
           getH3Event(ctx),
-          accessToken,
-          refreshToken,
-          true // OAuth defaults to remember
+          userId,
+          isAdmin,
+          true, // OAuth defaults to remember
+          clientIP,
+          userAgent
         );
+
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
 
         // Log successful OAuth login
         await logAuditEvent({
@@ -1083,34 +466,22 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        // Determine token expiry (OAuth defaults to long expiry for better UX)
-        const accessExpiry = getAccessTokenExpiry();
-        const refreshExpiry = AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG;
+        const isAdmin = userId === env.ADMIN_ID;
 
-        // Generate refresh token
-        const refreshToken = generateRefreshToken();
-
-        // Create session with client info
+        // Create session with Vinxi (OAuth defaults to remember me)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
-        const { sessionId } = await createSession(
-          userId,
-          refreshExpiry,
-          clientIP,
-          userAgent,
-          refreshToken
-        );
-
-        // Create access token
-        const accessToken = await createJWT(userId, sessionId, accessExpiry);
-
-        // Set cookies
-        setAuthCookies(
+        await createAuthSession(
           getH3Event(ctx),
-          accessToken,
-          refreshToken,
-          true // OAuth defaults to remember
+          userId,
+          isAdmin,
+          true, // OAuth defaults to remember
+          clientIP,
+          userAgent
         );
+
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
 
         // Log successful OAuth login
         await logAuditEvent({
@@ -1207,37 +578,22 @@ export const authRouter = createTRPCRouter({
         }
 
         const userId = (res.rows[0] as unknown as User).id;
+        const isAdmin = userId === env.ADMIN_ID;
 
-        // Determine token expiry based on rememberMe
-        const accessExpiry = getAccessTokenExpiry();
-        const refreshExpiry = rememberMe
-          ? AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG
-          : AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_SHORT;
-
-        // Generate refresh token
-        const refreshToken = generateRefreshToken();
-
-        // Create session with client info
+        // Create session with Vinxi (handles DB + encrypted cookie)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
-        const { sessionId } = await createSession(
-          userId,
-          refreshExpiry,
-          clientIP,
-          userAgent,
-          refreshToken
-        );
-
-        // Create access token
-        const accessToken = await createJWT(userId, sessionId, accessExpiry);
-
-        // Set cookies
-        setAuthCookies(
+        await createAuthSession(
           getH3Event(ctx),
-          accessToken,
-          refreshToken,
-          rememberMe || false
+          userId,
+          isAdmin,
+          rememberMe || false,
+          clientIP,
+          userAgent
         );
+
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
 
         // Log successful email link login
         await logAuditEvent({
@@ -1380,34 +736,22 @@ export const authRouter = createTRPCRouter({
           args: [userId, email, passwordHash, "email"]
         });
 
-        // Determine token expiry (registration defaults to short expiry)
-        const accessExpiry = getAccessTokenExpiry();
-        const refreshExpiry = AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_SHORT; // Default to 7 days
-
-        // Generate refresh token
-        const refreshToken = generateRefreshToken();
-
         // Create session with client info
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
-        const { sessionId } = await createSession(
-          userId,
-          refreshExpiry,
-          clientIP,
-          userAgent,
-          refreshToken
-        );
+        const isAdmin = userId === env.ADMIN_ID;
 
-        // Create access token
-        const accessToken = await createJWT(userId, sessionId, accessExpiry);
-
-        // Set cookies
-        setAuthCookies(
+        await createAuthSession(
           getH3Event(ctx),
-          accessToken,
-          refreshToken,
-          false // Registration defaults to non-remember
+          userId,
+          isAdmin,
+          false, // Registration defaults to non-remember
+          clientIP,
+          userAgent
         );
+
+        // Set CSRF token
+        setCSRFToken(getH3Event(ctx));
 
         // Log successful registration
         await logAuditEvent({
@@ -1562,35 +906,21 @@ export const authRouter = createTRPCRouter({
         // Reset rate limits on successful login
         await resetLoginRateLimits(email, clientIP);
 
-        // Determine token expiry based on rememberMe
-        const accessExpiry = getAccessTokenExpiry(); // Always 15m
-        const refreshExpiry = rememberMe
-          ? AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG
-          : AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_SHORT;
+        const isAdmin = user.id === env.ADMIN_ID;
 
-        // Create refresh token
-        const refreshToken = generateRefreshToken();
-
-        // Create session with client info (reuse clientIP from rate limiting)
+        // Create session with Vinxi
         const userAgent = getUserAgent(getH3Event(ctx));
-        const { sessionId } = await createSession(
-          user.id,
-          refreshExpiry,
-          clientIP,
-          userAgent,
-          refreshToken
-        );
-
-        // Create access token (short-lived)
-        const accessToken = await createJWT(user.id, sessionId, accessExpiry);
-
-        // Set both tokens in cookies with proper maxAge
-        setAuthCookies(
+        await createAuthSession(
           getH3Event(ctx),
-          accessToken,
-          refreshToken,
-          rememberMe || false
+          user.id,
+          isAdmin,
+          rememberMe || false,
+          clientIP,
+          userAgent
         );
+
+        // Set CSRF token for authenticated session
+        setCSRFToken(getH3Event(ctx));
 
         // Log successful login (wrap in try-catch to ensure it never blocks auth flow)
         try {
@@ -1961,16 +1291,6 @@ export const authRouter = createTRPCRouter({
         // Mark token as used
         await markPasswordResetTokenUsed(tokenId);
 
-        // Clear authentication cookies
-        setCookie(getH3Event(ctx), "emailToken", "", {
-          maxAge: 0,
-          path: "/"
-        });
-        setCookie(getH3Event(ctx), "userIDToken", "", {
-          maxAge: 0,
-          path: "/"
-        });
-
         // Log successful password reset
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
@@ -2160,148 +1480,44 @@ export const authRouter = createTRPCRouter({
 
   refreshToken: publicProcedure
     .input(refreshTokenSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { rememberMe } = input;
-
+    .mutation(async ({ ctx }) => {
       try {
-        // Step 1: Get current access token from cookie
-        const currentAccessToken = getCookie(
-          getH3Event(ctx),
-          ACCESS_TOKEN_COOKIE_NAME
-        );
-        if (!currentAccessToken) {
+        const event = getH3Event(ctx);
+
+        // Step 1: Get current session from Vinxi
+        const session = await getAuthSession(event);
+        if (!session) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "No access token found"
+            message: "No valid session found"
           });
         }
 
-        // Step 2: Extract session ID from access token (even if expired)
-        let sessionId: string | null = null;
-        try {
-          const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-          // Don't verify expiration, we expect it might be expired
-          const { payload } = await jwtVerify(currentAccessToken, secret, {
-            clockTolerance: 60 * 60 * 24 // 24h tolerance for expired tokens
-          });
-          sessionId = payload.sid as string;
-        } catch (error) {
-          // If we can't even decode, try manual parsing
-          const parts = currentAccessToken.split(".");
-          if (parts.length === 3) {
-            try {
-              const payloadBase64 = parts[1];
-              const payload = JSON.parse(
-                Buffer.from(payloadBase64, "base64url").toString()
-              );
-              sessionId = payload.sid;
-            } catch (e) {
-              throw new TRPCError({
-                code: "UNAUTHORIZED",
-                message: "Invalid access token format"
-              });
-            }
-          }
-        }
+        // Step 2: Get client info for rotation
+        const clientIP = getClientIP(event);
+        const userAgent = getUserAgent(event);
 
-        if (!sessionId) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Could not extract session ID from token"
-          });
-        }
-
-        // Step 3: Get refresh token from cookie
-        const refreshToken = getCookie(
-          getH3Event(ctx),
-          REFRESH_TOKEN_COOKIE_NAME
-        );
-        if (!refreshToken) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "No refresh token found"
-          });
-        }
-
-        // Step 4: Get client info for new session
-        const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent = getUserAgent(getH3Event(ctx));
-
-        // Step 5: Rotate tokens (includes all validation and breach detection)
-        const rotated = await rotateRefreshToken(
-          refreshToken,
-          sessionId,
-          rememberMe,
+        // Step 3: Rotate session (includes validation, breach detection, cookie update)
+        const newSession = await rotateAuthSession(
+          event,
+          session,
           clientIP,
           userAgent
         );
 
-        if (!rotated) {
-          // Rotation failed - could be invalid token, reuse detected, etc.
-          // Clear cookies to force re-login
-          setCookie(getH3Event(ctx), ACCESS_TOKEN_COOKIE_NAME, "", {
-            maxAge: 0,
-            path: "/"
-          });
-          setCookie(getH3Event(ctx), REFRESH_TOKEN_COOKIE_NAME, "", {
-            maxAge: 0,
-            path: "/"
-          });
-
+        if (!newSession) {
+          // Rotation failed - session invalid, reuse detected, or max rotations reached
+          await invalidateAuthSession(event, session.sessionId);
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Token refresh failed - please login again"
           });
         }
 
-        // Step 6: Set new access token cookie
-        // Session cookies (no maxAge) vs persistent cookies (with maxAge)
-        const accessCookieOptions: any = {
-          path: "/",
-          httpOnly: true,
-          secure: env.NODE_ENV === "production",
-          sameSite: "strict"
-        };
+        // Step 4: Refresh CSRF token
+        setCSRFToken(event);
 
-        if (rememberMe) {
-          // Persistent cookie - survives browser restart
-          accessCookieOptions.maxAge = getAccessCookieMaxAge();
-        }
-        // else: session cookie - expires when browser closes (no maxAge)
-
-        setCookie(
-          getH3Event(ctx),
-          ACCESS_TOKEN_COOKIE_NAME,
-          rotated.accessToken,
-          accessCookieOptions
-        );
-
-        // Step 7: Set new refresh token cookie
-        const refreshCookieOptions: any = {
-          path: "/",
-          httpOnly: true,
-          secure: env.NODE_ENV === "production",
-          sameSite: "strict"
-        };
-
-        if (rememberMe) {
-          // Persistent cookie - long-lived (90 days)
-          refreshCookieOptions.maxAge = getRefreshCookieMaxAge(true);
-        }
-        // else: session cookie - expires when browser closes (no maxAge)
-
-        setCookie(
-          getH3Event(ctx),
-          REFRESH_TOKEN_COOKIE_NAME,
-          rotated.refreshToken,
-          refreshCookieOptions
-        );
-
-        // Step 8: Refresh CSRF token
-        setCSRFToken(getH3Event(ctx));
-
-        // Step 9: Opportunistic cleanup (serverless-friendly)
-        // Run asynchronously without blocking the response
+        // Step 5: Opportunistic cleanup (serverless-friendly)
         import("~/server/token-cleanup")
           .then((module) => module.opportunisticCleanup())
           .catch((err) => console.error("Opportunistic cleanup failed:", err));
@@ -2311,7 +1527,6 @@ export const authRouter = createTRPCRouter({
           message: "Token refreshed successfully"
         };
       } catch (error) {
-        // Log error but don't expose details to client
         console.error("Token refresh error:", error);
 
         if (error instanceof TRPCError) {
@@ -2326,112 +1541,33 @@ export const authRouter = createTRPCRouter({
     }),
 
   signOut: publicProcedure.mutation(async ({ ctx }) => {
-    let userId: string | null = null;
-    let tokenFamily: string | null = null;
-    let sessionId: string | null = null;
-
     try {
-      // Step 1: Get user ID and token family from access token
-      const token = getCookie(getH3Event(ctx), "userIDToken");
-      if (token) {
-        try {
-          const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-          const { payload } = await jwtVerify(token, secret, {
-            clockTolerance: 60 * 60 * 24 // Allow expired tokens
-          });
-          userId = payload.id as string;
-          sessionId = payload.sid as string;
+      // Step 1: Get current session
+      const session = await getAuthSession(getH3Event(ctx));
 
-          // Get token family from session
-          if (sessionId) {
-            const conn = ConnectionFactory();
-            const sessionResult = await conn.execute({
-              sql: "SELECT token_family FROM Session WHERE id = ?",
-              args: [sessionId]
-            });
+      if (session) {
+        // Step 2: Revoke entire token family (all devices)
+        await revokeTokenFamily(session.tokenFamily, "user_logout");
+        console.log(`Token family ${session.tokenFamily} revoked on signout`);
 
-            if (sessionResult.rows.length > 0) {
-              tokenFamily = sessionResult.rows[0].token_family as string;
-            }
-          }
-        } catch (e) {
-          // Token verification failed, try to decode without verification
-          try {
-            const parts = token.split(".");
-            if (parts.length === 3) {
-              const payload = JSON.parse(
-                Buffer.from(parts[1], "base64url").toString()
-              );
-              userId = payload.id;
-              sessionId = payload.sid;
-
-              // Still try to get token family
-              if (sessionId) {
-                const conn = ConnectionFactory();
-                const sessionResult = await conn.execute({
-                  sql: "SELECT token_family FROM Session WHERE id = ?",
-                  args: [sessionId]
-                });
-
-                if (sessionResult.rows.length > 0) {
-                  tokenFamily = sessionResult.rows[0].token_family as string;
-                }
-              }
-            }
-          } catch (decodeError) {
-            console.error("Could not decode token for signout:", decodeError);
-          }
-        }
-      }
-
-      // Step 2: Revoke entire token family if found
-      if (tokenFamily) {
-        await revokeTokenFamily(tokenFamily, "user_logout");
-        console.log(`Token family ${tokenFamily} revoked on signout`);
-      } else if (sessionId) {
-        // Fallback: revoke just this session if family not found
-        await invalidateSession(sessionId);
-        console.log(`Session ${sessionId} invalidated on signout`);
+        // Step 3: Log signout event
+        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        await logAuditEvent({
+          userId: session.userId,
+          eventType: "auth.logout",
+          eventData: { sessionId: session.sessionId },
+          ipAddress,
+          userAgent,
+          success: true
+        });
       }
     } catch (e) {
-      console.error("Error during signout token revocation:", e);
-      // Continue with cookie clearing even if revocation fails
+      console.error("Error during signout:", e);
+      // Continue with session clearing even if revocation fails
     }
 
-    // Step 3: Clear all auth cookies
-    setCookie(getH3Event(ctx), "userIDToken", "", {
-      maxAge: 0,
-      path: "/"
-    });
-    setCookie(getH3Event(ctx), "refreshToken", "", {
-      maxAge: 0,
-      path: "/"
-    });
-    setCookie(getH3Event(ctx), "emailToken", "", {
-      maxAge: 0,
-      path: "/"
-    });
-    setCookie(getH3Event(ctx), "csrf-token", "", {
-      maxAge: 0,
-      path: "/"
-    });
-
-    // Step 4: Log signout event
-    if (userId) {
-      const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
-      await logAuditEvent({
-        userId,
-        eventType: "auth.signout",
-        eventData: {
-          sessionId: sessionId || "unknown",
-          tokenFamily: tokenFamily || "unknown",
-          method: "manual"
-        },
-        ipAddress,
-        userAgent,
-        success: true
-      });
-    }
+    // Step 4: Clear Vinxi session (clears encrypted cookie)
+    await invalidateAuthSession(getH3Event(ctx), "");
 
     return { success: true };
   }),

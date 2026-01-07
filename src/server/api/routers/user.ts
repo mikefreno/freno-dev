@@ -68,10 +68,6 @@ export const userRouter = createTRPCRouter({
 
       const user = res.rows[0] as unknown as User;
 
-      setCookie(ctx.event.nativeEvent, "emailToken", email, {
-        path: "/"
-      });
-
       return toUserProfile(user);
     }),
 
@@ -194,15 +190,6 @@ export const userRouter = createTRPCRouter({
         args: [newPasswordHash, userId]
       });
 
-      setCookie(ctx.event.nativeEvent, "emailToken", "", {
-        maxAge: 0,
-        path: "/"
-      });
-      setCookie(ctx.event.nativeEvent, "userIDToken", "", {
-        maxAge: 0,
-        path: "/"
-      });
-
       return { success: true, message: "success" };
     }),
 
@@ -253,15 +240,6 @@ export const userRouter = createTRPCRouter({
       await conn.execute({
         sql: "UPDATE User SET password_hash = ? WHERE id = ?",
         args: [passwordHash, userId]
-      });
-
-      setCookie(ctx.event.nativeEvent, "emailToken", "", {
-        maxAge: 0,
-        path: "/"
-      });
-      setCookie(ctx.event.nativeEvent, "userIDToken", "", {
-        maxAge: 0,
-        path: "/"
       });
 
       return { success: true, message: "success" };
@@ -322,15 +300,6 @@ export const userRouter = createTRPCRouter({
           image = ? 
           WHERE id = ?`,
         args: [null, 0, null, "user deleted", null, null, userId]
-      });
-
-      setCookie(ctx.event.nativeEvent, "emailToken", "", {
-        maxAge: 0,
-        path: "/"
-      });
-      setCookie(ctx.event.nativeEvent, "userIDToken", "", {
-        maxAge: 0,
-        path: "/"
       });
 
       return { success: true, message: "deleted" };

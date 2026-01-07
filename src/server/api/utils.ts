@@ -1,10 +1,10 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { APIEvent } from "@solidjs/start/server";
-import { getCookie, setCookie } from "vinxi/http";
-import { jwtVerify, type JWTPayload } from "jose";
+import { getCookie } from "vinxi/http";
 import { env } from "~/env/server";
 import { logVisit, enrichAnalyticsEntry } from "~/server/analytics";
 import { getRequestIP } from "vinxi/http";
+import { getAuthSession } from "~/server/session-helpers";
 
 export type Context = {
   event: APIEvent;
@@ -13,26 +13,15 @@ export type Context = {
 };
 
 async function createContextInner(event: APIEvent): Promise<Context> {
-  const userIDToken = getCookie(event.nativeEvent, "userIDToken");
+  // Get auth session from Vinxi encrypted session
+  const session = await getAuthSession(event.nativeEvent);
 
   let userId: string | null = null;
   let privilegeLevel: "anonymous" | "user" | "admin" = "anonymous";
 
-  if (userIDToken) {
-    try {
-      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-      const { payload } = await jwtVerify(userIDToken, secret);
-
-      if (payload.id && typeof payload.id === "string") {
-        userId = payload.id;
-        privilegeLevel = payload.id === env.ADMIN_ID ? "admin" : "user";
-      }
-    } catch (err) {
-      setCookie(event.nativeEvent, "userIDToken", "", {
-        maxAge: 0,
-        expires: new Date("2016-10-05")
-      });
-    }
+  if (session && session.userId) {
+    userId = session.userId;
+    privilegeLevel = session.isAdmin ? "admin" : "user";
   }
 
   const req = event.nativeEvent.node?.req || event.nativeEvent;

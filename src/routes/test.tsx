@@ -1158,8 +1158,7 @@ export default function TestPage() {
                 <div>
                   <h3 class="mb-2 text-lg font-semibold">🔴 Admin Required</h3>
                   <p class="mb-2 text-sm">
-                    Maintenance endpoints require admin privileges (userIDToken
-                    cookie with ADMIN_ID).
+                    Maintenance endpoints require admin privileges.
                   </p>
                   <ul class="ml-6 list-disc space-y-1 text-sm">
                     <li>

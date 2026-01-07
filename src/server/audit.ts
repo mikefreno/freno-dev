@@ -30,6 +30,7 @@ export type AuditEventType =
   | "security.csrf.failed"
   | "security.suspicious.activity"
   | "admin.action"
+  | "auth.session_created"
   | "system.session_cleanup";
 
 /**
