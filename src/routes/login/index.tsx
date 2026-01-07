@@ -552,7 +552,54 @@ export default function LoginPage() {
                 Login Success! Redirecting...
               </Show>
             </div>
+            {/* Code Input Section */}
+            <Show when={emailSent() && !register() && !usePassword()}>
+              <div class="bg-surface0 text-text mx-auto mt-6 w-full max-w-md rounded-lg border p-6">
+                <h3 class="mb-2 text-center text-lg font-semibold">
+                  Enter Your Code
+                </h3>
+                <p class="text-surface2 mb-2 text-center text-sm">
+                  Check your email for a 6-digit code
+                </p>
+                <p class="text-surface2 mb-4 text-center text-xs italic">
+                  Code expires in{" "}
+                  {expiryToHuman(AUTH_CONFIG.EMAIL_LOGIN_LINK_EXPIRY)}
+                </p>
 
+                <form onSubmit={handleCodeSubmit} class="flex flex-col gap-4">
+                  <div>
+                    <input
+                      type="text"
+                      value={loginCode()}
+                      onInput={(e) =>
+                        setLoginCode(
+                          e.currentTarget.value.replace(/\D/g, "").slice(0, 6)
+                        )
+                      }
+                      placeholder="000000"
+                      maxLength={6}
+                      class="text-blue mx-auto block w-48 rounded-lg border border-zinc-300 bg-white px-4 py-3 text-center text-2xl font-bold tracking-widest dark:border-zinc-600 dark:bg-zinc-900"
+                      autocomplete="off"
+                    />
+                  </div>
+
+                  <Show when={codeError()}>
+                    <div class="text-red text-center text-sm">
+                      {codeError()}
+                    </div>
+                  </Show>
+
+                  <Button
+                    type="submit"
+                    loading={codeLoading()}
+                    disabled={loginCode().length !== 6}
+                    class="mx-auto w-full"
+                  >
+                    Verify Code
+                  </Button>
+                </form>
+              </div>
+            </Show>
             <div class="flex justify-center py-4">
               <Show
                 when={
@@ -629,53 +676,6 @@ export default function LoginPage() {
           >
             <Show when={emailSent()}>Email Sent!</Show>
           </div>
-
-          {/* Code Input Section */}
-          <Show when={emailSent() && !register() && !usePassword()}>
-            <div class="bg-surface0 text-text mx-auto mt-6 w-full max-w-md rounded-lg border p-6">
-              <h3 class="mb-2 text-center text-lg font-semibold">
-                Enter Your Code
-              </h3>
-              <p class="text-surface2 mb-2 text-center text-sm">
-                Check your email for a 6-digit code
-              </p>
-              <p class="text-surface2 mb-4 text-center text-xs italic">
-                Code expires in{" "}
-                {expiryToHuman(AUTH_CONFIG.EMAIL_LOGIN_LINK_EXPIRY)}
-              </p>
-
-              <form onSubmit={handleCodeSubmit} class="flex flex-col gap-4">
-                <div>
-                  <input
-                    type="text"
-                    value={loginCode()}
-                    onInput={(e) =>
-                      setLoginCode(
-                        e.currentTarget.value.replace(/\D/g, "").slice(0, 6)
-                      )
-                    }
-                    placeholder="000000"
-                    maxLength={6}
-                    class="text-blue mx-auto block w-48 rounded-lg border border-zinc-300 bg-white px-4 py-3 text-center text-2xl font-bold tracking-widest dark:border-zinc-600 dark:bg-zinc-900"
-                    autocomplete="off"
-                  />
-                </div>
-
-                <Show when={codeError()}>
-                  <div class="text-red text-center text-sm">{codeError()}</div>
-                </Show>
-
-                <Button
-                  type="submit"
-                  loading={codeLoading()}
-                  disabled={loginCode().length !== 6}
-                  class="mx-auto w-full"
-                >
-                  Verify Code
-                </Button>
-              </form>
-            </div>
-          </Show>
 
           <div class="rule-around text-center">Or</div>
 

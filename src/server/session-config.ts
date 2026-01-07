@@ -27,13 +27,12 @@ export interface SessionData {
  */
 export const sessionConfig: SessionConfig = {
   password: env.JWT_SECRET_KEY,
-  cookieName: "session",
-  cookieOptions: {
+  name: "session",
+  cookie: {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/"
-    // maxAge is set dynamically based on rememberMe
   }
 };
 
@@ -43,7 +42,7 @@ export const sessionConfig: SessionConfig = {
  */
 export function getSessionCookieOptions(rememberMe: boolean) {
   return {
-    ...sessionConfig.cookieOptions,
+    ...sessionConfig.cookie,
     maxAge: rememberMe
       ? expiryToSeconds(AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG)
       : undefined // Session cookie (expires on browser close)
