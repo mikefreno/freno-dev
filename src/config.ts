@@ -41,13 +41,6 @@ export const AUTH_CONFIG = {
   REFRESH_COOKIE_MAX_AGE_SHORT: 60 * 60 * 24 * 7, // 7 days
   REFRESH_COOKIE_MAX_AGE_LONG: 60 * 60 * 24 * 90, // 90 days
 
-  // Legacy (keep for backwards compatibility during migration)
-  JWT_EXPIRY: "15m" as const, // Deprecated: use ACCESS_TOKEN_EXPIRY
-  JWT_EXPIRY_SHORT: "15m" as const, // Deprecated
-  SESSION_COOKIE_MAX_AGE: 60 * 60 * 24 * 7, // Deprecated
-  REMEMBER_ME_MAX_AGE: 60 * 60 * 24 * 90, // Deprecated
-
-  // Security Settings
   REFRESH_TOKEN_ROTATION_ENABLED: true, // Enable token rotation
   MAX_ROTATION_COUNT: 100, // Max rotations before forcing re-login
   REFRESH_TOKEN_REUSE_WINDOW_MS: 5000, // 5s grace period for race conditions
