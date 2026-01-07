@@ -31,7 +31,7 @@ export const sessionConfig: SessionConfig = {
   cookie: {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax", // Allow cookies on top-level navigation (OAuth/email redirects) for WebKit compatibility
     path: "/"
   }
 };

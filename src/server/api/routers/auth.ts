@@ -660,8 +660,8 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Use rememberMe from JWT payload (source of truth)
-        const rememberMe = (payload.rememberMe as boolean) || false;
+        // Use rememberMe from JWT payload (source of truth), default to false
+        const rememberMe = (payload.rememberMe as boolean) ?? false;
         console.log("[Email Login] Using rememberMe from JWT:", rememberMe);
 
         const conn = ConnectionFactory();
@@ -829,7 +829,7 @@ export const authRouter = createTRPCRouter({
         const userId = (res.rows[0] as unknown as User).id;
         const isAdmin = userId === env.ADMIN_ID;
 
-        // Use rememberMe from JWT if not provided in input
+        // Use rememberMe from JWT if not provided in input, default to false
         const shouldRemember =
           rememberMe ?? (payload.rememberMe as boolean) ?? false;
 
@@ -1008,7 +1008,7 @@ export const authRouter = createTRPCRouter({
           getH3Event(ctx),
           userId,
           isAdmin,
-          false, // Registration defaults to non-remember
+          true, // Always use persistent sessions
           clientIP,
           userAgent
         );
@@ -1177,7 +1177,7 @@ export const authRouter = createTRPCRouter({
           getH3Event(ctx),
           user.id,
           isAdmin,
-          rememberMe || false,
+          rememberMe ?? false, // Default to session cookie (expires on browser close)
           clientIP,
           userAgent
         );
@@ -1190,7 +1190,7 @@ export const authRouter = createTRPCRouter({
           await logAuditEvent({
             userId: user.id,
             eventType: "auth.login.success",
-            eventData: { method: "password", rememberMe: rememberMe || false },
+            eventData: { method: "password", rememberMe: rememberMe ?? false },
             ipAddress: clientIP,
             userAgent,
             success: true
@@ -1266,7 +1266,7 @@ export const authRouter = createTRPCRouter({
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({
           email,
-          rememberMe: rememberMe ?? false,
+          rememberMe: rememberMe ?? false, // Default to session cookie (expires on browser close)
           code: loginCode
         })
           .setProtectedHeader({ alg: "HS256" })
@@ -1274,7 +1274,7 @@ export const authRouter = createTRPCRouter({
           .sign(secret);
 
         const domain = env.VITE_DOMAIN || "https://freno.me";
-        const loginUrl = `${domain}/api/auth/email-login-callback?email=${email}&token=${token}&rememberMe=${rememberMe}`;
+        const loginUrl = `${domain}/api/auth/email-login-callback?email=${email}&token=${token}`;
 
         const htmlContent = generateLoginLinkEmail({
           email,

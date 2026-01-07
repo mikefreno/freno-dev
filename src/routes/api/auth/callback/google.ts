@@ -1,7 +1,6 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { appRouter } from "~/server/api/root";
 import { createTRPCContext } from "~/server/api/utils";
-import { getResponseHeaders } from "vinxi/http";
 
 export async function GET(event: APIEvent) {
   const url = new URL(event.request.url);
@@ -46,41 +45,12 @@ export async function GET(event: APIEvent) {
         result.redirectTo
       );
 
-      // Get the response headers that were set by the session (includes Set-Cookie)
-      const responseHeaders = getResponseHeaders(event.nativeEvent);
-      console.log(
-        "[Google OAuth Callback] Response headers from event:",
-        Object.keys(responseHeaders)
-      );
-
-      // Create redirect response with the session cookie
+      // Vinxi's updateSession already set the cookie headers automatically
+      // Just redirect - the cookies are already in the response
       const redirectUrl = result.redirectTo || "/account";
-      const headers = new Headers({
-        Location: redirectUrl
-      });
-
-      // Copy Set-Cookie headers from the session response
-      if (responseHeaders["set-cookie"]) {
-        const cookies = Array.isArray(responseHeaders["set-cookie"])
-          ? responseHeaders["set-cookie"]
-          : [responseHeaders["set-cookie"]];
-
-        console.log("[Google OAuth Callback] Found cookies:", cookies.length);
-        cookies.forEach((cookie) => {
-          headers.append("Set-Cookie", cookie);
-          console.log(
-            "[Google OAuth Callback] Adding cookie:",
-            cookie.substring(0, 50) + "..."
-          );
-        });
-      } else {
-        console.error("[Google OAuth Callback] NO SET-COOKIE HEADER FOUND!");
-        console.error("[Google OAuth Callback] All headers:", responseHeaders);
-      }
-
       return new Response(null, {
         status: 302,
-        headers
+        headers: { Location: redirectUrl }
       });
     } else {
       console.error(
