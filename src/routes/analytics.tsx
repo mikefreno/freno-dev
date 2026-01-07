@@ -9,14 +9,47 @@ const checkAdmin = query(async (): Promise<boolean> => {
   const userState = await getUserState();
 
   if (userState.privilegeLevel !== "admin") {
+    console.log("redirect");
     throw redirect("/");
   }
 
   return true;
 }, "checkAdminAccess");
 
+const getSummaryData = query(async (days: number) => {
+  "use server";
+  const { createCaller } = await import("~/server/api/root");
+  const { getEvent } = await import("vinxi/http");
+
+  const caller = await createCaller(getEvent());
+  return await caller.analytics.getSummary({ days });
+}, "getSummaryData");
+
+const getPerformanceData = query(async (days: number) => {
+  "use server";
+  const { createCaller } = await import("~/server/api/root");
+  const { getEvent } = await import("vinxi/http");
+
+  const caller = await createCaller(getEvent());
+  return await caller.analytics.getPerformanceStats({ days });
+}, "getPerformanceData");
+
+const getPathData = query(async (path: string, days: number) => {
+  "use server";
+  const { createCaller } = await import("~/server/api/root");
+  const { getEvent } = await import("vinxi/http");
+
+  const caller = await createCaller(getEvent());
+  return await caller.analytics.getPathStats({ path, days });
+}, "getPathData");
+
 export const route = {
-  load: () => checkAdmin()
+  load: async () => {
+    await checkAdmin();
+    // Preload initial data with default timeWindow of 7 days
+    void getSummaryData(7);
+    void getPerformanceData(7);
+  }
 };
 
 interface PerformanceTarget {
@@ -88,39 +121,14 @@ export default function AnalyticsPage() {
   const [selectedPath, setSelectedPath] = createSignal<string | null>(null);
   const [error, setError] = createSignal<string | null>(null);
 
-  const summary = createAsync(async () => {
-    try {
-      setError(null);
-      return await api.analytics.getSummary.query({ days: timeWindow() });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load analytics");
-      return null;
-    }
-  });
+  const summary = createAsync(() => getSummaryData(timeWindow()));
 
-  const performanceStats = createAsync(async () => {
-    try {
-      return await api.analytics.getPerformanceStats.query({
-        days: timeWindow()
-      });
-    } catch (e) {
-      console.error("Failed to load performance stats:", e);
-      return null;
-    }
-  });
+  const performanceStats = createAsync(() => getPerformanceData(timeWindow()));
 
-  const pathStats = createAsync(async () => {
+  const pathStats = createAsync(() => {
     const path = selectedPath();
-    if (!path) return null;
-    try {
-      return await api.analytics.getPathStats.query({
-        path,
-        days: timeWindow()
-      });
-    } catch (e) {
-      console.error("Failed to load path stats:", e);
-      return null;
-    }
+    if (!path) return Promise.resolve(null);
+    return getPathData(path, timeWindow());
   });
 
   return (

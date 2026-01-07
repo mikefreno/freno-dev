@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { env } from "~/env/server";
 import { withCacheAndStale } from "~/server/cache";
-import { CACHE_CONFIG } from "~/config";
+import { CACHE_CONFIG, NETWORK_CONFIG } from "~/config";
 import {
   fetchWithTimeout,
   checkResponse,
@@ -40,7 +40,7 @@ export const gitActivityRouter = createTRPCRouter({
                 Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
                 Accept: "application/vnd.github.v3+json"
               },
-              timeout: 15000 // 15 second timeout
+              timeout: NETWORK_CONFIG.GITHUB_API_TIMEOUT_MS
             }
           );
 
@@ -140,7 +140,7 @@ export const gitActivityRouter = createTRPCRouter({
                 Authorization: `token ${env.GITEA_TOKEN}`,
                 Accept: "application/json"
               },
-              timeout: 15000
+              timeout: NETWORK_CONFIG.GITHUB_API_TIMEOUT_MS
             }
           );
 
@@ -229,7 +229,7 @@ export const gitActivityRouter = createTRPCRouter({
   getGitHubActivity: publicProcedure.query(async () => {
     return withCacheAndStale(
       "github-activity",
-      10 * 60 * 1000,
+      CACHE_CONFIG.GIT_ACTIVITY_CACHE_TTL_MS,
       async () => {
         const query = `
         query($userName: String!) {
@@ -288,7 +288,7 @@ export const gitActivityRouter = createTRPCRouter({
 
         return contributions;
       },
-      { maxStaleMs: 24 * 60 * 60 * 1000 }
+      { maxStaleMs: CACHE_CONFIG.GIT_ACTIVITY_MAX_STALE_MS }
     ).catch((error) => {
       if (error instanceof NetworkError) {
         console.error("GitHub GraphQL API unavailable (network error)");
@@ -308,7 +308,7 @@ export const gitActivityRouter = createTRPCRouter({
   getGiteaActivity: publicProcedure.query(async () => {
     return withCacheAndStale(
       "gitea-activity",
-      10 * 60 * 1000,
+      CACHE_CONFIG.GIT_ACTIVITY_CACHE_TTL_MS,
       async () => {
         const reposResponse = await fetchWithTimeout(
           `${env.GITEA_URL}/api/v1/user/repos?limit=100`,
@@ -373,7 +373,7 @@ export const gitActivityRouter = createTRPCRouter({
 
         return contributions;
       },
-      { maxStaleMs: 24 * 60 * 60 * 1000 }
+      { maxStaleMs: CACHE_CONFIG.GIT_ACTIVITY_MAX_STALE_MS }
     ).catch((error) => {
       if (error instanceof NetworkError) {
         console.error("Gitea API unavailable (network error)");

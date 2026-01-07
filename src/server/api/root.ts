@@ -9,7 +9,8 @@ import { blogRouter } from "./routers/blog";
 import { gitActivityRouter } from "./routers/git-activity";
 import { postHistoryRouter } from "./routers/post-history";
 import { infillRouter } from "./routers/infill";
-import { createTRPCRouter } from "./utils";
+import { createTRPCRouter, createTRPCContext } from "./utils";
+import type { H3Event } from "h3";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -26,3 +27,13 @@ export const appRouter = createTRPCRouter({
 });
 
 export type AppRouter = typeof appRouter;
+
+/**
+ * Create a server-side caller for tRPC procedures
+ * This allows calling tRPC procedures directly on the server with proper context
+ */
+export const createCaller = async (event: H3Event) => {
+  const apiEvent = { nativeEvent: event, request: event.node.req } as any;
+  const ctx = await createTRPCContext(apiEvent);
+  return appRouter.createCaller(ctx);
+};

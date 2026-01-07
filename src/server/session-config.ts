@@ -1,6 +1,6 @@
 import type { SessionConfig } from "vinxi/http";
 import { env } from "~/env/server";
-import { AUTH_CONFIG } from "~/config";
+import { AUTH_CONFIG, expiryToSeconds } from "~/config";
 
 /**
  * Session data stored in encrypted cookie
@@ -45,7 +45,7 @@ export function getSessionCookieOptions(rememberMe: boolean) {
   return {
     ...sessionConfig.cookieOptions,
     maxAge: rememberMe
-      ? 90 * 24 * 60 * 60 // 90 days
+      ? expiryToSeconds(AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG)
       : undefined // Session cookie (expires on browser close)
   };
 }

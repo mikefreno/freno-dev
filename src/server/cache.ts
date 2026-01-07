@@ -11,6 +11,7 @@
 
 import { createClient } from "redis";
 import { env } from "~/env/server";
+import { CACHE_CONFIG } from "~/config";
 
 let redisClient: ReturnType<typeof createClient> | null = null;
 let isConnecting = false;
@@ -171,7 +172,8 @@ export async function withCacheAndStale<T>(
     logErrors?: boolean;
   } = {}
 ): Promise<T> {
-  const { maxStaleMs = 7 * 24 * 60 * 60 * 1000, logErrors = true } = options;
+  const { maxStaleMs = CACHE_CONFIG.MAX_STALE_DATA_MS, logErrors = true } =
+    options;
 
   // Try fresh cache
   const cached = await cache.get<T>(key);

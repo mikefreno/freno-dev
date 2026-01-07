@@ -5,7 +5,8 @@ import {
   useSession,
   updateSession,
   clearSession,
-  getSession
+  getSession,
+  getCookie
 } from "vinxi/http";
 import { ConnectionFactory } from "./database";
 import { env } from "~/env/server";
@@ -162,12 +163,47 @@ export async function createAuthSession(
 /**
  * Get current session from Vinxi and validate against database
  * @param event - H3Event
+ * @param skipUpdate - If true, don't update the session cookie (for SSR contexts)
  * @returns Session data or null if invalid/expired
  */
 export async function getAuthSession(
-  event: H3Event
+  event: H3Event,
+  skipUpdate = false
 ): Promise<SessionData | null> {
   try {
+    // In SSR contexts where headers may already be sent, use unsealSession directly
+    if (skipUpdate) {
+      const { unsealSession } = await import("vinxi/http");
+      const cookieValue = getCookie(event, sessionConfig.cookieName);
+      if (!cookieValue) {
+        return null;
+      }
+
+      try {
+        const data = await unsealSession<SessionData>(
+          event,
+          sessionConfig,
+          cookieValue
+        );
+
+        if (!data || !data.userId || !data.sessionId) {
+          return null;
+        }
+
+        // Validate session against database
+        const isValid = await validateSessionInDB(
+          data.sessionId,
+          data.userId,
+          data.refreshToken
+        );
+
+        return isValid ? data : null;
+      } catch {
+        return null;
+      }
+    }
+
+    // Normal path - allow session updates
     const session = await getSession<SessionData>(event, sessionConfig);
 
     if (!session.data || !session.data.userId || !session.data.sessionId) {
@@ -182,13 +218,30 @@ export async function getAuthSession(
     );
 
     if (!isValid) {
-      // Clear invalid session
-      await clearSession(event, sessionConfig);
+      // Clear invalid session - wrap in try/catch for headers-sent error
+      try {
+        await clearSession(event, sessionConfig);
+      } catch (clearError: any) {
+        // If headers already sent, we can't clear the cookie, but that's OK
+        // The session is invalid in DB anyway
+        if (clearError?.code !== "ERR_HTTP_HEADERS_SENT") {
+          throw clearError;
+        }
+      }
       return null;
     }
 
     return session.data;
-  } catch (error) {
+  } catch (error: any) {
+    // If headers already sent, we can't read the session cookie properly
+    // This can happen in SSR when response streaming has started
+    if (error?.code === "ERR_HTTP_HEADERS_SENT") {
+      console.warn(
+        "Cannot access session - headers already sent, retrying with skipUpdate"
+      );
+      // Retry with skipUpdate
+      return getAuthSession(event, true);
+    }
     console.error("Error getting auth session:", error);
     return null;
   }
