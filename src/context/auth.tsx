@@ -8,9 +8,17 @@
  * - Never trust client-side state for authorization decisions
  */
 
-import { createContext, useContext, Accessor, ParentComponent } from "solid-js";
-import { createAsync } from "@solidjs/router";
-import { getUserState, revalidateAuth, type UserState } from "~/lib/auth-query";
+import {
+  createContext,
+  useContext,
+  createSignal,
+  onMount,
+  onCleanup,
+  Accessor,
+  ParentComponent
+} from "solid-js";
+import { createAsync, revalidate } from "@solidjs/router";
+import { getUserState, type UserState } from "~/lib/auth-query";
 
 interface AuthContextType {
   /** Current user state (for UI display) */
@@ -41,8 +49,39 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>();
 
 export const AuthProvider: ParentComponent = (props) => {
-  // Get server state via SolidStart query
-  const serverAuth = createAsync(() => getUserState());
+  // Signal to force re-fetch when auth state changes
+  const [refreshTrigger, setRefreshTrigger] = createSignal(0);
+
+  // Get server state via SolidStart query - tracks refreshTrigger for reactivity
+  const serverAuth = createAsync(
+    () => {
+      refreshTrigger(); // Track the signal to force re-run
+      return getUserState();
+    },
+    { deferStream: true }
+  );
+
+  // Refresh callback that invalidates cache and forces re-fetch
+  const refreshAuth = () => {
+    revalidate(getUserState.key);
+    setRefreshTrigger((prev) => prev + 1); // Trigger re-fetch
+  };
+
+  // Listen for auth refresh events from external sources (token refresh, etc.)
+  onMount(() => {
+    if (typeof window === "undefined") return;
+
+    const handleAuthRefresh = () => {
+      console.log("[AuthContext] Received auth refresh event");
+      refreshAuth();
+    };
+
+    window.addEventListener("auth-state-changed", handleAuthRefresh);
+
+    onCleanup(() => {
+      window.removeEventListener("auth-state-changed", handleAuthRefresh);
+    });
+  });
 
   // Convenience accessors with safe defaults
   const isAuthenticated = () => serverAuth()?.isAuthenticated ?? false;
@@ -60,7 +99,7 @@ export const AuthProvider: ParentComponent = (props) => {
     userId,
     isAdmin,
     isEmailVerified,
-    refreshAuth: revalidateAuth
+    refreshAuth
   };
 
   return (

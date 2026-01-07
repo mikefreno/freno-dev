@@ -145,11 +145,3 @@ class TokenRefreshManager {
 
 // Singleton instance
 export const tokenRefreshManager = new TokenRefreshManager();
-
-/**
- * Manually trigger token refresh (can be called from UI)
- * @returns Promise<boolean> success status
- */
-export async function manualRefresh(): Promise<boolean> {
-  return tokenRefreshManager.refreshNow();
-}

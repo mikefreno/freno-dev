@@ -2,7 +2,6 @@ import { Show } from "solid-js";
 import { useSearchParams, A, query } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
 import { createAsync } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
 import PostSortingSelect from "~/components/blog/PostSortingSelect";
 import TagSelector from "~/components/blog/TagSelector";
 import PostSorting from "~/components/blog/PostSorting";
@@ -12,11 +11,11 @@ import { CACHE_CONFIG } from "~/config";
 
 const getPosts = query(async () => {
   "use server";
-  const { ConnectionFactory, getPrivilegeLevel } =
-    await import("~/server/utils");
+  const { getUserState } = await import("~/lib/auth-query");
+  const { ConnectionFactory } = await import("~/server/utils");
   const { withCache } = await import("~/server/cache");
-  const event = getRequestEvent()!;
-  const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
+  const userState = await getUserState();
+  const privilegeLevel = userState.privilegeLevel;
 
   return withCache(
     `posts-${privilegeLevel}`,

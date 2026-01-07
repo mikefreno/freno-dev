@@ -1,11 +1,6 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { TRPCError } from "@trpc/server";
-import {
-  ConnectionFactory,
-  getUserID,
-  hashPassword,
-  checkPassword
-} from "~/server/utils";
+import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
 import { setCookie } from "vinxi/http";
 import type { User } from "~/db/types";
 import { toUserProfile } from "~/types/user";
@@ -20,7 +15,7 @@ import {
 
 export const userRouter = createTRPCRouter({
   getProfile: publicProcedure.query(async ({ ctx }) => {
-    const userId = await getUserID(ctx.event.nativeEvent);
+    const userId = ctx.userId;
 
     if (!userId) {
       throw new TRPCError({
@@ -49,7 +44,7 @@ export const userRouter = createTRPCRouter({
   updateEmail: publicProcedure
     .input(updateEmailSchema)
     .mutation(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({
@@ -83,7 +78,7 @@ export const userRouter = createTRPCRouter({
   updateDisplayName: publicProcedure
     .input(updateDisplayNameSchema)
     .mutation(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({
@@ -112,7 +107,7 @@ export const userRouter = createTRPCRouter({
   updateProfileImage: publicProcedure
     .input(updateProfileImageSchema)
     .mutation(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({
@@ -141,7 +136,7 @@ export const userRouter = createTRPCRouter({
   changePassword: publicProcedure
     .input(changePasswordSchema)
     .mutation(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({
@@ -214,7 +209,7 @@ export const userRouter = createTRPCRouter({
   setPassword: publicProcedure
     .input(setPasswordSchema)
     .mutation(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({
@@ -275,7 +270,7 @@ export const userRouter = createTRPCRouter({
   deleteAccount: publicProcedure
     .input(deleteAccountSchema)
     .mutation(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({

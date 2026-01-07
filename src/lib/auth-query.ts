@@ -26,8 +26,8 @@ export interface UserState {
  */
 export const getUserState = query(async (): Promise<UserState> => {
   "use server";
-  const { getPrivilegeLevel, getUserID, ConnectionFactory } =
-    await import("~/server/utils");
+  const { getPrivilegeLevel, getUserID } = await import("~/server/auth");
+  const { ConnectionFactory } = await import("~/server/utils");
   const event = getRequestEvent()!;
   const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
   const userId = await getUserID(event.nativeEvent);
@@ -78,4 +78,9 @@ export const getUserState = query(async (): Promise<UserState> => {
  */
 export function revalidateAuth() {
   revalidateKey(getUserState.key);
+
+  // Dispatch browser event to trigger UI updates (client-side only)
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("auth-state-changed"));
+  }
 }

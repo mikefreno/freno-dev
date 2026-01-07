@@ -1,7 +1,6 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { ConnectionFactory } from "~/server/utils";
 import { z } from "zod";
-import { getUserID } from "~/server/auth";
 import { TRPCError } from "@trpc/server";
 import diff from "fast-diff";
 
@@ -86,7 +85,7 @@ export const postHistoryRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({
@@ -168,7 +167,7 @@ export const postHistoryRouter = createTRPCRouter({
   getHistory: publicProcedure
     .input(z.object({ postId: z.number() }))
     .query(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({
@@ -243,7 +242,7 @@ export const postHistoryRouter = createTRPCRouter({
   restore: publicProcedure
     .input(z.object({ historyId: z.number() }))
     .query(async ({ input, ctx }) => {
-      const userId = await getUserID(ctx.event.nativeEvent);
+      const userId = ctx.userId;
 
       if (!userId) {
         throw new TRPCError({

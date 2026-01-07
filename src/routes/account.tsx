@@ -1,7 +1,6 @@
 import { createSignal, Show, createEffect } from "solid-js";
 import { PageHead } from "~/components/PageHead";
 import { useNavigate, redirect, query, createAsync } from "@solidjs/router";
-import { getEvent } from "vinxi/http";
 import XCircle from "~/components/icons/XCircle";
 import GoogleLogo from "~/components/icons/GoogleLogo";
 import GitHub from "~/components/icons/GitHub";
@@ -22,13 +21,15 @@ import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
 
 const getUserProfile = query(async (): Promise<UserProfile | null> => {
   "use server";
-  const { getUserID, ConnectionFactory } = await import("~/server/utils");
-  const event = getEvent()!;
+  const { getUserState } = await import("~/lib/auth-query");
+  const { ConnectionFactory } = await import("~/server/utils");
 
-  const userId = await getUserID(event);
-  if (!userId) {
+  const userState = await getUserState();
+  if (!userState.isAuthenticated || !userState.userId) {
     throw redirect("/login");
   }
+
+  const userId = userState.userId;
 
   const conn = ConnectionFactory();
   try {

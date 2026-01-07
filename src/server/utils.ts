@@ -1,9 +1,4 @@
-export {
-  getPrivilegeLevel,
-  getUserID,
-  checkAuthStatus,
-  validateLineageRequest
-} from "./auth";
+export { checkAuthStatus, validateLineageRequest } from "./auth";
 
 export {
   ConnectionFactory,

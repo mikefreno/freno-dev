@@ -29,7 +29,7 @@
 export const AUTH_CONFIG = {
   // Access Token (JWT in cookie)
   ACCESS_TOKEN_EXPIRY: "15m" as const, // 15 minutes (short-lived)
-  ACCESS_TOKEN_EXPIRY_DEV: "2m" as const, // 1 hour in dev for convenience
+  ACCESS_TOKEN_EXPIRY_DEV: "3m" as const, // 3 minutes for testing
 
   // Refresh Token (opaque token in separate cookie)
   REFRESH_TOKEN_EXPIRY_SHORT: "7d" as const, // 7 days (no remember me)

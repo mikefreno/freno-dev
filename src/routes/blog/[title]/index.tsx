@@ -27,14 +27,15 @@ const getPostByTitle = query(
     sortBy: "newest" | "oldest" | "highest_rated" | "hot" = "newest"
   ) => {
     "use server";
-    const { ConnectionFactory, getUserID, getPrivilegeLevel } =
-      await import("~/server/utils");
+    const { getUserState } = await import("~/lib/auth-query");
+    const { ConnectionFactory } = await import("~/server/utils");
     const { parseConditionals, getSafeEnvVariables } =
       await import("~/server/conditional-parser");
     const { getFeatureFlags } = await import("~/server/feature-flags");
     const event = getRequestEvent()!;
-    const privilegeLevel = await getPrivilegeLevel(event.nativeEvent);
-    const userID = await getUserID(event.nativeEvent);
+    const userState = await getUserState();
+    const privilegeLevel = userState.privilegeLevel;
+    const userID = userState.userId;
     const conn = ConnectionFactory();
 
     if (title === "by-id") {

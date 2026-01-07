@@ -1206,7 +1206,7 @@ export const authRouter = createTRPCRouter({
 
       // Apply rate limiting
       const clientIP = getClientIP(getH3Event(ctx));
-      rateLimitRegistration(clientIP, getH3Event(ctx));
+      await rateLimitRegistration(clientIP, getH3Event(ctx));
 
       // Schema already validates password match, but double check
       if (password !== passwordConfirmation) {
@@ -1297,7 +1297,7 @@ export const authRouter = createTRPCRouter({
 
         // Apply rate limiting
         const clientIP = getClientIP(getH3Event(ctx));
-        rateLimitLogin(email, clientIP, getH3Event(ctx));
+        await rateLimitLogin(email, clientIP, getH3Event(ctx));
 
         const conn = ConnectionFactory();
         const res = await conn.execute({
@@ -1602,7 +1602,7 @@ export const authRouter = createTRPCRouter({
 
       // Apply rate limiting
       const clientIP = getClientIP(getH3Event(ctx));
-      rateLimitPasswordReset(clientIP, getH3Event(ctx));
+      await rateLimitPasswordReset(clientIP, getH3Event(ctx));
 
       try {
         const requested = getCookie(getH3Event(ctx), "passwordResetRequested");
@@ -1857,7 +1857,7 @@ export const authRouter = createTRPCRouter({
 
       // Apply rate limiting
       const clientIP = getClientIP(getH3Event(ctx));
-      rateLimitEmailVerification(clientIP, getH3Event(ctx));
+      await rateLimitEmailVerification(clientIP, getH3Event(ctx));
 
       try {
         const requested = getCookie(
@@ -2269,7 +2269,7 @@ export const authRouter = createTRPCRouter({
   // Admin endpoints for session management
   cleanupSessions: publicProcedure.mutation(async ({ ctx }) => {
     // Get user ID to check admin status
-    const userId = await getUserID(getH3Event(ctx));
+    const userId = ctx.userId;
     if (!userId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
@@ -2318,7 +2318,7 @@ export const authRouter = createTRPCRouter({
 
   getSessionStats: publicProcedure.query(async ({ ctx }) => {
     // Get user ID to check admin status
-    const userId = await getUserID(getH3Event(ctx));
+    const userId = ctx.userId;
     if (!userId) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
