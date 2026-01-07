@@ -173,7 +173,13 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { code } = input;
 
+      console.log(
+        "[GitHub Callback] Starting OAuth flow with code:",
+        code.substring(0, 10) + "..."
+      );
+
       try {
+        console.log("[GitHub Callback] Exchanging code for access token...");
         const tokenResponse = await fetchWithTimeout(
           "https://github.com/login/oauth/access_token",
           {
@@ -195,12 +201,16 @@ export const authRouter = createTRPCRouter({
         const { access_token } = await tokenResponse.json();
 
         if (!access_token) {
+          console.error("[GitHub Callback] No access token received");
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Failed to get access token from GitHub"
           });
         }
 
+        console.log(
+          "[GitHub Callback] Access token received, fetching user data..."
+        );
         const userResponse = await fetchWithTimeout(
           "https://api.github.com/user",
           {
@@ -216,6 +226,9 @@ export const authRouter = createTRPCRouter({
         const login = user.login;
         const icon = user.avatar_url;
 
+        console.log("[GitHub Callback] User data received:", { login });
+
+        console.log("[GitHub Callback] Fetching user emails...");
         const emailsResponse = await fetchWithTimeout(
           "https://api.github.com/user/emails",
           {
@@ -236,8 +249,16 @@ export const authRouter = createTRPCRouter({
         const email = primaryEmail?.email || null;
         const emailVerified = primaryEmail?.verified || false;
 
+        console.log(
+          "[GitHub Callback] Primary email:",
+          email,
+          "verified:",
+          emailVerified
+        );
+
         const conn = ConnectionFactory();
 
+        console.log("[GitHub Callback] Checking if user exists...");
         const query = `SELECT * FROM User WHERE provider = ? AND display_name = ?`;
         const params = ["github", login];
         const res = await conn.execute({ sql: query, args: params });
@@ -246,17 +267,23 @@ export const authRouter = createTRPCRouter({
 
         if (res.rows[0]) {
           userId = (res.rows[0] as unknown as User).id;
+          console.log("[GitHub Callback] Existing user found:", userId);
 
           try {
             await conn.execute({
               sql: `UPDATE User SET email = ?, email_verified = ?, image = ? WHERE id = ?`,
               args: [email, emailVerified ? 1 : 0, icon, userId]
             });
+            console.log("[GitHub Callback] User data updated");
           } catch (updateError: any) {
             if (
               updateError.code === "SQLITE_CONSTRAINT" &&
               updateError.message?.includes("User.email")
             ) {
+              console.error(
+                "[GitHub Callback] Email conflict during update:",
+                email
+              );
               throw new TRPCError({
                 code: "CONFLICT",
                 message:
@@ -267,6 +294,7 @@ export const authRouter = createTRPCRouter({
           }
         } else {
           userId = uuidV4();
+          console.log("[GitHub Callback] Creating new user:", userId);
 
           const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
           const insertParams = [
@@ -280,11 +308,16 @@ export const authRouter = createTRPCRouter({
 
           try {
             await conn.execute({ sql: insertQuery, args: insertParams });
+            console.log("[GitHub Callback] New user created");
           } catch (insertError: any) {
             if (
               insertError.code === "SQLITE_CONSTRAINT" &&
               insertError.message?.includes("User.email")
             ) {
+              console.error(
+                "[GitHub Callback] Email conflict during insert:",
+                email
+              );
               throw new TRPCError({
                 code: "CONFLICT",
                 message:
@@ -297,6 +330,7 @@ export const authRouter = createTRPCRouter({
 
         const isAdmin = userId === env.ADMIN_ID;
 
+        console.log("[GitHub Callback] Creating session for user:", userId);
         // Create session with Vinxi (OAuth defaults to remember me)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
@@ -312,6 +346,8 @@ export const authRouter = createTRPCRouter({
         // Set CSRF token for authenticated session
         setCSRFToken(getH3Event(ctx));
 
+        console.log("[GitHub Callback] Session created successfully");
+
         // Log successful OAuth login
         await logAuditEvent({
           userId,
@@ -322,11 +358,14 @@ export const authRouter = createTRPCRouter({
           success: true
         });
 
+        console.log("[GitHub Callback] OAuth flow completed successfully");
         return {
           success: true,
           redirectTo: "/account"
         };
       } catch (error) {
+        console.error("[GitHub Callback] Error during OAuth flow:", error);
+
         // Log failed OAuth login
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
@@ -345,26 +384,30 @@ export const authRouter = createTRPCRouter({
         }
 
         if (error instanceof TimeoutError) {
-          console.error("GitHub API timeout:", error.message);
+          console.error("[GitHub Callback] Timeout:", error.message);
           throw new TRPCError({
             code: "TIMEOUT",
             message: "GitHub authentication timed out. Please try again."
           });
         } else if (error instanceof NetworkError) {
-          console.error("GitHub API network error:", error.message);
+          console.error("[GitHub Callback] Network error:", error.message);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Unable to connect to GitHub. Please try again later."
           });
         } else if (error instanceof APIError) {
-          console.error("GitHub API error:", error.status, error.statusText);
+          console.error(
+            "[GitHub Callback] API error:",
+            error.status,
+            error.statusText
+          );
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "GitHub authentication failed. Please try again."
           });
         }
 
-        console.error("GitHub authentication failed:", error);
+        console.error("[GitHub Callback] Unknown error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "GitHub authentication failed"
@@ -377,7 +420,13 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { code } = input;
 
+      console.log(
+        "[Google Callback] Starting OAuth flow with code:",
+        code.substring(0, 10) + "..."
+      );
+
       try {
+        console.log("[Google Callback] Exchanging code for access token...");
         const tokenResponse = await fetchWithTimeout(
           "https://oauth2.googleapis.com/token",
           {
@@ -400,12 +449,16 @@ export const authRouter = createTRPCRouter({
         const { access_token } = await tokenResponse.json();
 
         if (!access_token) {
+          console.error("[Google Callback] No access token received");
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Failed to get access token from Google"
           });
         }
 
+        console.log(
+          "[Google Callback] Access token received, fetching user data..."
+        );
         const userResponse = await fetchWithTimeout(
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
@@ -423,8 +476,15 @@ export const authRouter = createTRPCRouter({
         const email = userData.email;
         const email_verified = userData.email_verified;
 
+        console.log("[Google Callback] User data received:", {
+          name,
+          email,
+          email_verified
+        });
+
         const conn = ConnectionFactory();
 
+        console.log("[Google Callback] Checking if user exists...");
         const query = `SELECT * FROM User WHERE provider = ? AND email = ?`;
         const params = ["google", email];
         const res = await conn.execute({ sql: query, args: params });
@@ -433,13 +493,16 @@ export const authRouter = createTRPCRouter({
 
         if (res.rows[0]) {
           userId = (res.rows[0] as unknown as User).id;
+          console.log("[Google Callback] Existing user found:", userId);
 
           await conn.execute({
             sql: `UPDATE User SET email = ?, email_verified = ?, display_name = ?, image = ? WHERE id = ?`,
             args: [email, email_verified ? 1 : 0, name, image, userId]
           });
+          console.log("[Google Callback] User data updated");
         } else {
           userId = uuidV4();
+          console.log("[Google Callback] Creating new user:", userId);
 
           const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
           const insertParams = [
@@ -456,11 +519,16 @@ export const authRouter = createTRPCRouter({
               sql: insertQuery,
               args: insertParams
             });
+            console.log("[Google Callback] New user created");
           } catch (insertError: any) {
             if (
               insertError.code === "SQLITE_CONSTRAINT" &&
               insertError.message?.includes("User.email")
             ) {
+              console.error(
+                "[Google Callback] Email conflict during insert:",
+                email
+              );
               throw new TRPCError({
                 code: "CONFLICT",
                 message:
@@ -473,6 +541,7 @@ export const authRouter = createTRPCRouter({
 
         const isAdmin = userId === env.ADMIN_ID;
 
+        console.log("[Google Callback] Creating session for user:", userId);
         // Create session with Vinxi (OAuth defaults to remember me)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
@@ -488,6 +557,8 @@ export const authRouter = createTRPCRouter({
         // Set CSRF token for authenticated session
         setCSRFToken(getH3Event(ctx));
 
+        console.log("[Google Callback] Session created successfully");
+
         // Log successful OAuth login
         await logAuditEvent({
           userId,
@@ -498,11 +569,14 @@ export const authRouter = createTRPCRouter({
           success: true
         });
 
+        console.log("[Google Callback] OAuth flow completed successfully");
         return {
           success: true,
           redirectTo: "/account"
         };
       } catch (error) {
+        console.error("[Google Callback] Error during OAuth flow:", error);
+
         // Log failed OAuth login
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
@@ -521,26 +595,30 @@ export const authRouter = createTRPCRouter({
         }
 
         if (error instanceof TimeoutError) {
-          console.error("Google API timeout:", error.message);
+          console.error("[Google Callback] Timeout:", error.message);
           throw new TRPCError({
             code: "TIMEOUT",
             message: "Google authentication timed out. Please try again."
           });
         } else if (error instanceof NetworkError) {
-          console.error("Google API network error:", error.message);
+          console.error("[Google Callback] Network error:", error.message);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Unable to connect to Google. Please try again later."
           });
         } else if (error instanceof APIError) {
-          console.error("Google API error:", error.status, error.statusText);
+          console.error(
+            "[Google Callback] API error:",
+            error.status,
+            error.statusText
+          );
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Google authentication failed. Please try again."
           });
         }
 
-        console.error("Google authentication failed:", error);
+        console.error("[Google Callback] Unknown error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Google authentication failed"

@@ -1,6 +1,9 @@
-import { readFileSync } from "fs";
-import { join } from "path";
 import { AUTH_CONFIG } from "~/config";
+
+// Import email templates as raw strings - Vite will bundle these at build time
+import loginLinkTemplate from "./login-link.html?raw";
+import passwordResetTemplate from "./password-reset.html?raw";
+import emailVerificationTemplate from "./email-verification.html?raw";
 
 /**
  * Convert expiry string to human-readable format
@@ -17,27 +20,6 @@ export function expiryToHuman(expiry: string): string {
     return value === 1 ? "1 day" : `${value} days`;
   }
   return expiry;
-}
-
-/**
- * Load email template from file
- * @param templateName - Name of the template file (without .html extension)
- * @returns Template content as string
- */
-function loadTemplate(templateName: string): string {
-  try {
-    const templatePath = join(
-      process.cwd(),
-      "src",
-      "server",
-      "email-templates",
-      `${templateName}.html`
-    );
-    return readFileSync(templatePath, "utf-8");
-  } catch (error) {
-    console.error(`Failed to load email template: ${templateName}`, error);
-    throw new Error(`Email template not found: ${templateName}`);
-  }
 }
 
 /**
@@ -68,10 +50,9 @@ export interface LoginLinkEmailParams {
  * Generate login link email HTML
  */
 export function generateLoginLinkEmail(params: LoginLinkEmailParams): string {
-  const template = loadTemplate("login-link");
   const expiryTime = expiryToHuman(AUTH_CONFIG.EMAIL_LOGIN_LINK_EXPIRY);
 
-  return processTemplate(template, {
+  return processTemplate(loginLinkTemplate, {
     LOGIN_URL: params.loginUrl,
     LOGIN_CODE: params.loginCode,
     EXPIRY_TIME: expiryTime
@@ -88,10 +69,9 @@ export interface PasswordResetEmailParams {
 export function generatePasswordResetEmail(
   params: PasswordResetEmailParams
 ): string {
-  const template = loadTemplate("password-reset");
   const expiryTime = "1 hour"; // Password reset is hardcoded to 1 hour
 
-  return processTemplate(template, {
+  return processTemplate(passwordResetTemplate, {
     RESET_URL: params.resetUrl,
     EXPIRY_TIME: expiryTime
   });
@@ -107,10 +87,9 @@ export interface EmailVerificationParams {
 export function generateEmailVerificationEmail(
   params: EmailVerificationParams
 ): string {
-  const template = loadTemplate("email-verification");
   const expiryTime = expiryToHuman(AUTH_CONFIG.EMAIL_VERIFICATION_LINK_EXPIRY);
 
-  return processTemplate(template, {
+  return processTemplate(emailVerificationTemplate, {
     VERIFICATION_URL: params.verificationUrl,
     EXPIRY_TIME: expiryTime
   });
