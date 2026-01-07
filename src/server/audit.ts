@@ -29,7 +29,8 @@ export type AuditEventType =
   | "security.rate_limit.exceeded"
   | "security.csrf.failed"
   | "security.suspicious.activity"
-  | "admin.action";
+  | "admin.action"
+  | "system.session_cleanup";
 
 /**
  * Audit log entry structure

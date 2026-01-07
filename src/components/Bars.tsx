@@ -15,7 +15,8 @@ import {
   useNavigate,
   useLocation,
   query,
-  createAsync
+  createAsync,
+  revalidate
 } from "@solidjs/router";
 import { BREAKPOINTS } from "~/config";
 import { getRequestEvent } from "solid-js/web";
@@ -50,6 +51,13 @@ const getUserState = query(async () => {
     privilegeLevel
   };
 }, "bars-user-state");
+
+/**
+ * Call this function after login/logout to refresh the user state in the sidebar
+ */
+export function revalidateUserState() {
+  revalidate(getUserState.key);
+}
 
 function formatDomainName(url: string): string {
   const domain = url.split("://")[1]?.split(":")[0] ?? url;

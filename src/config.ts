@@ -7,16 +7,87 @@
 // AUTHENTICATION & SESSION
 // ============================================================
 
+/**
+ * AUTHENTICATION & SESSION CONFIGURATION
+ *
+ * Security Model:
+ * - Access tokens: Short-lived (15m), contain user identity, stored in httpOnly cookie
+ * - Refresh tokens: Long-lived (7-90d), opaque tokens for getting new access tokens
+ * - Token rotation: Each refresh invalidates old token and issues new pair
+ * - Breach detection: Reusing invalidated token revokes entire token family
+ *
+ * Timing Decisions:
+ * - 15m access: Balance between security (short exposure) and UX (not too frequent refreshes)
+ * - 7d refresh: Conservative default, users re-auth weekly
+ * - 90d remember: Extended convenience for trusted devices
+ * - 5s reuse window: Handles race conditions in distributed systems
+ *
+ * References:
+ * - OWASP: https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+ * - RFC 6819: https://datatracker.ietf.org/doc/html/rfc6819#section-5.2
+ */
 export const AUTH_CONFIG = {
-  JWT_EXPIRY: "14d" as const,
-  JWT_EXPIRY_SHORT: "12h" as const,
-  SESSION_COOKIE_MAX_AGE: 60 * 60 * 24 * 14,
-  REMEMBER_ME_MAX_AGE: 60 * 60 * 24 * 14,
+  // Access Token (JWT in cookie)
+  ACCESS_TOKEN_EXPIRY: "15m" as const, // 15 minutes (short-lived)
+  ACCESS_TOKEN_EXPIRY_DEV: "2m" as const, // 1 hour in dev for convenience
+
+  // Refresh Token (opaque token in separate cookie)
+  REFRESH_TOKEN_EXPIRY_SHORT: "7d" as const, // 7 days (no remember me)
+  REFRESH_TOKEN_EXPIRY_LONG: "90d" as const, // 90 days (remember me)
+
+  // Cookie MaxAge (in seconds - must match token lifetime)
+  ACCESS_COOKIE_MAX_AGE: 15 * 60, // 15 minutes
+  ACCESS_COOKIE_MAX_AGE_DEV: 60 * 60, // 1 hour in dev
+  REFRESH_COOKIE_MAX_AGE_SHORT: 60 * 60 * 24 * 7, // 7 days
+  REFRESH_COOKIE_MAX_AGE_LONG: 60 * 60 * 24 * 90, // 90 days
+
+  // Legacy (keep for backwards compatibility during migration)
+  JWT_EXPIRY: "15m" as const, // Deprecated: use ACCESS_TOKEN_EXPIRY
+  JWT_EXPIRY_SHORT: "15m" as const, // Deprecated
+  SESSION_COOKIE_MAX_AGE: 60 * 60 * 24 * 7, // Deprecated
+  REMEMBER_ME_MAX_AGE: 60 * 60 * 24 * 90, // Deprecated
+
+  // Security Settings
+  REFRESH_TOKEN_ROTATION_ENABLED: true, // Enable token rotation
+  MAX_ROTATION_COUNT: 100, // Max rotations before forcing re-login
+  REFRESH_TOKEN_REUSE_WINDOW_MS: 5000, // 5s grace period for race conditions
+
+  // Session Cleanup (serverless-friendly opportunistic cleanup)
+  SESSION_CLEANUP_INTERVAL_HOURS: 24, // Check for cleanup every 24 hours
+  SESSION_CLEANUP_RETENTION_DAYS: 90, // Keep revoked sessions for 90 days (audit)
+
+  // Other Auth Settings
   CSRF_TOKEN_MAX_AGE: 60 * 60 * 24 * 14,
   EMAIL_LOGIN_LINK_EXPIRY: "15m" as const,
   EMAIL_VERIFICATION_LINK_EXPIRY: "15m" as const,
   LINEAGE_JWT_EXPIRY: "14d" as const
 } as const;
+
+/**
+ * Get access token expiry based on environment
+ */
+export function getAccessTokenExpiry(): string {
+  return process.env.NODE_ENV === "production"
+    ? AUTH_CONFIG.ACCESS_TOKEN_EXPIRY
+    : AUTH_CONFIG.ACCESS_TOKEN_EXPIRY_DEV;
+}
+
+/**
+ * Get access cookie maxAge based on environment (in seconds)
+ */
+export function getAccessCookieMaxAge(): number {
+  return process.env.NODE_ENV === "production"
+    ? AUTH_CONFIG.ACCESS_COOKIE_MAX_AGE
+    : AUTH_CONFIG.ACCESS_COOKIE_MAX_AGE_DEV;
+}
+
+/**
+ * Type helper for token expiry strings
+ */
+export type TokenExpiry =
+  | typeof AUTH_CONFIG.ACCESS_TOKEN_EXPIRY
+  | typeof AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_SHORT
+  | typeof AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG;
 
 // ============================================================
 // RATE LIMITING
@@ -222,4 +293,15 @@ export const LINEAGE_CONFIG = {
 export const AUDIT_CONFIG = {
   DEFAULT_QUERY_LIMIT: 100,
   MAX_RETENTION_DAYS: 90
+} as const;
+
+// ============================================================
+// SESSION CLEANUP
+// ============================================================
+
+export const SESSION_CLEANUP_CONFIG = {
+  ENABLED: true,
+  INTERVAL_HOURS: 24,
+  RETENTION_DAYS: 90,
+  RUN_ON_STARTUP: true
 } as const;

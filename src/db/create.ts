@@ -15,21 +15,29 @@ export const model: { [key: string]: string } = {
     );
   `,
   Session: `
-    CREATE TABLE Session
-    (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      token_family TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      expires_at TEXT NOT NULL,
-      last_used TEXT NOT NULL DEFAULT (datetime('now')),
-      ip_address TEXT,
-      user_agent TEXT,
-      revoked INTEGER DEFAULT 0,
-      FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
-    );
-    CREATE INDEX IF NOT EXISTS idx_session_user_id ON Session (user_id);
-    CREATE INDEX IF NOT EXISTS idx_session_expires_at ON Session (expires_at);
+     CREATE TABLE Session
+     (
+       id TEXT PRIMARY KEY,
+       user_id TEXT NOT NULL,
+       token_family TEXT NOT NULL,
+       refresh_token_hash TEXT NOT NULL,
+       parent_session_id TEXT,
+       rotation_count INTEGER DEFAULT 0,
+       created_at TEXT NOT NULL DEFAULT (datetime('now')),
+       expires_at TEXT NOT NULL,
+       access_token_expires_at TEXT NOT NULL,
+       last_used TEXT NOT NULL DEFAULT (datetime('now')),
+       ip_address TEXT,
+       user_agent TEXT,
+       revoked INTEGER DEFAULT 0,
+       FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
+       FOREIGN KEY (parent_session_id) REFERENCES Session(id) ON DELETE SET NULL
+     );
+     CREATE INDEX IF NOT EXISTS idx_session_user_id ON Session (user_id);
+     CREATE INDEX IF NOT EXISTS idx_session_expires_at ON Session (expires_at);
+     CREATE INDEX IF NOT EXISTS idx_session_token_family ON Session (token_family);
+     CREATE INDEX IF NOT EXISTS idx_session_refresh_token_hash ON Session (refresh_token_hash);
+     CREATE INDEX IF NOT EXISTS idx_session_revoked ON Session (revoked);
   `,
   PasswordResetToken: `
     CREATE TABLE PasswordResetToken

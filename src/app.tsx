@@ -18,6 +18,7 @@ import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 import { MOBILE_CONFIG } from "./config";
 import CustomScrollbar from "./components/CustomScrollbar";
 import { initPerformanceTracking } from "~/lib/performance-tracking";
+import { tokenRefreshManager } from "~/lib/token-refresh";
 
 function AppLayout(props: { children: any }) {
   const {
@@ -190,6 +191,16 @@ function AppLayout(props: { children: any }) {
 }
 
 export default function App() {
+  onMount(() => {
+    // Start token refresh monitoring
+    tokenRefreshManager.start();
+  });
+
+  onCleanup(() => {
+    // Cleanup token refresh on unmount
+    tokenRefreshManager.stop();
+  });
+
   return (
     <MetaProvider>
       <ErrorBoundary

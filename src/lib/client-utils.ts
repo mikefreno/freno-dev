@@ -19,6 +19,47 @@ export async function safeFetch(
 }
 
 /**
+ * Decode JWT payload without verification (client-side only)
+ * @param token - JWT token string
+ * @returns Decoded payload or null if invalid
+ */
+export function decodeJWT(token: string): {
+  id: string;
+  sid: string;
+  exp: number;
+  iat: number;
+} | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+
+    const payload = JSON.parse(
+      atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+    );
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get time until JWT expires (in milliseconds)
+ * @param token - JWT token string
+ * @returns Milliseconds until expiry, or null if invalid/expired
+ */
+export function getTimeUntilExpiry(token: string): number | null {
+  const payload = decodeJWT(token);
+  if (!payload || !payload.exp) return null;
+
+  const expiryMs = payload.exp * 1000;
+  const now = Date.now();
+  const timeUntil = expiryMs - now;
+
+  return timeUntil > 0 ? timeUntil : null;
+}
+
+/**
  * Inserts soft hyphens (&shy;) for manual hyphenation. Uses actual characters for Typewriter compatibility.
  */
 export function insertSoftHyphens(
