@@ -45,16 +45,6 @@ export default function Page_401() {
           <span class="text-peach">{location.pathname}</span>
         </div>
       </div>
-
-      <div class="text-subtext0 space-y-2 text-sm">
-        <div class="flex items-start gap-2">
-          <span class="text-blue">ℹ</span>
-          <span>
-            Type <span class="text-green">help</span> to see available commands,
-            or try one of the suggestions below
-          </span>
-        </div>
-      </div>
     </div>
   );
   const quickActions = (
