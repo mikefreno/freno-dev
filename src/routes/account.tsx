@@ -668,11 +668,7 @@ export default function AccountPage() {
                       ref={emailRef}
                       type="email"
                       required
-                      disabled={
-                        emailButtonLoading() ||
-                        (userProfile().email !== null &&
-                          !userProfile().emailVerified)
-                      }
+                      disabled={emailButtonLoading()}
                       title="Please enter a valid email address"
                       label={userProfile().email ? "Update Email" : "Add Email"}
                     />
