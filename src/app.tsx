@@ -19,7 +19,7 @@ import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 import { MOBILE_CONFIG } from "./config";
 import CustomScrollbar from "./components/CustomScrollbar";
 import { initPerformanceTracking } from "~/lib/performance-tracking";
-import { tokenRefreshManager } from "~/lib/token-refresh";
+import { startDeploymentMonitoring } from "~/lib/deployment-detection";
 
 function AppLayout(props: { children: any }) {
   const {
@@ -34,6 +34,9 @@ function AppLayout(props: { children: any }) {
   onMount(() => {
     // Initialize performance tracking
     initPerformanceTracking();
+
+    // Start monitoring for new deployments
+    startDeploymentMonitoring();
 
     const windowWidth = createWindowWidth();
 

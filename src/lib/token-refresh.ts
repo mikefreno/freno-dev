@@ -211,9 +211,14 @@ class TokenRefreshManager {
         `[Token Refresh] Using rememberMe: ${rememberMe} (from refresh token cookie existence)`
       );
 
-      const result = await api.auth.refreshToken.mutate({
-        rememberMe
-      });
+      const result = await Promise.race([
+        api.auth.refreshToken.mutate({
+          rememberMe
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Token refresh timeout")), 10000)
+        )
+      ]);
 
       if (result.success) {
         console.log("[Token Refresh] Token refreshed successfully");
@@ -230,6 +235,18 @@ class TokenRefreshManager {
       }
     } catch (error) {
       console.error("[Token Refresh] Token refresh error:", error);
+
+      // Don't redirect on timeout - might be deployment in progress
+      const isTimeout =
+        error instanceof Error && error.message.includes("timeout");
+      if (isTimeout) {
+        console.warn(
+          "[Token Refresh] Timeout - server might be deploying, will retry on schedule"
+        );
+        this.scheduleNextRefresh();
+        return false;
+      }
+
       this.handleRefreshFailure();
       return false;
     } finally {

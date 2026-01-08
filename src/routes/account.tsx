@@ -15,9 +15,7 @@ import Input from "~/components/ui/Input";
 import PasswordInput from "~/components/ui/PasswordInput";
 import Button from "~/components/ui/Button";
 import FormFeedback from "~/components/ui/FormFeedback";
-
 import type { UserProfile } from "~/types/user";
-import PasswordStrengthMeter from "~/components/PasswordStrengthMeter";
 
 const getUserProfile = query(async (): Promise<UserProfile | null> => {
   "use server";
@@ -672,7 +670,6 @@ export default function AccountPage() {
                       }
                       title="Please enter a valid email address"
                       label={userProfile().email ? "Update Email" : "Add Email"}
-                      containerClass="input-group mx-4"
                     />
                     <Show
                       when={
