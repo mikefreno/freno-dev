@@ -59,12 +59,70 @@ export function createIsMobile(
 }
 
 /**
+ * Converts an image to WebP format without resizing
+ * @param file Original image file
+ * @param quality WebP quality (0-1), default 0.85
+ * @returns Converted image as WebP Blob
+ */
+export async function convertToWebP(
+  file: File | Blob,
+  quality: number = 0.85
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      reject(new Error("Failed to get canvas context"));
+      return;
+    }
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to create blob from canvas"));
+          }
+        },
+        "image/webp",
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      reject(new Error("Failed to load image"));
+    };
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        img.src = e.target.result as string;
+      } else {
+        reject(new Error("Failed to read file"));
+      }
+    };
+    reader.onerror = () => {
+      reject(new Error("FileReader error"));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
  * Resizes an image file to a maximum width/height while maintaining aspect ratio
  * @param file Original image file
  * @param maxWidth Maximum width in pixels
  * @param maxHeight Maximum height in pixels
- * @param quality JPEG quality (0-1), default 0.85
- * @returns Resized image as Blob
+ * @param quality WebP quality (0-1), default 0.85
+ * @returns Resized image as WebP Blob
  */
 export async function resizeImage(
   file: File | Blob,
@@ -110,7 +168,7 @@ export async function resizeImage(
             reject(new Error("Failed to create blob from canvas"));
           }
         },
-        "image/jpeg",
+        "image/webp",
         quality
       );
     };

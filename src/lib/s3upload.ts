@@ -1,10 +1,11 @@
 /**
  * S3 Upload Utility for SolidStart
  * Uploads files to S3 using pre-signed URLs from tRPC
+ * Automatically converts images to WebP format for better compression
  */
 
 import { api } from "~/lib/api";
-import { resizeImage } from "~/lib/resize-utils";
+import { resizeImage, convertToWebP } from "~/lib/resize-utils";
 
 export default async function AddImageToS3(
   file: Blob | File,
@@ -14,46 +15,61 @@ export default async function AddImageToS3(
   try {
     const filename = (file as File).name;
 
-    const { uploadURL, key } = await api.misc.getPreSignedURL.mutate({
-      type,
-      title,
-      filename
-    });
-
-    console.log("url: " + uploadURL, "key: " + key);
-
     const ext = /^.+\.([^.]+)$/.exec(filename);
     let contentType = "application/octet-stream";
+    let isImage = false;
+    let isVideo = false;
 
     if (ext) {
       const extension = ext[1].toLowerCase();
       if (["mp4", "webm", "mov", "quicktime"].includes(extension)) {
         contentType =
           extension === "mov" ? "video/quicktime" : `video/${extension}`;
-      } else {
-        contentType = `image/${extension}`;
+        isVideo = true;
+      } else if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
+        isImage = true;
       }
     }
+
+    let fileToUpload: Blob | File = file;
+    let finalFilename = filename;
+
+    // Convert images to WebP for better compression
+    if (isImage) {
+      contentType = "image/webp";
+      fileToUpload = await convertToWebP(file, 0.85);
+      finalFilename = filename.replace(/\.[^.]+$/, ".webp");
+    }
+
+    const { uploadURL, key } = await api.misc.getPreSignedURL.mutate({
+      type,
+      title,
+      filename: finalFilename
+    });
+
+    console.log("url: " + uploadURL, "key: " + key);
 
     const uploadResponse = await fetch(uploadURL, {
       method: "PUT",
       headers: {
         "Content-Type": contentType
       },
-      body: file as File
+      body: fileToUpload
     });
 
     if (!uploadResponse.ok) {
       throw new Error("Failed to upload file to S3");
     }
 
-    // Only create thumbnails for images
-    const isImage = contentType.startsWith("image/");
+    // Create thumbnails for images (blog posts only)
     if (type === "blog" && isImage) {
       try {
         const thumbnail = await resizeImage(file, 200, 200, 0.8);
 
-        const thumbnailFilename = filename.replace(/(\.[^.]+)$/, "-small$1");
+        const thumbnailFilename = finalFilename.replace(
+          /(\.[^.]+)$/,
+          "-small$1"
+        );
 
         const { uploadURL: thumbnailUploadURL } =
           await api.misc.getPreSignedURL.mutate({
@@ -65,7 +81,7 @@ export default async function AddImageToS3(
         const thumbnailUploadResponse = await fetch(thumbnailUploadURL, {
           method: "PUT",
           headers: {
-            "Content-Type": "image/jpeg"
+            "Content-Type": "image/webp"
           },
           body: thumbnail
         });
