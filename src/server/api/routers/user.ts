@@ -9,6 +9,17 @@ import { z } from "zod";
 import { getAuthSession } from "~/server/session-helpers";
 import { logAuditEvent } from "~/server/audit";
 import { getClientIP, getUserAgent } from "~/server/security";
+import { generatePasswordSetEmail } from "~/server/email-templates";
+import { formatDeviceDescription } from "~/server/device-utils";
+import sendEmail from "~/server/email";
+import {
+  updateEmailSchema,
+  updateDisplayNameSchema,
+  updateProfileImageSchema,
+  changePasswordSchema,
+  setPasswordSchema,
+  deleteAccountSchema
+} from "../schemas/user";
 
 export const userRouter = createTRPCRouter({
   getProfile: publicProcedure.query(async ({ ctx }) => {
@@ -242,12 +253,6 @@ export const userRouter = createTRPCRouter({
       // Send email notification about password being set
       if (user.email) {
         try {
-          const { generatePasswordSetEmail } =
-            await import("~/server/email-templates");
-          const { formatDeviceDescription } =
-            await import("~/server/device-utils");
-          const { default: sendEmail } = await import("~/server/email");
-
           const h3Event = ctx.event.nativeEvent
             ? ctx.event.nativeEvent
             : (ctx.event as any);

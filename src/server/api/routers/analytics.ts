@@ -6,9 +6,12 @@ import {
   getPathAnalytics,
   cleanupOldAnalytics,
   logVisit,
-  getPerformanceStats
+  getPerformanceStats,
+  enrichAnalyticsEntry
 } from "~/server/analytics";
 import { ConnectionFactory } from "~/server/database";
+import { v4 as uuid } from "uuid";
+import { getRequestIP, getCookie } from "vinxi/http";
 
 export const analyticsRouter = createTRPCRouter({
   logPerformance: publicProcedure
@@ -66,9 +69,6 @@ export const analyticsRouter = createTRPCRouter({
             action: "updated"
           };
         } else {
-          const { v4: uuid } = await import("uuid");
-          const { enrichAnalyticsEntry } = await import("~/server/analytics");
-
           const req = ctx.event.nativeEvent.node?.req || ctx.event.nativeEvent;
           const userAgent =
             req.headers?.["user-agent"] ||
@@ -79,9 +79,7 @@ export const analyticsRouter = createTRPCRouter({
             req.headers?.referrer ||
             ctx.event.request?.headers?.get("referer") ||
             undefined;
-          const { getRequestIP } = await import("vinxi/http");
           const ipAddress = getRequestIP(ctx.event.nativeEvent) || undefined;
-          const { getCookie } = await import("vinxi/http");
           const sessionId =
             getCookie(ctx.event.nativeEvent, "session_id") || undefined;
 
