@@ -244,6 +244,14 @@ export const userRouter = createTRPCRouter({
         });
       }
 
+      // For OAuth accounts, require verified email before setting password
+      if (user.provider !== "email" && (!user.email || !user.email_verified)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Email verification required before setting password"
+        });
+      }
+
       const passwordHash = await hashPassword(newPassword);
       await conn.execute({
         sql: "UPDATE User SET password_hash = ? WHERE id = ?",

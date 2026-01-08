@@ -155,6 +155,8 @@ export const model: { [key: string]: string } = {
       post_id INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_tag_post_id ON Tag (post_id);
+    CREATE INDEX IF NOT EXISTS idx_tag_value ON Tag (value);
+    CREATE INDEX IF NOT EXISTS idx_tag_post_value ON Tag (post_id, value);
   `,
   PostHistory: `
     CREATE TABLE PostHistory

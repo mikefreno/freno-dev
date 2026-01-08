@@ -64,7 +64,6 @@ const WARMUP_RUNS = 1;
 // Pages to test
 const TEST_PAGES: PageTestConfig[] = [
   { name: "Home", path: "/" },
-  { name: "About", path: "/about" },
   { name: "Blog Index", path: "/blog" },
   { name: "Blog Post (basic)", path: "/blog/I_made_a_macOS_app_in_a_day" },
   {

@@ -16,6 +16,7 @@ import PasswordInput from "~/components/ui/PasswordInput";
 import Button from "~/components/ui/Button";
 import FormFeedback from "~/components/ui/FormFeedback";
 import type { UserProfile } from "~/types/user";
+import { useAuth } from "~/context/auth";
 
 const getUserProfile = query(async (): Promise<UserProfile | null> => {
   "use server";
@@ -27,13 +28,11 @@ const getUserProfile = query(async (): Promise<UserProfile | null> => {
     throw redirect("/login");
   }
 
-  const userId = userState.userId;
-
   const conn = ConnectionFactory();
   try {
     const res = await conn.execute({
-      sql: "SELECT * FROM User WHERE id = ?",
-      args: [userId]
+      sql: "SELECT provider, image, password_hash FROM User WHERE id = ?",
+      args: [userState.userId]
     });
 
     if (res.rows.length === 0) {
@@ -43,10 +42,10 @@ const getUserProfile = query(async (): Promise<UserProfile | null> => {
     const user = res.rows[0] as any;
 
     return {
-      id: user.id,
-      email: user.email ?? undefined,
-      emailVerified: user.email_verified === 1,
-      displayName: user.display_name ?? undefined,
+      id: userState.userId,
+      email: userState.email ?? undefined,
+      emailVerified: userState.emailVerified,
+      displayName: userState.displayName ?? undefined,
       provider: user.provider ?? undefined,
       image: user.image ?? undefined,
       hasPassword: !!user.password_hash
@@ -63,6 +62,7 @@ export const route = {
 
 export default function AccountPage() {
   const navigate = useNavigate();
+  const { refreshAuth } = useAuth();
 
   const userData = createAsync(() => getUserProfile(), { deferStream: true });
 
@@ -451,6 +451,7 @@ export default function AccountPage() {
     setSignOutLoading(true);
     try {
       await api.auth.signOut.mutate();
+      refreshAuth();
       navigate("/");
     } catch (error) {
       console.error("Sign out failed:", error);
@@ -555,7 +556,11 @@ export default function AccountPage() {
                       }
                     >
                       <div class="bg-blue mt-3 rounded px-3 py-2 text-center text-base text-sm">
-                        💡 Add a password to enable email/password login
+                        {!userProfile().email
+                          ? "💡 Add and verify an email to enable email/password login"
+                          : !userProfile().emailVerified
+                            ? "💡 Verify your email to enable password setup"
+                            : "💡 Add a password to enable email/password login"}
                       </div>
                     </Show>
                   </div>
@@ -769,13 +774,50 @@ export default function AccountPage() {
                       </div>
                     </noscript>
                     <Show when={!userProfile().hasPassword}>
-                      <div class="text-subtext0 mb-4 text-center text-sm">
-                        {userProfile().provider === "email"
-                          ? "Set a password to enable password login"
-                          : "Add a password to enable email/password login alongside your " +
-                            getProviderName(userProfile().provider) +
-                            " login"}
-                      </div>
+                      <Show
+                        when={
+                          userProfile().provider !== "email" &&
+                          (!userProfile().email || !userProfile().emailVerified)
+                        }
+                      >
+                        <div class="bg-yellow mb-4 rounded px-4 py-3 text-center text-base text-sm">
+                          <div class="mb-1 font-semibold">
+                            ⚠️ Email Verification Required
+                          </div>
+                          <div>
+                            {!userProfile().email
+                              ? "Please add and verify an email address before setting a password."
+                              : "Please verify your email address before setting a password."}
+                          </div>
+                          <Show
+                            when={
+                              userProfile().email &&
+                              !userProfile().emailVerified
+                            }
+                          >
+                            <button
+                              onClick={sendEmailVerification}
+                              class="mt-2 font-semibold text-blue-700 underline transition-all hover:brightness-125"
+                            >
+                              Resend Verification Email
+                            </button>
+                          </Show>
+                        </div>
+                      </Show>
+                      <Show
+                        when={
+                          userProfile().provider === "email" ||
+                          (userProfile().email && userProfile().emailVerified)
+                        }
+                      >
+                        <div class="text-subtext0 mb-4 text-center text-sm">
+                          {userProfile().provider === "email"
+                            ? "Set a password to enable password login"
+                            : "Add a password to enable email/password login alongside your " +
+                              getProviderName(userProfile().provider) +
+                              " login"}
+                        </div>
+                      </Show>
                     </Show>
 
                     <Show when={userProfile().hasPassword}>
@@ -795,7 +837,13 @@ export default function AccountPage() {
                       minlength="8"
                       onInput={handleNewPasswordChange}
                       onBlur={handlePasswordBlur}
-                      disabled={passwordChangeLoading()}
+                      disabled={
+                        passwordChangeLoading() ||
+                        (!userProfile().hasPassword &&
+                          userProfile().provider !== "email" &&
+                          (!userProfile().email ||
+                            !userProfile().emailVerified))
+                      }
                       title="Password must be at least 8 characters"
                       label="New Password"
                       showStrength
@@ -806,7 +854,13 @@ export default function AccountPage() {
                       required
                       minlength="8"
                       onInput={handlePasswordConfChange}
-                      disabled={passwordChangeLoading()}
+                      disabled={
+                        passwordChangeLoading() ||
+                        (!userProfile().hasPassword &&
+                          userProfile().provider !== "email" &&
+                          (!userProfile().email ||
+                            !userProfile().emailVerified))
+                      }
                       title="Password must be at least 8 characters"
                       label="New Password Conf."
                     />
@@ -828,7 +882,13 @@ export default function AccountPage() {
 
                     <Button
                       type="submit"
-                      disabled={!passwordsMatch()}
+                      disabled={
+                        !passwordsMatch() ||
+                        (!userProfile().hasPassword &&
+                          userProfile().provider !== "email" &&
+                          (!userProfile().email ||
+                            !userProfile().emailVerified))
+                      }
                       loading={passwordChangeLoading()}
                       class="my-6"
                     >

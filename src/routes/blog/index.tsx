@@ -13,11 +13,11 @@ const getPosts = query(async () => {
   "use server";
   const { getUserState } = await import("~/lib/auth-query");
   const { ConnectionFactory } = await import("~/server/utils");
-  const { withCache } = await import("~/server/cache");
+  const { withCacheAndStale } = await import("~/server/cache");
   const userState = await getUserState();
   const privilegeLevel = userState.privilegeLevel;
 
-  return withCache(
+  return withCacheAndStale(
     `posts-${privilegeLevel}`,
     CACHE_CONFIG.BLOG_POSTS_LIST_CACHE_TTL_MS,
     async () => {
