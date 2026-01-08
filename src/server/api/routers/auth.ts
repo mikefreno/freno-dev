@@ -11,6 +11,12 @@ import {
 import { setCookie, getCookie } from "vinxi/http";
 import type { User } from "~/db/types";
 import {
+  linkProvider,
+  findUserByProvider,
+  findUserByEmail,
+  updateProviderLastUsed
+} from "~/server/provider-helpers";
+import {
   fetchWithTimeout,
   checkResponse,
   fetchWithRetry,
@@ -259,72 +265,96 @@ export const authRouter = createTRPCRouter({
         const conn = ConnectionFactory();
 
         console.log("[GitHub Callback] Checking if user exists...");
-        const query = `SELECT * FROM User WHERE provider = ? AND display_name = ?`;
-        const params = ["github", login];
-        const res = await conn.execute({ sql: query, args: params });
 
-        let userId: string;
+        // Strategy 1: Check if this GitHub identity already linked
+        let userId = await findUserByProvider("github", login);
 
-        if (res.rows[0]) {
-          userId = (res.rows[0] as unknown as User).id;
-          console.log("[GitHub Callback] Existing user found:", userId);
+        let isNewUser = false;
+        let isLinkedAccount = false;
 
-          try {
-            await conn.execute({
-              sql: `UPDATE User SET email = ?, email_verified = ?, image = ? WHERE id = ?`,
-              args: [email, emailVerified ? 1 : 0, icon, userId]
-            });
-            console.log("[GitHub Callback] User data updated");
-          } catch (updateError: any) {
-            if (
-              updateError.code === "SQLITE_CONSTRAINT" &&
-              updateError.message?.includes("User.email")
-            ) {
-              console.error(
-                "[GitHub Callback] Email conflict during update:",
-                email
-              );
-              throw new TRPCError({
-                code: "CONFLICT",
-                message:
-                  "This email is already associated with another account. Please sign in with that account or use a different email address."
-              });
-            }
-            throw updateError;
-          }
+        if (userId) {
+          console.log(
+            "[GitHub Callback] Existing GitHub provider found:",
+            userId
+          );
+          // Update provider info
+          await updateProviderLastUsed(userId, "github");
         } else {
-          userId = uuidV4();
-          console.log("[GitHub Callback] Creating new user:", userId);
-
-          const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
-          const insertParams = [
-            userId,
-            email,
-            emailVerified ? 1 : 0,
-            login,
-            "github",
-            icon
-          ];
-
-          try {
-            await conn.execute({ sql: insertQuery, args: insertParams });
-            console.log("[GitHub Callback] New user created");
-          } catch (insertError: any) {
-            if (
-              insertError.code === "SQLITE_CONSTRAINT" &&
-              insertError.message?.includes("User.email")
-            ) {
-              console.error(
-                "[GitHub Callback] Email conflict during insert:",
-                email
+          // Strategy 2: Check if email matches existing user (account linking)
+          if (email) {
+            userId = await findUserByEmail(email);
+            if (userId) {
+              console.log(
+                "[GitHub Callback] Found existing user by email, linking GitHub account:",
+                userId
               );
-              throw new TRPCError({
-                code: "CONFLICT",
-                message:
-                  "This email is already associated with another account. Please sign in with that account or use a different email address."
-              });
+              // Link GitHub to existing account
+              try {
+                await linkProvider(userId, "github", {
+                  providerUserId: login,
+                  email: email,
+                  displayName: login,
+                  image: icon
+                });
+                isLinkedAccount = true;
+              } catch (linkError: any) {
+                console.error(
+                  "[GitHub Callback] Failed to link provider:",
+                  linkError.message
+                );
+                throw new TRPCError({
+                  code: "CONFLICT",
+                  message: linkError.message
+                });
+              }
             }
-            throw insertError;
+          }
+
+          // Strategy 3: Create new user
+          if (!userId) {
+            userId = uuidV4();
+            console.log("[GitHub Callback] Creating new user:", userId);
+
+            const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
+            const insertParams = [
+              userId,
+              email,
+              emailVerified ? 1 : 0,
+              login,
+              "github",
+              icon
+            ];
+
+            try {
+              await conn.execute({ sql: insertQuery, args: insertParams });
+
+              // Also create UserProvider entry for new user
+              await linkProvider(userId, "github", {
+                providerUserId: login,
+                email: email,
+                displayName: login,
+                image: icon
+              });
+
+              isNewUser = true;
+              console.log("[GitHub Callback] New user created");
+            } catch (insertError: any) {
+              if (
+                insertError.code === "SQLITE_CONSTRAINT" &&
+                insertError.message?.includes("User.email")
+              ) {
+                console.error(
+                  "[GitHub Callback] Email conflict during insert:",
+                  email
+                );
+                throw new TRPCError({
+                  code: "CONFLICT",
+                  message:
+                    "This email is already associated with another account. Please sign in with that account or use a different email address."
+                });
+              }
+              throw insertError;
+            }
           }
         }
 
@@ -352,7 +382,11 @@ export const authRouter = createTRPCRouter({
         await logAuditEvent({
           userId,
           eventType: "auth.login.success",
-          eventData: { method: "github", isNewUser: !res.rows[0] },
+          eventData: {
+            method: "github",
+            isNewUser,
+            isLinkedAccount
+          },
           ipAddress: clientIP,
           userAgent,
           success: true
@@ -485,57 +519,97 @@ export const authRouter = createTRPCRouter({
         const conn = ConnectionFactory();
 
         console.log("[Google Callback] Checking if user exists...");
-        const query = `SELECT * FROM User WHERE provider = ? AND email = ?`;
-        const params = ["google", email];
-        const res = await conn.execute({ sql: query, args: params });
 
-        let userId: string;
+        // Strategy 1: Check if this Google identity already linked
+        let userId = await findUserByProvider("google", email);
 
-        if (res.rows[0]) {
-          userId = (res.rows[0] as unknown as User).id;
-          console.log("[Google Callback] Existing user found:", userId);
+        let isNewUser = false;
+        let isLinkedAccount = false;
 
-          await conn.execute({
-            sql: `UPDATE User SET email = ?, email_verified = ?, display_name = ?, image = ? WHERE id = ?`,
-            args: [email, email_verified ? 1 : 0, name, image, userId]
-          });
-          console.log("[Google Callback] User data updated");
+        if (userId) {
+          console.log(
+            "[Google Callback] Existing Google provider found:",
+            userId
+          );
+          // Update provider info
+          await updateProviderLastUsed(userId, "google");
         } else {
-          userId = uuidV4();
-          console.log("[Google Callback] Creating new user:", userId);
-
-          const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
-          const insertParams = [
-            userId,
-            email,
-            email_verified ? 1 : 0,
-            name,
-            "google",
-            image
-          ];
-
-          try {
-            await conn.execute({
-              sql: insertQuery,
-              args: insertParams
-            });
-            console.log("[Google Callback] New user created");
-          } catch (insertError: any) {
-            if (
-              insertError.code === "SQLITE_CONSTRAINT" &&
-              insertError.message?.includes("User.email")
-            ) {
+          // Strategy 2: Check if email matches existing user (account linking)
+          userId = await findUserByEmail(email);
+          if (userId) {
+            console.log(
+              "[Google Callback] Found existing user by email, linking Google account:",
+              userId
+            );
+            // Link Google to existing account
+            try {
+              await linkProvider(userId, "google", {
+                providerUserId: email,
+                email: email,
+                displayName: name,
+                image: image
+              });
+              isLinkedAccount = true;
+            } catch (linkError: any) {
               console.error(
-                "[Google Callback] Email conflict during insert:",
-                email
+                "[Google Callback] Failed to link provider:",
+                linkError.message
               );
               throw new TRPCError({
                 code: "CONFLICT",
-                message:
-                  "This email is already associated with another account. Please sign in with that account instead."
+                message: linkError.message
               });
             }
-            throw insertError;
+          }
+
+          // Strategy 3: Create new user
+          if (!userId) {
+            userId = uuidV4();
+            console.log("[Google Callback] Creating new user:", userId);
+
+            const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
+            const insertParams = [
+              userId,
+              email,
+              email_verified ? 1 : 0,
+              name,
+              "google",
+              image
+            ];
+
+            try {
+              await conn.execute({
+                sql: insertQuery,
+                args: insertParams
+              });
+
+              // Also create UserProvider entry for new user
+              await linkProvider(userId, "google", {
+                providerUserId: email,
+                email: email,
+                displayName: name,
+                image: image
+              });
+
+              isNewUser = true;
+              console.log("[Google Callback] New user created");
+            } catch (insertError: any) {
+              if (
+                insertError.code === "SQLITE_CONSTRAINT" &&
+                insertError.message?.includes("User.email")
+              ) {
+                console.error(
+                  "[Google Callback] Email conflict during insert:",
+                  email
+                );
+                throw new TRPCError({
+                  code: "CONFLICT",
+                  message:
+                    "This email is already associated with another account. Please sign in with that account instead."
+                });
+              }
+              throw insertError;
+            }
           }
         }
 
@@ -563,7 +637,11 @@ export const authRouter = createTRPCRouter({
         await logAuditEvent({
           userId,
           eventType: "auth.login.success",
-          eventData: { method: "google", isNewUser: !res.rows[0] },
+          eventData: {
+            method: "google",
+            isNewUser,
+            isLinkedAccount
+          },
           ipAddress: clientIP,
           userAgent,
           success: true
@@ -989,6 +1067,36 @@ export const authRouter = createTRPCRouter({
         });
       }
 
+      // Check if email already exists (User table or UserProvider table)
+      const existingUserId = await findUserByEmail(email);
+      if (existingUserId) {
+        // User exists - check if they have a password
+        const conn = ConnectionFactory();
+        const userCheck = await conn.execute({
+          sql: "SELECT password_hash, provider FROM User WHERE id = ?",
+          args: [existingUserId]
+        });
+
+        if (userCheck.rows.length > 0) {
+          const existingUser = userCheck.rows[0] as any;
+
+          // If user has a password, it's a duplicate registration attempt
+          if (existingUser.password_hash) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "duplicate"
+            });
+          }
+
+          // If user doesn't have a password (provider-only), redirect to login
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              "An account with this email already exists. Please sign in and add a password from your account settings."
+          });
+        }
+      }
+
       const passwordHash = await hashPassword(password);
       const conn = ConnectionFactory();
       const userId = uuidV4();
@@ -997,6 +1105,12 @@ export const authRouter = createTRPCRouter({
         await conn.execute({
           sql: "INSERT INTO User (id, email, password_hash, provider) VALUES (?, ?, ?, ?)",
           args: [userId, email, passwordHash, "email"]
+        });
+
+        // Create UserProvider entry for email auth
+        await linkProvider(userId, "email", {
+          providerUserId: email,
+          email: email
         });
 
         // Create session with client info

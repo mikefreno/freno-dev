@@ -27,6 +27,23 @@ export interface Session {
   ip_address?: string | null;
   user_agent?: string | null;
   revoked: number;
+  device_name?: string | null;
+  device_type?: string | null;
+  browser?: string | null;
+  os?: string | null;
+  last_active_at?: string | null;
+}
+
+export interface UserProvider {
+  id: string;
+  user_id: string;
+  provider: "email" | "google" | "github" | "apple"; // apple is for Life and Lineage mobile app only
+  provider_user_id?: string | null;
+  email?: string | null;
+  display_name?: string | null;
+  image?: string | null;
+  created_at: string;
+  last_used_at: string;
 }
 
 export interface PasswordResetToken {

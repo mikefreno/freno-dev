@@ -1,4 +1,4 @@
-import { createSignal, Show, createEffect } from "solid-js";
+import { createSignal, Show, createEffect, For } from "solid-js";
 import { PageHead } from "~/components/PageHead";
 import { useNavigate, redirect, query, createAsync } from "@solidjs/router";
 import XCircle from "~/components/icons/XCircle";
@@ -858,6 +858,30 @@ export default function AccountPage() {
 
                 <hr class="mt-8 mb-8" />
 
+                {/* Linked Providers Section */}
+                <div class="mx-auto max-w-2xl py-8">
+                  <div class="mb-6 text-center text-2xl font-semibold">
+                    Linked Authentication Methods
+                  </div>
+                  <div class="bg-surface0 border-surface1 rounded-lg border px-6 py-4 shadow-sm">
+                    <LinkedProviders userId={userProfile().id} />
+                  </div>
+                </div>
+
+                <hr class="mt-8 mb-8" />
+
+                {/* Active Sessions Section */}
+                <div class="mx-auto max-w-2xl py-8">
+                  <div class="mb-6 text-center text-2xl font-semibold">
+                    Active Sessions
+                  </div>
+                  <div class="bg-surface0 border-surface1 rounded-lg border px-6 py-4 shadow-sm">
+                    <ActiveSessions userId={userProfile().id} />
+                  </div>
+                </div>
+
+                <hr class="mt-8 mb-8" />
+
                 {/* Sign Out Section */}
                 <div class="mx-auto max-w-md py-4">
                   <Button
@@ -948,5 +972,267 @@ export default function AccountPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function LinkedProviders(props: { userId: string }) {
+  const [providers, setProviders] = createSignal<any[]>([]);
+  const [loading, setLoading] = createSignal(true);
+  const [unlinkLoading, setUnlinkLoading] = createSignal<string | null>(null);
+
+  const loadProviders = async () => {
+    try {
+      const response = await fetch("/api/trpc/user.getProviders");
+      const result = await response.json();
+      if (response.ok && result.result?.data) {
+        setProviders(result.result.data);
+      }
+    } catch (err) {
+      console.error("Failed to load providers:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  createEffect(() => {
+    loadProviders();
+  });
+
+  const handleUnlink = async (provider: string) => {
+    if (!confirm(`Are you sure you want to unlink your ${provider} account?`)) {
+      return;
+    }
+
+    setUnlinkLoading(provider);
+    try {
+      const response = await fetch("/api/trpc/user.unlinkProvider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.result?.data?.success) {
+        await loadProviders();
+        alert(`${provider} account unlinked successfully`);
+      } else {
+        alert(result.error?.message || "Failed to unlink provider");
+      }
+    } catch (err) {
+      console.error("Failed to unlink provider:", err);
+      alert("Failed to unlink provider");
+    } finally {
+      setUnlinkLoading(null);
+    }
+  };
+
+  const getProviderIcon = (provider: string) => {
+    switch (provider) {
+      case "google":
+        return <GoogleLogo height={20} width={20} />;
+      case "github":
+        return <GitHub height={20} width={20} fill="currentColor" />;
+      case "email":
+        return <EmailIcon height={20} width={20} />;
+      default:
+        return null;
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  };
+
+  return (
+    <div class="space-y-4">
+      <Show when={loading()}>
+        <div class="text-center text-sm">Loading providers...</div>
+      </Show>
+      <Show when={!loading() && providers().length === 0}>
+        <div class="text-center text-sm">No linked providers found</div>
+      </Show>
+      <For each={providers()}>
+        {(provider) => (
+          <div class="bg-surface1 flex items-center justify-between rounded-lg p-4">
+            <div class="flex items-center gap-3">
+              <span class="text-blue">
+                {getProviderIcon(provider.provider)}
+              </span>
+              <div>
+                <div class="font-semibold capitalize">{provider.provider}</div>
+                <Show when={provider.email}>
+                  <div class="text-subtext0 text-sm">{provider.email}</div>
+                </Show>
+                <Show when={provider.lastUsedAt}>
+                  <div class="text-subtext0 text-xs">
+                    Last used: {formatDate(provider.lastUsedAt)}
+                  </div>
+                </Show>
+              </div>
+            </div>
+            <Show when={providers().length > 1}>
+              <button
+                onClick={() => handleUnlink(provider.provider)}
+                disabled={unlinkLoading() === provider.provider}
+                class="text-red hover:text-red rounded px-3 py-1 text-sm transition-all hover:brightness-125 disabled:opacity-50"
+              >
+                {unlinkLoading() === provider.provider
+                  ? "Unlinking..."
+                  : "Unlink"}
+              </button>
+            </Show>
+            <Show when={providers().length === 1}>
+              <div class="text-subtext0 text-xs italic">Primary method</div>
+            </Show>
+          </div>
+        )}
+      </For>
+    </div>
+  );
+}
+
+function ActiveSessions(props: { userId: string }) {
+  const [sessions, setSessions] = createSignal<any[]>([]);
+  const [loading, setLoading] = createSignal(true);
+  const [revokeLoading, setRevokeLoading] = createSignal<string | null>(null);
+
+  const loadSessions = async () => {
+    try {
+      const response = await fetch("/api/trpc/user.getSessions");
+      const result = await response.json();
+      if (response.ok && result.result?.data) {
+        setSessions(result.result.data);
+      }
+    } catch (err) {
+      console.error("Failed to load sessions:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  createEffect(() => {
+    loadSessions();
+  });
+
+  const handleRevoke = async (sessionId: string, isCurrent: boolean) => {
+    if (isCurrent) {
+      if (
+        !confirm(
+          "This will sign you out of this device. Are you sure you want to continue?"
+        )
+      ) {
+        return;
+      }
+    } else {
+      if (!confirm("Are you sure you want to revoke this session?")) {
+        return;
+      }
+    }
+
+    setRevokeLoading(sessionId);
+    try {
+      const response = await fetch("/api/trpc/user.revokeSession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.result?.data?.success) {
+        if (isCurrent) {
+          window.location.href = "/login";
+        } else {
+          await loadSessions();
+          alert("Session revoked successfully");
+        }
+      } else {
+        alert(result.error?.message || "Failed to revoke session");
+      }
+    } catch (err) {
+      console.error("Failed to revoke session:", err);
+      alert("Failed to revoke session");
+    } finally {
+      setRevokeLoading(null);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  const parseUserAgent = (ua: string) => {
+    const browser =
+      ua.match(/(Chrome|Firefox|Safari|Edge)\/[\d.]+/)?.[0] ||
+      "Unknown browser";
+    const os = ua.match(/(Windows|Mac|Linux|Android|iOS)/)?.[0] || "Unknown OS";
+    return { browser, os };
+  };
+
+  return (
+    <div class="space-y-4">
+      <Show when={loading()}>
+        <div class="text-center text-sm">Loading sessions...</div>
+      </Show>
+      <Show when={!loading() && sessions().length === 0}>
+        <div class="text-center text-sm">No active sessions found</div>
+      </Show>
+      <For each={sessions()}>
+        {(session) => {
+          const { browser, os } = parseUserAgent(session.userAgent || "");
+          return (
+            <div class="bg-surface1 rounded-lg p-4">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <div class="font-semibold">{browser}</div>
+                    <Show when={session.isCurrent}>
+                      <span class="text-green bg-green/20 rounded px-2 py-0.5 text-xs font-semibold">
+                        Current
+                      </span>
+                    </Show>
+                  </div>
+                  <div class="text-subtext0 mt-1 space-y-1 text-sm">
+                    <div>{os}</div>
+                    <Show when={session.clientIp}>
+                      <div>IP: {session.clientIp}</div>
+                    </Show>
+                    <div>
+                      Last active:{" "}
+                      {formatDate(session.lastRotatedAt || session.createdAt)}
+                    </div>
+                    <Show when={session.expiresAt}>
+                      <div class="text-xs">
+                        Expires: {formatDate(session.expiresAt)}
+                      </div>
+                    </Show>
+                  </div>
+                </div>
+                <button
+                  onClick={() =>
+                    handleRevoke(session.sessionId, session.isCurrent)
+                  }
+                  disabled={revokeLoading() === session.sessionId}
+                  class="text-red hover:text-red rounded px-3 py-1 text-sm transition-all hover:brightness-125 disabled:opacity-50"
+                >
+                  {revokeLoading() === session.sessionId
+                    ? "Revoking..."
+                    : "Revoke"}
+                </button>
+              </div>
+            </div>
+          );
+        }}
+      </For>
+    </div>
   );
 }

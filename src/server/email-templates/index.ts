@@ -4,6 +4,9 @@ import { AUTH_CONFIG } from "~/config";
 import loginLinkTemplate from "./login-link.html?raw";
 import passwordResetTemplate from "./password-reset.html?raw";
 import emailVerificationTemplate from "./email-verification.html?raw";
+import providerLinkedTemplate from "./provider-linked.html?raw";
+import newDeviceLoginTemplate from "./new-device-login.html?raw";
+import passwordSetTemplate from "./password-set.html?raw";
 
 /**
  * Convert expiry string to human-readable format
@@ -92,5 +95,70 @@ export function generateEmailVerificationEmail(
   return processTemplate(emailVerificationTemplate, {
     VERIFICATION_URL: params.verificationUrl,
     EXPIRY_TIME: expiryTime
+  });
+}
+
+export interface ProviderLinkedEmailParams {
+  providerName: string;
+  providerEmail?: string;
+  linkTime: string;
+  deviceInfo: string;
+}
+
+/**
+ * Generate provider linked notification email HTML
+ */
+export function generateProviderLinkedEmail(
+  params: ProviderLinkedEmailParams
+): string {
+  return processTemplate(providerLinkedTemplate, {
+    PROVIDER_NAME: params.providerName,
+    PROVIDER_EMAIL: params.providerEmail || "N/A",
+    LINK_TIME: params.linkTime,
+    DEVICE_INFO: params.deviceInfo
+  });
+}
+
+export interface NewDeviceLoginEmailParams {
+  deviceInfo: string;
+  loginTime: string;
+  ipAddress: string;
+  loginMethod: string;
+  accountUrl: string;
+}
+
+/**
+ * Generate new device login notification email HTML
+ */
+export function generateNewDeviceLoginEmail(
+  params: NewDeviceLoginEmailParams
+): string {
+  return processTemplate(newDeviceLoginTemplate, {
+    DEVICE_INFO: params.deviceInfo,
+    LOGIN_TIME: params.loginTime,
+    IP_ADDRESS: params.ipAddress,
+    LOGIN_METHOD: params.loginMethod,
+    ACCOUNT_URL: params.accountUrl
+  });
+}
+
+export interface PasswordSetEmailParams {
+  providerName: string;
+  setTime: string;
+  deviceInfo: string;
+  ipAddress: string;
+}
+
+/**
+ * Generate password set notification email HTML
+ */
+export function generatePasswordSetEmail(
+  params: PasswordSetEmailParams
+): string {
+  return processTemplate(passwordSetTemplate, {
+    PROVIDER_NAME: params.providerName,
+    SET_TIME: params.setTime,
+    DEVICE_INFO: params.deviceInfo,
+    IP_ADDRESS: params.ipAddress
   });
 }

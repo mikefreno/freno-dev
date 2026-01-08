@@ -9,6 +9,7 @@ import { blogRouter } from "./routers/blog";
 import { gitActivityRouter } from "./routers/git-activity";
 import { postHistoryRouter } from "./routers/post-history";
 import { infillRouter } from "./routers/infill";
+import { accountRouter } from "./routers/account";
 import { createTRPCRouter, createTRPCContext } from "./utils";
 import type { H3Event } from "h3";
 
@@ -23,7 +24,8 @@ export const appRouter = createTRPCRouter({
   blog: blogRouter,
   gitActivity: gitActivityRouter,
   postHistory: postHistoryRouter,
-  infill: infillRouter
+  infill: infillRouter,
+  account: accountRouter
 });
 
 export type AppRouter = typeof appRouter;

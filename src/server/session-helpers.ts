@@ -14,6 +14,7 @@ import { AUTH_CONFIG, expiryToSeconds } from "~/config";
 import { logAuditEvent } from "./audit";
 import type { SessionData } from "./session-config";
 import { sessionConfig } from "./session-config";
+import { getDeviceInfo } from "./device-utils";
 
 /**
  * Generate a cryptographically secure refresh token
@@ -61,6 +62,9 @@ export async function createAuthSession(
   const refreshToken = generateRefreshToken();
   const tokenHash = hashRefreshToken(refreshToken);
 
+  // Parse device information
+  const deviceInfo = getDeviceInfo(event);
+
   // Calculate refresh token expiration
   const refreshExpiry = rememberMe
     ? AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG
@@ -102,12 +106,13 @@ export async function createAuthSession(
     }
   }
 
-  // Insert session into database
+  // Insert session into database with device metadata
   await conn.execute({
     sql: `INSERT INTO Session 
           (id, user_id, token_family, refresh_token_hash, parent_session_id,
-           rotation_count, expires_at, access_token_expires_at, ip_address, user_agent)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           rotation_count, expires_at, access_token_expires_at, ip_address, user_agent,
+           device_name, device_type, browser, os, last_active_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
     args: [
       sessionId,
       userId,
@@ -118,7 +123,11 @@ export async function createAuthSession(
       expiresAt.toISOString(),
       accessExpiresAt.toISOString(),
       ipAddress,
-      userAgent
+      userAgent,
+      deviceInfo.deviceName || null,
+      deviceInfo.deviceType || null,
+      deviceInfo.browser || null,
+      deviceInfo.os || null
     ]
   });
 
@@ -152,7 +161,9 @@ export async function createAuthSession(
       sessionId,
       tokenFamily: family,
       rememberMe,
-      parentSessionId
+      parentSessionId,
+      deviceName: deviceInfo.deviceName,
+      deviceType: deviceInfo.deviceType
     },
     success: true
   });
@@ -299,14 +310,14 @@ async function validateSessionInDB(
       return false;
     }
 
-    // Update last_used timestamp (fire and forget)
+    // Update last_used and last_active_at timestamps (fire and forget)
     conn
       .execute({
-        sql: "UPDATE Session SET last_used = datetime('now') WHERE id = ?",
+        sql: "UPDATE Session SET last_used = datetime('now'), last_active_at = datetime('now') WHERE id = ?",
         args: [sessionId]
       })
       .catch((err) =>
-        console.error("Failed to update session last_used:", err)
+        console.error("Failed to update session timestamps:", err)
       );
 
     return true;

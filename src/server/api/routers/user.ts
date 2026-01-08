@@ -4,14 +4,11 @@ import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
 import { setCookie } from "vinxi/http";
 import type { User } from "~/db/types";
 import { toUserProfile } from "~/types/user";
-import {
-  updateEmailSchema,
-  updateDisplayNameSchema,
-  updateProfileImageSchema,
-  changePasswordSchema,
-  setPasswordSchema,
-  deleteAccountSchema
-} from "../schemas/user";
+import { getUserProviders, unlinkProvider } from "~/server/provider-helpers";
+import { z } from "zod";
+import { getAuthSession } from "~/server/session-helpers";
+import { logAuditEvent } from "~/server/audit";
+import { getClientIP, getUserAgent } from "~/server/security";
 
 export const userRouter = createTRPCRouter({
   getProfile: publicProcedure.query(async ({ ctx }) => {
@@ -242,6 +239,55 @@ export const userRouter = createTRPCRouter({
         args: [passwordHash, userId]
       });
 
+      // Send email notification about password being set
+      if (user.email) {
+        try {
+          const { generatePasswordSetEmail } =
+            await import("~/server/email-templates");
+          const { formatDeviceDescription } =
+            await import("~/server/device-utils");
+          const { default: sendEmail } = await import("~/server/email");
+
+          const h3Event = ctx.event.nativeEvent
+            ? ctx.event.nativeEvent
+            : (ctx.event as any);
+          const clientIP = getClientIP(h3Event);
+          const userAgent = getUserAgent(h3Event);
+
+          const deviceInfo = formatDeviceDescription({
+            userAgent
+          });
+
+          const providerName =
+            user.provider === "google"
+              ? "Google"
+              : user.provider === "github"
+                ? "GitHub"
+                : "provider";
+
+          const htmlContent = generatePasswordSetEmail({
+            providerName,
+            setTime: new Date().toLocaleString(),
+            deviceInfo,
+            ipAddress: clientIP
+          });
+
+          await sendEmail(
+            user.email,
+            "Password Added to Your Account",
+            htmlContent
+          );
+
+          console.log(`[setPassword] Confirmation email sent to ${user.email}`);
+        } catch (emailError) {
+          console.error(
+            "[setPassword] Failed to send confirmation email:",
+            emailError
+          );
+          // Don't fail the operation if email fails
+        }
+      }
+
       return { success: true, message: "success" };
     }),
 
@@ -303,5 +349,152 @@ export const userRouter = createTRPCRouter({
       });
 
       return { success: true, message: "deleted" };
+    }),
+
+  getProviders: publicProcedure.query(async ({ ctx }) => {
+    const userId = ctx.userId;
+
+    if (!userId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Not authenticated"
+      });
+    }
+
+    const providers = await getUserProviders(userId);
+
+    return providers.map((p) => ({
+      id: p.id,
+      provider: p.provider,
+      email: p.email || undefined,
+      displayName: p.display_name || undefined,
+      lastUsedAt: p.last_used_at,
+      createdAt: p.created_at
+    }));
+  }),
+
+  unlinkProvider: publicProcedure
+    .input(
+      z.object({
+        provider: z.enum(["email", "google", "github"])
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Not authenticated"
+        });
+      }
+
+      await unlinkProvider(userId, input.provider);
+
+      return { success: true, message: "Provider unlinked" };
+    }),
+
+  getSessions: publicProcedure.query(async ({ ctx }) => {
+    const userId = ctx.userId;
+
+    if (!userId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Not authenticated"
+      });
+    }
+
+    const conn = ConnectionFactory();
+    const res = await conn.execute({
+      sql: `SELECT session_id, token_family, created_at, expires_at, last_rotated_at, 
+            rotation_count, client_ip, user_agent 
+            FROM Session 
+            WHERE user_id = ? AND revoked = 0 AND expires_at > datetime('now')
+            ORDER BY last_rotated_at DESC`,
+      args: [userId]
+    });
+
+    // Get current session to mark it
+    const currentSession = await getAuthSession(ctx.event as any);
+
+    return res.rows.map((row: any) => ({
+      sessionId: row.session_id,
+      tokenFamily: row.token_family,
+      createdAt: row.created_at,
+      expiresAt: row.expires_at,
+      lastRotatedAt: row.last_rotated_at,
+      rotationCount: row.rotation_count,
+      clientIp: row.client_ip,
+      userAgent: row.user_agent,
+      isCurrent: currentSession?.sessionId === row.session_id
+    }));
+  }),
+
+  revokeSession: publicProcedure
+    .input(
+      z.object({
+        sessionId: z.string()
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId;
+
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Not authenticated"
+        });
+      }
+
+      const conn = ConnectionFactory();
+
+      // Verify session belongs to this user
+      const sessionCheck = await conn.execute({
+        sql: "SELECT user_id, token_family FROM Session WHERE session_id = ?",
+        args: [input.sessionId]
+      });
+
+      if (sessionCheck.rows.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Session not found"
+        });
+      }
+
+      const session = sessionCheck.rows[0] as any;
+      if (session.user_id !== userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Cannot revoke another user's session"
+        });
+      }
+
+      // Revoke the entire token family (all sessions on this device)
+      await conn.execute({
+        sql: "UPDATE Session SET revoked = 1 WHERE token_family = ?",
+        args: [session.token_family]
+      });
+
+      // Log audit event
+      const h3Event = ctx.event.nativeEvent
+        ? ctx.event.nativeEvent
+        : (ctx.event as any);
+      const clientIP = getClientIP(h3Event);
+      const userAgent = getUserAgent(h3Event);
+
+      await logAuditEvent({
+        userId,
+        eventType: "auth.session_revoked",
+        eventData: {
+          sessionId: input.sessionId,
+          tokenFamily: session.token_family,
+          reason: "user_revoked"
+        },
+        ipAddress: clientIP,
+        userAgent,
+        success: true
+      });
+
+      return { success: true, message: "Session revoked" };
     })
 });

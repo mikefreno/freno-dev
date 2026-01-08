@@ -30,6 +30,11 @@ export const model: { [key: string]: string } = {
        ip_address TEXT,
        user_agent TEXT,
        revoked INTEGER DEFAULT 0,
+       device_name TEXT,
+       device_type TEXT,
+       browser TEXT,
+       os TEXT,
+       last_active_at TEXT DEFAULT (datetime('now')),
        FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
        FOREIGN KEY (parent_session_id) REFERENCES Session(id) ON DELETE SET NULL
      );
@@ -38,6 +43,28 @@ export const model: { [key: string]: string } = {
      CREATE INDEX IF NOT EXISTS idx_session_token_family ON Session (token_family);
      CREATE INDEX IF NOT EXISTS idx_session_refresh_token_hash ON Session (refresh_token_hash);
      CREATE INDEX IF NOT EXISTS idx_session_revoked ON Session (revoked);
+     CREATE INDEX IF NOT EXISTS idx_session_last_active ON Session (last_active_at);
+     CREATE INDEX IF NOT EXISTS idx_session_user_active ON Session (user_id, revoked, last_active_at);
+  `,
+  UserProvider: `
+    CREATE TABLE UserProvider
+    (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      provider TEXT NOT NULL CHECK(provider IN ('email', 'google', 'github', 'apple')),
+      provider_user_id TEXT,
+      email TEXT,
+      display_name TEXT,
+      image TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_used_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_provider_provider_user ON UserProvider (provider, provider_user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_provider_provider_email ON UserProvider (provider, email);
+    CREATE INDEX IF NOT EXISTS idx_user_provider_user_id ON UserProvider (user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_provider_provider ON UserProvider (provider);
+    CREATE INDEX IF NOT EXISTS idx_user_provider_email ON UserProvider (email);
   `,
   PasswordResetToken: `
     CREATE TABLE PasswordResetToken

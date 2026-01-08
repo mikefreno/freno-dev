@@ -217,7 +217,11 @@ export default function LoginPage() {
             errorMsg.includes("duplicate") ||
             errorMsg.includes("already exists")
           ) {
-            setError("duplicate");
+            if (errorMsg.includes("sign in and add a password")) {
+              setError("provider_exists");
+            } else {
+              setError("duplicate");
+            }
           } else {
             setError(errorMsg);
           }
@@ -423,6 +427,16 @@ export default function LoginPage() {
                   Email Already Exists!
                 </div>
               </Show>
+              <Show when={error() === "provider_exists"}>
+                <div class="mb-2 text-base font-semibold">
+                  Account Already Exists
+                </div>
+                <div class="text-crust text-sm">
+                  An account with this email already exists. Please sign in
+                  using your provider (Google/GitHub) and add a password from
+                  your account settings.
+                </div>
+              </Show>
               <Show
                 when={
                   error().includes("Account locked") ||
@@ -445,6 +459,7 @@ export default function LoginPage() {
                   error() &&
                   error() !== "passwordMismatch" &&
                   error() !== "duplicate" &&
+                  error() !== "provider_exists" &&
                   !error().includes("Account locked") &&
                   !error().includes("Account is locked") &&
                   !error().includes("Too many attempts")
