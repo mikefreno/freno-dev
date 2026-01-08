@@ -1,5 +1,5 @@
 import type { H3Event } from "vinxi/http";
-import UAParser from "ua-parser-js";
+import { UAParser } from "ua-parser-js";
 
 export interface DeviceInfo {
   deviceName?: string;
