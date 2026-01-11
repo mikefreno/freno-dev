@@ -349,7 +349,7 @@ export const RATE_LIMITS = CONFIG_RATE_LIMITS;
 
 /**
  * Rate limiting middleware for login operations
- * In development, skips IP rate limiting to avoid self-DoS
+ * In development/test, skips IP rate limiting to avoid self-DoS
  * For unknown IPs in production, uses stricter shared limits
  */
 export async function rateLimitLogin(
@@ -357,8 +357,8 @@ export async function rateLimitLogin(
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  // In development, skip IP rate limiting to avoid self-DoS
-  if (env.NODE_ENV !== "development") {
+  // In development/test, skip IP rate limiting to avoid self-DoS
+  if (env.NODE_ENV === "production") {
     const isUnknownIP = clientIP === "unknown";
     const ipIdentifier = isUnknownIP
       ? `login:unknown-ip`
@@ -386,15 +386,15 @@ export async function rateLimitLogin(
 
 /**
  * Rate limiting middleware for password reset
- * In development, skips IP rate limiting to avoid self-DoS
+ * In development/test, skips IP rate limiting to avoid self-DoS
  * For unknown IPs in production, uses stricter shared limits
  */
 export async function rateLimitPasswordReset(
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  // In development, skip IP rate limiting to avoid self-DoS
-  if (env.NODE_ENV !== "development") {
+  // In development/test, skip IP rate limiting to avoid self-DoS
+  if (env.NODE_ENV === "production") {
     const isUnknownIP = clientIP === "unknown";
     const ipIdentifier = isUnknownIP
       ? `password-reset:unknown-ip`
@@ -414,15 +414,15 @@ export async function rateLimitPasswordReset(
 
 /**
  * Rate limiting middleware for registration
- * In development, skips IP rate limiting to avoid self-DoS
+ * In development/test, skips IP rate limiting to avoid self-DoS
  * For unknown IPs in production, uses stricter shared limits
  */
 export async function rateLimitRegistration(
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  // In development, skip IP rate limiting to avoid self-DoS
-  if (env.NODE_ENV !== "development") {
+  // In development/test, skip IP rate limiting to avoid self-DoS
+  if (env.NODE_ENV === "production") {
     const isUnknownIP = clientIP === "unknown";
     const ipIdentifier = isUnknownIP
       ? `registration:unknown-ip`
@@ -442,15 +442,15 @@ export async function rateLimitRegistration(
 
 /**
  * Rate limiting middleware for email verification
- * In development, skips IP rate limiting to avoid self-DoS
+ * In development/test, skips IP rate limiting to avoid self-DoS
  * For unknown IPs in production, uses stricter shared limits
  */
 export async function rateLimitEmailVerification(
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  // In development, skip IP rate limiting to avoid self-DoS
-  if (env.NODE_ENV !== "development") {
+  // In development/test, skip IP rate limiting to avoid self-DoS
+  if (env.NODE_ENV === "production") {
     const isUnknownIP = clientIP === "unknown";
     const ipIdentifier = isUnknownIP
       ? `email-verification:unknown-ip`
