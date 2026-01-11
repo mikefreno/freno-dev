@@ -3,6 +3,7 @@ import { z } from "zod";
 const clientEnvSchema = z.object({
   VITE_DOMAIN: z.string().min(1),
   VITE_AWS_BUCKET_STRING: z.string().min(1),
+  VITE_DOWNLOAD_BUCKET_STRING: z.string().min(1),
   VITE_GOOGLE_CLIENT_ID: z.string().min(1),
   VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1),
   VITE_GITHUB_CLIENT_ID: z.string().min(1),

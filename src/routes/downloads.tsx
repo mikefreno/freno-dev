@@ -25,26 +25,36 @@ export default function DownloadsPage() {
   const [LaLText, setLaLText] = createSignal("Life and Lineage");
   const [SwAText, setSwAText] = createSignal("Shapes with Abigail!");
   const [corkText, setCorkText] = createSignal("Cork");
+  const [gazeText, setGazeText] = createSignal("Gaze");
 
   const download = (assetName: string) => {
-    fetch(`/api/downloads/public/${assetName}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const url = data.downloadURL;
-        window.location.href = url;
-      })
-      .catch((error) => console.error(error));
+    // Call the tRPC endpoint directly
+    import("~/lib/api").then(({ api }) => {
+      api.downloads.getDownloadUrl
+        .query({ asset_name: assetName })
+        .then((data) => {
+          const url = data.downloadURL;
+          window.location.href = url;
+        })
+        .catch((error) => {
+          console.error("Download error:", error);
+          // Optionally show user a message
+          alert("Failed to initiate download. Please try again.");
+        });
+    });
   };
 
   onMount(() => {
     const lalInterval = glitchText(LaLText(), setLaLText);
     const swaInterval = glitchText(SwAText(), setSwAText);
     const corkInterval = glitchText(corkText(), setCorkText);
+    const gazeInterval = glitchText(gazeText(), setGazeText);
 
     onCleanup(() => {
       clearInterval(lalInterval);
       clearInterval(swaInterval);
       clearInterval(corkInterval);
+      clearInterval(gazeInterval);
     });
   });
 
@@ -68,8 +78,25 @@ export default function DownloadsPage() {
         </div>
 
         <div class="relative z-10">
+          <div class="text-center text-xl italic">
+            Ordered by date of initial release
+          </div>
           <div class="mx-auto max-w-5xl space-y-16">
-            {/* Life and Lineage */}
+            {/* Gaze */}
+            <div class="border-overlay0 rounded-lg border p-6 md:p-8">
+              <h2 class="text-text mb-6 font-mono text-2xl">
+                <span class="text-yellow">{">"}</span> {gazeText()}
+              </h2>
+
+              <div class="flex flex-col items-center gap-3">
+                <span class="text-subtext0 font-mono text-sm">
+                  platform: macOS (14.6+)
+                </span>
+                <DownloadButton onClick={() => download("gaze")}>
+                  download.dmg
+                </DownloadButton>
+              </div>
+            </div>
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
               <h2 class="text-text mb-6 font-mono text-2xl">
                 <span class="text-yellow">{">"}</span> {LaLText()}
@@ -99,6 +126,24 @@ export default function DownloadsPage() {
                     <DownloadOnAppStore size={50} />
                   </A>
                 </div>
+              </div>
+            </div>
+            {/* Cork */}
+            <div class="border-overlay0 rounded-lg border p-6 md:p-8">
+              <h2 class="text-text mb-6 font-mono text-2xl">
+                <span class="text-yellow">{">"}</span> {corkText()}
+              </h2>
+
+              <div class="flex flex-col items-center gap-3">
+                <span class="text-subtext0 font-mono text-sm">
+                  platform: macOS (13+)
+                </span>
+                <DownloadButton onClick={() => download("cork")}>
+                  download.zip
+                </DownloadButton>
+                <span class="text-subtext1 text-xs">
+                  # unzip → drag to /Applications
+                </span>
               </div>
             </div>
 
@@ -131,25 +176,6 @@ export default function DownloadsPage() {
                     <DownloadOnAppStore size={50} />
                   </A>
                 </div>
-              </div>
-            </div>
-
-            {/* Cork */}
-            <div class="border-overlay0 rounded-lg border p-6 md:p-8">
-              <h2 class="text-text mb-6 font-mono text-2xl">
-                <span class="text-yellow">{">"}</span> {corkText()}
-              </h2>
-
-              <div class="flex flex-col items-center gap-3">
-                <span class="text-subtext0 font-mono text-sm">
-                  platform: macOS (13+)
-                </span>
-                <DownloadButton onClick={() => download("cork")}>
-                  download.zip
-                </DownloadButton>
-                <span class="text-subtext1 text-xs">
-                  # unzip → drag to /Applications
-                </span>
               </div>
             </div>
           </div>
