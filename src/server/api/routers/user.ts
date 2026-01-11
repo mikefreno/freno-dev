@@ -419,7 +419,7 @@ export const userRouter = createTRPCRouter({
 
     const conn = ConnectionFactory();
     const res = await conn.execute({
-      sql: `SELECT session_id, token_family, created_at, expires_at, last_active_at, 
+      sql: `SELECT id, token_family, created_at, expires_at, last_active_at, 
             rotation_count, ip_address, user_agent 
             FROM Session 
             WHERE user_id = ? AND revoked = 0 AND expires_at > datetime('now')
@@ -431,7 +431,7 @@ export const userRouter = createTRPCRouter({
     const currentSession = await getAuthSession(ctx.event as any);
 
     return res.rows.map((row: any) => ({
-      sessionId: row.session_id,
+      sessionId: row.id,
       tokenFamily: row.token_family,
       createdAt: row.created_at,
       expiresAt: row.expires_at,
@@ -439,7 +439,7 @@ export const userRouter = createTRPCRouter({
       rotationCount: row.rotation_count,
       clientIp: row.ip_address,
       userAgent: row.user_agent,
-      isCurrent: currentSession?.sessionId === row.session_id
+      isCurrent: currentSession?.sessionId === row.id
     }));
   }),
 
@@ -463,7 +463,7 @@ export const userRouter = createTRPCRouter({
 
       // Verify session belongs to this user
       const sessionCheck = await conn.execute({
-        sql: "SELECT user_id, token_family FROM Session WHERE session_id = ?",
+        sql: "SELECT user_id, token_family FROM Session WHERE id = ?",
         args: [input.sessionId]
       });
 

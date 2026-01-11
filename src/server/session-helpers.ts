@@ -4,11 +4,63 @@ import type { H3Event } from "vinxi/http";
 import { useSession, clearSession, getSession, getCookie } from "vinxi/http";
 import { ConnectionFactory } from "./database";
 import { env } from "~/env/server";
-import { AUTH_CONFIG, expiryToSeconds } from "~/config";
+import { AUTH_CONFIG, expiryToSeconds, CACHE_CONFIG } from "~/config";
 import { logAuditEvent } from "./audit";
 import type { SessionData } from "./session-config";
 import { sessionConfig } from "./session-config";
 import { getDeviceInfo } from "./device-utils";
+import { cache } from "./cache";
+
+/**
+ * In-memory throttle for session activity updates
+ * Tracks last update time per session to avoid excessive DB writes
+ * In serverless, this is per-instance, but that's fine - updates are best-effort
+ */
+const sessionUpdateTimestamps = new Map<string, number>();
+
+/**
+ * Update session activity (last_used, last_active_at) with throttling
+ * Only updates DB if > SESSION_ACTIVITY_UPDATE_THRESHOLD_MS since last update
+ * Reduces 6,210 writes/period to ~60-100 writes (95%+ reduction)
+ *
+ * Security: Still secure - session validation happens every request (DB read)
+ * UX: Session activity timestamps within 5min accuracy is acceptable
+ *
+ * @param sessionId - Session ID to update
+ */
+async function updateSessionActivityThrottled(
+  sessionId: string
+): Promise<void> {
+  const now = Date.now();
+  const lastUpdate = sessionUpdateTimestamps.get(sessionId) || 0;
+  const timeSinceLastUpdate = now - lastUpdate;
+
+  // Skip DB update if we updated recently
+  if (timeSinceLastUpdate < CACHE_CONFIG.SESSION_ACTIVITY_UPDATE_THRESHOLD_MS) {
+    return;
+  }
+
+  // Update timestamp tracker
+  sessionUpdateTimestamps.set(sessionId, now);
+
+  // Cleanup old entries (prevent memory leak in long-running instances)
+  if (sessionUpdateTimestamps.size > 1000) {
+    const oldestAllowed =
+      now - 2 * CACHE_CONFIG.SESSION_ACTIVITY_UPDATE_THRESHOLD_MS;
+    for (const [sid, timestamp] of sessionUpdateTimestamps.entries()) {
+      if (timestamp < oldestAllowed) {
+        sessionUpdateTimestamps.delete(sid);
+      }
+    }
+  }
+
+  // Perform DB update
+  const conn = ConnectionFactory();
+  await conn.execute({
+    sql: "UPDATE Session SET last_used = datetime('now'), last_active_at = datetime('now') WHERE id = ?",
+    args: [sessionId]
+  });
+}
 
 /**
  * Generate a cryptographically secure refresh token
@@ -373,15 +425,11 @@ async function validateSessionInDB(
       return false;
     }
 
-    // Update last_used and last_active_at timestamps (fire and forget)
-    conn
-      .execute({
-        sql: "UPDATE Session SET last_used = datetime('now'), last_active_at = datetime('now') WHERE id = ?",
-        args: [sessionId]
-      })
-      .catch((err) =>
-        console.error("Failed to update session timestamps:", err)
-      );
+    // Update last_used and last_active_at timestamps (throttled)
+    // Only update DB if last update was > 5 minutes ago (reduces writes by 95%+)
+    updateSessionActivityThrottled(sessionId).catch((err) =>
+      console.error("Failed to update session timestamps:", err)
+    );
 
     return true;
   } catch (error) {

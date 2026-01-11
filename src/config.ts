@@ -149,7 +149,17 @@ export const CACHE_CONFIG = {
   GIT_ACTIVITY_CACHE_TTL_MS: 10 * 60 * 1000,
   BLOG_POSTS_LIST_CACHE_TTL_MS: 15 * 60 * 1000,
   MAX_STALE_DATA_MS: 7 * 24 * 60 * 60 * 1000,
-  GIT_ACTIVITY_MAX_STALE_MS: 24 * 60 * 60 * 1000
+  GIT_ACTIVITY_MAX_STALE_MS: 24 * 60 * 60 * 1000,
+
+  // Session activity tracking - only update DB if last update was > threshold
+  SESSION_ACTIVITY_UPDATE_THRESHOLD_MS: 5 * 60 * 1000, // 5 minutes
+
+  // Rate limit in-memory cache TTL (reduces DB reads)
+  RATE_LIMIT_CACHE_TTL_MS: 60 * 1000, // 1 minute
+
+  // Analytics batching - buffer writes in memory
+  ANALYTICS_BATCH_SIZE: 10, // Write to DB every N events
+  ANALYTICS_BATCH_TIMEOUT_MS: 30 * 1000 // Or every 30 seconds
 } as const;
 
 // ============================================================

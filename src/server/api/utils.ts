@@ -1,7 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { APIEvent } from "@solidjs/start/server";
 import { getCookie } from "vinxi/http";
-import { env } from "~/env/server";
 import { logVisit, enrichAnalyticsEntry } from "~/server/analytics";
 import { getRequestIP } from "vinxi/http";
 import { getAuthSession } from "~/server/session-helpers";
