@@ -1,13 +1,7 @@
 import { v4 as uuidV4 } from "uuid";
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import type { H3Event } from "vinxi/http";
-import {
-  useSession,
-  updateSession,
-  clearSession,
-  getSession,
-  getCookie
-} from "vinxi/http";
+import { useSession, clearSession, getSession, getCookie } from "vinxi/http";
 import { ConnectionFactory } from "./database";
 import { env } from "~/env/server";
 import { AUTH_CONFIG, expiryToSeconds } from "~/config";
@@ -142,16 +136,52 @@ export async function createAuthSession(
   };
 
   // Update Vinxi session with dynamic maxAge based on rememberMe
-  await updateSession(
-    event,
-    {
-      ...sessionConfig,
-      maxAge: rememberMe
-        ? expiryToSeconds(AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG)
-        : undefined // Session cookie (expires on browser close)
-    },
-    sessionData
-  );
+  const configWithMaxAge = {
+    ...sessionConfig,
+    maxAge: rememberMe
+      ? expiryToSeconds(AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG)
+      : undefined // Session cookie (expires on browser close)
+  };
+
+  console.log("[Session Create] Creating session with data:", {
+    userId: sessionData.userId,
+    sessionId: sessionData.sessionId,
+    tokenFamily: sessionData.tokenFamily,
+    rememberMe: sessionData.rememberMe,
+    maxAge: configWithMaxAge.maxAge
+  });
+
+  // Use useSession API to update session
+  const session = await useSession<SessionData>(event, configWithMaxAge);
+  await session.update(sessionData);
+
+  console.log("[Session Create] Session created via useSession API:", {
+    id: session.id,
+    hasData: !!session.data,
+    dataKeys: session.data ? Object.keys(session.data) : []
+  });
+
+  // Verify session was actually set by reading it back
+  try {
+    const cookieName = sessionConfig.name || "session";
+    const cookieValue = getCookie(event, cookieName);
+    console.log("[Session Create] Immediate verification:", {
+      cookieName,
+      hasCookie: !!cookieValue,
+      cookieLength: cookieValue?.length || 0
+    });
+
+    // Try reading back the session immediately
+    const verifySession = await getSession<SessionData>(event, sessionConfig);
+    console.log("[Session Create] Read-back verification:", {
+      hasData: !!verifySession.data,
+      dataMatches: verifySession.data?.userId === sessionData.userId,
+      userId: verifySession.data?.userId,
+      sessionId: verifySession.data?.sessionId
+    });
+  } catch (verifyError) {
+    console.error("[Session Create] Failed to verify session:", verifyError);
+  }
 
   // Log audit event
   await logAuditEvent({
@@ -187,6 +217,12 @@ export async function getAuthSession(
       const { unsealSession } = await import("vinxi/http");
       const cookieName = sessionConfig.name || "session";
       const cookieValue = getCookie(event, cookieName);
+      console.log(
+        "[Session Get] skipUpdate mode, cookieName:",
+        cookieName,
+        "has cookie:",
+        !!cookieValue
+      );
       if (!cookieValue) {
         return null;
       }
@@ -194,13 +230,26 @@ export async function getAuthSession(
       try {
         // unsealSession returns Partial<Session<T>>, not T directly
         const session = await unsealSession(event, sessionConfig, cookieValue);
+        console.log("[Session Get] Unsealed session:", {
+          hasData: !!session?.data,
+          dataType: typeof session?.data,
+          dataKeys: session?.data ? Object.keys(session.data) : []
+        });
 
         if (!session?.data || typeof session.data !== "object") {
+          console.log("[Session Get] Invalid session structure");
           return null;
         }
 
         const data = session.data as SessionData;
+        console.log("[Session Get] Session data:", {
+          hasUserId: !!data.userId,
+          hasSessionId: !!data.sessionId,
+          hasRefreshToken: !!data.refreshToken
+        });
+
         if (!data.userId || !data.sessionId) {
+          console.log("[Session Get] Missing userId or sessionId");
           return null;
         }
 
@@ -211,16 +260,27 @@ export async function getAuthSession(
           data.refreshToken
         );
 
+        console.log("[Session Get] DB validation result:", isValid);
         return isValid ? data : null;
-      } catch {
+      } catch (err) {
+        console.error("[Session Get] Error in skipUpdate path:", err);
         return null;
       }
     }
 
     // Normal path - allow session updates
+    console.log("[Session Get] Normal path, getting session");
     const session = await getSession<SessionData>(event, sessionConfig);
+    console.log("[Session Get] Got session:", {
+      hasData: !!session.data,
+      dataType: typeof session.data,
+      dataKeys: session.data ? Object.keys(session.data) : []
+    });
 
     if (!session.data || !session.data.userId || !session.data.sessionId) {
+      console.log(
+        "[Session Get] Missing data or userId/sessionId in normal path"
+      );
       return null;
     }
 

@@ -3,23 +3,7 @@ import { A } from "@solidjs/router";
 import { createSignal, onMount, onCleanup } from "solid-js";
 import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
 import { glitchText } from "~/lib/client-utils";
-
-const DownloadButton = ({
-  onClick,
-  children
-}: {
-  onClick: () => void;
-  children: Element | string;
-}) => {
-  return (
-    <button
-      onClick={onClick}
-      class="bg-green hover:bg-green/90 cursor-pointer rounded-md px-6 py-3 font-mono text-base font-semibold shadow-lg transition-all duration-200 ease-out hover:scale-105 active:scale-95"
-    >
-      {children}
-    </button>
-  );
-};
+import Button from "~/components/ui/Button";
 
 export default function DownloadsPage() {
   const [LaLText, setLaLText] = createSignal("Life and Lineage");
@@ -27,7 +11,23 @@ export default function DownloadsPage() {
   const [corkText, setCorkText] = createSignal("Cork");
   const [gazeText, setGazeText] = createSignal("Gaze");
 
+  // Track loading states for each download button
+  const [loadingState, setLoadingState] = createSignal<Record<string, boolean>>(
+    {
+      lineage: false,
+      cork: false,
+      gaze: false,
+      "shapes-with-abigail": false
+    }
+  );
+
   const download = (assetName: string) => {
+    // Prevent multiple rapid clicks
+    if (loadingState()[assetName]) return;
+
+    // Set loading state
+    setLoadingState((prev) => ({ ...prev, [assetName]: true }));
+
     // Call the tRPC endpoint directly
     import("~/lib/api").then(({ api }) => {
       api.downloads.getDownloadUrl
@@ -40,6 +40,10 @@ export default function DownloadsPage() {
           console.error("Download error:", error);
           // Optionally show user a message
           alert("Failed to initiate download. Please try again.");
+        })
+        .finally(() => {
+          // Reset loading state regardless of success/failure
+          setLoadingState((prev) => ({ ...prev, [assetName]: false }));
         });
     });
   };
@@ -92,9 +96,14 @@ export default function DownloadsPage() {
                 <span class="text-subtext0 font-mono text-sm">
                   platform: macOS (14.6+)
                 </span>
-                <DownloadButton onClick={() => download("gaze")}>
+                <Button
+                  variant="download"
+                  size="lg"
+                  loading={loadingState()["gaze"]}
+                  onClick={() => download("gaze")}
+                >
                   download.dmg
-                </DownloadButton>
+                </Button>
               </div>
             </div>
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
@@ -107,9 +116,14 @@ export default function DownloadsPage() {
                   <span class="text-subtext0 font-mono text-sm">
                     platform: android
                   </span>
-                  <DownloadButton onClick={() => download("lineage")}>
+                  <Button
+                    variant="download"
+                    size="lg"
+                    loading={loadingState()["lineage"]}
+                    onClick={() => download("lineage")}
+                  >
                     download.apk
-                  </DownloadButton>
+                  </Button>
                   <span class="text-subtext1 max-w-xs text-center text-xs italic">
                     # android build not optimized
                   </span>
@@ -138,9 +152,14 @@ export default function DownloadsPage() {
                 <span class="text-subtext0 font-mono text-sm">
                   platform: macOS (13+)
                 </span>
-                <DownloadButton onClick={() => download("cork")}>
+                <Button
+                  variant="download"
+                  size="lg"
+                  loading={loadingState()["cork"]}
+                  onClick={() => download("cork")}
+                >
                   download.zip
-                </DownloadButton>
+                </Button>
                 <span class="text-subtext1 text-xs">
                   # unzip → drag to /Applications
                 </span>
@@ -158,11 +177,14 @@ export default function DownloadsPage() {
                   <span class="text-subtext0 font-mono text-sm">
                     platform: android
                   </span>
-                  <DownloadButton
+                  <Button
+                    variant="download"
+                    size="lg"
+                    loading={loadingState()["shapes-with-abigail"]}
                     onClick={() => download("shapes-with-abigail")}
                   >
                     download.apk
-                  </DownloadButton>
+                  </Button>
                 </div>
 
                 <div class="flex flex-col items-center gap-3">

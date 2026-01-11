@@ -1,8 +1,8 @@
-import { JSX, splitProps, Show } from "solid-js";
+import { JSX, splitProps, Show, createSignal, createEffect } from "solid-js";
 import { Spinner } from "~/components/Spinner";
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "danger" | "ghost";
+  variant?: "primary" | "secondary" | "danger" | "ghost" | "download";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   fullWidth?: boolean;
@@ -18,6 +18,20 @@ export default function Button(props: ButtonProps) {
     "children",
     "disabled"
   ]);
+
+  let contentRef: HTMLSpanElement | undefined;
+  const [dimensions, setDimensions] = createSignal<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  // Measure content dimensions when not loading
+  createEffect(() => {
+    if (!local.loading && contentRef) {
+      const rect = contentRef.getBoundingClientRect();
+      setDimensions({ width: rect.width, height: rect.height });
+    }
+  });
 
   const variant = () => local.variant || "primary";
   const size = () => local.size || "md";
@@ -37,6 +51,10 @@ export default function Button(props: ButtonProps) {
         return isDisabledOrLoading
           ? "bg-surface0 cursor-not-allowed brightness-75"
           : "bg-surface0 hover:brightness-125 active:scale-90";
+      case "download":
+        return isDisabledOrLoading
+          ? "bg-green text-base cursor-not-allowed brightness-75"
+          : "bg-green text-base hover:brightness-125 active:scale-90";
       case "danger":
         return isDisabledOrLoading
           ? "bg-red cursor-not-allowed brightness-75"
@@ -71,8 +89,25 @@ export default function Button(props: ButtonProps) {
       disabled={local.disabled || local.loading}
       class={`${baseClasses} ${variantClasses()} ${sizeClasses()} ${widthClass()} ${local.class || ""}`}
     >
-      <Show when={local.loading} fallback={local.children}>
-        <Spinner size={24} />
+      <Show
+        when={local.loading}
+        fallback={
+          <span ref={contentRef} style={{ display: "inline-flex" }}>
+            {local.children}
+          </span>
+        }
+      >
+        <span
+          style={{
+            display: "inline-flex",
+            "align-items": "center",
+            "justify-content": "center",
+            "min-width": dimensions() ? `${dimensions()!.width}px` : undefined,
+            "min-height": dimensions() ? `${dimensions()!.height}px` : undefined
+          }}
+        >
+          <Spinner size={24} />
+        </span>
       </Show>
     </button>
   );
