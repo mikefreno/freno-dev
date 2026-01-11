@@ -349,19 +349,33 @@ export const RATE_LIMITS = CONFIG_RATE_LIMITS;
 
 /**
  * Rate limiting middleware for login operations
+ * In development, skips IP rate limiting to avoid self-DoS
+ * For unknown IPs in production, uses stricter shared limits
  */
 export async function rateLimitLogin(
   email: string,
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  await checkRateLimit(
-    `login:ip:${clientIP}`,
-    RATE_LIMITS.LOGIN_IP.maxAttempts,
-    RATE_LIMITS.LOGIN_IP.windowMs,
-    event
-  );
+  // In development, skip IP rate limiting to avoid self-DoS
+  if (env.NODE_ENV !== "development") {
+    const isUnknownIP = clientIP === "unknown";
+    const ipIdentifier = isUnknownIP
+      ? `login:unknown-ip`
+      : `login:ip:${clientIP}`;
+    const ipLimit = isUnknownIP
+      ? { maxAttempts: 3, windowMs: RATE_LIMITS.LOGIN_IP.windowMs } // Stricter for unknown IPs
+      : RATE_LIMITS.LOGIN_IP;
 
+    await checkRateLimit(
+      ipIdentifier,
+      ipLimit.maxAttempts,
+      ipLimit.windowMs,
+      event
+    );
+  }
+
+  // Always rate limit by email in all environments
   await checkRateLimit(
     `login:email:${email}`,
     RATE_LIMITS.LOGIN_EMAIL.maxAttempts,
@@ -372,47 +386,86 @@ export async function rateLimitLogin(
 
 /**
  * Rate limiting middleware for password reset
+ * In development, skips IP rate limiting to avoid self-DoS
+ * For unknown IPs in production, uses stricter shared limits
  */
 export async function rateLimitPasswordReset(
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  await checkRateLimit(
-    `password-reset:ip:${clientIP}`,
-    RATE_LIMITS.PASSWORD_RESET_IP.maxAttempts,
-    RATE_LIMITS.PASSWORD_RESET_IP.windowMs,
-    event
-  );
+  // In development, skip IP rate limiting to avoid self-DoS
+  if (env.NODE_ENV !== "development") {
+    const isUnknownIP = clientIP === "unknown";
+    const ipIdentifier = isUnknownIP
+      ? `password-reset:unknown-ip`
+      : `password-reset:ip:${clientIP}`;
+    const ipLimit = isUnknownIP
+      ? { maxAttempts: 2, windowMs: RATE_LIMITS.PASSWORD_RESET_IP.windowMs } // Stricter for unknown IPs
+      : RATE_LIMITS.PASSWORD_RESET_IP;
+
+    await checkRateLimit(
+      ipIdentifier,
+      ipLimit.maxAttempts,
+      ipLimit.windowMs,
+      event
+    );
+  }
 }
 
 /**
  * Rate limiting middleware for registration
+ * In development, skips IP rate limiting to avoid self-DoS
+ * For unknown IPs in production, uses stricter shared limits
  */
 export async function rateLimitRegistration(
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  await checkRateLimit(
-    `registration:ip:${clientIP}`,
-    RATE_LIMITS.REGISTRATION_IP.maxAttempts,
-    RATE_LIMITS.REGISTRATION_IP.windowMs,
-    event
-  );
+  // In development, skip IP rate limiting to avoid self-DoS
+  if (env.NODE_ENV !== "development") {
+    const isUnknownIP = clientIP === "unknown";
+    const ipIdentifier = isUnknownIP
+      ? `registration:unknown-ip`
+      : `registration:ip:${clientIP}`;
+    const ipLimit = isUnknownIP
+      ? { maxAttempts: 2, windowMs: RATE_LIMITS.REGISTRATION_IP.windowMs } // Stricter for unknown IPs
+      : RATE_LIMITS.REGISTRATION_IP;
+
+    await checkRateLimit(
+      ipIdentifier,
+      ipLimit.maxAttempts,
+      ipLimit.windowMs,
+      event
+    );
+  }
 }
 
 /**
  * Rate limiting middleware for email verification
+ * In development, skips IP rate limiting to avoid self-DoS
+ * For unknown IPs in production, uses stricter shared limits
  */
 export async function rateLimitEmailVerification(
   clientIP: string,
   event?: H3Event
 ): Promise<void> {
-  await checkRateLimit(
-    `email-verification:ip:${clientIP}`,
-    RATE_LIMITS.EMAIL_VERIFICATION_IP.maxAttempts,
-    RATE_LIMITS.EMAIL_VERIFICATION_IP.windowMs,
-    event
-  );
+  // In development, skip IP rate limiting to avoid self-DoS
+  if (env.NODE_ENV !== "development") {
+    const isUnknownIP = clientIP === "unknown";
+    const ipIdentifier = isUnknownIP
+      ? `email-verification:unknown-ip`
+      : `email-verification:ip:${clientIP}`;
+    const ipLimit = isUnknownIP
+      ? { maxAttempts: 3, windowMs: RATE_LIMITS.EMAIL_VERIFICATION_IP.windowMs } // Stricter for unknown IPs
+      : RATE_LIMITS.EMAIL_VERIFICATION_IP;
+
+    await checkRateLimit(
+      ipIdentifier,
+      ipLimit.maxAttempts,
+      ipLimit.windowMs,
+      event
+    );
+  }
 }
 
 export const ACCOUNT_LOCKOUT = CONFIG_ACCOUNT_LOCKOUT;

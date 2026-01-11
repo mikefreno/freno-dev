@@ -185,19 +185,22 @@ export async function getAuthSession(
     // In SSR contexts where headers may already be sent, use unsealSession directly
     if (skipUpdate) {
       const { unsealSession } = await import("vinxi/http");
-      const cookieValue = getCookie(event, sessionConfig.cookieName);
+      const cookieName = sessionConfig.name || "session";
+      const cookieValue = getCookie(event, cookieName);
       if (!cookieValue) {
         return null;
       }
 
       try {
-        const data = await unsealSession<SessionData>(
-          event,
-          sessionConfig,
-          cookieValue
-        );
+        // unsealSession returns Partial<Session<T>>, not T directly
+        const session = await unsealSession(event, sessionConfig, cookieValue);
 
-        if (!data || !data.userId || !data.sessionId) {
+        if (!session?.data || typeof session.data !== "object") {
+          return null;
+        }
+
+        const data = session.data as SessionData;
+        if (!data.userId || !data.sessionId) {
           return null;
         }
 

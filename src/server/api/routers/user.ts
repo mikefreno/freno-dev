@@ -419,11 +419,11 @@ export const userRouter = createTRPCRouter({
 
     const conn = ConnectionFactory();
     const res = await conn.execute({
-      sql: `SELECT session_id, token_family, created_at, expires_at, last_rotated_at, 
-            rotation_count, client_ip, user_agent 
+      sql: `SELECT session_id, token_family, created_at, expires_at, last_active_at, 
+            rotation_count, ip_address, user_agent 
             FROM Session 
             WHERE user_id = ? AND revoked = 0 AND expires_at > datetime('now')
-            ORDER BY last_rotated_at DESC`,
+            ORDER BY last_active_at DESC`,
       args: [userId]
     });
 
@@ -435,9 +435,9 @@ export const userRouter = createTRPCRouter({
       tokenFamily: row.token_family,
       createdAt: row.created_at,
       expiresAt: row.expires_at,
-      lastRotatedAt: row.last_rotated_at,
+      lastActiveAt: row.last_active_at,
       rotationCount: row.rotation_count,
-      clientIp: row.client_ip,
+      clientIp: row.ip_address,
       userAgent: row.user_agent,
       isCurrent: currentSession?.sessionId === row.session_id
     }));

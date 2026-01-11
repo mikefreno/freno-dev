@@ -1261,7 +1261,7 @@ function ActiveSessions(props: { userId: string }) {
                     </Show>
                     <div>
                       Last active:{" "}
-                      {formatDate(session.lastRotatedAt || session.createdAt)}
+                      {formatDate(session.lastActiveAt || session.createdAt)}
                     </div>
                     <Show when={session.expiresAt}>
                       <div class="text-xs">

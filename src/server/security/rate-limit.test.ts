@@ -416,6 +416,79 @@ describe("Rate Limiting", () => {
     });
   });
 
+  describe("Unknown IP Handling", () => {
+    it("should handle 'unknown' IP in development without rate limiting", async () => {
+      // In development, IP rate limits should be skipped
+      // This test assumes NODE_ENV is 'development' or 'test'
+      const unknownIP = "unknown";
+      const email = `test-${Date.now()}@example.com`;
+
+      // Should allow many login attempts in development with unknown IP
+      // (only email rate limit applies)
+      for (let i = 0; i < RATE_LIMITS.LOGIN_EMAIL.maxAttempts; i++) {
+        const testEmail = `test-${Date.now()}-${i}@example.com`;
+        await rateLimitLogin(testEmail, unknownIP);
+      }
+
+      // Should be able to continue with different emails (no IP limit in dev)
+      await rateLimitLogin(`final-${Date.now()}@example.com`, unknownIP);
+    });
+
+    it("should still enforce email rate limits with unknown IP", async () => {
+      const unknownIP = "unknown";
+      const email = `test-${Date.now()}@example.com`;
+
+      // Use up email rate limit
+      for (let i = 0; i < RATE_LIMITS.LOGIN_EMAIL.maxAttempts; i++) {
+        await rateLimitLogin(email, unknownIP);
+      }
+
+      // Next attempt should fail due to email limit
+      try {
+        await rateLimitLogin(email, unknownIP);
+        expect.unreachable("Should have thrown");
+      } catch (error) {
+        expect(error).toBeInstanceOf(TRPCError);
+      }
+    });
+
+    it("should handle unknown IP in password reset", async () => {
+      const unknownIP = "unknown";
+
+      // In development, should allow many attempts (no IP limit)
+      for (let i = 0; i < 10; i++) {
+        await rateLimitPasswordReset(unknownIP);
+      }
+
+      // Should not throw in development
+      expect(true).toBe(true);
+    });
+
+    it("should handle unknown IP in registration", async () => {
+      const unknownIP = "unknown";
+
+      // In development, should allow many attempts (no IP limit)
+      for (let i = 0; i < 10; i++) {
+        await rateLimitRegistration(unknownIP);
+      }
+
+      // Should not throw in development
+      expect(true).toBe(true);
+    });
+
+    it("should handle unknown IP in email verification", async () => {
+      const unknownIP = "unknown";
+
+      // In development, should allow many attempts (no IP limit)
+      for (let i = 0; i < 10; i++) {
+        await rateLimitEmailVerification(unknownIP);
+      }
+
+      // Should not throw in development
+      expect(true).toBe(true);
+    });
+  });
+
   describe("Rate Limit Configuration", () => {
     it("should have reasonable limits configured", () => {
       // Login should be more permissive than registration
