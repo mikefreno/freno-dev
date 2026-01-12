@@ -136,12 +136,9 @@ export async function attemptTokenRefresh(
   refreshToken: string
 ): Promise<string | null> {
   try {
-    console.log("[Token Refresh SSR] Attempting server-side refresh");
-
     // Step 1: Get current session from Vinxi
     const session = await getAuthSession(event);
     if (!session) {
-      console.warn("[Token Refresh SSR] No valid session found");
       return null;
     }
 
@@ -149,10 +146,6 @@ export async function attemptTokenRefresh(
     const clientIP = getClientIP(event);
     const userAgent = getUserAgent(event);
 
-    // Step 3: Rotate session (includes validation, breach detection, cookie update)
-    console.log(
-      `[Token Refresh SSR] Rotating tokens for session ${session.sessionId}`
-    );
     const newSession = await rotateAuthSession(
       event,
       session,
@@ -161,14 +154,11 @@ export async function attemptTokenRefresh(
     );
 
     if (!newSession) {
-      console.warn("[Token Refresh SSR] Token rotation failed");
       return null;
     }
 
-    console.log("[Token Refresh SSR] Token refresh successful");
     return newSession.userId;
   } catch (error) {
-    console.error("[Token Refresh SSR] Error:", error);
     return null;
   }
 }
@@ -179,13 +169,7 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { code } = input;
 
-      console.log(
-        "[GitHub Callback] Starting OAuth flow with code:",
-        code.substring(0, 10) + "..."
-      );
-
       try {
-        console.log("[GitHub Callback] Exchanging code for access token...");
         const tokenResponse = await fetchWithTimeout(
           "https://github.com/login/oauth/access_token",
           {
@@ -214,9 +198,6 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        console.log(
-          "[GitHub Callback] Access token received, fetching user data..."
-        );
         const userResponse = await fetchWithTimeout(
           "https://api.github.com/user",
           {
@@ -232,9 +213,6 @@ export const authRouter = createTRPCRouter({
         const login = user.login;
         const icon = user.avatar_url;
 
-        console.log("[GitHub Callback] User data received:", { login });
-
-        console.log("[GitHub Callback] Fetching user emails...");
         const emailsResponse = await fetchWithTimeout(
           "https://api.github.com/user/emails",
           {
@@ -255,40 +233,20 @@ export const authRouter = createTRPCRouter({
         const email = primaryEmail?.email || null;
         const emailVerified = primaryEmail?.verified || false;
 
-        console.log(
-          "[GitHub Callback] Primary email:",
-          email,
-          "verified:",
-          emailVerified
-        );
-
         const conn = ConnectionFactory();
 
-        console.log("[GitHub Callback] Checking if user exists...");
-
-        // Strategy 1: Check if this GitHub identity already linked
         let userId = await findUserByProvider("github", login);
 
         let isNewUser = false;
         let isLinkedAccount = false;
 
         if (userId) {
-          console.log(
-            "[GitHub Callback] Existing GitHub provider found:",
-            userId
-          );
-          // Update provider info
           await updateProviderLastUsed(userId, "github");
         } else {
           // Strategy 2: Check if email matches existing user (account linking)
           if (email) {
             userId = await findUserByEmail(email);
             if (userId) {
-              console.log(
-                "[GitHub Callback] Found existing user by email, linking GitHub account:",
-                userId
-              );
-              // Link GitHub to existing account
               try {
                 await linkProvider(userId, "github", {
                   providerUserId: login,
@@ -298,10 +256,6 @@ export const authRouter = createTRPCRouter({
                 });
                 isLinkedAccount = true;
               } catch (linkError: any) {
-                console.error(
-                  "[GitHub Callback] Failed to link provider:",
-                  linkError.message
-                );
                 throw new TRPCError({
                   code: "CONFLICT",
                   message: linkError.message
@@ -313,7 +267,6 @@ export const authRouter = createTRPCRouter({
           // Strategy 3: Create new user
           if (!userId) {
             userId = uuidV4();
-            console.log("[GitHub Callback] Creating new user:", userId);
 
             const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
             const insertParams = [
@@ -337,16 +290,11 @@ export const authRouter = createTRPCRouter({
               });
 
               isNewUser = true;
-              console.log("[GitHub Callback] New user created");
             } catch (insertError: any) {
               if (
                 insertError.code === "SQLITE_CONSTRAINT" &&
                 insertError.message?.includes("User.email")
               ) {
-                console.error(
-                  "[GitHub Callback] Email conflict during insert:",
-                  email
-                );
                 throw new TRPCError({
                   code: "CONFLICT",
                   message:
@@ -360,8 +308,6 @@ export const authRouter = createTRPCRouter({
 
         const isAdmin = userId === env.ADMIN_ID;
 
-        console.log("[GitHub Callback] Creating session for user:", userId);
-        // Create session with Vinxi (OAuth defaults to remember me)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
         await createAuthSession(
@@ -372,13 +318,8 @@ export const authRouter = createTRPCRouter({
           clientIP,
           userAgent
         );
-
-        // Set CSRF token for authenticated session
         setCSRFToken(getH3Event(ctx));
 
-        console.log("[GitHub Callback] Session created successfully");
-
-        // Log successful OAuth login
         await logAuditEvent({
           userId,
           eventType: "auth.login.success",
@@ -392,7 +333,6 @@ export const authRouter = createTRPCRouter({
           success: true
         });
 
-        console.log("[GitHub Callback] OAuth flow completed successfully");
         return {
           success: true,
           redirectTo: "/account"
@@ -454,13 +394,7 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { code } = input;
 
-      console.log(
-        "[Google Callback] Starting OAuth flow with code:",
-        code.substring(0, 10) + "..."
-      );
-
       try {
-        console.log("[Google Callback] Exchanging code for access token...");
         const tokenResponse = await fetchWithTimeout(
           "https://oauth2.googleapis.com/token",
           {
@@ -490,9 +424,6 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        console.log(
-          "[Google Callback] Access token received, fetching user data..."
-        );
         const userResponse = await fetchWithTimeout(
           "https://www.googleapis.com/oauth2/v3/userinfo",
           {
@@ -509,39 +440,19 @@ export const authRouter = createTRPCRouter({
         const image = userData.picture;
         const email = userData.email;
         const email_verified = userData.email_verified;
-
-        console.log("[Google Callback] User data received:", {
-          name,
-          email,
-          email_verified
-        });
-
         const conn = ConnectionFactory();
 
-        console.log("[Google Callback] Checking if user exists...");
-
-        // Strategy 1: Check if this Google identity already linked
         let userId = await findUserByProvider("google", email);
 
         let isNewUser = false;
         let isLinkedAccount = false;
 
         if (userId) {
-          console.log(
-            "[Google Callback] Existing Google provider found:",
-            userId
-          );
-          // Update provider info
           await updateProviderLastUsed(userId, "google");
         } else {
           // Strategy 2: Check if email matches existing user (account linking)
           userId = await findUserByEmail(email);
           if (userId) {
-            console.log(
-              "[Google Callback] Found existing user by email, linking Google account:",
-              userId
-            );
-            // Link Google to existing account
             try {
               await linkProvider(userId, "google", {
                 providerUserId: email,
@@ -562,10 +473,8 @@ export const authRouter = createTRPCRouter({
             }
           }
 
-          // Strategy 3: Create new user
           if (!userId) {
             userId = uuidV4();
-            console.log("[Google Callback] Creating new user:", userId);
 
             const insertQuery = `INSERT INTO User (id, email, email_verified, display_name, provider, image) VALUES (?, ?, ?, ?, ?, ?)`;
             const insertParams = [
@@ -592,7 +501,6 @@ export const authRouter = createTRPCRouter({
               });
 
               isNewUser = true;
-              console.log("[Google Callback] New user created");
             } catch (insertError: any) {
               if (
                 insertError.code === "SQLITE_CONSTRAINT" &&
@@ -615,7 +523,6 @@ export const authRouter = createTRPCRouter({
 
         const isAdmin = userId === env.ADMIN_ID;
 
-        console.log("[Google Callback] Creating session for user:", userId);
         // Create session with Vinxi (OAuth defaults to remember me)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
@@ -628,12 +535,8 @@ export const authRouter = createTRPCRouter({
           userAgent
         );
 
-        // Set CSRF token for authenticated session
         setCSRFToken(getH3Event(ctx));
 
-        console.log("[Google Callback] Session created successfully");
-
-        // Log successful OAuth login
         await logAuditEvent({
           userId,
           eventType: "auth.login.success",
@@ -647,7 +550,6 @@ export const authRouter = createTRPCRouter({
           success: true
         });
 
-        console.log("[Google Callback] OAuth flow completed successfully");
         return {
           success: true,
           redirectTo: "/account"
@@ -655,7 +557,6 @@ export const authRouter = createTRPCRouter({
       } catch (error) {
         console.error("[Google Callback] Error during OAuth flow:", error);
 
-        // Log failed OAuth login
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           eventType: "auth.login.failed",
@@ -716,16 +617,8 @@ export const authRouter = createTRPCRouter({
       const { email, token } = input;
 
       try {
-        console.log("[Email Login] Attempting login for:", email);
-
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const { payload } = await jwtVerify(token, secret);
-
-        console.log("[Email Login] JWT verified successfully. Payload:", {
-          email: payload.email,
-          rememberMe: payload.rememberMe,
-          exp: payload.exp
-        });
 
         if (payload.email !== email) {
           console.error("[Email Login] Email mismatch:", {
@@ -738,9 +631,7 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Use rememberMe from JWT payload (source of truth), default to false
         const rememberMe = (payload.rememberMe as boolean) ?? false;
-        console.log("[Email Login] Using rememberMe from JWT:", rememberMe);
 
         const conn = ConnectionFactory();
         const query = `SELECT * FROM User WHERE email = ?`;
@@ -758,13 +649,9 @@ export const authRouter = createTRPCRouter({
         const userId = (res.rows[0] as unknown as User).id;
         const isAdmin = userId === env.ADMIN_ID;
 
-        console.log("[Email Login] User found:", { userId, isAdmin });
-
-        // Create session with Vinxi (handles DB + encrypted cookie)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
 
-        console.log("[Email Login] Creating auth session...");
         await createAuthSession(
           getH3Event(ctx),
           userId,
@@ -773,13 +660,8 @@ export const authRouter = createTRPCRouter({
           clientIP,
           userAgent
         );
-
-        // Set CSRF token for authenticated session
         setCSRFToken(getH3Event(ctx));
 
-        console.log("[Email Login] Session created successfully");
-
-        // Log successful email link login
         await logAuditEvent({
           userId,
           eventType: "auth.login.success",
@@ -837,13 +719,6 @@ export const authRouter = createTRPCRouter({
       const { email, code, rememberMe } = input;
 
       try {
-        console.log(
-          "[Email Code Login] Attempting login for:",
-          email,
-          "with code:",
-          code
-        );
-
         const conn = ConnectionFactory();
         const res = await conn.execute({
           sql: "SELECT * FROM User WHERE email = ?",
@@ -911,9 +786,6 @@ export const authRouter = createTRPCRouter({
         const shouldRemember =
           rememberMe ?? (payload.rememberMe as boolean) ?? false;
 
-        console.log("[Email Code Login] Code verified, creating session");
-
-        // Create session
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
         await createAuthSession(
@@ -924,13 +796,8 @@ export const authRouter = createTRPCRouter({
           clientIP,
           userAgent
         );
-
-        // Set CSRF token
         setCSRFToken(getH3Event(ctx));
 
-        console.log("[Email Code Login] Session created successfully");
-
-        // Log successful code login
         await logAuditEvent({
           userId,
           eventType: "auth.login.success",
@@ -1840,11 +1707,8 @@ export const authRouter = createTRPCRouter({
       const session = await getAuthSession(getH3Event(ctx));
 
       if (session) {
-        // Step 2: Revoke entire token family (all devices)
         await revokeTokenFamily(session.tokenFamily, "user_logout");
-        console.log(`Token family ${session.tokenFamily} revoked on signout`);
 
-        // Step 3: Log signout event
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           userId: session.userId,

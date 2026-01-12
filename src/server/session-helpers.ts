@@ -201,48 +201,14 @@ export async function createAuthSession(
       : undefined // Session cookie (expires on browser close)
   };
 
-  console.log("[Session Create] Creating session with data:", {
-    userId: sessionData.userId,
-    sessionId: sessionData.sessionId,
-    tokenFamily: sessionData.tokenFamily,
-    rememberMe: sessionData.rememberMe,
-    maxAge: configWithMaxAge.maxAge
-  });
-
   // Use updateSession to set session data directly
-  console.log(
-    "[Session Create] Input sessionData:",
-    JSON.stringify(sessionData, null, 2)
-  );
+
   const session = await updateSession(event, configWithMaxAge, sessionData);
-  console.log(
-    "[Session Create] Returned session object:",
-    JSON.stringify(
-      {
-        id: session.id,
-        data: session.data,
-        createdAt: session.createdAt
-      },
-      null,
-      2
-    )
-  );
 
   // Explicitly seal/flush the session to ensure cookie is written
   // This is important in serverless environments where response might stream early
   const { sealSession } = await import("vinxi/http");
   sealSession(event, configWithMaxAge);
-  console.log("[Session Create] Explicitly sealed session cookie");
-
-  console.log("[Session Create] Session created via updateSession API:", {
-    sessionId: session.id,
-    hasData: !!session.data,
-    dataKeys: session.data ? Object.keys(session.data) : [],
-    dataIsEmpty: session.data && Object.keys(session.data).length === 0,
-    inputDataKeys: Object.keys(sessionData),
-    configPassword: configWithMaxAge.password?.substring(0, 10) + "...",
-    configMaxAge: configWithMaxAge.maxAge
-  });
 
   // Set a separate sessionId cookie for DB fallback (in case main session cookie fails)
   setCookie(event, "session_id", sessionId, {
@@ -253,29 +219,16 @@ export async function createAuthSession(
     maxAge: configWithMaxAge.maxAge
   });
 
-  console.log("[Session Create] Set session_id fallback cookie:", sessionId);
-
   // Verify session was actually set by reading it back
   try {
     const cookieName = sessionConfig.name || "session";
     const cookieValue = getCookie(event, cookieName);
-    console.log("[Session Create] Immediate verification:", {
-      cookieName,
-      hasCookie: !!cookieValue,
-      cookieLength: cookieValue?.length || 0
-    });
 
     // Try reading back the session immediately using the same config
     const verifySession = await getSession<SessionData>(
       event,
       configWithMaxAge
     );
-    console.log("[Session Create] Read-back verification:", {
-      hasData: !!verifySession.data,
-      dataMatches: verifySession.data?.userId === sessionData.userId,
-      userId: verifySession.data?.userId,
-      sessionId: verifySession.data?.sessionId
-    });
   } catch (verifyError) {
     console.error("[Session Create] Failed to verify session:", verifyError);
   }
@@ -314,12 +267,7 @@ export async function getAuthSession(
       const { unsealSession } = await import("vinxi/http");
       const cookieName = sessionConfig.name || "session";
       const cookieValue = getCookie(event, cookieName);
-      console.log(
-        "[Session Get] skipUpdate mode, cookieName:",
-        cookieName,
-        "has cookie:",
-        !!cookieValue
-      );
+
       if (!cookieValue) {
         return null;
       }
@@ -327,42 +275,21 @@ export async function getAuthSession(
       try {
         // unsealSession returns Partial<Session<T>>, not T directly
         const session = await unsealSession(event, sessionConfig, cookieValue);
-        console.log("[Session Get] Unsealed session:", {
-          hasData: !!session?.data,
-          dataType: typeof session?.data,
-          dataKeys: session?.data ? Object.keys(session.data) : []
-        });
 
         if (!session?.data || typeof session.data !== "object") {
-          console.log("[Session Get] Invalid session structure");
           return null;
         }
 
         const data = session.data as SessionData;
-        console.log("[Session Get] Session data:", {
-          hasUserId: !!data.userId,
-          hasSessionId: !!data.sessionId,
-          hasRefreshToken: !!data.refreshToken
-        });
 
         if (!data.userId || !data.sessionId) {
-          console.log("[Session Get] Missing userId or sessionId");
-
           // Fallback: Try to restore from DB using session_id cookie
           const sessionIdCookie = getCookie(event, "session_id");
           if (sessionIdCookie) {
-            console.log(
-              "[Session Get] Attempting DB fallback (skipUpdate path) with session_id:",
-              sessionIdCookie
-            );
             const restored = await restoreSessionFromDB(event, sessionIdCookie);
             if (restored) {
-              console.log(
-                "[Session Get] Successfully restored session from DB (skipUpdate path)"
-              );
               return restored;
             }
-            console.log("[Session Get] DB fallback failed (skipUpdate path)");
           }
 
           return null;
@@ -375,7 +302,6 @@ export async function getAuthSession(
           data.refreshToken
         );
 
-        console.log("[Session Get] DB validation result:", isValid);
         return isValid ? data : null;
       } catch (err) {
         console.error("[Session Get] Error in skipUpdate path:", err);
@@ -384,34 +310,17 @@ export async function getAuthSession(
     }
 
     // Normal path - allow session updates
-    console.log("[Session Get] Normal path, getting session");
+
     const session = await getSession<SessionData>(event, sessionConfig);
-    console.log("[Session Get] Got session:", {
-      hasData: !!session.data,
-      dataType: typeof session.data,
-      dataKeys: session.data ? Object.keys(session.data) : []
-    });
 
     if (!session.data || !session.data.userId || !session.data.sessionId) {
-      console.log(
-        "[Session Get] Missing data or userId/sessionId in normal path"
-      );
-
       // Fallback: Try to restore from DB using session_id cookie
       const sessionIdCookie = getCookie(event, "session_id");
       if (sessionIdCookie) {
-        console.log(
-          "[Session Get] Attempting DB fallback with session_id:",
-          sessionIdCookie
-        );
         const restored = await restoreSessionFromDB(event, sessionIdCookie);
         if (restored) {
-          console.log("[Session Get] Successfully restored session from DB");
           return restored;
         }
-        console.log(
-          "[Session Get] DB fallback failed - session not found or invalid"
-        );
       }
 
       return null;
@@ -443,9 +352,6 @@ export async function getAuthSession(
     // If headers already sent, we can't read the session cookie properly
     // This can happen in SSR when response streaming has started
     if (error?.code === "ERR_HTTP_HEADERS_SENT") {
-      console.warn(
-        "Cannot access session - headers already sent, retrying with skipUpdate"
-      );
       // Retry with skipUpdate
       return getAuthSession(event, true);
     }
@@ -479,7 +385,6 @@ async function restoreSessionFromDB(
     });
 
     if (result.rows.length === 0) {
-      console.log("[Session Restore] Session not found in DB:", sessionId);
       return null;
     }
 
@@ -487,21 +392,16 @@ async function restoreSessionFromDB(
 
     // Validate session is still valid
     if (dbSession.revoked === 1) {
-      console.log("[Session Restore] Session is revoked");
       return null;
     }
 
     const expiresAt = new Date(dbSession.expires_at as string);
     if (expiresAt < new Date()) {
-      console.log("[Session Restore] Session expired");
       return null;
     }
 
     // We can't restore the refresh token (it's hashed in DB)
     // So we need to generate a new one and rotate the session
-    console.log(
-      "[Session Restore] Session valid but refresh token lost - rotating session"
-    );
 
     // Get IP and user agent
     const { getRequestIP } = await import("vinxi/http");
@@ -520,10 +420,6 @@ async function restoreSessionFromDB(
       dbSession.token_family as string // Reuse family
     );
 
-    console.log(
-      "[Session Restore] Created new session via rotation:",
-      newSession.sessionId
-    );
     return newSession;
   } catch (error) {
     console.error("[Session Restore] Error restoring session:", error);
@@ -606,7 +502,6 @@ export async function invalidateAuthSession(
   sessionId: string
 ): Promise<void> {
   const conn = ConnectionFactory();
-  console.log(`[Session] Invalidating session ${sessionId}`);
 
   await conn.execute({
     sql: "UPDATE Session SET revoked = 1 WHERE id = ?",
@@ -644,9 +539,7 @@ export async function revokeTokenFamily(
   });
 
   // Revoke all sessions in family
-  console.log(
-    `[Token Family] Revoking entire family ${tokenFamily} (reason: ${reason}). Sessions affected: ${sessions.rows.length}`
-  );
+
   await conn.execute({
     sql: "UPDATE Session SET revoked = 1 WHERE token_family = ?",
     args: [tokenFamily]
@@ -665,8 +558,6 @@ export async function revokeTokenFamily(
       success: true
     });
   }
-
-  console.warn(`Token family ${tokenFamily} revoked: ${reason}`);
 }
 
 /**
@@ -699,16 +590,10 @@ export async function detectTokenReuse(sessionId: string): Promise<boolean> {
 
   // Grace period for race conditions
   if (timeSinceRotation < AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS) {
-    console.warn(
-      `[Token Reuse] Within grace period (${timeSinceRotation}ms < ${AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS}ms), allowing for session ${sessionId}`
-    );
     return false;
   }
 
   // Reuse detected outside grace period - this is a breach!
-  console.error(
-    `[Token Reuse] BREACH DETECTED! Session ${sessionId} rotated ${timeSinceRotation}ms ago. Child session: ${childSession.id}`
-  );
 
   // Get token family and revoke entire family
   const sessionInfo = await conn.execute({
@@ -755,10 +640,6 @@ export async function rotateAuthSession(
   ipAddress: string,
   userAgent: string
 ): Promise<SessionData | null> {
-  console.log(
-    `[Token Rotation] Starting rotation for session ${oldSessionData.sessionId}`
-  );
-
   // Validate old session exists in DB
   const isValid = await validateSessionInDB(
     oldSessionData.sessionId,
@@ -767,18 +648,12 @@ export async function rotateAuthSession(
   );
 
   if (!isValid) {
-    console.warn(
-      `[Token Rotation] Invalid session during rotation for ${oldSessionData.sessionId}`
-    );
     return null;
   }
 
   // Detect token reuse (breach detection)
   const reuseDetected = await detectTokenReuse(oldSessionData.sessionId);
   if (reuseDetected) {
-    console.error(
-      `[Token Rotation] Token reuse detected for session ${oldSessionData.sessionId}`
-    );
     return null;
   }
 
@@ -795,9 +670,6 @@ export async function rotateAuthSession(
 
   const rotationCount = sessionCheck.rows[0].rotation_count as number;
   if (rotationCount >= AUTH_CONFIG.MAX_ROTATION_COUNT) {
-    console.warn(
-      `[Token Rotation] Max rotation count reached for session ${oldSessionData.sessionId}`
-    );
     await invalidateAuthSession(event, oldSessionData.sessionId);
     return null;
   }
@@ -832,10 +704,6 @@ export async function rotateAuthSession(
     },
     success: true
   });
-
-  console.log(
-    `[Token Rotation] Successfully rotated session ${oldSessionData.sessionId} -> ${newSessionData.sessionId}`
-  );
 
   return newSessionData;
 }
