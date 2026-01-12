@@ -1,7 +1,7 @@
 import { v4 as uuidV4 } from "uuid";
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import type { H3Event } from "vinxi/http";
-import { useSession, clearSession, getSession, getCookie } from "vinxi/http";
+import { clearSession, getSession, getCookie, setCookie } from "vinxi/http";
 import { ConnectionFactory } from "./database";
 import { env } from "~/env/server";
 import { AUTH_CONFIG, expiryToSeconds, CACHE_CONFIG } from "~/config";
@@ -203,15 +203,26 @@ export async function createAuthSession(
     maxAge: configWithMaxAge.maxAge
   });
 
-  // Use useSession API to update session
-  const session = await useSession<SessionData>(event, configWithMaxAge);
-  await session.update(sessionData);
+  // Use updateSession to set session data directly
+  const { updateSession } = await import("vinxi/http");
+  const session = await updateSession(event, configWithMaxAge, sessionData);
 
-  console.log("[Session Create] Session created via useSession API:", {
-    id: session.id,
+  console.log("[Session Create] Session created via updateSession API:", {
+    sessionId: session.id,
     hasData: !!session.data,
     dataKeys: session.data ? Object.keys(session.data) : []
   });
+
+  // Set a separate sessionId cookie for DB fallback (in case main session cookie fails)
+  setCookie(event, "session_id", sessionId, {
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: configWithMaxAge.maxAge
+  });
+
+  console.log("[Session Create] Set session_id fallback cookie:", sessionId);
 
   // Verify session was actually set by reading it back
   try {
@@ -223,8 +234,11 @@ export async function createAuthSession(
       cookieLength: cookieValue?.length || 0
     });
 
-    // Try reading back the session immediately
-    const verifySession = await getSession<SessionData>(event, sessionConfig);
+    // Try reading back the session immediately using the same config
+    const verifySession = await getSession<SessionData>(
+      event,
+      configWithMaxAge
+    );
     console.log("[Session Create] Read-back verification:", {
       hasData: !!verifySession.data,
       dataMatches: verifySession.data?.userId === sessionData.userId,
@@ -302,6 +316,24 @@ export async function getAuthSession(
 
         if (!data.userId || !data.sessionId) {
           console.log("[Session Get] Missing userId or sessionId");
+
+          // Fallback: Try to restore from DB using session_id cookie
+          const sessionIdCookie = getCookie(event, "session_id");
+          if (sessionIdCookie) {
+            console.log(
+              "[Session Get] Attempting DB fallback (skipUpdate path) with session_id:",
+              sessionIdCookie
+            );
+            const restored = await restoreSessionFromDB(event, sessionIdCookie);
+            if (restored) {
+              console.log(
+                "[Session Get] Successfully restored session from DB (skipUpdate path)"
+              );
+              return restored;
+            }
+            console.log("[Session Get] DB fallback failed (skipUpdate path)");
+          }
+
           return null;
         }
 
@@ -333,6 +365,24 @@ export async function getAuthSession(
       console.log(
         "[Session Get] Missing data or userId/sessionId in normal path"
       );
+
+      // Fallback: Try to restore from DB using session_id cookie
+      const sessionIdCookie = getCookie(event, "session_id");
+      if (sessionIdCookie) {
+        console.log(
+          "[Session Get] Attempting DB fallback with session_id:",
+          sessionIdCookie
+        );
+        const restored = await restoreSessionFromDB(event, sessionIdCookie);
+        if (restored) {
+          console.log("[Session Get] Successfully restored session from DB");
+          return restored;
+        }
+        console.log(
+          "[Session Get] DB fallback failed - session not found or invalid"
+        );
+      }
+
       return null;
     }
 
@@ -369,6 +419,83 @@ export async function getAuthSession(
       return getAuthSession(event, true);
     }
     console.error("Error getting auth session:", error);
+    return null;
+  }
+}
+
+/**
+ * Restore session from database when cookie data is empty/corrupt
+ * This provides a fallback mechanism for session recovery
+ * @param event - H3Event
+ * @param sessionId - Session ID from fallback cookie
+ * @returns Session data or null if cannot restore
+ */
+async function restoreSessionFromDB(
+  event: H3Event,
+  sessionId: string
+): Promise<SessionData | null> {
+  try {
+    const conn = ConnectionFactory();
+
+    // Query DB for session with all necessary data
+    const result = await conn.execute({
+      sql: `SELECT s.id, s.user_id, s.token_family, s.refresh_token_hash, 
+                   s.revoked, s.expires_at, u.isAdmin
+            FROM Session s
+            JOIN User u ON s.user_id = u.id
+            WHERE s.id = ?`,
+      args: [sessionId]
+    });
+
+    if (result.rows.length === 0) {
+      console.log("[Session Restore] Session not found in DB:", sessionId);
+      return null;
+    }
+
+    const dbSession = result.rows[0];
+
+    // Validate session is still valid
+    if (dbSession.revoked === 1) {
+      console.log("[Session Restore] Session is revoked");
+      return null;
+    }
+
+    const expiresAt = new Date(dbSession.expires_at as string);
+    if (expiresAt < new Date()) {
+      console.log("[Session Restore] Session expired");
+      return null;
+    }
+
+    // We can't restore the refresh token (it's hashed in DB)
+    // So we need to generate a new one and rotate the session
+    console.log(
+      "[Session Restore] Session valid but refresh token lost - rotating session"
+    );
+
+    // Get IP and user agent
+    const { getRequestIP } = await import("vinxi/http");
+    const ipAddress = getRequestIP(event) || "unknown";
+    const userAgent = event.node?.req?.headers["user-agent"] || "unknown";
+
+    // Create a new session (this will be a rotation)
+    const newSession = await createAuthSession(
+      event,
+      dbSession.user_id as string,
+      dbSession.isAdmin === 1,
+      true, // Assume rememberMe=true for restoration
+      ipAddress,
+      userAgent,
+      sessionId, // Parent session
+      dbSession.token_family as string // Reuse family
+    );
+
+    console.log(
+      "[Session Restore] Created new session via rotation:",
+      newSession.sessionId
+    );
+    return newSession;
+  } catch (error) {
+    console.error("[Session Restore] Error restoring session:", error);
     return null;
   }
 }
@@ -456,6 +583,15 @@ export async function invalidateAuthSession(
   });
 
   await clearSession(event, sessionConfig);
+
+  // Also clear the session_id fallback cookie
+  setCookie(event, "session_id", "", {
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0 // Expire immediately
+  });
 }
 
 /**
