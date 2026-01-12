@@ -204,6 +204,14 @@ export async function createAuthSession(
     rememberMe
   };
 
+  console.log("[Session Create] Creating session with data:", {
+    userId,
+    sessionId,
+    isAdmin,
+    hasRefreshToken: !!refreshToken,
+    rememberMe
+  });
+
   // Update Vinxi session with dynamic maxAge based on rememberMe
   const configWithMaxAge = {
     ...sessionConfig,
@@ -216,10 +224,17 @@ export async function createAuthSession(
 
   const session = await updateSession(event, configWithMaxAge, sessionData);
 
+  console.log("[Session Create] updateSession returned:", {
+    hasData: !!session?.data,
+    dataKeys: session?.data ? Object.keys(session.data) : []
+  });
+
   // Explicitly seal/flush the session to ensure cookie is written
   // This is important in serverless environments where response might stream early
   const { sealSession } = await import("vinxi/http");
-  sealSession(event, configWithMaxAge);
+  await sealSession(event, configWithMaxAge);
+
+  console.log("[Session Create] Session sealed");
 
   // Set a separate sessionId cookie for DB fallback (in case main session cookie fails)
   setCookie(event, "session_id", sessionId, {
@@ -230,16 +245,31 @@ export async function createAuthSession(
     maxAge: configWithMaxAge.maxAge
   });
 
+  console.log("[Session Create] session_id cookie set");
+
   // Verify session was actually set by reading it back
   try {
     const cookieName = sessionConfig.name || "session";
     const cookieValue = getCookie(event, cookieName);
+
+    console.log(
+      "[Session Create] Verification - cookie name:",
+      cookieName,
+      "has value:",
+      !!cookieValue
+    );
 
     // Try reading back the session immediately using the same config
     const verifySession = await getSession<SessionData>(
       event,
       configWithMaxAge
     );
+
+    console.log("[Session Create] Verification - read session back:", {
+      hasData: !!verifySession?.data,
+      hasUserId: !!verifySession?.data?.userId,
+      hasSessionId: !!verifySession?.data?.sessionId
+    });
   } catch (verifyError) {
     console.error("[Session Create] Failed to verify session:", verifyError);
   }
@@ -288,18 +318,51 @@ export async function getAuthSession(
         const session = await unsealSession(event, sessionConfig, cookieValue);
 
         if (!session?.data || typeof session.data !== "object") {
+          console.log(
+            "[Session Get] skipUpdate: session data is empty/invalid"
+          );
+          // Try DB restoration before giving up
+          const sessionIdCookie = getCookie(event, "session_id");
+          if (sessionIdCookie) {
+            console.log(
+              "[Session Get] Attempting restore from DB (empty data)..."
+            );
+            const restored = await restoreSessionFromDB(event, sessionIdCookie);
+            if (restored) {
+              console.log(
+                "[Session Get] Successfully restored session from DB"
+              );
+              return restored;
+            }
+          }
           return null;
         }
 
         const data = session.data as SessionData;
 
         if (!data.userId || !data.sessionId) {
+          console.log(
+            "[Session Get] Session data missing userId or sessionId:",
+            {
+              hasUserId: !!data.userId,
+              hasSessionId: !!data.sessionId
+            }
+          );
+
           // Fallback: Try to restore from DB using session_id cookie
           const sessionIdCookie = getCookie(event, "session_id");
+          console.log("[Session Get] session_id cookie:", sessionIdCookie);
+
           if (sessionIdCookie) {
+            console.log("[Session Get] Attempting restore from DB...");
             const restored = await restoreSessionFromDB(event, sessionIdCookie);
             if (restored) {
+              console.log(
+                "[Session Get] Successfully restored session from DB"
+              );
               return restored;
+            } else {
+              console.log("[Session Get] Failed to restore session from DB");
             }
           }
 
@@ -315,7 +378,28 @@ export async function getAuthSession(
 
         return isValid ? data : null;
       } catch (err) {
-        console.error("[Session Get] Error in skipUpdate path:", err);
+        console.error(
+          "[Session Get] Error in skipUpdate path (likely decryption failure):",
+          err
+        );
+        // If decryption failed (after server restart), try DB restoration
+        const sessionIdCookie = getCookie(event, "session_id");
+        if (sessionIdCookie) {
+          console.log(
+            "[Session Get] Attempting restore from DB after decryption error..."
+          );
+          const restored = await restoreSessionFromDB(event, sessionIdCookie);
+          if (restored) {
+            console.log(
+              "[Session Get] Successfully restored session from DB after error"
+            );
+            return restored;
+          } else {
+            console.log(
+              "[Session Get] Failed to restore session from DB after error"
+            );
+          }
+        }
         return null;
       }
     }
@@ -324,13 +408,34 @@ export async function getAuthSession(
 
     const session = await getSession<SessionData>(event, sessionConfig);
 
+    console.log("[Session Get] Got session from Vinxi:", {
+      hasData: !!session.data,
+      hasUserId: !!session.data?.userId,
+      hasSessionId: !!session.data?.sessionId
+    });
+
     if (!session.data || !session.data.userId || !session.data.sessionId) {
       // Fallback: Try to restore from DB using session_id cookie
       const sessionIdCookie = getCookie(event, "session_id");
+      console.log(
+        "[Session Get] Normal path - session_id cookie:",
+        sessionIdCookie
+      );
+
       if (sessionIdCookie) {
+        console.log(
+          "[Session Get] Attempting restore from DB (normal path)..."
+        );
         const restored = await restoreSessionFromDB(event, sessionIdCookie);
         if (restored) {
+          console.log(
+            "[Session Get] Successfully restored session from DB (normal path)"
+          );
           return restored;
+        } else {
+          console.log(
+            "[Session Get] Failed to restore session from DB (normal path)"
+          );
         }
       }
 
@@ -383,6 +488,7 @@ async function restoreSessionFromDB(
   sessionId: string
 ): Promise<SessionData | null> {
   try {
+    console.log("[Session Restore] Starting restore for sessionId:", sessionId);
     const conn = ConnectionFactory();
 
     // Query DB for session with all necessary data including is_admin
@@ -395,24 +501,39 @@ async function restoreSessionFromDB(
       args: [sessionId]
     });
 
+    console.log(
+      "[Session Restore] DB query returned rows:",
+      result.rows.length
+    );
+
     if (result.rows.length === 0) {
+      console.log("[Session Restore] No session found in DB");
       return null;
     }
 
     const dbSession = result.rows[0];
+    console.log("[Session Restore] Found session:", {
+      userId: dbSession.user_id,
+      revoked: dbSession.revoked,
+      expiresAt: dbSession.expires_at
+    });
 
     // Validate session is still valid
     if (dbSession.revoked === 1) {
+      console.log("[Session Restore] Session is revoked");
       return null;
     }
 
     const expiresAt = new Date(dbSession.expires_at as string);
     if (expiresAt < new Date()) {
+      console.log("[Session Restore] Session is expired");
       return null;
     }
 
     // We can't restore the refresh token (it's hashed in DB)
     // So we need to generate a new one and rotate the session
+
+    console.log("[Session Restore] Creating new rotated session...");
 
     // Get IP and user agent
     const { getRequestIP } = await import("vinxi/http");
@@ -430,6 +551,7 @@ async function restoreSessionFromDB(
       dbSession.token_family as string // Reuse family
     );
 
+    console.log("[Session Restore] Successfully created new session");
     return newSession;
   } catch (error) {
     console.error("[Session Restore] Error restoring session:", error);

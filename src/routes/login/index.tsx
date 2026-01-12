@@ -547,12 +547,7 @@ export default function LoginPage() {
             </Show>
 
             <div class="mx-auto flex pt-4">
-              <input
-                type="checkbox"
-                class="my-auto"
-                ref={rememberMeRef}
-                checked
-              />
+              <input type="checkbox" class="my-auto" ref={rememberMeRef} />
               <div class="my-auto px-2 text-sm font-normal">Remember Me</div>
             </div>
 
