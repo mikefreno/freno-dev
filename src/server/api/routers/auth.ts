@@ -910,7 +910,7 @@ export const authRouter = createTRPCRouter({
   emailRegistration: publicProcedure
     .input(registerUserSchema)
     .mutation(async ({ input, ctx }) => {
-      const { email, password, passwordConfirmation } = input;
+      const { email, password, passwordConfirmation, rememberMe } = input;
 
       // Apply rate limiting
       const clientIP = getClientIP(getH3Event(ctx));
@@ -977,7 +977,7 @@ export const authRouter = createTRPCRouter({
         await createAuthSession(
           getH3Event(ctx),
           userId,
-          true, // Always use persistent sessions
+          rememberMe ?? true, // Default to persistent sessions for registration
           clientIP,
           userAgent
         );

@@ -17,7 +17,7 @@
  *
  * Timing Decisions:
  * - 15m access: Balance between security (short exposure) and UX (not too frequent refreshes)
- * - 1d session: DB cleanup for session-only logins (cookie expires on browser close anyway)
+ * - 7d session: DB expiry for non-remember-me (cookie is session-only but accommodates users who keep browser open)
  * - 90d remember: Extended convenience for trusted devices (both DB and cookie persist)
  * - 5s reuse window: Handles race conditions in distributed systems
  */
@@ -27,12 +27,12 @@ export const AUTH_CONFIG = {
   ACCESS_TOKEN_EXPIRY_DEV: "2m" as const, // 2 minutes for faster testing
 
   // Refresh Token (opaque token in separate cookie)
-  REFRESH_TOKEN_EXPIRY_SHORT: "1d" as const, // 1 day (DB expiry, cookie is session-only - non-remember me)
+  REFRESH_TOKEN_EXPIRY_SHORT: "7d" as const, // 7 days (DB expiry for non-remember me - accommodates users who keep browser open)
   REFRESH_TOKEN_EXPIRY_LONG: "90d" as const, // 90 days (remember me - both DB and cookie persist)
 
   // Security Settings
   REFRESH_TOKEN_ROTATION_ENABLED: true, // Enable token rotation
-  MAX_ROTATION_COUNT: 100, // Max rotations before forcing re-login
+  MAX_ROTATION_COUNT: 1000, // Max rotations before forcing re-login (1000 * 15m = 10.4 days in prod, 1000 * 2m = 33 hours in dev)
   REFRESH_TOKEN_REUSE_WINDOW_MS: 5000, // 5s grace period for race conditions
 
   // Session Cleanup (serverless-friendly opportunistic cleanup)

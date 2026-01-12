@@ -48,7 +48,8 @@ export const registerUserSchema = z
   .object({
     email: z.string().email(),
     password: securePasswordSchema,
-    passwordConfirmation: z.string().min(VALIDATION_CONFIG.MIN_PASSWORD_LENGTH)
+    passwordConfirmation: z.string().min(VALIDATION_CONFIG.MIN_PASSWORD_LENGTH),
+    rememberMe: z.boolean().optional().default(true)
   })
   .refine((data) => data.password === data.passwordConfirmation, {
     message: "Passwords do not match",
@@ -60,7 +61,8 @@ export const registerUserSchema = z
  */
 export const loginUserSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1, "Password is required")
+  password: z.string().min(1, "Password is required"),
+  rememberMe: z.boolean().optional().default(false)
 });
 
 /**
