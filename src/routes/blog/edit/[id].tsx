@@ -12,7 +12,7 @@ const getPostForEdit = query(async (id: string) => {
   const { ConnectionFactory } = await import("~/server/utils");
   const userState = await getUserState();
 
-  if (userState.privilegeLevel !== "admin") {
+  if (!userState.isAdmin) {
     throw redirect("/401");
   }
 
@@ -35,7 +35,7 @@ const getPostForEdit = query(async (id: string) => {
   return {
     post,
     tags,
-    privilegeLevel: userState.privilegeLevel,
+    isAdmin: userState.isAdmin,
     userID: userState.userId
   };
 }, "post-for-edit");

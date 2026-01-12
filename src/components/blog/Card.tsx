@@ -7,14 +7,14 @@ const DeletePostButton = lazy(() => import("./DeletePostButton"));
 
 export interface CardProps {
   post: PostCardData;
-  privilegeLevel: "anonymous" | "admin" | "user";
+  isAdmin: boolean;
   index?: number;
 }
 
 export default function Card(props: CardProps) {
   return (
     <div class="bg-base border-text relative z-0 mx-auto h-96 w-full overflow-hidden rounded-lg border shadow-lg lg:w-5/6 xl:w-3/4">
-      <Show when={props.privilegeLevel === "admin"}>
+      <Show when={props.isAdmin}>
         <div class="border-opacity-20 bg-opacity-40 border-text bg-text absolute top-0 w-full border-b px-2 py-4 backdrop-blur-md md:px-6">
           <div class="flex justify-between">
             <Show when={!props.post.published}>
@@ -60,7 +60,7 @@ export default function Card(props: CardProps) {
             </div>
             <CardLinks
               postTitle={props.post.title}
-              privilegeLevel={props.privilegeLevel}
+              isAdmin={props.isAdmin}
               postID={props.post.id}
             />
           </div>

@@ -144,7 +144,7 @@ export const databaseRouter = createTRPCRouter({
           commentID: input.commentID,
           deletionType: input.deletionType,
           userId: ctx.userId,
-          privilegeLevel: ctx.privilegeLevel
+          isAdmin: ctx.isAdmin
         });
 
         const commentQuery = await conn.execute({
@@ -161,7 +161,7 @@ export const databaseRouter = createTRPCRouter({
         }
 
         const isOwner = comment.commenter_id === ctx.userId;
-        const isAdmin = ctx.privilegeLevel === "admin";
+        const isAdmin = ctx.isAdmin;
 
         console.log("[deleteComment] Authorization check:", {
           isOwner,

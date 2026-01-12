@@ -90,7 +90,6 @@ export function hashRefreshToken(token: string): string {
  * Create a new session in database and Vinxi session
  * @param event - H3Event
  * @param userId - User ID
- * @param isAdmin - Whether user is admin
  * @param rememberMe - Whether to use extended session duration
  * @param ipAddress - Client IP address
  * @param userAgent - Client user agent string
@@ -101,7 +100,6 @@ export function hashRefreshToken(token: string): string {
 export async function createAuthSession(
   event: H3Event,
   userId: string,
-  isAdmin: boolean,
   rememberMe: boolean,
   ipAddress: string,
   userAgent: string,
@@ -109,6 +107,19 @@ export async function createAuthSession(
   tokenFamily: string | null = null
 ): Promise<SessionData> {
   const conn = ConnectionFactory();
+
+  // Fetch is_admin from database
+  const userResult = await conn.execute({
+    sql: "SELECT is_admin FROM User WHERE id = ?",
+    args: [userId]
+  });
+
+  if (userResult.rows.length === 0) {
+    throw new Error(`User not found: ${userId}`);
+  }
+
+  const isAdmin = userResult.rows[0].is_admin === 1;
+
   const sessionId = uuidV4();
   const family = tokenFamily || uuidV4();
   const refreshToken = generateRefreshToken();
@@ -374,10 +385,10 @@ async function restoreSessionFromDB(
   try {
     const conn = ConnectionFactory();
 
-    // Query DB for session with all necessary data
+    // Query DB for session with all necessary data including is_admin
     const result = await conn.execute({
       sql: `SELECT s.id, s.user_id, s.token_family, s.refresh_token_hash, 
-                   s.revoked, s.expires_at, u.isAdmin
+                   s.revoked, s.expires_at, u.is_admin
             FROM Session s
             JOIN User u ON s.user_id = u.id
             WHERE s.id = ?`,
@@ -412,7 +423,6 @@ async function restoreSessionFromDB(
     const newSession = await createAuthSession(
       event,
       dbSession.user_id as string,
-      dbSession.isAdmin === 1,
       true, // Assume rememberMe=true for restoration
       ipAddress,
       userAgent,
@@ -678,7 +688,6 @@ export async function rotateAuthSession(
   const newSessionData = await createAuthSession(
     event,
     oldSessionData.userId,
-    oldSessionData.isAdmin,
     oldSessionData.rememberMe,
     ipAddress,
     userAgent,

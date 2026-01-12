@@ -2,8 +2,6 @@ import { z } from "zod";
 
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
-  ADMIN_EMAIL: z.string().min(1),
-  ADMIN_ID: z.string().min(1),
   JWT_SECRET_KEY: z.string().min(1),
   AWS_REGION: z.string().min(1),
   AWS_S3_BUCKET_NAME: z.string().min(1),
@@ -109,8 +107,6 @@ export const isMissingEnvVar = (varName: string): boolean => {
 export const getMissingEnvVars = (): string[] => {
   const requiredServerVars = [
     "NODE_ENV",
-    "ADMIN_EMAIL",
-    "ADMIN_ID",
     "JWT_SECRET_KEY",
     "AWS_REGION",
     "AWS_S3_BUCKET_NAME",

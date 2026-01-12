@@ -55,8 +55,6 @@ export interface BackupResponse {
   commentParent?: number | null;
 }
 
-export type PrivilegeLevel = "admin" | "user" | "anonymous";
-
 export type SortingMode = "newest" | "oldest" | "highest_rated" | "hot";
 
 export type DeletionType = "user" | "admin" | "database";
@@ -64,7 +62,8 @@ export type DeletionType = "user" | "admin" | "database";
 export type ModificationType = "delete" | "edit";
 
 export interface CommentSectionWrapperProps {
-  privilegeLevel: PrivilegeLevel;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
   allComments: Comment[];
   topLevelComments: Comment[];
   id: number;
@@ -74,7 +73,8 @@ export interface CommentSectionWrapperProps {
 }
 
 export interface CommentSectionProps {
-  privilegeLevel: PrivilegeLevel;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
   postID: number;
   allComments: Comment[];
   topLevelComments: Comment[];
@@ -101,7 +101,8 @@ export interface CommentBlockProps {
   recursionCount: number;
   allComments: Comment[] | undefined;
   child_comments: Comment[] | undefined;
-  privilegeLevel: PrivilegeLevel;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
   currentUserID: string;
   reactionMap: Map<number, CommentReaction[]>;
   level: number;
@@ -124,7 +125,7 @@ export interface CommentBlockProps {
 export interface CommentInputBlockProps {
   isReply: boolean;
   parent_id?: number;
-  privilegeLevel: PrivilegeLevel;
+  isAuthenticated: boolean;
   post_id: number;
   socket: WebSocket | undefined;
   currentUserID: string;
@@ -134,7 +135,8 @@ export interface CommentInputBlockProps {
 
 export interface CommentSortingProps {
   topLevelComments: Comment[];
-  privilegeLevel: PrivilegeLevel;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
   postID: number;
   allComments: Comment[];
   reactionMap: Map<number, CommentReaction[]>;
@@ -170,14 +172,14 @@ export interface ReactionBarProps {
   currentUserID: string;
   commentID: number;
   reactions: CommentReaction[];
-  privilegeLevel: PrivilegeLevel;
+  isAuthenticated: boolean;
   showingReactionOptions: boolean;
   commentReaction: (reactionType: ReactionType, commentID: number) => void;
 }
 
 export interface CommentDeletionPromptProps {
   isOpen: boolean;
-  privilegeLevel: PrivilegeLevel;
+  isAdmin: boolean;
   commentID: number;
   commenterID: string;
   deleteComment: (

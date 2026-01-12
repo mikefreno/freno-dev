@@ -7,7 +7,7 @@ import {
 describe("parseConditionals", () => {
   const baseContext: ConditionalContext = {
     isAuthenticated: true,
-    privilegeLevel: "user",
+    isAdmin: false,
     userId: "test-user",
     currentDate: new Date("2025-06-01"),
     featureFlags: { "beta-feature": true },
@@ -34,7 +34,7 @@ describe("parseConditionals", () => {
     const anonContext: ConditionalContext = {
       ...baseContext,
       isAuthenticated: false,
-      privilegeLevel: "anonymous"
+      isAdmin: false
     };
     const result = parseConditionals(html, anonContext);
     expect(result).not.toContain("Secret content");
@@ -51,7 +51,7 @@ describe("parseConditionals", () => {
 
     const adminContext: ConditionalContext = {
       ...baseContext,
-      privilegeLevel: "admin"
+      isAdmin: true
     };
     const adminResult = parseConditionals(html, adminContext);
     expect(adminResult).toContain("Admin panel");
@@ -119,7 +119,7 @@ describe("parseConditionals", () => {
     const anonContext: ConditionalContext = {
       ...baseContext,
       isAuthenticated: false,
-      privilegeLevel: "anonymous"
+      isAdmin: false
     };
     const anonResult = parseConditionals(html, anonContext);
     expect(anonResult).toContain("Not authenticated content");

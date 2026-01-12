@@ -65,7 +65,7 @@ export const AuthProvider: ParentComponent = (props) => {
   const email = () => serverAuth()?.email ?? null;
   const displayName = () => serverAuth()?.displayName ?? null;
   const userId = () => serverAuth()?.userId ?? null;
-  const isAdmin = () => serverAuth()?.privilegeLevel === "admin";
+  const isAdmin = () => serverAuth()?.isAdmin ?? false;
   const isEmailVerified = () => serverAuth()?.emailVerified ?? false;
 
   // Server handles all token refresh logic

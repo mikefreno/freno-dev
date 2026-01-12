@@ -3,7 +3,7 @@ import { env } from "~/env/server";
 
 export const infillRouter = createTRPCRouter({
   getConfig: publicProcedure.query(({ ctx }) => {
-    if (ctx.privilegeLevel !== "admin") {
+    if (!ctx.isAdmin) {
       return { endpoint: null, token: null };
     }
 

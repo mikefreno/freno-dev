@@ -8,7 +8,7 @@ import { getAuthSession } from "~/server/session-helpers";
 export type Context = {
   event: APIEvent;
   userId: string | null;
-  privilegeLevel: "anonymous" | "user" | "admin";
+  isAdmin: boolean;
 };
 
 async function createContextInner(event: APIEvent): Promise<Context> {
@@ -16,11 +16,11 @@ async function createContextInner(event: APIEvent): Promise<Context> {
   const session = await getAuthSession(event.nativeEvent);
 
   let userId: string | null = null;
-  let privilegeLevel: "anonymous" | "user" | "admin" = "anonymous";
+  let isAdmin = false;
 
   if (session && session.userId) {
     userId = session.userId;
-    privilegeLevel = session.isAdmin ? "admin" : "user";
+    isAdmin = session.isAdmin;
   }
 
   const req = event.nativeEvent.node?.req || event.nativeEvent;
@@ -56,7 +56,7 @@ async function createContextInner(event: APIEvent): Promise<Context> {
   return {
     event,
     userId,
-    privilegeLevel
+    isAdmin
   };
 }
 
@@ -70,7 +70,7 @@ export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure;
 
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.userId || ctx.privilegeLevel === "anonymous") {
+  if (!ctx.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "Not authenticated" });
   }
   return next({
@@ -82,7 +82,7 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
 });
 
 const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
-  if (ctx.privilegeLevel !== "admin") {
+  if (!ctx.isAdmin) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Admin access required"

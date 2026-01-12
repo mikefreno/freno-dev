@@ -7,7 +7,7 @@ import { getUserState } from "~/lib/auth-query";
 const checkAdminAccess = query(async () => {
   "use server";
   const userState = await getUserState();
-  return { privilegeLevel: userState.privilegeLevel };
+  return { isAdmin: userState.isAdmin };
 }, "test-auth-state");
 
 type EndpointTest = {
@@ -916,7 +916,7 @@ export default function TestPage() {
         description="tRPC API testing dashboard for developers to test endpoints and verify functionality."
       />
       <Show
-        when={authState()?.privilegeLevel === "admin"}
+        when={authState()?.isAdmin}
         fallback={
           <div class="w-full pt-[30vh] text-center">
             <div class="text-text text-2xl">Unauthorized</div>

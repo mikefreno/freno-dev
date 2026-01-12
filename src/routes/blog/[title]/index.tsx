@@ -34,7 +34,8 @@ const getPostByTitle = query(
     const { getFeatureFlags } = await import("~/server/feature-flags");
     const event = getRequestEvent()!;
     const userState = await getUserState();
-    const privilegeLevel = userState.privilegeLevel;
+    const isAuthenticated = userState.isAuthenticated;
+    const isAdmin = userState.isAdmin;
     const userID = userState.userId;
     const conn = ConnectionFactory();
 
@@ -51,7 +52,8 @@ const getPostByTitle = query(
           tags: [],
           userCommentArray: [],
           reactionArray: [],
-          privilegeLevel: "anonymous" as const,
+          isAuthenticated: false,
+          isAdmin: false,
           userID: null
         };
       }
@@ -77,13 +79,14 @@ const getPostByTitle = query(
         tags: [],
         userCommentArray: [],
         reactionArray: [],
-        privilegeLevel: "anonymous" as const,
+        isAuthenticated: false,
+        isAdmin: false,
         userID: null
       };
     }
 
     let query = "SELECT * FROM Post WHERE title = ?";
-    if (privilegeLevel !== "admin") {
+    if (!isAdmin) {
       query += ` AND published = TRUE`;
     }
 
@@ -110,7 +113,8 @@ const getPostByTitle = query(
           tags: [],
           userCommentArray: [],
           reactionArray: [],
-          privilegeLevel: "anonymous" as const,
+          isAuthenticated: false,
+          isAdmin: false,
           userID: null
         };
       }
@@ -123,14 +127,15 @@ const getPostByTitle = query(
         tags: [],
         userCommentArray: [],
         reactionArray: [],
-        privilegeLevel: "anonymous" as const,
+        isAuthenticated: false,
+        isAdmin: false,
         userID: null
       };
     }
 
     const conditionalContext = {
       isAuthenticated: userID !== null,
-      privilegeLevel: privilegeLevel,
+      isAdmin: isAdmin,
       userId: userID,
       currentDate: new Date(),
       featureFlags: getFeatureFlags(),
@@ -245,7 +250,8 @@ const getPostByTitle = query(
       topLevelComments,
       userCommentArray,
       reactionArray,
-      privilegeLevel,
+      isAuthenticated,
+      isAdmin,
       userID,
       sortBy,
       reads: post.reads || 0
@@ -429,7 +435,7 @@ export default function PostPage() {
                             <div>
                               <SessionDependantLike
                                 currentUserID={postData.userID}
-                                privilegeLevel={postData.privilegeLevel}
+                                isAuthenticated={postData.isAuthenticated}
                                 likes={postData.likes as any[]}
                                 projectID={p().id}
                               />
@@ -455,7 +461,8 @@ export default function PostPage() {
                           class="mx-4 pt-12 pb-12 md:mx-8 lg:mx-12"
                         >
                           <CommentSectionWrapper
-                            privilegeLevel={postData.privilegeLevel}
+                            isAuthenticated={postData.isAuthenticated}
+                            isAdmin={postData.isAdmin}
                             allComments={postData.comments as Comment[]}
                             topLevelComments={
                               postData.topLevelComments as Comment[]

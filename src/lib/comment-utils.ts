@@ -50,15 +50,14 @@ export function isValidCommentBody(body: string): boolean {
 export function canModifyComment(
   userID: string,
   commenterID: string,
-  privilegeLevel: "admin" | "user" | "anonymous"
+  isAuthenticated: boolean,
+  isAdmin: boolean
 ): boolean {
-  if (privilegeLevel === "admin") return true;
-  if (privilegeLevel === "anonymous") return false;
+  if (isAdmin) return true;
+  if (!isAuthenticated) return false;
   return userID === commenterID;
 }
 
-export function canDatabaseDelete(
-  privilegeLevel: "admin" | "user" | "anonymous"
-): boolean {
-  return privilegeLevel === "admin";
+export function canDatabaseDelete(isAdmin: boolean): boolean {
+  return isAdmin;
 }

@@ -122,12 +122,9 @@ export default function CommentBlock(props: CommentBlockProps) {
     );
 
   const canDelete = () =>
-    props.currentUserID === props.comment.commenter_id ||
-    props.privilegeLevel === "admin";
+    props.currentUserID === props.comment.commenter_id || props.isAdmin;
 
   const canEdit = () => props.currentUserID === props.comment.commenter_id;
-
-  const isAnonymous = () => props.privilegeLevel === "anonymous";
 
   const replyIconColor = () => "var(--color-peach)";
 
@@ -163,12 +160,12 @@ export default function CommentBlock(props: CommentBlockProps) {
                     hasUpvoted()
                       ? "fill-green"
                       : `fill-text hover:fill-green ${
-                          isAnonymous() ? "tooltip z-50" : ""
+                          !props.isAuthenticated ? "tooltip z-50" : ""
                         }`
                   }`}
                 >
                   <ThumbsUpEmoji />
-                  <Show when={isAnonymous()}>
+                  <Show when={!props.isAuthenticated}>
                     <div class="tooltip-text -ml-16 w-32 text-white">
                       You must be logged in
                     </div>
@@ -190,14 +187,14 @@ export default function CommentBlock(props: CommentBlockProps) {
                     hasDownvoted()
                       ? "fill-red"
                       : `fill-text hover:fill-red ${
-                          isAnonymous() ? "tooltip z-50" : ""
+                          !props.isAuthenticated ? "tooltip z-50" : ""
                         }`
                   }`}
                 >
                   <div class="rotate-180">
                     <ThumbsUpEmoji />
                   </div>
-                  <Show when={isAnonymous()}>
+                  <Show when={!props.isAuthenticated}>
                     <div class="tooltip-text -ml-16 w-32">
                       You must be logged in
                     </div>
@@ -309,7 +306,7 @@ export default function CommentBlock(props: CommentBlockProps) {
                   currentUserID={props.currentUserID}
                   reactions={reactions()}
                   showingReactionOptions={showingReactionOptions()}
-                  privilegeLevel={props.privilegeLevel}
+                  isAuthenticated={props.isAuthenticated}
                   commentReaction={props.commentReaction}
                 />
               </div>
@@ -325,7 +322,7 @@ export default function CommentBlock(props: CommentBlockProps) {
             >
               <CommentInputBlock
                 isReply={true}
-                privilegeLevel={props.privilegeLevel}
+                isAuthenticated={props.isAuthenticated}
                 parent_id={props.comment.id}
                 post_id={props.projectID}
                 currentUserID={props.currentUserID}
@@ -348,7 +345,8 @@ export default function CommentBlock(props: CommentBlockProps) {
                   child_comments={props.allComments?.filter(
                     (comment) => comment.parent_comment_id === childComment.id
                   )}
-                  privilegeLevel={props.privilegeLevel}
+                  isAuthenticated={props.isAuthenticated}
+                  isAdmin={props.isAdmin}
                   currentUserID={props.currentUserID}
                   reactionMap={props.reactionMap}
                   level={props.level + 1}

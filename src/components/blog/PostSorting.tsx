@@ -10,7 +10,7 @@ export interface Tag {
 export interface PostSortingProps {
   posts: PostCardData[];
   tags: Tag[];
-  privilegeLevel: "anonymous" | "admin" | "user";
+  isAdmin: boolean;
   filters?: string;
   sort?: string;
   include?: string;
@@ -36,7 +36,7 @@ export default function PostSorting(props: PostSortingProps) {
   const filteredPosts = createMemo(() => {
     let filtered = props.posts;
 
-    if (props.privilegeLevel === "admin" && props.status) {
+    if (props.isAdmin && props.status) {
       if (props.status === "published") {
         filtered = filtered.filter((post) => post.published === 1);
       } else if (props.status === "unpublished") {
@@ -141,11 +141,7 @@ export default function PostSorting(props: PostSortingProps) {
       <For each={sortedPosts()}>
         {(post, index) => (
           <div class="my-4">
-            <Card
-              post={post}
-              privilegeLevel={props.privilegeLevel}
-              index={index()}
-            />
+            <Card post={post} isAdmin={props.isAdmin} index={index()} />
           </div>
         )}
       </For>

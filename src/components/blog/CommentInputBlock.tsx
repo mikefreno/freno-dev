@@ -18,7 +18,7 @@ export default function CommentInputBlock(props: CommentInputBlockProps) {
     }
   };
 
-  if (props.privilegeLevel === "user" || props.privilegeLevel === "admin") {
+  if (props.isAuthenticated) {
     return (
       <div class="flex w-full justify-center select-none">
         <div class="h-fit w-3/4">

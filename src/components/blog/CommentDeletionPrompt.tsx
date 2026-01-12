@@ -84,13 +84,11 @@ export default function CommentDeletionPrompt(
             onChange={handleNormalDeleteCheckbox}
           />
           <div class="my-auto px-2 text-sm font-normal">
-            {props.privilegeLevel === "admin"
-              ? "Confirm User Delete?"
-              : "Confirm Delete?"}
+            {props.isAdmin ? "Confirm User Delete?" : "Confirm Delete?"}
           </div>
         </div>
       </div>
-      <Show when={props.privilegeLevel === "admin"}>
+      <Show when={props.isAdmin}>
         <div class="flex w-full justify-center">
           <div class="flex pt-4">
             <input

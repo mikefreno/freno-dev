@@ -9,6 +9,7 @@ export const model: { [key: string]: string } = {
       display_name TEXT,
       provider TEXT,
       image TEXT,
+      is_admin INTEGER DEFAULT 0,
       registered_at TEXT NOT NULL DEFAULT (datetime('now')),
       failed_attempts INTEGER DEFAULT 0,
       locked_until TEXT

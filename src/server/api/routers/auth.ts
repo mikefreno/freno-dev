@@ -306,14 +306,11 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        const isAdmin = userId === env.ADMIN_ID;
-
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
         await createAuthSession(
           getH3Event(ctx),
           userId,
-          isAdmin,
           true, // OAuth defaults to remember
           clientIP,
           userAgent
@@ -521,15 +518,12 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        const isAdmin = userId === env.ADMIN_ID;
-
         // Create session with Vinxi (OAuth defaults to remember me)
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
         await createAuthSession(
           getH3Event(ctx),
           userId,
-          isAdmin,
           true, // OAuth defaults to remember
           clientIP,
           userAgent
@@ -647,7 +641,6 @@ export const authRouter = createTRPCRouter({
         }
 
         const userId = (res.rows[0] as unknown as User).id;
-        const isAdmin = userId === env.ADMIN_ID;
 
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
@@ -655,7 +648,6 @@ export const authRouter = createTRPCRouter({
         await createAuthSession(
           getH3Event(ctx),
           userId,
-          isAdmin,
           rememberMe,
           clientIP,
           userAgent
@@ -780,7 +772,6 @@ export const authRouter = createTRPCRouter({
         }
 
         const userId = (res.rows[0] as unknown as User).id;
-        const isAdmin = userId === env.ADMIN_ID;
 
         // Use rememberMe from JWT if not provided in input, default to false
         const shouldRemember =
@@ -791,7 +782,6 @@ export const authRouter = createTRPCRouter({
         await createAuthSession(
           getH3Event(ctx),
           userId,
-          isAdmin,
           shouldRemember,
           clientIP,
           userAgent
@@ -983,12 +973,10 @@ export const authRouter = createTRPCRouter({
         // Create session with client info
         const clientIP = getClientIP(getH3Event(ctx));
         const userAgent = getUserAgent(getH3Event(ctx));
-        const isAdmin = userId === env.ADMIN_ID;
 
         await createAuthSession(
           getH3Event(ctx),
           userId,
-          isAdmin,
           true, // Always use persistent sessions
           clientIP,
           userAgent
@@ -1150,14 +1138,11 @@ export const authRouter = createTRPCRouter({
         // Reset rate limits on successful login
         await resetLoginRateLimits(email, clientIP);
 
-        const isAdmin = user.id === env.ADMIN_ID;
-
         // Create session with Vinxi
         const userAgent = getUserAgent(getH3Event(ctx));
         await createAuthSession(
           getH3Event(ctx),
           user.id,
-          isAdmin,
           rememberMe ?? false, // Default to session cookie (expires on browser close)
           clientIP,
           userAgent

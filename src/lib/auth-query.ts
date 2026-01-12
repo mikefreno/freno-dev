@@ -7,7 +7,7 @@ export interface UserState {
   email: string | null;
   displayName: string | null;
   emailVerified: boolean;
-  privilegeLevel: "admin" | "user" | "anonymous";
+  isAdmin: boolean;
 }
 
 /**
@@ -29,7 +29,7 @@ export const getUserState = query(async (): Promise<UserState> => {
       email: null,
       displayName: null,
       emailVerified: false,
-      privilegeLevel: "anonymous"
+      isAdmin: false
     };
   }
 
@@ -42,7 +42,7 @@ export const getUserState = query(async (): Promise<UserState> => {
       email: null,
       displayName: null,
       emailVerified: false,
-      privilegeLevel: "anonymous"
+      isAdmin: false
     };
   }
 
@@ -59,7 +59,7 @@ export const getUserState = query(async (): Promise<UserState> => {
       email: null,
       displayName: null,
       emailVerified: false,
-      privilegeLevel: "anonymous"
+      isAdmin: false
     };
   }
 
@@ -71,7 +71,7 @@ export const getUserState = query(async (): Promise<UserState> => {
     email: user.email ?? null,
     displayName: user.display_name ?? null,
     emailVerified: user.email_verified === 1,
-    privilegeLevel: auth.isAdmin ? "admin" : "user"
+    isAdmin: auth.isAdmin
   };
 }, "user-auth-state");
 

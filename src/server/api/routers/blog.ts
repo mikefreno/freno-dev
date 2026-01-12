@@ -7,9 +7,9 @@ import { CACHE_CONFIG } from "~/config";
 
 const BLOG_CACHE_TTL = CACHE_CONFIG.BLOG_CACHE_TTL_MS;
 
-const getAllPostsData = async (privilegeLevel: string) => {
+const getAllPostsData = async (isAdmin: boolean) => {
   return withCacheAndStale(
-    `blog-posts-${privilegeLevel}`,
+    `blog-posts-${isAdmin ? "admin" : "public"}`,
     BLOG_CACHE_TTL,
     async () => {
       const conn = ConnectionFactory();
@@ -34,7 +34,7 @@ const getAllPostsData = async (privilegeLevel: string) => {
         LEFT JOIN Comment c ON p.id = c.post_id
       `;
 
-      if (privilegeLevel !== "admin") {
+      if (!isAdmin) {
         postsQuery += ` WHERE p.published = TRUE`;
       }
 
@@ -48,7 +48,7 @@ const getAllPostsData = async (privilegeLevel: string) => {
         SELECT t.value, t.post_id
         FROM Tag t
         JOIN Post p ON t.post_id = p.id
-        ${privilegeLevel !== "admin" ? "WHERE p.published = TRUE" : ""}
+        ${!isAdmin ? "WHERE p.published = TRUE" : ""}
         ORDER BY t.value ASC
       `;
 
@@ -64,21 +64,21 @@ const getAllPostsData = async (privilegeLevel: string) => {
         tagMap[key] = (tagMap[key] || 0) + 1;
       });
 
-      return { posts, tags, tagMap, privilegeLevel };
+      return { posts, tags, tagMap, isAdmin };
     }
   );
 };
 
 export const blogRouter = createTRPCRouter({
   getRecentPosts: publicProcedure.query(async ({ ctx }) => {
-    const allPostsData = await getAllPostsData("public");
+    const allPostsData = await getAllPostsData(false);
 
     return allPostsData.posts.slice(0, 3);
   }),
 
   getPosts: publicProcedure.query(async ({ ctx }) => {
-    const privilegeLevel = ctx.privilegeLevel;
-    return getAllPostsData(privilegeLevel);
+    const isAdmin = ctx.isAdmin;
+    return getAllPostsData(isAdmin);
   }),
 
   incrementPostRead: publicProcedure

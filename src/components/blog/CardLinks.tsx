@@ -5,7 +5,7 @@ import { Spinner } from "~/components/Spinner";
 export interface CardLinksProps {
   postTitle: string;
   postID: number;
-  privilegeLevel: string;
+  isAdmin: boolean;
 }
 
 export default function CardLinks(props: CardLinksProps) {
@@ -25,7 +25,7 @@ export default function CardLinks(props: CardLinksProps) {
           <Spinner size={24} />
         </Show>
       </A>
-      <Show when={props.privilegeLevel === "admin"}>
+      <Show when={props.isAdmin}>
         <A
           href={`/blog/edit/${props.postID}`}
           onClick={() => setEditLoading(true)}

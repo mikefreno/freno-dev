@@ -10,7 +10,7 @@ export interface PostLike {
 
 export interface SessionDependantLikeProps {
   currentUserID: string | undefined | null;
-  privilegeLevel: "admin" | "user" | "anonymous";
+  isAuthenticated: boolean;
   likes: PostLike[];
   projectID: number;
 }
@@ -61,7 +61,7 @@ export default function SessionDependantLike(props: SessionDependantLikeProps) {
 
   return (
     <Show
-      when={props.privilegeLevel !== "anonymous"}
+      when={props.isAuthenticated}
       fallback={
         <button class="tooltip flex flex-col">
           <div class="mx-auto">

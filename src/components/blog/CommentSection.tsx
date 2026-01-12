@@ -6,7 +6,6 @@ import type {
   UserPublicData,
   ReactionType,
   ModificationType,
-  PrivilegeLevel,
   SortingMode
 } from "~/types/comment";
 import CommentInputBlock from "./CommentInputBlock";
@@ -19,28 +18,6 @@ const COMMENT_SORTING_OPTIONS: { val: SortingMode }[] = [
   { val: "highest_rated" },
   { val: "hot" }
 ];
-
-interface CommentSectionProps {
-  privilegeLevel: PrivilegeLevel;
-  allComments: Comment[];
-  topLevelComments: Comment[];
-  postID: number;
-  reactionMap: Map<number, CommentReaction[]>;
-  currentUserID: string;
-  userCommentMap: Map<UserPublicData, number[]> | undefined;
-  newComment: (commentBody: string, parentCommentID?: number) => Promise<void>;
-  commentSubmitLoading: boolean;
-  toggleModification: (
-    commentID: number,
-    commenterID: string,
-    commentBody: string,
-    modificationType: ModificationType,
-    commenterImage?: string,
-    commenterEmail?: string,
-    commenterDisplayName?: string
-  ) => void;
-  commentReaction: (reactionType: ReactionType, commentID: number) => void;
-}
 
 export default function CommentSection(props: CommentSectionProps) {
   const [searchParams] = useSearchParams();
@@ -66,7 +43,7 @@ export default function CommentSection(props: CommentSectionProps) {
       <div class="mb-1">
         <CommentInputBlock
           isReply={false}
-          privilegeLevel={props.privilegeLevel}
+          isAuthenticated={props.isAuthenticated}
           post_id={props.postID}
           socket={undefined}
           currentUserID={props.currentUserID}
@@ -90,7 +67,8 @@ export default function CommentSection(props: CommentSectionProps) {
         <div id="comments">
           <CommentSorting
             topLevelComments={props.topLevelComments}
-            privilegeLevel={props.privilegeLevel}
+            isAuthenticated={props.isAuthenticated}
+            isAdmin={props.isAdmin}
             postID={props.postID}
             allComments={props.allComments}
             reactionMap={props.reactionMap}

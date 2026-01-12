@@ -13,7 +13,7 @@ const checkAdminAccess = query(async () => {
   // Reuse shared auth query for consistency
   const userState = await getUserState();
 
-  if (userState.privilegeLevel !== "admin") {
+  if (!userState.isAdmin) {
     throw redirect("/401");
   }
 

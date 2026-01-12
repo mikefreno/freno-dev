@@ -6,7 +6,6 @@ import { getAuthSession } from "./session-helpers";
 
 /**
  * Check authentication status
- * Consolidates getUserID, getPrivilegeLevel, and checkAuthStatus into single function
  * @param event - H3Event
  * @returns Object with isAuthenticated, userId, and isAdmin flags
  */

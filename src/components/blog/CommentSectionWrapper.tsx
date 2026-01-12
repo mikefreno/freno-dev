@@ -855,7 +855,8 @@ export default function CommentSectionWrapper(
       </Show>
 
       <CommentSection
-        privilegeLevel={props.privilegeLevel}
+        isAuthenticated={props.isAuthenticated}
+        isAdmin={props.isAdmin}
         allComments={allComments()}
         topLevelComments={topLevelComments()}
         postID={props.id}
@@ -875,7 +876,7 @@ export default function CommentSectionWrapper(
         commenterImage={commenterImageForModification()}
         commenterEmail={commenterEmailForModification()}
         commenterDisplayName={commenterDisplayNameForModification()}
-        privilegeLevel={props.privilegeLevel}
+        isAdmin={props.isAdmin}
         commentDeletionLoading={commentDeletionLoading()}
         deleteComment={deleteComment}
         onClose={() => {

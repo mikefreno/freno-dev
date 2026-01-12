@@ -51,7 +51,8 @@ export default function CommentSorting(props: CommentSortingProps) {
               child_comments={props.allComments?.filter(
                 (comment) => comment.parent_comment_id === topLevelComment.id
               )}
-              privilegeLevel={props.privilegeLevel}
+              isAuthenticated={props.isAuthenticated}
+              isAdmin={props.isAdmin}
               currentUserID={props.currentUserID}
               reactionMap={props.reactionMap}
               level={0}

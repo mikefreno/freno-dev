@@ -15,10 +15,10 @@ const getPosts = query(async () => {
   const { ConnectionFactory } = await import("~/server/utils");
   const { withCacheAndStale } = await import("~/server/cache");
   const userState = await getUserState();
-  const privilegeLevel = userState.privilegeLevel;
+  const isAdmin = userState.isAdmin;
 
   return withCacheAndStale(
-    `posts-${privilegeLevel}`,
+    `posts-${isAdmin ? "admin" : "user"}`,
     CACHE_CONFIG.BLOG_POSTS_LIST_CACHE_TTL_MS,
     async () => {
       const conn = ConnectionFactory();
@@ -43,7 +43,7 @@ const getPosts = query(async () => {
       LEFT JOIN Comment c ON p.id = c.post_id
     `;
 
-      if (privilegeLevel !== "admin") {
+      if (!isAdmin) {
         postsQuery += ` WHERE p.published = TRUE`;
       }
 
@@ -57,7 +57,7 @@ const getPosts = query(async () => {
       SELECT t.value, t.post_id
       FROM Tag t
       JOIN Post p ON t.post_id = p.id
-      ${privilegeLevel !== "admin" ? "WHERE p.published = TRUE" : ""}
+      ${!isAdmin ? "WHERE p.published = TRUE" : ""}
       ORDER BY t.value ASC
     `;
 
@@ -70,7 +70,7 @@ const getPosts = query(async () => {
         tagMap[key] = (tagMap[key] || 0) + 1;
       });
 
-      return { posts, tags, tagMap, privilegeLevel };
+      return { posts, tags, tagMap, isAdmin };
     }
   );
 }, "posts");
@@ -106,11 +106,11 @@ export default function BlogIndex() {
                   <TagSelector tagMap={loadedData().tagMap} />
                 </Show>
 
-                <Show when={loadedData().privilegeLevel === "admin"}>
+                <Show when={loadedData().isAdmin}>
                   <PublishStatusToggle />
                 </Show>
 
-                <Show when={loadedData().privilegeLevel === "admin"}>
+                <Show when={loadedData().isAdmin}>
                   <div class="mt-2 flex justify-center md:mt-0 md:justify-end">
                     <A
                       href="/blog/create"
@@ -130,7 +130,7 @@ export default function BlogIndex() {
                   <PostSorting
                     posts={loadedData().posts}
                     tags={loadedData().tags}
-                    privilegeLevel={loadedData().privilegeLevel}
+                    isAdmin={loadedData().isAdmin}
                     filters={filters()}
                     sort={sort()}
                     include={include()}

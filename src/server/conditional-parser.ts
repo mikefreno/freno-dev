@@ -11,7 +11,7 @@ export function getSafeEnvVariables(): Record<string, string | undefined> {
 
 export interface ConditionalContext {
   isAuthenticated: boolean;
-  privilegeLevel: "admin" | "user" | "anonymous";
+  isAdmin: boolean;
   userId: string | null;
   currentDate: Date;
   featureFlags: Record<string, boolean>;
@@ -194,7 +194,16 @@ function evaluatePrivilegeCondition(
   value: string,
   context: ConditionalContext
 ): boolean {
-  return context.privilegeLevel === value;
+  switch (value) {
+    case "admin":
+      return context.isAdmin;
+    case "user":
+      return context.isAuthenticated && !context.isAdmin;
+    case "anonymous":
+      return !context.isAuthenticated;
+    default:
+      return false;
+  }
 }
 
 /**

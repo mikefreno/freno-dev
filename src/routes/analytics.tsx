@@ -8,7 +8,7 @@ const checkAdmin = query(async (): Promise<boolean> => {
   const { getUserState } = await import("~/lib/auth-query");
   const userState = await getUserState();
 
-  if (userState.privilegeLevel !== "admin") {
+  if (!userState.isAdmin) {
     console.log("redirect");
     throw redirect("/");
   }
