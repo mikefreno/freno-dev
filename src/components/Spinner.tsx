@@ -1,4 +1,4 @@
-import { onMount, onCleanup, createSignal, JSX } from "solid-js";
+import { onMount, onCleanup, createSignal } from "solid-js";
 import { isServer } from "solid-js/web";
 
 const spinnerChars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -7,6 +7,7 @@ export interface SpinnerProps {
   size?: "sm" | "md" | "lg" | "xl" | number;
   class?: string;
   "aria-label"?: string;
+  inverse: boolean;
 }
 
 const sizeMap = {
@@ -47,7 +48,7 @@ export function Spinner(props: SpinnerProps) {
 
   return (
     <span
-      class={`text-crust font-mono ${sizeClass()} ${props.class || ""}`}
+      class={`font-mono ${sizeClass()} ${props.class || ""} ${props.inverse ? "text-text" : "text-crust"}`}
       style={style()}
       aria-label={props["aria-label"] || "Loading..."}
       role="status"

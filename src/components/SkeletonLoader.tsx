@@ -11,7 +11,7 @@ export function SkeletonBox(props: SkeletonProps) {
       aria-label="Loading..."
       role="status"
     >
-      <Spinner size="md" />
+      <Spinner size="md" inverse />
     </div>
   );
 }
@@ -23,7 +23,7 @@ export function SkeletonText(props: SkeletonProps) {
       aria-label="Loading..."
       role="status"
     >
-      <Spinner size="sm" />
+      <Spinner size="sm" inverse />
     </div>
   );
 }
