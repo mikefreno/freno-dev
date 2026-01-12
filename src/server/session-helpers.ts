@@ -1,7 +1,13 @@
 import { v4 as uuidV4 } from "uuid";
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import type { H3Event } from "vinxi/http";
-import { clearSession, getSession, getCookie, setCookie } from "vinxi/http";
+import {
+  clearSession,
+  getSession,
+  getCookie,
+  setCookie,
+  updateSession
+} from "vinxi/http";
 import { ConnectionFactory } from "./database";
 import { env } from "~/env/server";
 import { AUTH_CONFIG, expiryToSeconds, CACHE_CONFIG } from "~/config";
@@ -204,13 +210,38 @@ export async function createAuthSession(
   });
 
   // Use updateSession to set session data directly
-  const { updateSession } = await import("vinxi/http");
+  console.log(
+    "[Session Create] Input sessionData:",
+    JSON.stringify(sessionData, null, 2)
+  );
   const session = await updateSession(event, configWithMaxAge, sessionData);
+  console.log(
+    "[Session Create] Returned session object:",
+    JSON.stringify(
+      {
+        id: session.id,
+        data: session.data,
+        createdAt: session.createdAt
+      },
+      null,
+      2
+    )
+  );
+
+  // Explicitly seal/flush the session to ensure cookie is written
+  // This is important in serverless environments where response might stream early
+  const { sealSession } = await import("vinxi/http");
+  sealSession(event, configWithMaxAge);
+  console.log("[Session Create] Explicitly sealed session cookie");
 
   console.log("[Session Create] Session created via updateSession API:", {
     sessionId: session.id,
     hasData: !!session.data,
-    dataKeys: session.data ? Object.keys(session.data) : []
+    dataKeys: session.data ? Object.keys(session.data) : [],
+    dataIsEmpty: session.data && Object.keys(session.data).length === 0,
+    inputDataKeys: Object.keys(sessionData),
+    configPassword: configWithMaxAge.password?.substring(0, 10) + "...",
+    configMaxAge: configWithMaxAge.maxAge
   });
 
   // Set a separate sessionId cookie for DB fallback (in case main session cookie fails)
