@@ -430,17 +430,27 @@ export const userRouter = createTRPCRouter({
     // Get current session to mark it
     const currentSession = await getAuthSession(ctx.event as any);
 
-    return res.rows.map((row: any) => ({
-      sessionId: row.id,
-      tokenFamily: row.token_family,
-      createdAt: row.created_at,
-      expiresAt: row.expires_at,
-      lastActiveAt: row.last_active_at,
-      rotationCount: row.rotation_count,
-      clientIp: row.ip_address,
-      userAgent: row.user_agent,
-      isCurrent: currentSession?.sessionId === row.id
-    }));
+    return res.rows.map((row: any) => {
+      // Infer rememberMe from expires_at duration
+      // If expires_at is > 2 days from creation, it's a remember-me session
+      const createdAt = new Date(row.created_at);
+      const expiresAt = new Date(row.expires_at);
+      const durationMs = expiresAt.getTime() - createdAt.getTime();
+      const rememberMe = durationMs > 2 * 24 * 60 * 60 * 1000; // > 2 days
+
+      return {
+        sessionId: row.id,
+        tokenFamily: row.token_family,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+        lastActiveAt: row.last_active_at,
+        rotationCount: row.rotation_count,
+        clientIp: row.ip_address,
+        userAgent: row.user_agent,
+        rememberMe,
+        isCurrent: currentSession?.sessionId === row.id
+      };
+    });
   }),
 
   revokeSession: publicProcedure

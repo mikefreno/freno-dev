@@ -1214,7 +1214,9 @@ function ActiveSessions(props: { userId: string }) {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString(undefined, {
+    // Database stores UTC time, convert to local timezone
+    const date = new Date(dateStr + (dateStr.includes("Z") ? "" : "Z"));
+    return date.toLocaleString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -1266,6 +1268,15 @@ function ActiveSessions(props: { userId: string }) {
                     <Show when={session.expiresAt}>
                       <div class="text-xs">
                         Expires: {formatDate(session.expiresAt)}
+                        {session.rememberMe !== undefined && (
+                          <span class="text-subtext1 ml-2">
+                            (
+                            {session.rememberMe
+                              ? "Remember me"
+                              : "Session-only"}
+                            )
+                          </span>
+                        )}
                       </div>
                     </Show>
                   </div>
