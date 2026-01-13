@@ -477,6 +477,80 @@ export async function getAuthSession(
 }
 
 /**
+ * Find the latest valid session in a rotation chain
+ * Recursively follows child sessions until finding the most recent one
+ * @param conn - Database connection
+ * @param sessionId - Starting session ID
+ * @param maxDepth - Maximum depth to traverse (prevents infinite loops)
+ * @returns Latest session row or null if chain is invalid
+ */
+async function findLatestSessionInChain(
+  conn: ReturnType<typeof ConnectionFactory>,
+  sessionId: string,
+  maxDepth: number = 100
+): Promise<any | null> {
+  if (maxDepth <= 0) {
+    console.log("[Session Chain] Max depth reached, stopping traversal");
+    return null;
+  }
+
+  // Get the current session
+  const result = await conn.execute({
+    sql: `SELECT id, user_id, token_family, revoked, expires_at 
+          FROM Session 
+          WHERE id = ?`,
+    args: [sessionId]
+  });
+
+  if (result.rows.length === 0) {
+    return null;
+  }
+
+  const currentSession = result.rows[0];
+
+  // Check if this session has been rotated (has a child)
+  const childCheck = await conn.execute({
+    sql: `SELECT id FROM Session 
+          WHERE parent_session_id = ? 
+          ORDER BY created_at DESC 
+          LIMIT 1`,
+    args: [sessionId]
+  });
+
+  if (childCheck.rows.length > 0) {
+    // Session has a child, follow the chain
+    console.log(
+      `[Session Chain] Session ${sessionId} has child, following chain...`
+    );
+    return findLatestSessionInChain(
+      conn,
+      childCheck.rows[0].id as string,
+      maxDepth - 1
+    );
+  }
+
+  // No child found - this is the latest session
+  // Verify it's valid (not revoked, not expired)
+  if (currentSession.revoked === 1) {
+    console.log(
+      `[Session Chain] Latest session ${sessionId} is revoked - chain invalid`
+    );
+    return null;
+  }
+
+  const expiresAt = new Date(currentSession.expires_at as string);
+  if (expiresAt < new Date()) {
+    console.log(
+      `[Session Chain] Latest session ${sessionId} is expired - chain invalid`
+    );
+    return null;
+  }
+
+  console.log(`[Session Chain] Found valid latest session: ${sessionId}`);
+  return currentSession;
+}
+
+/**
  * Restore session from database when cookie data is empty/corrupt
  * This provides a fallback mechanism for session recovery
  * @param event - H3Event
@@ -490,6 +564,11 @@ async function restoreSessionFromDB(
   try {
     console.log("[Session Restore] Starting restore for sessionId:", sessionId);
     const conn = ConnectionFactory();
+
+    // Get IP and user agent early since we'll need them for any rotation
+    const { getRequestIP } = await import("vinxi/http");
+    const ipAddress = getRequestIP(event) || "unknown";
+    const userAgent = event.node?.req?.headers["user-agent"] || "unknown";
 
     // Query DB for session with all necessary data including is_admin
     const result = await conn.execute({
@@ -518,34 +597,76 @@ async function restoreSessionFromDB(
       expiresAt: dbSession.expires_at
     });
 
-    // Validate session is still valid
-    if (dbSession.revoked === 1) {
-      console.log("[Session Restore] Session is revoked");
-      return null;
-    }
-
+    // Check if refresh token is expired (applies to all sessions in chain)
     const expiresAt = new Date(dbSession.expires_at as string);
     if (expiresAt < new Date()) {
-      console.log("[Session Restore] Session is expired");
+      console.log("[Session Restore] Session refresh token expired");
       return null;
     }
 
     // Check if this session has already been rotated (has a child session)
-    // If so, we cannot restore from it - user must create a new session
+    // If so, follow the chain to find the latest valid session
+    // We check this BEFORE checking if revoked because revoked parents can have valid children
     const childCheck = await conn.execute({
-      sql: `SELECT id FROM Session WHERE parent_session_id = ? LIMIT 1`,
+      sql: `SELECT id, revoked, expires_at, refresh_token_hash 
+            FROM Session 
+            WHERE parent_session_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT 1`,
       args: [sessionId]
     });
 
     if (childCheck.rows.length > 0) {
       console.log(
-        "[Session Restore] Session has already been rotated - cannot restore"
+        "[Session Restore] Session has already been rotated - following chain to latest child"
       );
-      // Revoke this session to ensure it's marked as used
+
+      // Follow the chain to find the latest valid session
+      const latestSession = await findLatestSessionInChain(
+        conn,
+        childCheck.rows[0].id as string
+      );
+
+      if (!latestSession) {
+        console.log("[Session Restore] Could not find valid session in chain");
+        return null;
+      }
+
+      console.log(
+        "[Session Restore] Found latest session in chain:",
+        latestSession.id
+      );
+
+      // Use the latest session to restore
+      // Generate new refresh token and rotate from the latest session
+      const newSession = await createAuthSession(
+        event,
+        latestSession.user_id as string,
+        true, // Assume rememberMe=true for restoration
+        ipAddress,
+        userAgent,
+        latestSession.id as string, // Parent is the latest session
+        latestSession.token_family as string // Reuse family
+      );
+
+      // Mark the latest session as revoked now that we've rotated it
       await conn.execute({
         sql: "UPDATE Session SET revoked = 1 WHERE id = ?",
-        args: [sessionId]
+        args: [latestSession.id]
       });
+
+      console.log(
+        "[Session Restore] Successfully restored from latest session in chain"
+      );
+      return newSession;
+    }
+
+    // No children - this is the current session
+    // Validate it's not revoked (if no children, revoked = invalid)
+    if (dbSession.revoked === 1) {
+      console.log(
+        "[Session Restore] Session is revoked and has no children - cannot restore"
+      );
       return null;
     }
 
@@ -553,11 +674,6 @@ async function restoreSessionFromDB(
     // So we need to generate a new one and rotate the session
 
     console.log("[Session Restore] Creating new rotated session...");
-
-    // Get IP and user agent
-    const { getRequestIP } = await import("vinxi/http");
-    const ipAddress = getRequestIP(event) || "unknown";
-    const userAgent = event.node?.req?.headers["user-agent"] || "unknown";
 
     // Create a new session (this will be a rotation)
     const newSession = await createAuthSession(
