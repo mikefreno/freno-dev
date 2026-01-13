@@ -20,6 +20,8 @@ class TokenRefreshManager {
   private isRefreshing = false;
   private isStarted = false;
   private visibilityChangeHandler: (() => void) | null = null;
+  private onlineHandler: (() => void) | null = null;
+  private focusHandler: (() => void) | null = null;
   private lastRefreshTime: number | null = null;
 
   /**
@@ -62,6 +64,20 @@ class TokenRefreshManager {
       }
     };
     document.addEventListener("visibilitychange", this.visibilityChangeHandler);
+
+    // Re-check on network reconnection (device was offline)
+    this.onlineHandler = () => {
+      console.log("[Token Refresh] Network reconnected, checking token status");
+      this.checkAndRefreshIfNeeded();
+    };
+    window.addEventListener("online", this.onlineHandler);
+
+    // Re-check on window focus (device was asleep or user switched apps)
+    this.focusHandler = () => {
+      console.log("[Token Refresh] Window focused, checking token status");
+      this.checkAndRefreshIfNeeded();
+    };
+    window.addEventListener("focus", this.focusHandler);
   }
 
   /**
@@ -79,6 +95,16 @@ class TokenRefreshManager {
         this.visibilityChangeHandler
       );
       this.visibilityChangeHandler = null;
+    }
+
+    if (this.onlineHandler) {
+      window.removeEventListener("online", this.onlineHandler);
+      this.onlineHandler = null;
+    }
+
+    if (this.focusHandler) {
+      window.removeEventListener("focus", this.focusHandler);
+      this.focusHandler = null;
     }
 
     this.isStarted = false;

@@ -530,6 +530,25 @@ async function restoreSessionFromDB(
       return null;
     }
 
+    // Check if this session has already been rotated (has a child session)
+    // If so, we cannot restore from it - user must create a new session
+    const childCheck = await conn.execute({
+      sql: `SELECT id FROM Session WHERE parent_session_id = ? LIMIT 1`,
+      args: [sessionId]
+    });
+
+    if (childCheck.rows.length > 0) {
+      console.log(
+        "[Session Restore] Session has already been rotated - cannot restore"
+      );
+      // Revoke this session to ensure it's marked as used
+      await conn.execute({
+        sql: "UPDATE Session SET revoked = 1 WHERE id = ?",
+        args: [sessionId]
+      });
+      return null;
+    }
+
     // We can't restore the refresh token (it's hashed in DB)
     // So we need to generate a new one and rotate the session
 
@@ -551,7 +570,15 @@ async function restoreSessionFromDB(
       dbSession.token_family as string // Reuse family
     );
 
-    console.log("[Session Restore] Successfully created new session");
+    // Mark parent session as revoked now that we've rotated it
+    await conn.execute({
+      sql: "UPDATE Session SET revoked = 1 WHERE id = ?",
+      args: [sessionId]
+    });
+
+    console.log(
+      "[Session Restore] Successfully created new session and revoked parent"
+    );
     return newSession;
   } catch (error) {
     console.error("[Session Restore] Error restoring session:", error);
@@ -562,6 +589,7 @@ async function restoreSessionFromDB(
 /**
  * Validate session against database
  * Checks if session exists, not revoked, not expired, and refresh token matches
+ * Also validates that no child sessions exist (indicating this session was rotated)
  * @param sessionId - Session ID
  * @param userId - User ID
  * @param refreshToken - Plaintext refresh token
@@ -577,7 +605,7 @@ async function validateSessionInDB(
     const tokenHash = hashRefreshToken(refreshToken);
 
     const result = await conn.execute({
-      sql: `SELECT revoked, expires_at, refresh_token_hash 
+      sql: `SELECT revoked, expires_at, refresh_token_hash, token_family
             FROM Session 
             WHERE id = ? AND user_id = ?`,
       args: [sessionId, userId]
@@ -609,6 +637,41 @@ async function validateSessionInDB(
       )
     ) {
       return false;
+    }
+
+    // CRITICAL: Check if this session has been rotated (has a child session)
+    // If a child exists, check if we're within the grace period for cookie propagation
+    // This handles SSR/serverless cases where client may not have received new cookies yet
+    const childCheck = await conn.execute({
+      sql: `SELECT id, created_at FROM Session 
+            WHERE parent_session_id = ? 
+            ORDER BY created_at DESC
+            LIMIT 1`,
+      args: [sessionId]
+    });
+
+    if (childCheck.rows.length > 0) {
+      // This session has been rotated - check grace period
+      const childSession = childCheck.rows[0];
+      const childCreatedAt = new Date(childSession.created_at as string);
+      const now = new Date();
+      const timeSinceRotation = now.getTime() - childCreatedAt.getTime();
+
+      // Grace period allows client to receive and use new cookies from rotation
+      // This is critical for SSR/serverless where response cookies may be delayed
+      if (timeSinceRotation >= AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS) {
+        // Grace period expired - parent session should no longer be used
+        // This indicates either token theft or client failed to update cookies
+        console.log(
+          `[Session Validation] Parent session used ${Math.round(timeSinceRotation / 1000)}s after rotation (grace period expired)`
+        );
+        return false;
+      }
+
+      // Within grace period - allow parent session use while cookies propagate
+      console.log(
+        `[Session Validation] Parent session used ${Math.round(timeSinceRotation / 1000)}s after rotation (within grace period)`
+      );
     }
 
     // Update last_used and last_active_at timestamps (throttled)
