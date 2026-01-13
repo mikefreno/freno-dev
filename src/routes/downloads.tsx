@@ -150,7 +150,7 @@ export default function DownloadsPage() {
 
               <div class="flex flex-col items-center gap-3">
                 <span class="text-subtext0 font-mono text-sm">
-                  platform: macOS (13+)
+                  platform: macOS (13.0+)
                 </span>
                 <Button
                   variant="download"
