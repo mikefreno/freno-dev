@@ -33,8 +33,9 @@ export const gitActivityRouter = createTRPCRouter({
         `github-commits-${input.limit}`,
         CACHE_CONFIG.GIT_ACTIVITY_CACHE_TTL_MS,
         async () => {
-          const reposResponse = await fetchWithTimeout(
-            `https://api.github.com/users/MikeFreno/repos?sort=pushed&per_page=10`,
+          // Use Events API to get recent push events - much more efficient
+          const eventsResponse = await fetchWithTimeout(
+            `https://api.github.com/users/MikeFreno/events/public?per_page=100`,
             {
               headers: {
                 Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
@@ -44,46 +45,53 @@ export const gitActivityRouter = createTRPCRouter({
             }
           );
 
-          await checkResponse(reposResponse);
-          const repos = await reposResponse.json();
+          await checkResponse(eventsResponse);
+          const events = await eventsResponse.json();
           const allCommits: GitCommit[] = [];
 
-          for (const repo of repos) {
-            if (allCommits.length >= input.limit * 3) break; // Get extra to sort later
+          // Extract push events and fetch commit details
+          for (const event of events) {
+            if (event.type !== "PushEvent") continue;
+            if (allCommits.length >= input.limit * 5) break; // Get extra to ensure we have enough
+
+            const repoName = event.repo.name;
+            const commitSha = event.payload.head;
 
             try {
-              const commitsResponse = await fetchWithTimeout(
-                `https://api.github.com/repos/${repo.full_name}/commits?per_page=5`,
+              // Fetch the actual commit details to get the message
+              const commitResponse = await fetchWithTimeout(
+                `https://api.github.com/repos/${repoName}/commits/${commitSha}`,
                 {
                   headers: {
                     Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
                     Accept: "application/vnd.github.v3+json"
                   },
-                  timeout: 10000
+                  timeout: 5000
                 }
               );
 
-              if (commitsResponse.ok) {
-                const commits = await commitsResponse.json();
-                for (const commit of commits) {
-                  if (
-                    commit.author?.login === "MikeFreno" ||
-                    commit.commit?.author?.email?.includes("mike")
-                  ) {
-                    allCommits.push({
-                      sha: commit.sha?.substring(0, 7) || "unknown",
-                      message:
-                        commit.commit?.message?.split("\n")[0] || "No message",
-                      author:
-                        commit.commit?.author?.name ||
-                        commit.author?.login ||
-                        "Unknown",
-                      date:
-                        commit.commit?.author?.date || new Date().toISOString(),
-                      repo: repo.full_name,
-                      url: `https://github.com/${repo.full_name}/commit/${commit.sha}`
-                    });
-                  }
+              if (commitResponse.ok) {
+                const commit = await commitResponse.json();
+
+                // Filter for your commits
+                if (
+                  commit.author?.login === "MikeFreno" ||
+                  commit.author?.login === "mikefreno" ||
+                  commit.commit?.author?.email?.includes("mike")
+                ) {
+                  allCommits.push({
+                    sha: commit.sha?.substring(0, 7) || "unknown",
+                    message:
+                      commit.commit?.message?.split("\n")[0] || "No message",
+                    author:
+                      commit.commit?.author?.name ||
+                      commit.author?.login ||
+                      "Unknown",
+                    date:
+                      commit.commit?.author?.date || new Date().toISOString(),
+                    repo: repoName,
+                    url: `https://github.com/${repoName}/commit/${commit.sha}`
+                  });
                 }
               }
             } catch (error) {
@@ -92,17 +100,18 @@ export const gitActivityRouter = createTRPCRouter({
                 error instanceof TimeoutError
               ) {
                 console.warn(
-                  `Network error fetching commits for ${repo.full_name}, skipping`
+                  `Network error fetching commit ${commitSha} for ${repoName}, skipping`
                 );
               } else {
                 console.error(
-                  `Error fetching commits for ${repo.full_name}:`,
+                  `Error fetching commit ${commitSha} for ${repoName}:`,
                   error
                 );
               }
             }
           }
 
+          // Already sorted by event date, but sort again by commit date to be precise
           allCommits.sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           );

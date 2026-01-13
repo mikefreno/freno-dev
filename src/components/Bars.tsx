@@ -68,18 +68,28 @@ export function RightBarContent() {
   onMount(() => {
     const fetchData = async () => {
       try {
+        // Fetch more commits to account for deduplication
         const [ghCommits, gtCommits, ghActivity, gtActivity] =
           await Promise.all([
             api.gitActivity.getGitHubCommits
-              .query({ limit: 3 })
+              .query({ limit: 6 })
               .catch(() => []),
-            api.gitActivity.getGiteaCommits.query({ limit: 3 }).catch(() => []),
+            api.gitActivity.getGiteaCommits.query({ limit: 6 }).catch(() => []),
             api.gitActivity.getGitHubActivity.query().catch(() => []),
             api.gitActivity.getGiteaActivity.query().catch(() => [])
           ]);
 
-        setGithubCommits(ghCommits);
-        setGiteaCommits(gtCommits);
+        // Take first 3 from GitHub
+        const displayedGithubCommits = ghCommits.slice(0, 3);
+
+        // Deduplicate Gitea commits - only against the 3 shown in GitHub section
+        const githubShas = new Set(displayedGithubCommits.map((c) => c.sha));
+        const uniqueGiteaCommits = gtCommits.filter(
+          (commit) => !githubShas.has(commit.sha)
+        );
+
+        setGithubCommits(displayedGithubCommits);
+        setGiteaCommits(uniqueGiteaCommits.slice(0, 3));
         setGithubActivity(ghActivity);
         setGiteaActivity(gtActivity);
       } catch (error) {
