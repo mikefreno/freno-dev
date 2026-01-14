@@ -111,7 +111,7 @@ export default function DownloadsPage() {
                 <span class="text-yellow">{">"}</span> {LaLText()}
               </h2>
 
-              <div class="flex flex-col gap-8 md:flex-row md:justify-around">
+              <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
                 <div class="flex flex-col items-center gap-3">
                   <span class="text-subtext0 font-mono text-sm">
                     platform: android
@@ -172,7 +172,7 @@ export default function DownloadsPage() {
                 <span class="text-yellow">{">"}</span> {SwAText()}
               </h2>
 
-              <div class="flex flex-col gap-8 md:flex-row md:justify-around">
+              <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
                 <div class="flex flex-col items-center gap-3">
                   <span class="text-subtext0 font-mono text-sm">
                     platform: android
