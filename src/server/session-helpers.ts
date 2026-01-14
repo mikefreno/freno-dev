@@ -220,23 +220,13 @@ export async function createAuthSession(
       : undefined // Session cookie (expires on browser close)
   };
 
-  // Use updateSession to set session data directly
-
   const session = await updateSession(event, configWithMaxAge, sessionData);
-
-  console.log("[Session Create] updateSession returned:", {
-    hasData: !!session?.data,
-    dataKeys: session?.data ? Object.keys(session.data) : []
-  });
 
   // Explicitly seal/flush the session to ensure cookie is written
   // This is important in serverless environments where response might stream early
   const { sealSession } = await import("vinxi/http");
   await sealSession(event, configWithMaxAge);
 
-  console.log("[Session Create] Session sealed");
-
-  // Set a separate sessionId cookie for DB fallback (in case main session cookie fails)
   setCookie(event, "session_id", sessionId, {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
@@ -245,31 +235,14 @@ export async function createAuthSession(
     maxAge: configWithMaxAge.maxAge
   });
 
-  console.log("[Session Create] session_id cookie set");
-
-  // Verify session was actually set by reading it back
   try {
     const cookieName = sessionConfig.name || "session";
     const cookieValue = getCookie(event, cookieName);
 
-    console.log(
-      "[Session Create] Verification - cookie name:",
-      cookieName,
-      "has value:",
-      !!cookieValue
-    );
-
-    // Try reading back the session immediately using the same config
     const verifySession = await getSession<SessionData>(
       event,
       configWithMaxAge
     );
-
-    console.log("[Session Create] Verification - read session back:", {
-      hasData: !!verifySession?.data,
-      hasUserId: !!verifySession?.data?.userId,
-      hasSessionId: !!verifySession?.data?.sessionId
-    });
   } catch (verifyError) {
     console.error("[Session Create] Failed to verify session:", verifyError);
   }
@@ -318,20 +291,10 @@ export async function getAuthSession(
         const session = await unsealSession(event, sessionConfig, cookieValue);
 
         if (!session?.data || typeof session.data !== "object") {
-          console.log(
-            "[Session Get] skipUpdate: session data is empty/invalid"
-          );
-          // Try DB restoration before giving up
           const sessionIdCookie = getCookie(event, "session_id");
           if (sessionIdCookie) {
-            console.log(
-              "[Session Get] Attempting restore from DB (empty data)..."
-            );
             const restored = await restoreSessionFromDB(event, sessionIdCookie);
             if (restored) {
-              console.log(
-                "[Session Get] Successfully restored session from DB"
-              );
               return restored;
             }
           }
@@ -341,28 +304,13 @@ export async function getAuthSession(
         const data = session.data as SessionData;
 
         if (!data.userId || !data.sessionId) {
-          console.log(
-            "[Session Get] Session data missing userId or sessionId:",
-            {
-              hasUserId: !!data.userId,
-              hasSessionId: !!data.sessionId
-            }
-          );
-
-          // Fallback: Try to restore from DB using session_id cookie
           const sessionIdCookie = getCookie(event, "session_id");
-          console.log("[Session Get] session_id cookie:", sessionIdCookie);
 
           if (sessionIdCookie) {
-            console.log("[Session Get] Attempting restore from DB...");
             const restored = await restoreSessionFromDB(event, sessionIdCookie);
             if (restored) {
-              console.log(
-                "[Session Get] Successfully restored session from DB"
-              );
               return restored;
             } else {
-              console.log("[Session Get] Failed to restore session from DB");
             }
           }
 
@@ -385,19 +333,10 @@ export async function getAuthSession(
         // If decryption failed (after server restart), try DB restoration
         const sessionIdCookie = getCookie(event, "session_id");
         if (sessionIdCookie) {
-          console.log(
-            "[Session Get] Attempting restore from DB after decryption error..."
-          );
           const restored = await restoreSessionFromDB(event, sessionIdCookie);
           if (restored) {
-            console.log(
-              "[Session Get] Successfully restored session from DB after error"
-            );
             return restored;
           } else {
-            console.log(
-              "[Session Get] Failed to restore session from DB after error"
-            );
           }
         }
         return null;
@@ -408,34 +347,14 @@ export async function getAuthSession(
 
     const session = await getSession<SessionData>(event, sessionConfig);
 
-    console.log("[Session Get] Got session from Vinxi:", {
-      hasData: !!session.data,
-      hasUserId: !!session.data?.userId,
-      hasSessionId: !!session.data?.sessionId
-    });
-
     if (!session.data || !session.data.userId || !session.data.sessionId) {
       // Fallback: Try to restore from DB using session_id cookie
       const sessionIdCookie = getCookie(event, "session_id");
-      console.log(
-        "[Session Get] Normal path - session_id cookie:",
-        sessionIdCookie
-      );
 
       if (sessionIdCookie) {
-        console.log(
-          "[Session Get] Attempting restore from DB (normal path)..."
-        );
         const restored = await restoreSessionFromDB(event, sessionIdCookie);
         if (restored) {
-          console.log(
-            "[Session Get] Successfully restored session from DB (normal path)"
-          );
           return restored;
-        } else {
-          console.log(
-            "[Session Get] Failed to restore session from DB (normal path)"
-          );
         }
       }
 
@@ -490,7 +409,6 @@ async function findLatestSessionInChain(
   maxDepth: number = 100
 ): Promise<any | null> {
   if (maxDepth <= 0) {
-    console.log("[Session Chain] Max depth reached, stopping traversal");
     return null;
   }
 
@@ -518,10 +436,6 @@ async function findLatestSessionInChain(
   });
 
   if (childCheck.rows.length > 0) {
-    // Session has a child, follow the chain
-    console.log(
-      `[Session Chain] Session ${sessionId} has child, following chain...`
-    );
     return findLatestSessionInChain(
       conn,
       childCheck.rows[0].id as string,
@@ -529,24 +443,15 @@ async function findLatestSessionInChain(
     );
   }
 
-  // No child found - this is the latest session
-  // Verify it's valid (not revoked, not expired)
   if (currentSession.revoked === 1) {
-    console.log(
-      `[Session Chain] Latest session ${sessionId} is revoked - chain invalid`
-    );
     return null;
   }
 
   const expiresAt = new Date(currentSession.expires_at as string);
   if (expiresAt < new Date()) {
-    console.log(
-      `[Session Chain] Latest session ${sessionId} is expired - chain invalid`
-    );
     return null;
   }
 
-  console.log(`[Session Chain] Found valid latest session: ${sessionId}`);
   return currentSession;
 }
 
@@ -562,15 +467,12 @@ async function restoreSessionFromDB(
   sessionId: string
 ): Promise<SessionData | null> {
   try {
-    console.log("[Session Restore] Starting restore for sessionId:", sessionId);
     const conn = ConnectionFactory();
 
-    // Get IP and user agent early since we'll need them for any rotation
     const { getRequestIP } = await import("vinxi/http");
     const ipAddress = getRequestIP(event) || "unknown";
     const userAgent = event.node?.req?.headers["user-agent"] || "unknown";
 
-    // Query DB for session with all necessary data including is_admin
     const result = await conn.execute({
       sql: `SELECT s.id, s.user_id, s.token_family, s.refresh_token_hash, 
                    s.revoked, s.expires_at, u.is_admin
@@ -580,27 +482,14 @@ async function restoreSessionFromDB(
       args: [sessionId]
     });
 
-    console.log(
-      "[Session Restore] DB query returned rows:",
-      result.rows.length
-    );
-
     if (result.rows.length === 0) {
-      console.log("[Session Restore] No session found in DB");
       return null;
     }
 
     const dbSession = result.rows[0];
-    console.log("[Session Restore] Found session:", {
-      userId: dbSession.user_id,
-      revoked: dbSession.revoked,
-      expiresAt: dbSession.expires_at
-    });
 
-    // Check if refresh token is expired (applies to all sessions in chain)
     const expiresAt = new Date(dbSession.expires_at as string);
     if (expiresAt < new Date()) {
-      console.log("[Session Restore] Session refresh token expired");
       return null;
     }
 
@@ -617,28 +506,15 @@ async function restoreSessionFromDB(
     });
 
     if (childCheck.rows.length > 0) {
-      console.log(
-        "[Session Restore] Session has already been rotated - following chain to latest child"
-      );
-
-      // Follow the chain to find the latest valid session
       const latestSession = await findLatestSessionInChain(
         conn,
         childCheck.rows[0].id as string
       );
 
       if (!latestSession) {
-        console.log("[Session Restore] Could not find valid session in chain");
         return null;
       }
 
-      console.log(
-        "[Session Restore] Found latest session in chain:",
-        latestSession.id
-      );
-
-      // Use the latest session to restore
-      // Generate new refresh token and rotate from the latest session
       const newSession = await createAuthSession(
         event,
         latestSession.user_id as string,
@@ -649,33 +525,22 @@ async function restoreSessionFromDB(
         latestSession.token_family as string // Reuse family
       );
 
-      // Mark the latest session as revoked now that we've rotated it
       await conn.execute({
         sql: "UPDATE Session SET revoked = 1 WHERE id = ?",
         args: [latestSession.id]
       });
 
-      console.log(
-        "[Session Restore] Successfully restored from latest session in chain"
-      );
       return newSession;
     }
 
     // No children - this is the current session
     // Validate it's not revoked (if no children, revoked = invalid)
     if (dbSession.revoked === 1) {
-      console.log(
-        "[Session Restore] Session is revoked and has no children - cannot restore"
-      );
       return null;
     }
 
     // We can't restore the refresh token (it's hashed in DB)
-    // So we need to generate a new one and rotate the session
 
-    console.log("[Session Restore] Creating new rotated session...");
-
-    // Create a new session (this will be a rotation)
     const newSession = await createAuthSession(
       event,
       dbSession.user_id as string,
@@ -692,9 +557,6 @@ async function restoreSessionFromDB(
       args: [sessionId]
     });
 
-    console.log(
-      "[Session Restore] Successfully created new session and revoked parent"
-    );
     return newSession;
   } catch (error) {
     console.error("[Session Restore] Error restoring session:", error);
@@ -776,18 +638,8 @@ async function validateSessionInDB(
       // Grace period allows client to receive and use new cookies from rotation
       // This is critical for SSR/serverless where response cookies may be delayed
       if (timeSinceRotation >= AUTH_CONFIG.REFRESH_TOKEN_REUSE_WINDOW_MS) {
-        // Grace period expired - parent session should no longer be used
-        // This indicates either token theft or client failed to update cookies
-        console.log(
-          `[Session Validation] Parent session used ${Math.round(timeSinceRotation / 1000)}s after rotation (grace period expired)`
-        );
         return false;
       }
-
-      // Within grace period - allow parent session use while cookies propagate
-      console.log(
-        `[Session Validation] Parent session used ${Math.round(timeSinceRotation / 1000)}s after rotation (within grace period)`
-      );
     }
 
     // Update last_used and last_active_at timestamps (throttled)
