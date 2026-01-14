@@ -7,7 +7,7 @@ export interface SpinnerProps {
   size?: "sm" | "md" | "lg" | "xl" | number;
   class?: string;
   "aria-label"?: string;
-  inverse: boolean;
+  inverse?: boolean;
 }
 
 const sizeMap = {

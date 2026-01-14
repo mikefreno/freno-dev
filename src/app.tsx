@@ -176,7 +176,7 @@ function AppLayout(props: { children: any }) {
               onMouseUp={handleCenterTapRelease}
               onTouchEnd={handleCenterTapRelease}
             >
-              <Suspense fallback={<TerminalSplash />}>
+              <Suspense fallback={<TerminalSplash inverse />}>
                 <CustomScrollbar
                   autoHide={true}
                   autoHideDelay={1500}
