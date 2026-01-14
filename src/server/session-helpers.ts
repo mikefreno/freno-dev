@@ -232,7 +232,7 @@ export async function createAuthSession(
   // Explicitly seal/flush the session to ensure cookie is written
   // This is important in serverless environments where response might stream early
   const { sealSession } = await import("vinxi/http");
-  sealSession(event, configWithMaxAge);
+  await sealSession(event, configWithMaxAge);
 
   console.log("[Session Create] Session sealed");
 

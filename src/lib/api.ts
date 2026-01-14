@@ -44,6 +44,13 @@ export const api = createTRPCProxyClient<AppRouter>({
       headers: () => {
         const csrfToken = getCSRFToken();
         return csrfToken ? { "x-csrf-token": csrfToken } : {};
+      },
+      // CRITICAL FOR SAFARI: Ensure cookies are sent and received
+      fetch(url, options) {
+        return fetch(url, {
+          ...options,
+          credentials: "include" // Safari requires this for cookie handling
+        });
       }
     })
   ]

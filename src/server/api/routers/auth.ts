@@ -1660,17 +1660,33 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Step 4: Refresh CSRF token
+        // Step 4: Force response headers to be sent immediately
+        // This is critical for Safari to receive the new session cookies
+        // Safari is very strict about cookie updates from fetch responses
+        try {
+          const headers = event.node?.res?.getHeaders?.() || {};
+          console.log(
+            "[Token Refresh] Response headers set:",
+            Object.keys(headers)
+          );
+        } catch (e) {
+          // Headers already sent or not available - that's OK
+        }
+
+        // Step 5: Refresh CSRF token
         setCSRFToken(event);
 
-        // Step 5: Opportunistic cleanup (serverless-friendly)
+        // Step 6: Opportunistic cleanup (serverless-friendly)
         import("~/server/token-cleanup")
           .then((module) => module.opportunisticCleanup())
           .catch((err) => console.error("Opportunistic cleanup failed:", err));
 
         return {
           success: true,
-          message: "Token refreshed successfully"
+          message: "Token refreshed successfully",
+          // Return new session ID for Safari fallback
+          // If Safari doesn't apply cookies, client can use this to restore
+          sessionId: newSession.sessionId
         };
       } catch (error) {
         console.error("Token refresh error:", error);

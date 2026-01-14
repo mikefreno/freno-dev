@@ -23,6 +23,7 @@ class TokenRefreshManager {
   private onlineHandler: (() => void) | null = null;
   private focusHandler: (() => void) | null = null;
   private lastRefreshTime: number | null = null;
+  private lastCheckTime: number = 0;
 
   /**
    * Start monitoring and auto-refresh
@@ -73,7 +74,18 @@ class TokenRefreshManager {
     window.addEventListener("online", this.onlineHandler);
 
     // Re-check on window focus (device was asleep or user switched apps)
+    // Debounce to prevent Safari from firing this too frequently
     this.focusHandler = () => {
+      const now = Date.now();
+      const timeSinceLastCheck = now - this.lastCheckTime;
+
+      // Debounce: only check if last check was >1s ago (prevents Safari spam)
+      if (timeSinceLastCheck < 1000) {
+        console.log("[Token Refresh] Window focused but debouncing (Safari)");
+        return;
+      }
+
+      this.lastCheckTime = now;
       console.log("[Token Refresh] Window focused, checking token status");
       this.checkAndRefreshIfNeeded();
     };
