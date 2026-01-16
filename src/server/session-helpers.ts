@@ -13,7 +13,7 @@ import { env } from "~/env/server";
 import { AUTH_CONFIG, expiryToSeconds, CACHE_CONFIG } from "~/config";
 import { logAuditEvent } from "./audit";
 import type { SessionData } from "./session-config";
-import { sessionConfig } from "./session-config";
+import { sessionConfig, getSessionConfig } from "./session-config";
 import { getDeviceInfo } from "./device-utils";
 import { cache } from "./cache";
 
@@ -213,8 +213,10 @@ export async function createAuthSession(
   });
 
   // Update Vinxi session with dynamic maxAge based on rememberMe
+  // Use getSessionConfig() to ensure password is read at runtime
+  const baseConfig = getSessionConfig();
   const configWithMaxAge = {
-    ...sessionConfig,
+    ...baseConfig,
     maxAge: rememberMe
       ? expiryToSeconds(AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG)
       : undefined // Session cookie (expires on browser close)

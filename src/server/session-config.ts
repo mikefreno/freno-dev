@@ -1,5 +1,4 @@
 import type { SessionConfig } from "vinxi/http";
-import { env } from "~/env/server";
 import { AUTH_CONFIG, expiryToSeconds } from "~/config";
 
 /**
@@ -22,16 +21,57 @@ export interface SessionData {
 }
 
 /**
+ * Get session password directly from process.env
+ * This avoids any bundler-time substitution issues with the validated env object
+ */
+function getSessionPassword(): string {
+  // Read directly from process.env at runtime, not from bundled env object
+  const password = process.env.JWT_SECRET_KEY;
+  if (!password || password.trim() === "") {
+    console.error(
+      `[SessionConfig] JWT_SECRET_KEY missing from process.env! Keys available:`,
+      Object.keys(process.env)
+        .filter((k) => k.includes("JWT") || k.includes("SECRET"))
+        .join(", ") || "none matching JWT/SECRET"
+    );
+    throw new Error(
+      `JWT_SECRET_KEY is empty at runtime. Ensure it is set as a runtime environment variable in Vercel (not just build-time).`
+    );
+  }
+  return password;
+}
+
+/**
+ * Get session config with runtime password validation
+ * Returns a fresh config each time to ensure env vars are read at call time,
+ * not at module load time (important for serverless cold starts)
+ */
+export function getSessionConfig(): SessionConfig {
+  return {
+    password: getSessionPassword(),
+    name: "session",
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/"
+    }
+  };
+}
+
+/**
  * Vinxi session configuration
- * Uses iron-session style password-based encryption
+ * Using a getter ensures password is evaluated at access time, not module load time
  */
 export const sessionConfig: SessionConfig = {
-  password: env.JWT_SECRET_KEY,
+  get password() {
+    return getSessionPassword();
+  },
   name: "session",
   cookie: {
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "lax", // Allow cookies on top-level navigation (OAuth/email redirects) for WebKit compatibility
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     path: "/"
   }
 };
