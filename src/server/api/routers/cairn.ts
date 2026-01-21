@@ -185,10 +185,6 @@ const loginSchema = z.object({
   password: z.string().min(1)
 });
 
-const testTokenSchema = z.object({
-  userId: z.string().min(1)
-});
-
 export const cairnDbRouter = createTRPCRouter({
   health: cairnProcedure.query(async () => {
     try {
@@ -239,15 +235,39 @@ export const cairnDbRouter = createTRPCRouter({
         });
         await conn.execute({
           sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          args: [crypto.randomUUID(), userId, "email", null, input.email, null, null]
+          args: [
+            crypto.randomUUID(),
+            userId,
+            "email",
+            null,
+            input.email,
+            null,
+            null
+          ]
         });
         await conn.execute({
           sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          args: [crypto.randomUUID(), userId, "password", passwordHash, input.email, null, null]
+          args: [
+            crypto.randomUUID(),
+            userId,
+            "password",
+            passwordHash,
+            input.email,
+            null,
+            null
+          ]
         });
         await conn.execute({
           sql: "INSERT INTO workoutPlans (id, userId, name, category, difficulty, type, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          args: [crypto.randomUUID(), userId, "Getting Started", "strength", "beginner", "strength", 0]
+          args: [
+            crypto.randomUUID(),
+            userId,
+            "Getting Started",
+            "strength",
+            "beginner",
+            "strength",
+            0
+          ]
         });
 
         const token = await signCairnToken(userId);
@@ -264,90 +284,73 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  login: publicProcedure
-    .input(loginSchema)
-    .mutation(async ({ input }) => {
-      try {
-        const conn = CairnConnectionFactory();
-        const result = await conn.execute({
-          sql: "SELECT userId, email, provider, providerUserId FROM authProviders WHERE email = ? AND provider IN ('email', 'password')",
-          args: [input.email]
-        });
+  login: publicProcedure.input(loginSchema).mutation(async ({ input }) => {
+    try {
+      const conn = CairnConnectionFactory();
+      const result = await conn.execute({
+        sql: "SELECT userId, email, provider, providerUserId FROM authProviders WHERE email = ? AND provider IN ('email', 'password')",
+        args: [input.email]
+      });
 
-        if (!result.rows.length) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid credentials"
-          });
-        }
-
-        const rows = result.rows as Array<{
-          userId: string;
-          email: string | null;
-          provider: string;
-          providerUserId: string | null;
-        }>;
-        const emailProvider = rows.find((row) => row.provider === "email");
-        const passwordProvider = rows.find((row) => row.provider === "password");
-
-        if (emailProvider?.userId !== passwordProvider?.userId) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid credentials"
-          });
-        }
-
-        if (!emailProvider || !passwordProvider) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid credentials"
-          });
-        }
-
-        const matches = await checkPasswordSafe(
-          input.password,
-          passwordProvider.providerUserId
-        );
-        if (!matches) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid credentials"
-          });
-        }
-
-        const token = await signCairnToken(emailProvider.userId);
-        await conn.execute({
-          sql: "UPDATE users SET lastLoginAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?",
-          args: [emailProvider.userId]
-        });
-
-        return { success: true, token, userId: emailProvider.userId };
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        console.error("Failed to login Cairn user:", error);
+      if (!result.rows.length) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to login"
+          code: "UNAUTHORIZED",
+          message: "Invalid credentials"
         });
       }
-    }),
 
-  createTestToken: publicProcedure
-    .input(testTokenSchema)
-    .mutation(async ({ input }) => {
-      try {
-        const token = await signCairnToken(input.userId);
-        return { success: true, token, userId: input.userId };
-      } catch (error) {
-        console.error("Failed to create Cairn test token:", error);
+      const rows = result.rows as Array<{
+        userId: string;
+        email: string | null;
+        provider: string;
+        providerUserId: string | null;
+      }>;
+      const emailProvider = rows.find((row) => row.provider === "email");
+      const passwordProvider = rows.find((row) => row.provider === "password");
+
+      if (emailProvider?.userId !== passwordProvider?.userId) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create test token"
+          code: "UNAUTHORIZED",
+          message: "Invalid credentials"
         });
       }
-    }),
+
+      if (!emailProvider || !passwordProvider) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid credentials"
+        });
+      }
+
+      const matches = await checkPasswordSafe(
+        input.password,
+        passwordProvider.providerUserId
+      );
+      if (!matches) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid credentials"
+        });
+      }
+
+      const token = await signCairnToken(emailProvider.userId);
+      await conn.execute({
+        sql: "UPDATE users SET lastLoginAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?",
+        args: [emailProvider.userId]
+      });
+
+      return { success: true, token, userId: emailProvider.userId };
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+      console.error("Failed to login Cairn user:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to login"
+      });
+    }
+  }),
 
   getUsers: cairnProcedure
     .input(paginatedQuerySchema)
