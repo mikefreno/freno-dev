@@ -11,7 +11,7 @@ import { postHistoryRouter } from "./routers/post-history";
 import { infillRouter } from "./routers/infill";
 import { accountRouter } from "./routers/account";
 import { downloadsRouter } from "./routers/downloads";
-import { remoteDbRouter } from "./routers/remote-db";
+import { cairnDbRouter } from "./routers/cairn";
 import { appleNotificationsRouter } from "./routers/apple-notifications";
 import { createTRPCRouter, createTRPCContext } from "./utils";
 import type { H3Event } from "h3";
@@ -30,7 +30,7 @@ export const appRouter = createTRPCRouter({
   infill: infillRouter,
   account: accountRouter,
   downloads: downloadsRouter,
-  remoteDb: remoteDbRouter,
+  cairnDb: cairnDbRouter,
   appleNotifications: appleNotificationsRouter
 });
 
