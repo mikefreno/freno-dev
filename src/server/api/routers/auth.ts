@@ -1639,54 +1639,36 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Step 2: Get client info for rotation
-        const clientIP = getClientIP(event);
-        const userAgent = getUserAgent(event);
+        const authToken = getCookie(event, authCookieName);
 
-        // Step 3: Rotate session (includes validation, breach detection, cookie update)
-        const newSession = await rotateAuthSession(
-          event,
-          session,
-          clientIP,
-          userAgent
-        );
-
-        if (!newSession) {
-          // Rotation failed - session invalid, reuse detected, or max rotations reached
-          await invalidateAuthSession(event, session.sessionId);
+        if (!authToken) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "Token refresh failed - please login again"
+            message: "No valid token found"
           });
         }
 
-        // Step 4: Force response headers to be sent immediately
-        // This is critical for Safari to receive the new session cookies
-        // Safari is very strict about cookie updates from fetch responses
-        try {
-          const headers = event.node?.res?.getHeaders?.() || {};
-          console.log(
-            "[Token Refresh] Response headers set:",
-            Object.keys(headers)
-          );
-        } catch (e) {
-          // Headers already sent or not available - that's OK
+        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+        const { payload } = await jwtVerify(authToken, secret);
+
+        if (!payload.sub) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid token"
+          });
         }
 
-        // Step 5: Refresh CSRF token
-        setCSRFToken(event);
+        await issueAuthToken({
+          event,
+          userId: payload.sub as string,
+          rememberMe: ctx.input.rememberMe ?? false
+        });
 
-        // Step 6: Opportunistic cleanup (serverless-friendly)
-        import("~/server/token-cleanup")
-          .then((module) => module.opportunisticCleanup())
-          .catch((err) => console.error("Opportunistic cleanup failed:", err));
+        setCSRFToken(event);
 
         return {
           success: true,
-          message: "Token refreshed successfully",
-          // Return new session ID for Safari fallback
-          // If Safari doesn't apply cookies, client can use this to restore
-          sessionId: newSession.sessionId
+          message: "Token refreshed successfully"
         };
       } catch (error) {
         console.error("Token refresh error:", error);
@@ -1704,17 +1686,14 @@ export const authRouter = createTRPCRouter({
 
   signOut: publicProcedure.mutation(async ({ ctx }) => {
     try {
-      // Step 1: Get current session
-      const session = await getAuthSession(getH3Event(ctx));
+      const auth = await checkAuthStatus(getH3Event(ctx));
 
-      if (session) {
-        await revokeTokenFamily(session.tokenFamily, "user_logout");
-
+      if (auth.userId) {
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
-          userId: session.userId,
+          userId: auth.userId,
           eventType: "auth.logout",
-          eventData: { sessionId: session.sessionId },
+          eventData: {},
           ipAddress,
           userAgent,
           success: true
@@ -1722,11 +1701,9 @@ export const authRouter = createTRPCRouter({
       }
     } catch (e) {
       console.error("Error during signout:", e);
-      // Continue with session clearing even if revocation fails
     }
 
-    // Step 4: Clear Vinxi session (clears encrypted cookie)
-    await invalidateAuthSession(getH3Event(ctx), "");
+    clearAuthToken(getH3Event(ctx));
 
     return { success: true };
   }),

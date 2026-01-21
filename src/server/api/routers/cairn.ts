@@ -1,8 +1,10 @@
-import { createTRPCRouter, cairnProcedure } from "../utils";
+import { createTRPCRouter, cairnProcedure, publicProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { CairnConnectionFactory } from "~/server/database";
 import { cache } from "~/server/cache";
+import { hashPassword, checkPasswordSafe } from "~/server/utils";
+import { signCairnToken } from "~/server/cairn-auth";
 
 const CAIRN_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -171,6 +173,22 @@ const bulkSchema = z.object({
   authProviders: z.array(providerSchema).optional()
 });
 
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1)
+});
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1)
+});
+
+const testTokenSchema = z.object({
+  userId: z.string().min(1)
+});
+
 export const cairnDbRouter = createTRPCRouter({
   health: cairnProcedure.query(async () => {
     try {
@@ -185,6 +203,151 @@ export const cairnDbRouter = createTRPCRouter({
       });
     }
   }),
+
+  register: publicProcedure
+    .input(registerSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const conn = CairnConnectionFactory();
+        const existing = await conn.execute({
+          sql: "SELECT id FROM users WHERE email = ?",
+          args: [input.email]
+        });
+
+        if (existing.rows.length) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Email already registered"
+          });
+        }
+
+        const userId = crypto.randomUUID();
+        const passwordHash = await hashPassword(input.password);
+        await conn.execute({
+          sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, provider, status, updatedAt)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+          args: [
+            userId,
+            input.email,
+            0,
+            input.firstName,
+            input.lastName,
+            `${input.firstName} ${input.lastName}`.trim(),
+            "email",
+            "active"
+          ]
+        });
+        await conn.execute({
+          sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          args: [crypto.randomUUID(), userId, "email", null, input.email, null, null]
+        });
+        await conn.execute({
+          sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          args: [crypto.randomUUID(), userId, "password", passwordHash, input.email, null, null]
+        });
+        await conn.execute({
+          sql: "INSERT INTO workoutPlans (id, userId, name, category, difficulty, type, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          args: [crypto.randomUUID(), userId, "Getting Started", "strength", "beginner", "strength", 0]
+        });
+
+        const token = await signCairnToken(userId);
+        return { success: true, token, userId };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Failed to register Cairn user:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to register user"
+        });
+      }
+    }),
+
+  login: publicProcedure
+    .input(loginSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const conn = CairnConnectionFactory();
+        const result = await conn.execute({
+          sql: "SELECT userId, email, provider, providerUserId FROM authProviders WHERE email = ? AND provider IN ('email', 'password')",
+          args: [input.email]
+        });
+
+        if (!result.rows.length) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid credentials"
+          });
+        }
+
+        const rows = result.rows as Array<{
+          userId: string;
+          email: string | null;
+          provider: string;
+          providerUserId: string | null;
+        }>;
+        const emailProvider = rows.find((row) => row.provider === "email");
+        const passwordProvider = rows.find((row) => row.provider === "password");
+
+        if (emailProvider?.userId !== passwordProvider?.userId) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid credentials"
+          });
+        }
+
+        if (!emailProvider || !passwordProvider) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid credentials"
+          });
+        }
+
+        const matches = await checkPasswordSafe(
+          input.password,
+          passwordProvider.providerUserId
+        );
+        if (!matches) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid credentials"
+          });
+        }
+
+        const token = await signCairnToken(emailProvider.userId);
+        await conn.execute({
+          sql: "UPDATE users SET lastLoginAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?",
+          args: [emailProvider.userId]
+        });
+
+        return { success: true, token, userId: emailProvider.userId };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Failed to login Cairn user:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to login"
+        });
+      }
+    }),
+
+  createTestToken: publicProcedure
+    .input(testTokenSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const token = await signCairnToken(input.userId);
+        return { success: true, token, userId: input.userId };
+      } catch (error) {
+        console.error("Failed to create Cairn test token:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create test token"
+        });
+      }
+    }),
 
   getUsers: cairnProcedure
     .input(paginatedQuerySchema)
@@ -274,6 +437,171 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
+  getPlanDetails: cairnProcedure
+    .input(paginatedQuerySchema)
+    .query(async ({ input, ctx }) => {
+      const limit = input.limit ?? 50;
+      const offset = input.offset ?? 0;
+      const cacheKey = `cairn-plan-details:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
+
+      const cached = await cache.get<{
+        plans: Array<{
+          id: string;
+          userId: string;
+          name: string;
+          description: string | null;
+          category: string;
+          difficulty: string | null;
+          durationMinutes: number | null;
+          type: string;
+          isPublic: number | null;
+          createdAt: string;
+          updatedAt: string;
+        }>;
+        planExercises: Array<{
+          id: string;
+          planId: string;
+          exerciseId: string | null;
+          name: string;
+          category: string;
+          orderIndex: number;
+          notes: string | null;
+          createdAt: string;
+        }>;
+        planSets: Array<{
+          id: string;
+          planExerciseId: string;
+          setNumber: number;
+          reps: number | null;
+          weight: number | null;
+          durationSeconds: number | null;
+          rpe: number | null;
+          restAfterSeconds: number | null;
+          isWarmup: number | null;
+          isDropset: number | null;
+          notes: string | null;
+          createdAt: string;
+        }>;
+        routePoints: Array<{
+          id: string;
+          planId: string;
+          latitude: number;
+          longitude: number;
+          orderIndex: number;
+          isWaypoint: number | null;
+          createdAt: string;
+        }>;
+      }>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      try {
+        const conn = CairnConnectionFactory();
+        const planSql = input.since
+          ? "SELECT id, userId, name, description, category, difficulty, durationMinutes, type, isPublic, createdAt, updatedAt FROM workoutPlans WHERE userId = ? AND updatedAt > ? ORDER BY createdAt DESC LIMIT ? OFFSET ?"
+          : "SELECT id, userId, name, description, category, difficulty, durationMinutes, type, isPublic, createdAt, updatedAt FROM workoutPlans WHERE userId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+        const planArgs = input.since
+          ? [ctx.cairnUserId, input.since, limit, offset]
+          : [ctx.cairnUserId, limit, offset];
+        const planResult = await conn.execute({
+          sql: planSql,
+          args: planArgs
+        });
+
+        const planExercisesSql = input.since
+          ? "SELECT id, planId, exerciseId, name, category, orderIndex, notes, createdAt FROM planExercises WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ? AND updatedAt > ?) ORDER BY orderIndex ASC"
+          : "SELECT id, planId, exerciseId, name, category, orderIndex, notes, createdAt FROM planExercises WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ?) ORDER BY orderIndex ASC";
+        const planExercisesArgs = input.since
+          ? [ctx.cairnUserId, input.since]
+          : [ctx.cairnUserId];
+        const planExercisesResult = await conn.execute({
+          sql: planExercisesSql,
+          args: planExercisesArgs
+        });
+
+        const planSetsSql = input.since
+          ? "SELECT id, planExerciseId, setNumber, reps, weight, durationSeconds, rpe, restAfterSeconds, isWarmup, isDropset, notes, createdAt FROM planSets WHERE planExerciseId IN (SELECT id FROM planExercises WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ? AND updatedAt > ?)) ORDER BY setNumber ASC"
+          : "SELECT id, planExerciseId, setNumber, reps, weight, durationSeconds, rpe, restAfterSeconds, isWarmup, isDropset, notes, createdAt FROM planSets WHERE planExerciseId IN (SELECT id FROM planExercises WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ?)) ORDER BY setNumber ASC";
+        const planSetsArgs = input.since
+          ? [ctx.cairnUserId, input.since]
+          : [ctx.cairnUserId];
+        const planSetsResult = await conn.execute({
+          sql: planSetsSql,
+          args: planSetsArgs
+        });
+
+        const routePointsSql = input.since
+          ? "SELECT id, planId, latitude, longitude, orderIndex, isWaypoint, createdAt FROM routePoints WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ? AND updatedAt > ?) ORDER BY orderIndex ASC"
+          : "SELECT id, planId, latitude, longitude, orderIndex, isWaypoint, createdAt FROM routePoints WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ?) ORDER BY orderIndex ASC";
+        const routePointsArgs = input.since
+          ? [ctx.cairnUserId, input.since]
+          : [ctx.cairnUserId];
+        const routePointsResult = await conn.execute({
+          sql: routePointsSql,
+          args: routePointsArgs
+        });
+
+        const payload = {
+          plans: planResult.rows as Array<{
+            id: string;
+            userId: string;
+            name: string;
+            description: string | null;
+            category: string;
+            difficulty: string | null;
+            durationMinutes: number | null;
+            type: string;
+            isPublic: number | null;
+            createdAt: string;
+            updatedAt: string;
+          }>,
+          planExercises: planExercisesResult.rows as Array<{
+            id: string;
+            planId: string;
+            exerciseId: string | null;
+            name: string;
+            category: string;
+            orderIndex: number;
+            notes: string | null;
+            createdAt: string;
+          }>,
+          planSets: planSetsResult.rows as Array<{
+            id: string;
+            planExerciseId: string;
+            setNumber: number;
+            reps: number | null;
+            weight: number | null;
+            durationSeconds: number | null;
+            rpe: number | null;
+            restAfterSeconds: number | null;
+            isWarmup: number | null;
+            isDropset: number | null;
+            notes: string | null;
+            createdAt: string;
+          }>,
+          routePoints: routePointsResult.rows as Array<{
+            id: string;
+            planId: string;
+            latitude: number;
+            longitude: number;
+            orderIndex: number;
+            isWaypoint: number | null;
+            createdAt: string;
+          }>
+        };
+
+        await cache.set(cacheKey, payload, CAIRN_CACHE_TTL_MS);
+        return payload;
+      } catch (error) {
+        console.error("Failed to fetch Cairn plan details:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch Cairn plan details"
+        });
+      }
+    }),
+
   getWorkouts: cairnProcedure
     .input(paginatedQuerySchema)
     .query(async ({ input, ctx }) => {
@@ -316,6 +644,189 @@ export const cairnDbRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch Cairn workouts"
+        });
+      }
+    }),
+
+  getWorkoutDetails: cairnProcedure
+    .input(paginatedQuerySchema)
+    .query(async ({ input, ctx }) => {
+      const limit = input.limit ?? 50;
+      const offset = input.offset ?? 0;
+      const cacheKey = `cairn-workout-details:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
+
+      const cached = await cache.get<{
+        workouts: Array<{
+          id: string;
+          userId: string;
+          planId: string | null;
+          type: string;
+          name: string | null;
+          startDate: string;
+          endDate: string | null;
+          durationSeconds: number | null;
+          distanceMeters: number | null;
+          calories: number | null;
+          averageHeartRate: number | null;
+          maxHeartRate: number | null;
+          averagePace: number | null;
+          elevationGain: number | null;
+          status: string;
+          source: string;
+          healthKitUUID: string | null;
+          notes: string | null;
+          createdAt: string;
+          updatedAt: string;
+          syncedAt: string | null;
+        }>;
+        heartRateSamples: Array<{
+          id: string;
+          workoutId: string;
+          timestamp: string;
+          bpm: number;
+          source: string | null;
+        }>;
+        locationSamples: Array<{
+          id: string;
+          workoutId: string;
+          timestamp: string;
+          latitude: number;
+          longitude: number;
+          altitude: number | null;
+          horizontalAccuracy: number | null;
+          verticalAccuracy: number | null;
+          speed: number | null;
+          course: number | null;
+        }>;
+        workoutSplits: Array<{
+          id: string;
+          workoutId: string;
+          splitNumber: number;
+          distanceMeters: number;
+          durationSeconds: number;
+          startTimestamp: string;
+          endTimestamp: string;
+          averageHeartRate: number | null;
+          averagePace: number | null;
+          elevationGain: number | null;
+          elevationLoss: number | null;
+        }>;
+      }>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      try {
+        const conn = CairnConnectionFactory();
+        const workoutSql = input.since
+          ? "SELECT id, userId, planId, type, name, startDate, endDate, durationSeconds, distanceMeters, calories, averageHeartRate, maxHeartRate, averagePace, elevationGain, status, source, healthKitUUID, notes, createdAt, updatedAt, syncedAt FROM workouts WHERE userId = ? AND updatedAt > ? ORDER BY startDate DESC LIMIT ? OFFSET ?"
+          : "SELECT id, userId, planId, type, name, startDate, endDate, durationSeconds, distanceMeters, calories, averageHeartRate, maxHeartRate, averagePace, elevationGain, status, source, healthKitUUID, notes, createdAt, updatedAt, syncedAt FROM workouts WHERE userId = ? ORDER BY startDate DESC LIMIT ? OFFSET ?";
+        const workoutArgs = input.since
+          ? [ctx.cairnUserId, input.since, limit, offset]
+          : [ctx.cairnUserId, limit, offset];
+        const workoutResult = await conn.execute({
+          sql: workoutSql,
+          args: workoutArgs
+        });
+
+        const heartRateSql = input.since
+          ? "SELECT id, workoutId, timestamp, bpm, source FROM heartRateSamples WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ? AND updatedAt > ?) ORDER BY timestamp ASC"
+          : "SELECT id, workoutId, timestamp, bpm, source FROM heartRateSamples WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ?) ORDER BY timestamp ASC";
+        const heartRateArgs = input.since
+          ? [ctx.cairnUserId, input.since]
+          : [ctx.cairnUserId];
+        const heartRateResult = await conn.execute({
+          sql: heartRateSql,
+          args: heartRateArgs
+        });
+
+        const locationSql = input.since
+          ? "SELECT id, workoutId, timestamp, latitude, longitude, altitude, horizontalAccuracy, verticalAccuracy, speed, course FROM locationSamples WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ? AND updatedAt > ?) ORDER BY timestamp ASC"
+          : "SELECT id, workoutId, timestamp, latitude, longitude, altitude, horizontalAccuracy, verticalAccuracy, speed, course FROM locationSamples WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ?) ORDER BY timestamp ASC";
+        const locationArgs = input.since
+          ? [ctx.cairnUserId, input.since]
+          : [ctx.cairnUserId];
+        const locationResult = await conn.execute({
+          sql: locationSql,
+          args: locationArgs
+        });
+
+        const splitSql = input.since
+          ? "SELECT id, workoutId, splitNumber, distanceMeters, durationSeconds, startTimestamp, endTimestamp, averageHeartRate, averagePace, elevationGain, elevationLoss FROM workoutSplits WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ? AND updatedAt > ?) ORDER BY splitNumber ASC"
+          : "SELECT id, workoutId, splitNumber, distanceMeters, durationSeconds, startTimestamp, endTimestamp, averageHeartRate, averagePace, elevationGain, elevationLoss FROM workoutSplits WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ?) ORDER BY splitNumber ASC";
+        const splitArgs = input.since
+          ? [ctx.cairnUserId, input.since]
+          : [ctx.cairnUserId];
+        const splitResult = await conn.execute({
+          sql: splitSql,
+          args: splitArgs
+        });
+
+        const payload = {
+          workouts: workoutResult.rows as Array<{
+            id: string;
+            userId: string;
+            planId: string | null;
+            type: string;
+            name: string | null;
+            startDate: string;
+            endDate: string | null;
+            durationSeconds: number | null;
+            distanceMeters: number | null;
+            calories: number | null;
+            averageHeartRate: number | null;
+            maxHeartRate: number | null;
+            averagePace: number | null;
+            elevationGain: number | null;
+            status: string;
+            source: string;
+            healthKitUUID: string | null;
+            notes: string | null;
+            createdAt: string;
+            updatedAt: string;
+            syncedAt: string | null;
+          }>,
+          heartRateSamples: heartRateResult.rows as Array<{
+            id: string;
+            workoutId: string;
+            timestamp: string;
+            bpm: number;
+            source: string | null;
+          }>,
+          locationSamples: locationResult.rows as Array<{
+            id: string;
+            workoutId: string;
+            timestamp: string;
+            latitude: number;
+            longitude: number;
+            altitude: number | null;
+            horizontalAccuracy: number | null;
+            verticalAccuracy: number | null;
+            speed: number | null;
+            course: number | null;
+          }>,
+          workoutSplits: splitResult.rows as Array<{
+            id: string;
+            workoutId: string;
+            splitNumber: number;
+            distanceMeters: number;
+            durationSeconds: number;
+            startTimestamp: string;
+            endTimestamp: string;
+            averageHeartRate: number | null;
+            averagePace: number | null;
+            elevationGain: number | null;
+            elevationLoss: number | null;
+          }>
+        };
+
+        await cache.set(cacheKey, payload, CAIRN_CACHE_TTL_MS);
+        return payload;
+      } catch (error) {
+        console.error("Failed to fetch Cairn workout details:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch Cairn workout details"
         });
       }
     }),
