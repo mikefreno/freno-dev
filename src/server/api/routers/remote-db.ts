@@ -8,7 +8,8 @@ const CAIRN_CACHE_TTL_MS = 5 * 60 * 1000;
 
 const paginatedQuerySchema = z.object({
   limit: z.number().int().min(1).max(100).optional(),
-  offset: z.number().int().min(0).optional()
+  offset: z.number().int().min(0).optional(),
+  since: z.string().optional()
 });
 
 const planIdSchema = z.object({ id: z.string().min(1) });
@@ -187,10 +188,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   getUsers: cairnProcedure
     .input(paginatedQuerySchema)
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const limit = input.limit ?? 50;
       const offset = input.offset ?? 0;
-      const cacheKey = `cairn-users:${limit}:${offset}`;
+      const cacheKey = `cairn-users:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
 
       const cached = await cache.get<{
         users: Array<{ id: string; email: string | null }>;
@@ -201,9 +202,15 @@ export const remoteDbRouter = createTRPCRouter({
 
       try {
         const conn = CairnConnectionFactory();
+        const sql = input.since
+          ? "SELECT id, email FROM users WHERE id = ? AND updatedAt > ? ORDER BY createdAt DESC LIMIT ? OFFSET ?"
+          : "SELECT id, email FROM users WHERE id = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+        const args = input.since
+          ? [ctx.cairnUserId, input.since, limit, offset]
+          : [ctx.cairnUserId, limit, offset];
         const result = await conn.execute({
-          sql: "SELECT id, email FROM users ORDER BY createdAt DESC LIMIT ? OFFSET ?",
-          args: [limit, offset]
+          sql,
+          args
         });
 
         const payload = {
@@ -223,10 +230,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   getPlans: cairnProcedure
     .input(paginatedQuerySchema)
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const limit = input.limit ?? 50;
       const offset = input.offset ?? 0;
-      const cacheKey = `cairn-plans:${limit}:${offset}`;
+      const cacheKey = `cairn-plans:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
 
       const cached = await cache.get<{
         plans: Array<{ id: string; name: string; category: string }>;
@@ -237,9 +244,15 @@ export const remoteDbRouter = createTRPCRouter({
 
       try {
         const conn = CairnConnectionFactory();
+        const sql = input.since
+          ? "SELECT id, name, category FROM workoutPlans WHERE userId = ? AND updatedAt > ? ORDER BY createdAt DESC LIMIT ? OFFSET ?"
+          : "SELECT id, name, category FROM workoutPlans WHERE userId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+        const args = input.since
+          ? [ctx.cairnUserId, input.since, limit, offset]
+          : [ctx.cairnUserId, limit, offset];
         const result = await conn.execute({
-          sql: "SELECT id, name, category FROM workoutPlans ORDER BY createdAt DESC LIMIT ? OFFSET ?",
-          args: [limit, offset]
+          sql,
+          args
         });
 
         const payload = {
@@ -263,10 +276,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   getWorkouts: cairnProcedure
     .input(paginatedQuerySchema)
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const limit = input.limit ?? 50;
       const offset = input.offset ?? 0;
-      const cacheKey = `cairn-workouts:${limit}:${offset}`;
+      const cacheKey = `cairn-workouts:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
 
       const cached = await cache.get<{
         workouts: Array<{ id: string; type: string; startDate: string }>;
@@ -277,9 +290,15 @@ export const remoteDbRouter = createTRPCRouter({
 
       try {
         const conn = CairnConnectionFactory();
+        const sql = input.since
+          ? "SELECT id, type, startDate FROM workouts WHERE userId = ? AND updatedAt > ? ORDER BY startDate DESC LIMIT ? OFFSET ?"
+          : "SELECT id, type, startDate FROM workouts WHERE userId = ? ORDER BY startDate DESC LIMIT ? OFFSET ?";
+        const args = input.since
+          ? [ctx.cairnUserId, input.since, limit, offset]
+          : [ctx.cairnUserId, limit, offset];
         const result = await conn.execute({
-          sql: "SELECT id, type, startDate FROM workouts ORDER BY startDate DESC LIMIT ? OFFSET ?",
-          args: [limit, offset]
+          sql,
+          args
         });
 
         const payload = {
@@ -303,12 +322,16 @@ export const remoteDbRouter = createTRPCRouter({
 
   createUser: cairnProcedure
     .input(userInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.id !== ctx.cairnUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = CairnConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, appleUserId, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET email = excluded.email, emailVerified = excluded.emailVerified, firstName = excluded.firstName, lastName = excluded.lastName, displayName = excluded.displayName, avatarUrl = excluded.avatarUrl, provider = excluded.provider, appleUserId = excluded.appleUserId, status = excluded.status, updatedAt = datetime('now')`,
           args: [
             input.id,
             input.email ?? null,
@@ -334,7 +357,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   updateUser: cairnProcedure
     .input(userInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.id !== ctx.cairnUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = CairnConnectionFactory();
         await conn.execute({
@@ -364,7 +390,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   deleteUser: cairnProcedure
     .input(userIdSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.id !== ctx.cairnUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = CairnConnectionFactory();
         await conn.execute({
@@ -383,7 +412,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   createWorkoutPlan: cairnProcedure
     .input(workoutPlanSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId != ctx.cairnUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = CairnConnectionFactory();
         await conn.execute({
@@ -413,7 +445,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   updateWorkoutPlan: cairnProcedure
     .input(workoutPlanSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId != ctx.cairnUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = CairnConnectionFactory();
         await conn.execute({
@@ -441,9 +476,16 @@ export const remoteDbRouter = createTRPCRouter({
 
   deleteWorkoutPlan: cairnProcedure
     .input(planIdSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const check = await conn.execute({
+          sql: "SELECT userId FROM workoutPlans WHERE id = ?",
+          args: [input.id]
+        });
+        if (!check.rows.length || check.rows[0].userId !== ctx.cairnUserId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: "DELETE FROM workoutPlans WHERE id = ?",
           args: [input.id]
@@ -460,9 +502,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   createPlanExercise: cairnProcedure
     .input(planExerciseSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT userId FROM workoutPlans WHERE id = ?",
+          args: [input.planId]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: `INSERT INTO planExercises (id, planId, exerciseId, name, category, orderIndex, notes)
                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -488,9 +540,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   updatePlanExercise: cairnProcedure
     .input(planExerciseSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT userId FROM workoutPlans WHERE id = ?",
+          args: [input.planId]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: `UPDATE planExercises SET exerciseId = ?, name = ?, category = ?, orderIndex = ?, notes = ? WHERE id = ?`,
           args: [
@@ -514,9 +576,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   deletePlanExercise: cairnProcedure
     .input(planExerciseIdSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN planExercises ON planExercises.planId = workoutPlans.id WHERE planExercises.id = ?",
+          args: [input.id]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: "DELETE FROM planExercises WHERE id = ?",
           args: [input.id]
@@ -533,9 +605,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   createPlanSet: cairnProcedure
     .input(planSetSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN planExercises ON planExercises.planId = workoutPlans.id WHERE planExercises.id = ?",
+          args: [input.planExerciseId]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: `INSERT INTO planSets (id, planExerciseId, setNumber, reps, weight, durationSeconds, rpe, restAfterSeconds, isWarmup, isDropset, notes)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -565,9 +647,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   updatePlanSet: cairnProcedure
     .input(planSetSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN planExercises ON planExercises.planId = workoutPlans.id INNER JOIN planSets ON planSets.planExerciseId = planExercises.id WHERE planSets.id = ?",
+          args: [input.id]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: `UPDATE planSets SET setNumber = ?, reps = ?, weight = ?, durationSeconds = ?, rpe = ?, restAfterSeconds = ?, isWarmup = ?, isDropset = ?, notes = ? WHERE id = ?`,
           args: [
@@ -595,9 +687,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   deletePlanSet: cairnProcedure
     .input(planSetIdSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN planExercises ON planExercises.planId = workoutPlans.id INNER JOIN planSets ON planSets.planExerciseId = planExercises.id WHERE planSets.id = ?",
+          args: [input.id]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: "DELETE FROM planSets WHERE id = ?",
           args: [input.id]
@@ -614,9 +716,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   createRoutePoint: cairnProcedure
     .input(routePointSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT userId FROM workoutPlans WHERE id = ?",
+          args: [input.planId]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: `INSERT INTO routePoints (id, planId, latitude, longitude, orderIndex, isWaypoint)
                 VALUES (?, ?, ?, ?, ?, ?)`,
@@ -641,9 +753,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   updateRoutePoint: cairnProcedure
     .input(routePointSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN routePoints ON routePoints.planId = workoutPlans.id WHERE routePoints.id = ?",
+          args: [input.id]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: `UPDATE routePoints SET latitude = ?, longitude = ?, orderIndex = ?, isWaypoint = ? WHERE id = ?`,
           args: [
@@ -666,9 +788,19 @@ export const remoteDbRouter = createTRPCRouter({
 
   deleteRoutePoint: cairnProcedure
     .input(routePointIdSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const planCheck = await conn.execute({
+          sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN routePoints ON routePoints.planId = workoutPlans.id WHERE routePoints.id = ?",
+          args: [input.id]
+        });
+        if (
+          !planCheck.rows.length ||
+          planCheck.rows[0].userId !== ctx.cairnUserId
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: "DELETE FROM routePoints WHERE id = ?",
           args: [input.id]
@@ -685,7 +817,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   createWorkout: cairnProcedure
     .input(workoutSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId != ctx.cairnUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = CairnConnectionFactory();
         await conn.execute({
@@ -724,7 +859,10 @@ export const remoteDbRouter = createTRPCRouter({
 
   updateWorkout: cairnProcedure
     .input(workoutSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId != ctx.cairnUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = CairnConnectionFactory();
         await conn.execute({
@@ -761,9 +899,16 @@ export const remoteDbRouter = createTRPCRouter({
 
   deleteWorkout: cairnProcedure
     .input(workoutIdSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
+        const check = await conn.execute({
+          sql: "SELECT userId FROM workouts WHERE id = ?",
+          args: [input.id]
+        });
+        if (!check.rows.length || check.rows[0].userId !== ctx.cairnUserId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+        }
         await conn.execute({
           sql: "DELETE FROM workouts WHERE id = ?",
           args: [input.id]
@@ -811,12 +956,7 @@ export const remoteDbRouter = createTRPCRouter({
         const conn = CairnConnectionFactory();
         await conn.execute({
           sql: `UPDATE heartRateSamples SET timestamp = ?, bpm = ?, source = ? WHERE id = ?`,
-          args: [
-            input.timestamp,
-            input.bpm,
-            input.source ?? null,
-            input.id
-          ]
+          args: [input.timestamp, input.bpm, input.source ?? null, input.id]
         });
         return { success: true };
       } catch (error) {
@@ -1162,12 +1302,18 @@ export const remoteDbRouter = createTRPCRouter({
 
   bulkUpsert: cairnProcedure
     .input(bulkSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = CairnConnectionFactory();
 
         if (input.users?.length) {
           for (const user of input.users) {
+            if (user.id !== ctx.cairnUserId) {
+              throw new TRPCError({
+                code: "FORBIDDEN",
+                message: "User mismatch"
+              });
+            }
             await conn.execute({
               sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, appleUserId, status)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -1188,219 +1334,365 @@ export const remoteDbRouter = createTRPCRouter({
           }
         }
 
-        if (input.exerciseLibrary?.length) {
-          for (const exercise of input.exerciseLibrary) {
-            await conn.execute({
-              sql: `INSERT INTO exerciseLibrary (id, name, category, muscleGroups, equipment, instructions, defaultSets, defaultReps, defaultRestSeconds, notes)
+        bulkUpsert: cairnProcedure
+          .input(bulkSchema)
+          .mutation(async ({ input, ctx }) => {
+            try {
+              const conn = CairnConnectionFactory();
+
+              if (input.users?.length) {
+                for (const user of input.users) {
+                  if (user.id !== ctx.cairnUserId) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, appleUserId, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET email = excluded.email, emailVerified = excluded.emailVerified, firstName = excluded.firstName, lastName = excluded.lastName, displayName = excluded.displayName, avatarUrl = excluded.avatarUrl, provider = excluded.provider, appleUserId = excluded.appleUserId, status = excluded.status, updatedAt = datetime('now')`,
+                    args: [
+                      user.id,
+                      user.email ?? null,
+                      user.emailVerified ?? 0,
+                      user.firstName ?? null,
+                      user.lastName ?? null,
+                      user.displayName ?? null,
+                      user.avatarUrl ?? null,
+                      user.provider ?? null,
+                      user.appleUserId ?? null,
+                      user.status ?? "active"
+                    ]
+                  });
+                }
+              }
+
+              if (input.exerciseLibrary?.length) {
+                for (const exercise of input.exerciseLibrary) {
+                  await conn.execute({
+                    sql: `INSERT INTO exerciseLibrary (id, name, category, muscleGroups, equipment, instructions, defaultSets, defaultReps, defaultRestSeconds, notes)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET name = excluded.name, category = excluded.category, muscleGroups = excluded.muscleGroups, equipment = excluded.equipment, instructions = excluded.instructions, defaultSets = excluded.defaultSets, defaultReps = excluded.defaultReps, defaultRestSeconds = excluded.defaultRestSeconds, notes = excluded.notes, updatedAt = datetime('now')`,
-              args: [
-                exercise.id,
-                exercise.name,
-                exercise.category,
-                exercise.muscleGroups ?? null,
-                exercise.equipment ?? null,
-                exercise.instructions ?? null,
-                exercise.defaultSets ?? null,
-                exercise.defaultReps ?? null,
-                exercise.defaultRestSeconds ?? null,
-                exercise.notes ?? null
-              ]
-            });
-          }
-        }
+                    args: [
+                      exercise.id,
+                      exercise.name,
+                      exercise.category,
+                      exercise.muscleGroups ?? null,
+                      exercise.equipment ?? null,
+                      exercise.instructions ?? null,
+                      exercise.defaultSets ?? null,
+                      exercise.defaultReps ?? null,
+                      exercise.defaultRestSeconds ?? null,
+                      exercise.notes ?? null
+                    ]
+                  });
+                }
+              }
 
-        if (input.workoutPlans?.length) {
-          for (const plan of input.workoutPlans) {
-            await conn.execute({
-              sql: `INSERT INTO workoutPlans (id, userId, name, description, category, difficulty, durationMinutes, type, isPublic)
+              if (input.workoutPlans?.length) {
+                for (const plan of input.workoutPlans) {
+                  if (plan.userId !== ctx.cairnUserId) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO workoutPlans (id, userId, name, description, category, difficulty, durationMinutes, type, isPublic)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET name = excluded.name, description = excluded.description, category = excluded.category, difficulty = excluded.difficulty, durationMinutes = excluded.durationMinutes, type = excluded.type, isPublic = excluded.isPublic, updatedAt = datetime('now')`,
-              args: [
-                plan.id,
-                plan.userId,
-                plan.name,
-                plan.description ?? null,
-                plan.category,
-                plan.difficulty ?? "intermediate",
-                plan.durationMinutes ?? null,
-                plan.type,
-                plan.isPublic ?? 0
-              ]
-            });
-          }
-        }
+                    args: [
+                      plan.id,
+                      plan.userId,
+                      plan.name,
+                      plan.description ?? null,
+                      plan.category,
+                      plan.difficulty ?? "intermediate",
+                      plan.durationMinutes ?? null,
+                      plan.type,
+                      plan.isPublic ?? 0
+                    ]
+                  });
+                }
+              }
 
-        if (input.planExercises?.length) {
-          for (const planExercise of input.planExercises) {
-            await conn.execute({
-              sql: `INSERT INTO planExercises (id, planId, exerciseId, name, category, orderIndex, notes)
+              if (input.planExercises?.length) {
+                for (const planExercise of input.planExercises) {
+                  const planCheck = await conn.execute({
+                    sql: "SELECT userId FROM workoutPlans WHERE id = ?",
+                    args: [planExercise.planId]
+                  });
+                  if (
+                    !planCheck.rows.length ||
+                    planCheck.rows[0].userId !== ctx.cairnUserId
+                  ) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO planExercises (id, planId, exerciseId, name, category, orderIndex, notes)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET exerciseId = excluded.exerciseId, name = excluded.name, category = excluded.category, orderIndex = excluded.orderIndex, notes = excluded.notes`,
-              args: [
-                planExercise.id,
-                planExercise.planId,
-                planExercise.exerciseId ?? null,
-                planExercise.name,
-                planExercise.category,
-                planExercise.orderIndex,
-                planExercise.notes ?? null
-              ]
-            });
-          }
-        }
+                    args: [
+                      planExercise.id,
+                      planExercise.planId,
+                      planExercise.exerciseId ?? null,
+                      planExercise.name,
+                      planExercise.category,
+                      planExercise.orderIndex,
+                      planExercise.notes ?? null
+                    ]
+                  });
+                }
+              }
 
-        if (input.planSets?.length) {
-          for (const planSet of input.planSets) {
-            await conn.execute({
-              sql: `INSERT INTO planSets (id, planExerciseId, setNumber, reps, weight, durationSeconds, rpe, restAfterSeconds, isWarmup, isDropset, notes)
+              if (input.planSets?.length) {
+                for (const planSet of input.planSets) {
+                  const planExerciseCheck = await conn.execute({
+                    sql: "SELECT planId FROM planExercises WHERE id = ?",
+                    args: [planSet.planExerciseId]
+                  });
+                  if (planExerciseCheck.rows.length) {
+                    const planCheck = await conn.execute({
+                      sql: "SELECT userId FROM workoutPlans WHERE id = ?",
+                      args: [planExerciseCheck.rows[0].planId]
+                    });
+                    if (
+                      !planCheck.rows.length ||
+                      planCheck.rows[0].userId !== ctx.cairnUserId
+                    ) {
+                      throw new TRPCError({
+                        code: "FORBIDDEN",
+                        message: "User mismatch"
+                      });
+                    }
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO planSets (id, planExerciseId, setNumber, reps, weight, durationSeconds, rpe, restAfterSeconds, isWarmup, isDropset, notes)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET setNumber = excluded.setNumber, reps = excluded.reps, weight = excluded.weight, durationSeconds = excluded.durationSeconds, rpe = excluded.rpe, restAfterSeconds = excluded.restAfterSeconds, isWarmup = excluded.isWarmup, isDropset = excluded.isDropset, notes = excluded.notes`,
-              args: [
-                planSet.id,
-                planSet.planExerciseId,
-                planSet.setNumber,
-                planSet.reps ?? null,
-                planSet.weight ?? null,
-                planSet.durationSeconds ?? null,
-                planSet.rpe ?? null,
-                planSet.restAfterSeconds ?? null,
-                planSet.isWarmup ?? 0,
-                planSet.isDropset ?? 0,
-                planSet.notes ?? null
-              ]
-            });
-          }
-        }
+                    args: [
+                      planSet.id,
+                      planSet.planExerciseId,
+                      planSet.setNumber,
+                      planSet.reps ?? null,
+                      planSet.weight ?? null,
+                      planSet.durationSeconds ?? null,
+                      planSet.rpe ?? null,
+                      planSet.restAfterSeconds ?? null,
+                      planSet.isWarmup ?? 0,
+                      planSet.isDropset ?? 0,
+                      planSet.notes ?? null
+                    ]
+                  });
+                }
+              }
 
-        if (input.routePoints?.length) {
-          for (const point of input.routePoints) {
-            await conn.execute({
-              sql: `INSERT INTO routePoints (id, planId, latitude, longitude, orderIndex, isWaypoint)
+              if (input.routePoints?.length) {
+                for (const point of input.routePoints) {
+                  const planCheck = await conn.execute({
+                    sql: "SELECT userId FROM workoutPlans WHERE id = ?",
+                    args: [point.planId]
+                  });
+                  if (
+                    !planCheck.rows.length ||
+                    planCheck.rows[0].userId !== ctx.cairnUserId
+                  ) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO routePoints (id, planId, latitude, longitude, orderIndex, isWaypoint)
                     VALUES (?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET latitude = excluded.latitude, longitude = excluded.longitude, orderIndex = excluded.orderIndex, isWaypoint = excluded.isWaypoint`,
-              args: [
-                point.id,
-                point.planId,
-                point.latitude,
-                point.longitude,
-                point.orderIndex,
-                point.isWaypoint ?? 0
-              ]
-            });
-          }
-        }
+                    args: [
+                      point.id,
+                      point.planId,
+                      point.latitude,
+                      point.longitude,
+                      point.orderIndex,
+                      point.isWaypoint ?? 0
+                    ]
+                  });
+                }
+              }
 
-        if (input.workouts?.length) {
-          for (const workout of input.workouts) {
-            await conn.execute({
-              sql: `INSERT INTO workouts (id, userId, planId, type, name, startDate, endDate, durationSeconds, distanceMeters, calories, averageHeartRate, maxHeartRate, averagePace, elevationGain, status, source, healthKitUUID, notes)
+              if (input.workouts?.length) {
+                for (const workout of input.workouts) {
+                  if (workout.userId !== ctx.cairnUserId) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO workouts (id, userId, planId, type, name, startDate, endDate, durationSeconds, distanceMeters, calories, averageHeartRate, maxHeartRate, averagePace, elevationGain, status, source, healthKitUUID, notes)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET planId = excluded.planId, type = excluded.type, name = excluded.name, startDate = excluded.startDate, endDate = excluded.endDate, durationSeconds = excluded.durationSeconds, distanceMeters = excluded.distanceMeters, calories = excluded.calories, averageHeartRate = excluded.averageHeartRate, maxHeartRate = excluded.maxHeartRate, averagePace = excluded.averagePace, elevationGain = excluded.elevationGain, status = excluded.status, source = excluded.source, healthKitUUID = excluded.healthKitUUID, notes = excluded.notes, updatedAt = datetime('now')`,
-              args: [
-                workout.id,
-                workout.userId,
-                workout.planId ?? null,
-                workout.type,
-                workout.name ?? null,
-                workout.startDate,
-                workout.endDate ?? null,
-                workout.durationSeconds ?? null,
-                workout.distanceMeters ?? null,
-                workout.calories ?? null,
-                workout.averageHeartRate ?? null,
-                workout.maxHeartRate ?? null,
-                workout.averagePace ?? null,
-                workout.elevationGain ?? null,
-                workout.status,
-                workout.source,
-                workout.healthKitUUID ?? null,
-                workout.notes ?? null
-              ]
-            });
-          }
-        }
+                    args: [
+                      workout.id,
+                      workout.userId,
+                      workout.planId ?? null,
+                      workout.type,
+                      workout.name ?? null,
+                      workout.startDate,
+                      workout.endDate ?? null,
+                      workout.durationSeconds ?? null,
+                      workout.distanceMeters ?? null,
+                      workout.calories ?? null,
+                      workout.averageHeartRate ?? null,
+                      workout.maxHeartRate ?? null,
+                      workout.averagePace ?? null,
+                      workout.elevationGain ?? null,
+                      workout.status,
+                      workout.source,
+                      workout.healthKitUUID ?? null,
+                      workout.notes ?? null
+                    ]
+                  });
+                }
+              }
 
-        if (input.heartRateSamples?.length) {
-          for (const sample of input.heartRateSamples) {
-            await conn.execute({
-              sql: `INSERT INTO heartRateSamples (id, workoutId, timestamp, bpm, source)
+              if (input.heartRateSamples?.length) {
+                for (const sample of input.heartRateSamples) {
+                  const workoutCheck = await conn.execute({
+                    sql: "SELECT userId FROM workouts WHERE id = ?",
+                    args: [sample.workoutId]
+                  });
+                  if (
+                    !workoutCheck.rows.length ||
+                    workoutCheck.rows[0].userId !== ctx.cairnUserId
+                  ) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO heartRateSamples (id, workoutId, timestamp, bpm, source)
                     VALUES (?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET timestamp = excluded.timestamp, bpm = excluded.bpm, source = excluded.source`,
-              args: [
-                sample.id,
-                sample.workoutId,
-                sample.timestamp,
-                sample.bpm,
-                sample.source ?? null
-              ]
-            });
-          }
-        }
+                    args: [
+                      sample.id,
+                      sample.workoutId,
+                      sample.timestamp,
+                      sample.bpm,
+                      sample.source ?? null
+                    ]
+                  });
+                }
+              }
 
-        if (input.locationSamples?.length) {
-          for (const sample of input.locationSamples) {
-            await conn.execute({
-              sql: `INSERT INTO locationSamples (id, workoutId, timestamp, latitude, longitude, altitude, horizontalAccuracy, verticalAccuracy, speed, course)
+              if (input.locationSamples?.length) {
+                for (const sample of input.locationSamples) {
+                  const workoutCheck = await conn.execute({
+                    sql: "SELECT userId FROM workouts WHERE id = ?",
+                    args: [sample.workoutId]
+                  });
+                  if (
+                    !workoutCheck.rows.length ||
+                    workoutCheck.rows[0].userId !== ctx.cairnUserId
+                  ) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO locationSamples (id, workoutId, timestamp, latitude, longitude, altitude, horizontalAccuracy, verticalAccuracy, speed, course)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET timestamp = excluded.timestamp, latitude = excluded.latitude, longitude = excluded.longitude, altitude = excluded.altitude, horizontalAccuracy = excluded.horizontalAccuracy, verticalAccuracy = excluded.verticalAccuracy, speed = excluded.speed, course = excluded.course`,
-              args: [
-                sample.id,
-                sample.workoutId,
-                sample.timestamp,
-                sample.latitude,
-                sample.longitude,
-                sample.altitude ?? null,
-                sample.horizontalAccuracy ?? null,
-                sample.verticalAccuracy ?? null,
-                sample.speed ?? null,
-                sample.course ?? null
-              ]
-            });
-          }
-        }
+                    args: [
+                      sample.id,
+                      sample.workoutId,
+                      sample.timestamp,
+                      sample.latitude,
+                      sample.longitude,
+                      sample.altitude ?? null,
+                      sample.horizontalAccuracy ?? null,
+                      sample.verticalAccuracy ?? null,
+                      sample.speed ?? null,
+                      sample.course ?? null
+                    ]
+                  });
+                }
+              }
 
-        if (input.workoutSplits?.length) {
-          for (const split of input.workoutSplits) {
-            await conn.execute({
-              sql: `INSERT INTO workoutSplits (id, workoutId, splitNumber, distanceMeters, durationSeconds, startTimestamp, endTimestamp, averageHeartRate, averagePace, elevationGain, elevationLoss)
+              if (input.workoutSplits?.length) {
+                for (const split of input.workoutSplits) {
+                  const workoutCheck = await conn.execute({
+                    sql: "SELECT userId FROM workouts WHERE id = ?",
+                    args: [split.workoutId]
+                  });
+                  if (
+                    !workoutCheck.rows.length ||
+                    workoutCheck.rows[0].userId !== ctx.cairnUserId
+                  ) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO workoutSplits (id, workoutId, splitNumber, distanceMeters, durationSeconds, startTimestamp, endTimestamp, averageHeartRate, averagePace, elevationGain, elevationLoss)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET splitNumber = excluded.splitNumber, distanceMeters = excluded.distanceMeters, durationSeconds = excluded.durationSeconds, startTimestamp = excluded.startTimestamp, endTimestamp = excluded.endTimestamp, averageHeartRate = excluded.averageHeartRate, averagePace = excluded.averagePace, elevationGain = excluded.elevationGain, elevationLoss = excluded.elevationLoss`,
-              args: [
-                split.id,
-                split.workoutId,
-                split.splitNumber,
-                split.distanceMeters,
-                split.durationSeconds,
-                split.startTimestamp,
-                split.endTimestamp,
-                split.averageHeartRate ?? null,
-                split.averagePace ?? null,
-                split.elevationGain ?? null,
-                split.elevationLoss ?? null
-              ]
-            });
-          }
-        }
+                    args: [
+                      split.id,
+                      split.workoutId,
+                      split.splitNumber,
+                      split.distanceMeters,
+                      split.durationSeconds,
+                      split.startTimestamp,
+                      split.endTimestamp,
+                      split.averageHeartRate ?? null,
+                      split.averagePace ?? null,
+                      split.elevationGain ?? null,
+                      split.elevationLoss ?? null
+                    ]
+                  });
+                }
+              }
 
-        if (input.authProviders?.length) {
-          for (const provider of input.authProviders) {
-            await conn.execute({
-              sql: `INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl)
+              if (input.authProviders?.length) {
+                for (const provider of input.authProviders) {
+                  if (provider.userId !== ctx.cairnUserId) {
+                    throw new TRPCError({
+                      code: "FORBIDDEN",
+                      message: "User mismatch"
+                    });
+                  }
+                  await conn.execute({
+                    sql: `INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET provider = excluded.provider, providerUserId = excluded.providerUserId, email = excluded.email, displayName = excluded.displayName, avatarUrl = excluded.avatarUrl, lastUsedAt = datetime('now')`,
-              args: [
-                provider.id,
-                provider.userId,
-                provider.provider,
-                provider.providerUserId ?? null,
-                provider.email ?? null,
-                provider.displayName ?? null,
-                provider.avatarUrl ?? null
-              ]
-            });
-          }
-        }
+                    args: [
+                      provider.id,
+                      provider.userId,
+                      provider.provider,
+                      provider.providerUserId ?? null,
+                      provider.email ?? null,
+                      provider.displayName ?? null,
+                      provider.avatarUrl ?? null
+                    ]
+                  });
+                }
+              }
+
+              return { success: true };
+            } catch (error) {
+              console.error("Failed bulk upsert:", error);
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Failed to bulk upsert"
+              });
+            }
+          });
 
         return { success: true };
       } catch (error) {
