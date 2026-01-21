@@ -160,7 +160,7 @@ const routerSections: RouterSection[] = [
         router: "auth",
         procedure: "signOut",
         method: "mutation",
-        description: "Clear auth cookies and sign out"
+        description: "Clear auth cookie and sign out"
       },
       {
         name: "GitHub Callback",

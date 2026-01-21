@@ -9,7 +9,7 @@ import {
 import { PageHead } from "~/components/PageHead";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
-import SessionDependantLike from "~/components/blog/SessionDependantLike";
+import AuthenticatedLike from "~/components/blog/AuthenticatedLike";
 import CommentIcon from "~/components/icons/CommentIcon";
 import { Fire } from "~/components/icons/Fire";
 import CommentSectionWrapper from "~/components/blog/CommentSectionWrapper";
@@ -433,11 +433,11 @@ export default function PostPage() {
                             </a>
 
                             <div>
-                              <SessionDependantLike
-                                currentUserID={postData.userID}
-                                isAuthenticated={postData.isAuthenticated}
-                                likes={postData.likes as any[]}
-                                projectID={p().id}
+                              <AuthenticatedLike
+                                currentUserID={userID}
+                                isAuthenticated={isAuthenticated}
+                                likes={post.likes}
+                                projectID={post.id}
                               />
                             </div>
                           </div>

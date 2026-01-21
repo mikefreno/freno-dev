@@ -1188,7 +1188,7 @@ export const authRouter = createTRPCRouter({
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({
           email,
-          rememberMe: rememberMe ?? false, // Default to browser session cookie
+          rememberMe: rememberMe ?? false, // Default to browser cookie
           code: loginCode
         })
           .setProtectedHeader({ alg: "HS256" })

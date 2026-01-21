@@ -8,14 +8,14 @@ export interface PostLike {
   post_id: string;
 }
 
-export interface SessionDependantLikeProps {
+export interface AuthenticatedLikeProps {
   currentUserID: string | undefined | null;
   isAuthenticated: boolean;
   likes: PostLike[];
   projectID: number;
 }
 
-export default function SessionDependantLike(props: SessionDependantLikeProps) {
+export default function AuthenticatedLike(props: AuthenticatedLikeProps) {
   const [hovering, setHovering] = createSignal(false);
   const [likes, setLikes] = createSignal(props.likes);
   const [instantOffset, setInstantOffset] = createSignal(0);
