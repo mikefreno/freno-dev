@@ -4,11 +4,13 @@ import { getCookie } from "vinxi/http";
 import { logVisit, enrichAnalyticsEntry } from "~/server/analytics";
 import { getRequestIP } from "vinxi/http";
 import { getAuthSession } from "~/server/session-helpers";
+import { verifyCairnToken } from "~/server/cairn-auth";
 
 export type Context = {
   event: APIEvent;
   userId: string | null;
   isAdmin: boolean;
+  cairnUserId: string | null;
 };
 
 async function createContextInner(event: APIEvent): Promise<Context> {
@@ -37,6 +39,22 @@ async function createContextInner(event: APIEvent): Promise<Context> {
     undefined;
   const ipAddress = getRequestIP(event.nativeEvent) || undefined;
   const sessionId = getCookie(event.nativeEvent, "session_id") || undefined;
+  const authHeader =
+    event.request?.headers?.get("authorization") ||
+    req.headers?.authorization ||
+    req.headers?.Authorization ||
+    null;
+
+  let cairnUserId: string | null = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "").trim();
+    try {
+      const payload = await verifyCairnToken(token);
+      cairnUserId = payload.sub;
+    } catch (error) {
+      console.error("Cairn JWT verification failed:", error);
+    }
+  }
 
   // Don't log the performance logging endpoint itself to avoid circular tracking
   if (!path.includes("analytics.logPerformance")) {
@@ -56,7 +74,8 @@ async function createContextInner(event: APIEvent): Promise<Context> {
   return {
     event,
     userId,
-    isAdmin
+    isAdmin,
+    cairnUserId
   };
 }
 
@@ -96,5 +115,21 @@ const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
   });
 });
 
+const enforceCairnUser = t.middleware(({ ctx, next }) => {
+  if (!ctx.cairnUserId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Cairn authentication required"
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      cairnUserId: ctx.cairnUserId
+    }
+  });
+});
+
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 export const adminProcedure = t.procedure.use(enforceUserIsAdmin);
+export const cairnProcedure = t.procedure.use(enforceCairnUser);

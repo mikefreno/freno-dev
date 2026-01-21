@@ -14,6 +14,7 @@ import {
 
 let mainDBConnection: ReturnType<typeof createClient> | null = null;
 let lineageDBConnection: ReturnType<typeof createClient> | null = null;
+let cairnDBConnection: ReturnType<typeof createClient> | null = null;
 
 export function ConnectionFactory() {
   if (!mainDBConnection) {
@@ -35,6 +36,17 @@ export function LineageConnectionFactory() {
     lineageDBConnection = createClient(config);
   }
   return lineageDBConnection;
+}
+
+export function CairnConnectionFactory() {
+  if (!cairnDBConnection) {
+    const config = {
+      url: env.CAIRN_DB_URL,
+      authToken: env.CAIRN_DB_TOKEN
+    };
+    cairnDBConnection = createClient(config);
+  }
+  return cairnDBConnection;
 }
 
 export async function LineageDBInit() {

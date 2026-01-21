@@ -11,6 +11,8 @@ import { postHistoryRouter } from "./routers/post-history";
 import { infillRouter } from "./routers/infill";
 import { accountRouter } from "./routers/account";
 import { downloadsRouter } from "./routers/downloads";
+import { remoteDbRouter } from "./routers/remote-db";
+import { appleNotificationsRouter } from "./routers/apple-notifications";
 import { createTRPCRouter, createTRPCContext } from "./utils";
 import type { H3Event } from "h3";
 
@@ -27,7 +29,9 @@ export const appRouter = createTRPCRouter({
   postHistory: postHistoryRouter,
   infill: infillRouter,
   account: accountRouter,
-  downloads: downloadsRouter
+  downloads: downloadsRouter,
+  remoteDb: remoteDbRouter,
+  appleNotifications: appleNotificationsRouter
 });
 
 export type AppRouter = typeof appRouter;
