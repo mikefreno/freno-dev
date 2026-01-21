@@ -13,8 +13,9 @@ import { accountRouter } from "./routers/account";
 import { downloadsRouter } from "./routers/downloads";
 import { cairnDbRouter } from "./routers/cairn";
 import { appleNotificationsRouter } from "./routers/apple-notifications";
-import { createTRPCRouter, createTRPCContext } from "./utils";
+import { createTRPCRouter, createTRPCContext, t } from "./utils";
 import type { H3Event } from "h3";
+import type { APIEvent } from "@solidjs/start/server";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -36,12 +37,24 @@ export const appRouter = createTRPCRouter({
 
 export type AppRouter = typeof appRouter;
 
+/** Server-side caller factory using the modern tRPC pattern */
+export const createCallerFactory = t.createCallerFactory(appRouter);
+
 /**
- * Create a server-side caller for tRPC procedures
- * This allows calling tRPC procedures directly on the server with proper context
+ * Create a server-side caller for tRPC procedures from H3Event (vinxi/http getEvent)
+ * Used in server functions within route files
  */
 export const createCaller = async (event: H3Event) => {
   const apiEvent = { nativeEvent: event, request: event.node.req } as any;
   const ctx = await createTRPCContext(apiEvent);
-  return appRouter.createCaller(ctx);
+  return createCallerFactory(ctx);
+};
+
+/**
+ * Create a server-side caller for tRPC procedures from APIEvent
+ * Used in API route handlers
+ */
+export const createServerCaller = async (event: APIEvent) => {
+  const ctx = await createTRPCContext(event);
+  return createCallerFactory(ctx);
 };

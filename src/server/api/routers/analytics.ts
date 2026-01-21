@@ -5,13 +5,32 @@ import {
   getAnalyticsSummary,
   getPathAnalytics,
   cleanupOldAnalytics,
-  logVisit,
   getPerformanceStats,
   enrichAnalyticsEntry
 } from "~/server/analytics";
 import { ConnectionFactory } from "~/server/database";
 import { v4 as uuid } from "uuid";
 import { getRequestIP } from "vinxi/http";
+
+/** Safely get a header value from either Fetch API Headers or Node.js IncomingHttpHeaders */
+function getHeader(
+  headers: Record<string, string | string[] | undefined> | Headers | undefined,
+  name: string
+): string | undefined {
+  if (!headers) return undefined;
+
+  // Check if it's a Fetch API Headers object (has .get method)
+  if (typeof (headers as Headers).get === "function") {
+    return (headers as Headers).get(name) || undefined;
+  }
+
+  // Otherwise treat as Node.js IncomingHttpHeaders (plain object)
+  const value = (headers as Record<string, string | string[] | undefined>)[
+    name.toLowerCase()
+  ];
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
 
 export const analyticsRouter = createTRPCRouter({
   logPerformance: publicProcedure
@@ -71,14 +90,12 @@ export const analyticsRouter = createTRPCRouter({
         } else {
           const req = ctx.event.nativeEvent.node?.req || ctx.event.nativeEvent;
           const userAgent =
-            req.headers?.["user-agent"] ||
-            ctx.event.request?.headers?.get("user-agent") ||
-            undefined;
+            getHeader(req.headers, "user-agent") ||
+            getHeader(ctx.event.request?.headers, "user-agent");
           const referrer =
-            req.headers?.referer ||
-            req.headers?.referrer ||
-            ctx.event.request?.headers?.get("referer") ||
-            undefined;
+            getHeader(req.headers, "referer") ||
+            getHeader(req.headers, "referrer") ||
+            getHeader(ctx.event.request?.headers, "referer");
           const ipAddress = getRequestIP(ctx.event.nativeEvent) || undefined;
           const enriched = enrichAnalyticsEntry({
             userId: ctx.userId,

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { appRouter } from "~/server/api/root";
+import { createCallerFactory, appRouter } from "~/server/api/root";
 import { createTRPCContext } from "~/server/api/utils";
 
 vi.mock("~/server/apple-notification", () => ({
@@ -17,9 +17,10 @@ vi.mock("~/server/apple-notification-store", () => ({
 
 describe("apple notification router", () => {
   it("verifies and stores notifications", async () => {
-    const caller = appRouter.createCaller(
-      await createTRPCContext({ nativeEvent: { node: { req: {} } } } as any)
-    );
+    const ctx = await createTRPCContext({
+      nativeEvent: { node: { req: {} } }
+    } as any);
+    const caller = createCallerFactory(ctx);
 
     const result = await caller.appleNotifications.verifyAndStore.mutate({
       signedPayload: "test"

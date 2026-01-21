@@ -1,6 +1,5 @@
 import type { APIEvent } from "@solidjs/start/server";
-import { appRouter } from "~/server/api/root";
-import { createTRPCContext } from "~/server/api/utils";
+import { createServerCaller } from "~/server/api/root";
 
 export async function GET(event: APIEvent) {
   const url = new URL(event.request.url);
@@ -57,20 +56,19 @@ export async function GET(event: APIEvent) {
       `,
       {
         status: 400,
-        headers: { "Content-Type": "text/html" },
+        headers: { "Content-Type": "text/html" }
       }
     );
   }
 
   try {
     // Create tRPC caller to invoke the emailVerification procedure
-    const ctx = await createTRPCContext(event);
-    const caller = appRouter.createCaller(ctx);
+    const caller = await createServerCaller(event);
 
     // Call the email verification handler
     const result = await caller.auth.emailVerification({
       email,
-      token,
+      token
     });
 
     if (result.success) {
@@ -129,7 +127,7 @@ export async function GET(event: APIEvent) {
         `,
         {
           status: 200,
-          headers: { "Content-Type": "text/html" },
+          headers: { "Content-Type": "text/html" }
         }
       );
     } else {
@@ -139,8 +137,10 @@ export async function GET(event: APIEvent) {
     console.error("Email verification callback error:", error);
 
     // Check if it's a token expiration error
-    const errorMessage = error instanceof Error ? error.message : "server_error";
-    const isTokenError = errorMessage.includes("expired") || errorMessage.includes("invalid");
+    const errorMessage =
+      error instanceof Error ? error.message : "server_error";
+    const isTokenError =
+      errorMessage.includes("expired") || errorMessage.includes("invalid");
 
     return new Response(
       `
@@ -192,7 +192,7 @@ export async function GET(event: APIEvent) {
       `,
       {
         status: 400,
-        headers: { "Content-Type": "text/html" },
+        headers: { "Content-Type": "text/html" }
       }
     );
   }

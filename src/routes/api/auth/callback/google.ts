@@ -1,6 +1,5 @@
 import type { APIEvent } from "@solidjs/start/server";
-import { appRouter } from "~/server/api/root";
-import { createTRPCContext } from "~/server/api/utils";
+import { createServerCaller } from "~/server/api/root";
 
 export async function GET(event: APIEvent) {
   const url = new URL(event.request.url);
@@ -31,8 +30,7 @@ export async function GET(event: APIEvent) {
 
   try {
     console.log("[Google OAuth Callback] Creating tRPC caller...");
-    const ctx = await createTRPCContext(event);
-    const caller = appRouter.createCaller(ctx);
+    const caller = await createServerCaller(event);
 
     console.log("[Google OAuth Callback] Calling googleCallback procedure...");
     const result = await caller.auth.googleCallback({ code });

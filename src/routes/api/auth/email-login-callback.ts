@@ -1,6 +1,5 @@
 import type { APIEvent } from "@solidjs/start/server";
-import { appRouter } from "~/server/api/root";
-import { createTRPCContext } from "~/server/api/utils";
+import { createServerCaller } from "~/server/api/root";
 
 export async function GET(event: APIEvent) {
   const url = new URL(event.request.url);
@@ -27,8 +26,7 @@ export async function GET(event: APIEvent) {
   try {
     console.log("[Email Login Callback] Creating tRPC caller...");
     // Create tRPC caller to invoke the emailLogin procedure
-    const ctx = await createTRPCContext(event);
-    const caller = appRouter.createCaller(ctx);
+    const caller = await createServerCaller(event);
 
     console.log("[Email Login Callback] Calling emailLogin procedure...");
     // Call the email login handler - rememberMe will be read from JWT payload

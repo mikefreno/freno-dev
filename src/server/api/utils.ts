@@ -12,6 +12,26 @@ export type Context = {
   cairnUserId: string | null;
 };
 
+/** Safely get a header value from either Fetch API Headers or Node.js IncomingHttpHeaders */
+function getHeader(
+  headers: Record<string, string | string[] | undefined> | Headers | undefined,
+  name: string
+): string | undefined {
+  if (!headers) return undefined;
+
+  // Check if it's a Fetch API Headers object (has .get method)
+  if (typeof (headers as Headers).get === "function") {
+    return (headers as Headers).get(name) || undefined;
+  }
+
+  // Otherwise treat as Node.js IncomingHttpHeaders (plain object)
+  const value = (headers as Record<string, string | string[] | undefined>)[
+    name.toLowerCase()
+  ];
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
 async function createContextInner(event: APIEvent): Promise<Context> {
   const payload = await getAuthPayloadFromEvent(event.nativeEvent);
 
@@ -27,19 +47,16 @@ async function createContextInner(event: APIEvent): Promise<Context> {
   const path = req.url || event.request?.url || "unknown";
   const method = req.method || event.request?.method || "GET";
   const userAgent =
-    req.headers?.["user-agent"] ||
-    event.request?.headers?.get("user-agent") ||
-    undefined;
+    getHeader(req.headers, "user-agent") ||
+    getHeader(event.request?.headers, "user-agent");
   const referrer =
-    req.headers?.referer ||
-    req.headers?.referrer ||
-    event.request?.headers?.get("referer") ||
-    undefined;
+    getHeader(req.headers, "referer") ||
+    getHeader(req.headers, "referrer") ||
+    getHeader(event.request?.headers, "referer");
   const ipAddress = getRequestIP(event.nativeEvent) || undefined;
   const authHeader =
-    event.request?.headers?.get("authorization") ||
-    req.headers?.authorization ||
-    req.headers?.Authorization ||
+    getHeader(req.headers, "authorization") ||
+    getHeader(event.request?.headers, "authorization") ||
     null;
 
   let cairnUserId: string | null = null;
