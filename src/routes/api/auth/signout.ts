@@ -1,13 +1,11 @@
-import type { APIEvent } from "@solidjs/start/server";
-import { getEvent, clearSession } from "vinxi/http";
-import { sessionConfig } from "~/server/session-config";
+import { getEvent } from "vinxi/http";
+import { clearAuthToken } from "~/server/auth";
 
 export async function POST() {
   "use server";
   const event = getEvent()!;
 
-  // Clear Vinxi session
-  await clearSession(event, sessionConfig);
+  clearAuthToken(event);
 
   return new Response(null, {
     status: 302,

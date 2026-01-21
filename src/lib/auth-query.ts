@@ -86,11 +86,5 @@ export function revalidateAuth() {
   // Dispatch event to trigger UI updates (client-side only)
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("auth-state-changed"));
-
-    // Reset token refresh timer when auth state changes
-    // This ensures the timer is synchronized with fresh tokens
-    import("~/lib/token-refresh").then(({ tokenRefreshManager }) => {
-      tokenRefreshManager.reset();
-    });
   }
 }

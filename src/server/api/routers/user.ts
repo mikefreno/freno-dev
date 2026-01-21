@@ -1,14 +1,10 @@
 import { createTRPCRouter, publicProcedure } from "../utils";
 import { TRPCError } from "@trpc/server";
 import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
-import { setCookie } from "vinxi/http";
 import type { User } from "~/db/types";
 import { toUserProfile } from "~/types/user";
 import { getUserProviders, unlinkProvider } from "~/server/provider-helpers";
 import { z } from "zod";
-import { getAuthSession } from "~/server/session-helpers";
-import { logAuditEvent } from "~/server/audit";
-import { getClientIP, getUserAgent } from "~/server/security";
 import { generatePasswordSetEmail } from "~/server/email-templates";
 import { formatDeviceDescription } from "~/server/device-utils";
 import sendEmail from "~/server/email";
@@ -405,119 +401,5 @@ export const userRouter = createTRPCRouter({
       await unlinkProvider(userId, input.provider);
 
       return { success: true, message: "Provider unlinked" };
-    }),
-
-  getSessions: publicProcedure.query(async ({ ctx }) => {
-    const userId = ctx.userId;
-
-    if (!userId) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Not authenticated"
-      });
-    }
-
-    const conn = ConnectionFactory();
-    const res = await conn.execute({
-      sql: `SELECT id, token_family, created_at, expires_at, last_active_at, 
-            rotation_count, ip_address, user_agent 
-            FROM Session 
-            WHERE user_id = ? AND revoked = 0 AND expires_at > datetime('now')
-            ORDER BY last_active_at DESC`,
-      args: [userId]
-    });
-
-    // Get current session to mark it
-    const currentSession = await getAuthSession(ctx.event as any);
-
-    return res.rows.map((row: any) => {
-      // Infer rememberMe from expires_at duration
-      // If expires_at is > 2 days from creation, it's a remember-me session
-      const createdAt = new Date(row.created_at);
-      const expiresAt = new Date(row.expires_at);
-      const durationMs = expiresAt.getTime() - createdAt.getTime();
-      const rememberMe = durationMs > 2 * 24 * 60 * 60 * 1000; // > 2 days
-
-      return {
-        sessionId: row.id,
-        tokenFamily: row.token_family,
-        createdAt: row.created_at,
-        expiresAt: row.expires_at,
-        lastActiveAt: row.last_active_at,
-        rotationCount: row.rotation_count,
-        clientIp: row.ip_address,
-        userAgent: row.user_agent,
-        rememberMe,
-        isCurrent: currentSession?.sessionId === row.id
-      };
-    });
-  }),
-
-  revokeSession: publicProcedure
-    .input(
-      z.object({
-        sessionId: z.string()
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      const userId = ctx.userId;
-
-      if (!userId) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Not authenticated"
-        });
-      }
-
-      const conn = ConnectionFactory();
-
-      // Verify session belongs to this user
-      const sessionCheck = await conn.execute({
-        sql: "SELECT user_id, token_family FROM Session WHERE id = ?",
-        args: [input.sessionId]
-      });
-
-      if (sessionCheck.rows.length === 0) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Session not found"
-        });
-      }
-
-      const session = sessionCheck.rows[0] as any;
-      if (session.user_id !== userId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Cannot revoke another user's session"
-        });
-      }
-
-      // Revoke the entire token family (all sessions on this device)
-      await conn.execute({
-        sql: "UPDATE Session SET revoked = 1 WHERE token_family = ?",
-        args: [session.token_family]
-      });
-
-      // Log audit event
-      const h3Event = ctx.event.nativeEvent
-        ? ctx.event.nativeEvent
-        : (ctx.event as any);
-      const clientIP = getClientIP(h3Event);
-      const userAgent = getUserAgent(h3Event);
-
-      await logAuditEvent({
-        userId,
-        eventType: "auth.session_revoked",
-        eventData: {
-          sessionId: input.sessionId,
-          tokenFamily: session.token_family,
-          reason: "user_revoked"
-        },
-        ipAddress: clientIP,
-        userAgent,
-        success: true
-      });
-
-      return { success: true, message: "Session revoked" };
     })
 });

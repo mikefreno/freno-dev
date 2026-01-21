@@ -167,7 +167,7 @@ describe("CSRF Protection", () => {
       expect(isValid).toBe(false);
     });
 
-    it("should prevent token reuse from different session", () => {
+    it("should prevent token reuse from different login", () => {
       const token1 = generateCSRFToken();
       const token2 = generateCSRFToken();
 

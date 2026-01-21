@@ -17,23 +17,6 @@ export interface User {
   locked_until?: string | null;
 }
 
-export interface Session {
-  id: string;
-  user_id: string;
-  token_family: string;
-  created_at: string;
-  expires_at: string;
-  last_used: string;
-  ip_address?: string | null;
-  user_agent?: string | null;
-  revoked: number;
-  device_name?: string | null;
-  device_type?: string | null;
-  browser?: string | null;
-  os?: string | null;
-  last_active_at?: string | null;
-}
-
 export interface UserProvider {
   id: string;
   user_id: string;
@@ -165,7 +148,6 @@ export interface VisitorAnalytics {
   device_type?: string | null;
   browser?: string | null;
   os?: string | null;
-  session_id?: string | null;
   duration_ms?: number | null;
   fcp?: number | null;
   lcp?: number | null;

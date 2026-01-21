@@ -14,7 +14,6 @@ export interface AnalyticsEntry {
   deviceType?: string | null;
   browser?: string | null;
   os?: string | null;
-  sessionId?: string | null;
   durationMs?: number | null;
   fcp?: number | null;
   lcp?: number | null;
@@ -62,9 +61,9 @@ async function flushAnalyticsBuffer(): Promise<void> {
       await conn.execute({
         sql: `INSERT INTO VisitorAnalytics (
           id, user_id, path, method, referrer, user_agent, ip_address, 
-          country, device_type, browser, os, session_id, duration_ms,
+          country, device_type, browser, os, duration_ms,
           fcp, lcp, cls, fid, inp, ttfb, dom_load, load_complete
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           uuid(),
           entry.userId || null,
@@ -77,7 +76,6 @@ async function flushAnalyticsBuffer(): Promise<void> {
           entry.deviceType || null,
           entry.browser || null,
           entry.os || null,
-          entry.sessionId || null,
           entry.durationMs || null,
           entry.fcp || null,
           entry.lcp || null,
@@ -202,7 +200,6 @@ export async function queryAnalytics(
     device_type: row.device_type as string | null,
     browser: row.browser as string | null,
     os: row.os as string | null,
-    session_id: row.session_id as string | null,
     duration_ms: row.duration_ms as number | null,
     created_at: row.created_at as string
   }));

@@ -11,7 +11,7 @@ import {
 } from "~/server/analytics";
 import { ConnectionFactory } from "~/server/database";
 import { v4 as uuid } from "uuid";
-import { getRequestIP, getCookie } from "vinxi/http";
+import { getRequestIP } from "vinxi/http";
 
 export const analyticsRouter = createTRPCRouter({
   logPerformance: publicProcedure
@@ -80,9 +80,6 @@ export const analyticsRouter = createTRPCRouter({
             ctx.event.request?.headers?.get("referer") ||
             undefined;
           const ipAddress = getRequestIP(ctx.event.nativeEvent) || undefined;
-          const sessionId =
-            getCookie(ctx.event.nativeEvent, "session_id") || undefined;
-
           const enriched = enrichAnalyticsEntry({
             userId: ctx.userId,
             path: input.path,
@@ -90,7 +87,6 @@ export const analyticsRouter = createTRPCRouter({
             userAgent,
             referrer,
             ipAddress,
-            sessionId,
             fcp: input.metrics.fcp,
             lcp: input.metrics.lcp,
             cls: input.metrics.cls,
@@ -104,9 +100,9 @@ export const analyticsRouter = createTRPCRouter({
           await conn.execute({
             sql: `INSERT INTO VisitorAnalytics (
               id, user_id, path, method, referrer, user_agent, ip_address, 
-              country, device_type, browser, os, session_id, duration_ms,
+              country, device_type, browser, os, duration_ms,
               fcp, lcp, cls, fid, inp, ttfb, dom_load, load_complete
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
               uuid(),
               enriched.userId || null,
@@ -119,7 +115,6 @@ export const analyticsRouter = createTRPCRouter({
               enriched.deviceType || null,
               enriched.browser || null,
               enriched.os || null,
-              enriched.sessionId || null,
               enriched.durationMs || null,
               enriched.fcp || null,
               enriched.lcp || null,

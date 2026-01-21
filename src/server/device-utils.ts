@@ -88,7 +88,7 @@ export function formatDeviceDescription(deviceInfo: DeviceInfo): string {
 
 /**
  * Create a short device fingerprint for comparison
- * Not cryptographic, just for grouping similar sessions
+ * Not cryptographic, just for grouping similar logins
  * @param deviceInfo - Device information
  * @returns Short fingerprint string
  */

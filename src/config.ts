@@ -7,37 +7,21 @@
  *
  * Security Model:
  * - Access tokens: Short-lived (15m), contain user identity, stored in httpOnly cookie
- * - Refresh tokens: Long-lived (7-90d), opaque tokens for getting new access tokens
- * - Token rotation: Each refresh invalidates old token and issues new pair
- * - Breach detection: Reusing invalidated token revokes entire token family
+ * - rememberMe tokens: Long-lived (30d), issued as JWT without refresh tokens
  *
  * Cookie Behavior:
- * - rememberMe = false: Session cookies (no maxAge) - expire when browser closes
+ * - rememberMe = false: Browser-session cookies (no maxAge) - expire when browser closes
  * - rememberMe = true: Persistent cookies (with maxAge) - survive browser restart
  *
  * Timing Decisions:
  * - 15m access: Balance between security (short exposure) and UX (not too frequent refreshes)
- * - 7d session: DB expiry for non-remember-me (cookie is session-only but accommodates users who keep browser open)
- * - 90d remember: Extended convenience for trusted devices (both DB and cookie persist)
- * - 5s reuse window: Handles race conditions in distributed systems
+ * - 30d remember: Extended convenience for trusted devices
  */
 export const AUTH_CONFIG = {
   // Access Token (JWT in cookie)
   ACCESS_TOKEN_EXPIRY: "15m" as const, // 15 minutes (short-lived)
   ACCESS_TOKEN_EXPIRY_DEV: "2m" as const, // 2 minutes for faster testing
-
-  // Refresh Token (opaque token in separate cookie)
-  REFRESH_TOKEN_EXPIRY_SHORT: "7d" as const, // 7 days (DB expiry for non-remember me - accommodates users who keep browser open)
-  REFRESH_TOKEN_EXPIRY_LONG: "90d" as const, // 90 days (remember me - both DB and cookie persist)
-
-  // Security Settings
-  REFRESH_TOKEN_ROTATION_ENABLED: true, // Enable token rotation
-  MAX_ROTATION_COUNT: 1000, // Max rotations before forcing re-login (1000 * 15m = 10.4 days in prod, 1000 * 2m = 33 hours in dev)
-  REFRESH_TOKEN_REUSE_WINDOW_MS: 5000, // 5s grace period for race conditions
-
-  // Session Cleanup (serverless-friendly opportunistic cleanup)
-  SESSION_CLEANUP_INTERVAL_HOURS: 24, // Check for cleanup every 24 hours
-  SESSION_CLEANUP_RETENTION_DAYS: 90, // Keep revoked sessions for 90 days (audit)
+  ACCESS_TOKEN_EXPIRY_LONG: "30d" as const, // rememberMe cookie lifetime
 
   // Other Auth Settings
   CSRF_TOKEN_MAX_AGE: 60 * 60 * 24 * 14,
@@ -57,7 +41,7 @@ export function getAccessTokenExpiry(): string {
 
 /**
  * Convert expiry string to seconds for cookie Max-Age
- * @param expiry - Expiry string like "15m", "7d", "90d"
+ * @param expiry - Expiry string like "15m", "30d"
  * @returns Seconds as number
  */
 export function expiryToSeconds(expiry: string): number {
@@ -72,30 +56,11 @@ export function expiryToSeconds(expiry: string): number {
 }
 
 /**
- * Get access cookie maxAge based on environment (in seconds)
- */
-export function getAccessCookieMaxAge(): number {
-  return expiryToSeconds(getAccessTokenExpiry());
-}
-
-/**
- * Get refresh cookie maxAge based on rememberMe preference (in seconds)
- */
-export function getRefreshCookieMaxAge(rememberMe: boolean): number {
-  return expiryToSeconds(
-    rememberMe
-      ? AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG
-      : AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_SHORT
-  );
-}
-
-/**
  * Type helper for token expiry strings
  */
 export type TokenExpiry =
   | typeof AUTH_CONFIG.ACCESS_TOKEN_EXPIRY
-  | typeof AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_SHORT
-  | typeof AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_LONG;
+  | typeof AUTH_CONFIG.ACCESS_TOKEN_EXPIRY_LONG;
 
 // ============================================================
 // RATE LIMITING
@@ -150,9 +115,6 @@ export const CACHE_CONFIG = {
   BLOG_POSTS_LIST_CACHE_TTL_MS: 15 * 60 * 1000,
   MAX_STALE_DATA_MS: 7 * 24 * 60 * 60 * 1000,
   GIT_ACTIVITY_MAX_STALE_MS: 24 * 60 * 60 * 1000,
-
-  // Session activity tracking - only update DB if last update was > threshold
-  SESSION_ACTIVITY_UPDATE_THRESHOLD_MS: 5 * 60 * 1000, // 5 minutes
 
   // Rate limit in-memory cache TTL (reduces DB reads)
   RATE_LIMIT_CACHE_TTL_MS: 60 * 1000, // 1 minute

@@ -15,38 +15,6 @@ export const model: { [key: string]: string } = {
       locked_until TEXT
     );
   `,
-  Session: `
-     CREATE TABLE Session
-     (
-       id TEXT PRIMARY KEY,
-       user_id TEXT NOT NULL,
-       token_family TEXT NOT NULL,
-       refresh_token_hash TEXT NOT NULL,
-       parent_session_id TEXT,
-       rotation_count INTEGER DEFAULT 0,
-       created_at TEXT NOT NULL DEFAULT (datetime('now')),
-       expires_at TEXT NOT NULL,
-       access_token_expires_at TEXT NOT NULL,
-       last_used TEXT NOT NULL DEFAULT (datetime('now')),
-       ip_address TEXT,
-       user_agent TEXT,
-       revoked INTEGER DEFAULT 0,
-       device_name TEXT,
-       device_type TEXT,
-       browser TEXT,
-       os TEXT,
-       last_active_at TEXT DEFAULT (datetime('now')),
-       FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
-       FOREIGN KEY (parent_session_id) REFERENCES Session(id) ON DELETE SET NULL
-     );
-     CREATE INDEX IF NOT EXISTS idx_session_user_id ON Session (user_id);
-     CREATE INDEX IF NOT EXISTS idx_session_expires_at ON Session (expires_at);
-     CREATE INDEX IF NOT EXISTS idx_session_token_family ON Session (token_family);
-     CREATE INDEX IF NOT EXISTS idx_session_refresh_token_hash ON Session (refresh_token_hash);
-     CREATE INDEX IF NOT EXISTS idx_session_revoked ON Session (revoked);
-     CREATE INDEX IF NOT EXISTS idx_session_last_active ON Session (last_active_at);
-     CREATE INDEX IF NOT EXISTS idx_session_user_active ON Session (user_id, revoked, last_active_at);
-  `,
   UserProvider: `
     CREATE TABLE UserProvider
     (

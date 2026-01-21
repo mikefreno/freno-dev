@@ -15,10 +15,6 @@ vi.mock("~/server/apple-notification-store", () => ({
   storeAppleNotificationUser: async () => undefined
 }));
 
-vi.mock("~/server/session-helpers", () => ({
-  getAuthSession: async () => ({ userId: "admin", isAdmin: true })
-}));
-
 describe("apple notification router", () => {
   it("verifies and stores notifications", async () => {
     const caller = appRouter.createCaller(

@@ -20,7 +20,6 @@ import {
 } from "solid-js";
 import { createAsync, revalidate } from "@solidjs/router";
 import { getUserState, type UserState } from "~/lib/auth-query";
-import { tokenRefreshManager } from "~/lib/token-refresh";
 
 interface AuthContextType {
   /** Current user state (for UI display) */
@@ -85,41 +84,6 @@ export const AuthProvider: ParentComponent = (props) => {
     onCleanup(() => {
       window.removeEventListener("auth-state-changed", handleAuthRefresh);
     });
-  });
-
-  // Start/stop token refresh manager based on auth state
-  let previousAuth: boolean | undefined = undefined;
-  createEffect(() => {
-    const authenticated = isAuthenticated();
-
-    console.log(
-      `[AuthContext] createEffect triggered - authenticated: ${authenticated}, previousAuth: ${previousAuth}`
-    );
-
-    // Only act if auth state actually changed
-    if (authenticated === previousAuth) {
-      console.log("[AuthContext] Auth state unchanged, skipping");
-      return;
-    }
-
-    previousAuth = authenticated;
-
-    if (authenticated) {
-      console.log(
-        "[AuthContext] User authenticated, starting token refresh manager"
-      );
-      tokenRefreshManager.start(true);
-    } else {
-      console.log(
-        "[AuthContext] User not authenticated, stopping token refresh manager"
-      );
-      tokenRefreshManager.stop();
-    }
-  });
-
-  // Cleanup on unmount
-  onCleanup(() => {
-    tokenRefreshManager.stop();
   });
 
   const value: AuthContextType = {

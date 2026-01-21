@@ -24,14 +24,10 @@ export type AuditEventType =
   | "auth.oauth.github.failed"
   | "auth.oauth.google.success"
   | "auth.oauth.google.failed"
-  | "auth.session.revoke"
-  | "auth.session.revokeAll"
   | "security.rate_limit.exceeded"
   | "security.csrf.failed"
   | "security.suspicious.activity"
-  | "admin.action"
-  | "auth.session_created"
-  | "system.session_cleanup";
+  | "admin.action";
 
 /**
  * Audit log entry structure
@@ -246,7 +242,6 @@ export async function getUserSecuritySummary(
   lastLoginAt: string | null;
   lastLoginIp: string | null;
   uniqueIpCount: number;
-  recentSessions: number;
 }> {
   const conn = ConnectionFactory();
 
@@ -336,16 +331,6 @@ export async function getUserSecuritySummary(
   });
   const uniqueIpCount = (ipResult.rows[0]?.count as number) || 0;
 
-  const sessionResult = await conn.execute({
-    sql: `SELECT COUNT(*) as count FROM AuditLog 
-          WHERE user_id = ? 
-          AND event_type = 'auth.login.success'
-          AND success = 1
-          AND created_at >= datetime('now', '-1 day')`,
-    args: [userId]
-  });
-  const recentSessions = (sessionResult.rows[0]?.count as number) || 0;
-
   return {
     totalEvents,
     successfulEvents,
@@ -356,8 +341,7 @@ export async function getUserSecuritySummary(
     failedLogins,
     lastLoginAt: lastLogin?.created_at as string | null,
     lastLoginIp: lastLogin?.ip_address as string | null,
-    uniqueIpCount,
-    recentSessions
+    uniqueIpCount
   };
 }
 

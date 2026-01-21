@@ -19,7 +19,7 @@ app.config.timestamp_*.js
 .classpath
 *.launch
 .settings/
-tasks
+#tasks
 
 # Temp
 gitignore

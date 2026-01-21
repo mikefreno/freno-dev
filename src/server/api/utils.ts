@@ -1,10 +1,9 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { APIEvent } from "@solidjs/start/server";
-import { getCookie } from "vinxi/http";
 import { logVisit, enrichAnalyticsEntry } from "~/server/analytics";
 import { getRequestIP } from "vinxi/http";
-import { getAuthSession } from "~/server/session-helpers";
 import { verifyCairnToken } from "~/server/cairn-auth";
+import { getAuthPayloadFromEvent } from "~/server/auth";
 
 export type Context = {
   event: APIEvent;
@@ -14,15 +13,14 @@ export type Context = {
 };
 
 async function createContextInner(event: APIEvent): Promise<Context> {
-  // Get auth session from Vinxi encrypted session
-  const session = await getAuthSession(event.nativeEvent);
+  const payload = await getAuthPayloadFromEvent(event.nativeEvent);
 
   let userId: string | null = null;
   let isAdmin = false;
 
-  if (session && session.userId) {
-    userId = session.userId;
-    isAdmin = session.isAdmin;
+  if (payload) {
+    userId = payload.sub;
+    isAdmin = payload.isAdmin;
   }
 
   const req = event.nativeEvent.node?.req || event.nativeEvent;
@@ -38,7 +36,6 @@ async function createContextInner(event: APIEvent): Promise<Context> {
     event.request?.headers?.get("referer") ||
     undefined;
   const ipAddress = getRequestIP(event.nativeEvent) || undefined;
-  const sessionId = getCookie(event.nativeEvent, "session_id") || undefined;
   const authHeader =
     event.request?.headers?.get("authorization") ||
     req.headers?.authorization ||
@@ -65,8 +62,7 @@ async function createContextInner(event: APIEvent): Promise<Context> {
         method,
         userAgent,
         referrer,
-        ipAddress,
-        sessionId
+        ipAddress
       })
     );
   }

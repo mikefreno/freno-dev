@@ -8,7 +8,6 @@ import {
   checkPassword,
   checkPasswordSafe
 } from "~/server/utils";
-import { setCookie, getCookie } from "vinxi/http";
 import type { User } from "~/db/types";
 import {
   linkProvider,
@@ -51,17 +50,22 @@ import {
 import { logAuditEvent } from "~/server/audit";
 import type { H3Event } from "vinxi/http";
 import type { Context } from "../utils";
-import { AUTH_CONFIG, NETWORK_CONFIG, COOLDOWN_TIMERS } from "~/config";
 import {
-  createAuthSession,
-  getAuthSession,
-  invalidateAuthSession,
-  rotateAuthSession,
-  revokeTokenFamily
-} from "~/server/session-helpers";
-import { checkAuthStatus } from "~/server/auth";
+  AUTH_CONFIG,
+  NETWORK_CONFIG,
+  COOLDOWN_TIMERS,
+  expiryToSeconds,
+  getAccessTokenExpiry
+} from "~/config";
+import {
+  issueAuthToken,
+  clearAuthToken,
+  checkAuthStatus,
+  verifyAuthToken,
+  getAuthTokenFromEvent
+} from "~/server/auth";
 import { v4 as uuidV4 } from "uuid";
-import { jwtVerify, SignJWT } from "jose";
+import { SignJWT } from "jose";
 import {
   generateLoginLinkEmail,
   generatePasswordResetEmail,
@@ -83,9 +87,6 @@ function getH3Event(ctx: Context): H3Event {
 }
 
 // Zod schemas
-const refreshTokenSchema = z.object({
-  rememberMe: z.boolean().optional().default(false)
-});
 
 async function sendEmail(to: string, subject: string, htmlContent: string) {
   const apiKey = env.SENDINBLUE_KEY;
@@ -122,45 +123,6 @@ async function sendEmail(to: string, subject: string, htmlContent: string) {
       retryDelay: NETWORK_CONFIG.RETRY_DELAY_MS
     }
   );
-}
-
-/**
- * Attempt server-side token refresh for SSR
- * Called from getUserState() when access token is expired but refresh token exists
- * @param event - H3Event from SSR
- * @param refreshToken - Refresh token from httpOnly cookie (unused, kept for API compatibility)
- * @returns userId if refresh succeeded, null otherwise
- */
-export async function attemptTokenRefresh(
-  event: H3Event,
-  refreshToken: string
-): Promise<string | null> {
-  try {
-    // Step 1: Get current session from Vinxi
-    const session = await getAuthSession(event);
-    if (!session) {
-      return null;
-    }
-
-    // Step 2: Get client info for rotation
-    const clientIP = getClientIP(event);
-    const userAgent = getUserAgent(event);
-
-    const newSession = await rotateAuthSession(
-      event,
-      session,
-      clientIP,
-      userAgent
-    );
-
-    if (!newSession) {
-      return null;
-    }
-
-    return newSession.userId;
-  } catch (error) {
-    return null;
-  }
 }
 
 export const authRouter = createTRPCRouter({
@@ -306,16 +268,15 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent = getUserAgent(getH3Event(ctx));
-        await createAuthSession(
-          getH3Event(ctx),
+        const event = getH3Event(ctx);
+        const clientIP = getClientIP(event);
+        const userAgent = getUserAgent(event);
+        await issueAuthToken({
+          event,
           userId,
-          true, // OAuth defaults to remember
-          clientIP,
-          userAgent
-        );
-        setCSRFToken(getH3Event(ctx));
+          rememberMe: true
+        });
+        setCSRFToken(event);
 
         await logAuditEvent({
           userId,
@@ -518,18 +479,17 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        // Create session with Vinxi (OAuth defaults to remember me)
-        const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent = getUserAgent(getH3Event(ctx));
-        await createAuthSession(
-          getH3Event(ctx),
+        // Issue JWT (OAuth defaults to remember me)
+        const event = getH3Event(ctx);
+        const clientIP = getClientIP(event);
+        const userAgent = getUserAgent(event);
+        await issueAuthToken({
+          event,
           userId,
-          true, // OAuth defaults to remember
-          clientIP,
-          userAgent
-        );
+          rememberMe: true
+        });
 
-        setCSRFToken(getH3Event(ctx));
+        setCSRFToken(event);
 
         await logAuditEvent({
           userId,
@@ -642,17 +602,16 @@ export const authRouter = createTRPCRouter({
 
         const userId = (res.rows[0] as unknown as User).id;
 
-        const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent = getUserAgent(getH3Event(ctx));
+        const event = getH3Event(ctx);
+        const clientIP = getClientIP(event);
+        const userAgent = getUserAgent(event);
 
-        await createAuthSession(
-          getH3Event(ctx),
+        await issueAuthToken({
+          event,
           userId,
-          rememberMe,
-          clientIP,
-          userAgent
-        );
-        setCSRFToken(getH3Event(ctx));
+          rememberMe
+        });
+        setCSRFToken(event);
 
         await logAuditEvent({
           userId,
@@ -777,16 +736,15 @@ export const authRouter = createTRPCRouter({
         const shouldRemember =
           rememberMe ?? (payload.rememberMe as boolean) ?? false;
 
-        const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent = getUserAgent(getH3Event(ctx));
-        await createAuthSession(
-          getH3Event(ctx),
+        const event = getH3Event(ctx);
+        const clientIP = getClientIP(event);
+        const userAgent = getUserAgent(event);
+        await issueAuthToken({
+          event,
           userId,
-          shouldRemember,
-          clientIP,
-          userAgent
-        );
-        setCSRFToken(getH3Event(ctx));
+          rememberMe: shouldRemember
+        });
+        setCSRFToken(event);
 
         await logAuditEvent({
           userId,
@@ -970,20 +928,19 @@ export const authRouter = createTRPCRouter({
           email: email
         });
 
-        // Create session with client info
-        const clientIP = getClientIP(getH3Event(ctx));
-        const userAgent = getUserAgent(getH3Event(ctx));
+        // Issue auth token with client info
+        const event = getH3Event(ctx);
+        const clientIP = getClientIP(event);
+        const userAgent = getUserAgent(event);
 
-        await createAuthSession(
-          getH3Event(ctx),
+        await issueAuthToken({
+          event,
           userId,
-          rememberMe ?? true, // Default to persistent sessions for registration
-          clientIP,
-          userAgent
-        );
+          rememberMe: rememberMe ?? true
+        });
 
         // Set CSRF token
-        setCSRFToken(getH3Event(ctx));
+        setCSRFToken(event);
 
         // Log successful registration
         await logAuditEvent({
@@ -1138,18 +1095,17 @@ export const authRouter = createTRPCRouter({
         // Reset rate limits on successful login
         await resetLoginRateLimits(email, clientIP);
 
-        // Create session with Vinxi
-        const userAgent = getUserAgent(getH3Event(ctx));
-        await createAuthSession(
-          getH3Event(ctx),
-          user.id,
-          rememberMe ?? false, // Default to session cookie (expires on browser close)
-          clientIP,
-          userAgent
-        );
+        // Issue JWT for authenticated user
+        const event = getH3Event(ctx);
+        const userAgent = getUserAgent(event);
+        await issueAuthToken({
+          event,
+          userId: user.id,
+          rememberMe: rememberMe ?? false
+        });
 
-        // Set CSRF token for authenticated session
-        setCSRFToken(getH3Event(ctx));
+        // Set CSRF token for authenticated user
+        setCSRFToken(event);
 
         // Log successful login (wrap in try-catch to ensure it never blocks auth flow)
         try {
@@ -1232,7 +1188,7 @@ export const authRouter = createTRPCRouter({
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({
           email,
-          rememberMe: rememberMe ?? false, // Default to session cookie (expires on browser close)
+          rememberMe: rememberMe ?? false, // Default to browser session cookie
           code: loginCode
         })
           .setProtectedHeader({ alg: "HS256" })
@@ -1624,72 +1580,66 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  refreshToken: publicProcedure
-    .input(refreshTokenSchema)
-    .mutation(async ({ ctx }) => {
-      try {
-        const event = getH3Event(ctx);
+  refreshToken: publicProcedure.mutation(async ({ ctx }) => {
+    try {
+      const event = getH3Event(ctx);
+      const authToken = getAuthTokenFromEvent(event);
 
-        // Step 1: Get current session from Vinxi
-        const session = await getAuthSession(event);
-        if (!session) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "No valid session found"
-          });
-        }
-
-        const authToken = getCookie(event, authCookieName);
-
-        if (!authToken) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "No valid token found"
-          });
-        }
-
-        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-        const { payload } = await jwtVerify(authToken, secret);
-
-        if (!payload.sub) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid token"
-          });
-        }
-
-        await issueAuthToken({
-          event,
-          userId: payload.sub as string,
-          rememberMe: ctx.input.rememberMe ?? false
-        });
-
-        setCSRFToken(event);
-
-        return {
-          success: true,
-          message: "Token refreshed successfully"
-        };
-      } catch (error) {
-        console.error("Token refresh error:", error);
-
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-
+      if (!authToken) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Token refresh failed"
+          code: "UNAUTHORIZED",
+          message: "No valid token found"
         });
       }
-    }),
+
+      const payload = await verifyAuthToken(authToken);
+
+      if (!payload) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid token"
+        });
+      }
+
+      const expiresIn = payload.exp
+        ? payload.exp - Math.floor(Date.now() / 1000)
+        : 0;
+
+      const shortExpiry = expiryToSeconds(getAccessTokenExpiry());
+
+      await issueAuthToken({
+        event,
+        userId: payload.sub,
+        rememberMe: expiresIn > shortExpiry
+      });
+
+      setCSRFToken(event);
+
+      return {
+        success: true,
+        message: "Token refreshed successfully"
+      };
+    } catch (error) {
+      console.error("Token refresh error:", error);
+
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Token refresh failed"
+      });
+    }
+  }),
 
   signOut: publicProcedure.mutation(async ({ ctx }) => {
     try {
-      const auth = await checkAuthStatus(getH3Event(ctx));
+      const event = getH3Event(ctx);
+      const auth = await checkAuthStatus(event);
 
       if (auth.userId) {
-        const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
+        const { ipAddress, userAgent } = getAuditContext(event);
         await logAuditEvent({
           userId: auth.userId,
           eventType: "auth.logout",
@@ -1699,87 +1649,12 @@ export const authRouter = createTRPCRouter({
           success: true
         });
       }
+
+      clearAuthToken(event);
     } catch (e) {
       console.error("Error during signout:", e);
     }
 
-    clearAuthToken(getH3Event(ctx));
-
     return { success: true };
-  }),
-
-  // Admin endpoints for session management
-  cleanupSessions: publicProcedure.mutation(async ({ ctx }) => {
-    // Get user ID to check admin status
-    const userId = ctx.userId;
-    if (!userId) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Authentication required"
-      });
-    }
-
-    // Import cleanup functions
-    const { cleanupExpiredSessions, cleanupOrphanedReferences } =
-      await import("~/server/token-cleanup");
-
-    try {
-      // Run cleanup
-      const stats = await cleanupExpiredSessions();
-      const orphansFixed = await cleanupOrphanedReferences();
-
-      // Log admin action
-      const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
-      await logAuditEvent({
-        userId,
-        eventType: "admin.session_cleanup",
-        eventData: {
-          sessionsDeleted: stats.totalDeleted,
-          orphansFixed
-        },
-        ipAddress,
-        userAgent,
-        success: true
-      });
-
-      return {
-        success: true,
-        sessionsDeleted: stats.totalDeleted,
-        expiredDeleted: stats.expiredDeleted,
-        revokedDeleted: stats.revokedDeleted,
-        orphansFixed
-      };
-    } catch (error) {
-      console.error("Manual cleanup failed:", error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Cleanup failed"
-      });
-    }
-  }),
-
-  getSessionStats: publicProcedure.query(async ({ ctx }) => {
-    // Get user ID to check admin status
-    const userId = ctx.userId;
-    if (!userId) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Authentication required"
-      });
-    }
-
-    // Import stats function
-    const { getSessionStats } = await import("~/server/token-cleanup");
-
-    try {
-      const stats = await getSessionStats();
-      return stats;
-    } catch (error) {
-      console.error("Failed to get session stats:", error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to retrieve stats"
-      });
-    }
   })
 });

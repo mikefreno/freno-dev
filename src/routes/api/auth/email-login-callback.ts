@@ -45,7 +45,7 @@ export async function GET(event: APIEvent) {
         result.redirectTo
       );
 
-      // Vinxi's updateSession already set the cookie headers automatically
+      // Auth handler already set cookie headers
       // Just redirect - the cookies are already in the response
       const redirectUrl = result.redirectTo || "/account";
       return new Response(null, {
