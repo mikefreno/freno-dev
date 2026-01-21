@@ -434,10 +434,10 @@ export default function PostPage() {
 
                             <div>
                               <AuthenticatedLike
-                                currentUserID={userID}
-                                isAuthenticated={isAuthenticated}
-                                likes={post.likes}
-                                projectID={post.id}
+                                currentUserID={postData.userID}
+                                isAuthenticated={postData.isAuthenticated}
+                                likes={postData.likes}
+                                projectID={p().id}
                               />
                             </div>
                           </div>
