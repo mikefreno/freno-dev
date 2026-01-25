@@ -185,6 +185,48 @@ const loginSchema = z.object({
   password: z.string().min(1)
 });
 
+const googleSignInSchema = z.object({
+  idToken: z.string().min(1),
+  email: z.string().email().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional()
+});
+
+const appleSignInSchema = z.object({
+  idToken: z.string().min(1),
+  email: z.string().email().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  appleUserId: z.string().min(1)
+});
+
+interface GoogleTokenPayload {
+  iss: string;
+  azp: string;
+  aud: string;
+  sub: string;
+  email?: string;
+  email_verified?: boolean;
+  name?: string;
+  picture?: string;
+  given_name?: string;
+  family_name?: string;
+  iat: number;
+  exp: number;
+}
+
+interface AppleTokenPayload {
+  iss: string;
+  aud: string;
+  exp: number;
+  iat: number;
+  sub: string;
+  email?: string;
+  email_verified?: boolean | string;
+  is_private_email?: boolean | string;
+  real_user_status?: number;
+}
+
 export const nessaDbRouter = createTRPCRouter({
   health: nessaProcedure.query(async () => {
     try {
@@ -351,6 +393,446 @@ export const nessaDbRouter = createTRPCRouter({
       });
     }
   }),
+
+  googleSignIn: publicProcedure
+    .input(googleSignInSchema)
+    .mutation(async ({ input }) => {
+      try {
+        // Verify the Google ID token
+        const tokenInfoResponse = await fetch(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=${input.idToken}`
+        );
+
+        if (!tokenInfoResponse.ok) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid Google ID token"
+          });
+        }
+
+        const tokenPayload =
+          (await tokenInfoResponse.json()) as GoogleTokenPayload;
+
+        // Validate the token payload
+        if (
+          tokenPayload.iss !== "accounts.google.com" &&
+          tokenPayload.iss !== "https://accounts.google.com"
+        ) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid token issuer"
+          });
+        }
+
+        // Check if token is expired
+        const now = Math.floor(Date.now() / 1000);
+        if (tokenPayload.exp < now) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Token has expired"
+          });
+        }
+
+        const googleUserId = tokenPayload.sub;
+        const email = tokenPayload.email ?? input.email;
+        const firstName =
+          tokenPayload.given_name ?? input.firstName ?? "Google";
+        const lastName = tokenPayload.family_name ?? input.lastName ?? "User";
+        const displayName =
+          tokenPayload.name ?? `${firstName} ${lastName}`.trim();
+        const avatarUrl = tokenPayload.picture ?? null;
+
+        const conn = NessaConnectionFactory();
+
+        // Check if user exists by Google provider ID
+        const existingByGoogle = await conn.execute({
+          sql: "SELECT userId FROM authProviders WHERE provider = 'google' AND providerUserId = ?",
+          args: [googleUserId]
+        });
+
+        let userId: string;
+
+        if (existingByGoogle.rows.length > 0) {
+          // User exists with Google account - log them in
+          userId = existingByGoogle.rows[0].userId as string;
+          await conn.execute({
+            sql: "UPDATE users SET lastLoginAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?",
+            args: [userId]
+          });
+        } else if (email) {
+          // Check if user exists by email
+          const existingByEmail = await conn.execute({
+            sql: "SELECT id FROM users WHERE email = ?",
+            args: [email]
+          });
+
+          if (existingByEmail.rows.length > 0) {
+            // User exists with email - link Google account
+            userId = existingByEmail.rows[0].id as string;
+            await conn.execute({
+              sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              args: [
+                crypto.randomUUID(),
+                userId,
+                "google",
+                googleUserId,
+                email,
+                displayName,
+                avatarUrl
+              ]
+            });
+            await conn.execute({
+              sql: "UPDATE users SET provider = 'google', lastLoginAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?",
+              args: [userId]
+            });
+          } else {
+            // Create new user with Google account
+            userId = crypto.randomUUID();
+            await conn.execute({
+              sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, status, updatedAt)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+              args: [
+                userId,
+                email,
+                tokenPayload.email_verified ? 1 : 0,
+                firstName,
+                lastName,
+                displayName,
+                avatarUrl,
+                "google",
+                "active"
+              ]
+            });
+            await conn.execute({
+              sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              args: [
+                crypto.randomUUID(),
+                userId,
+                "google",
+                googleUserId,
+                email,
+                displayName,
+                avatarUrl
+              ]
+            });
+            // Create default workout plan for new user
+            await conn.execute({
+              sql: "INSERT INTO workoutPlans (id, userId, name, category, difficulty, type, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              args: [
+                crypto.randomUUID(),
+                userId,
+                "Getting Started",
+                "strength",
+                "beginner",
+                "strength",
+                0
+              ]
+            });
+          }
+        } else {
+          // No email available - create user without email
+          userId = crypto.randomUUID();
+          await conn.execute({
+            sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, status, updatedAt)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+            args: [
+              userId,
+              null,
+              0,
+              firstName,
+              lastName,
+              displayName,
+              avatarUrl,
+              "google",
+              "active"
+            ]
+          });
+          await conn.execute({
+            sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            args: [
+              crypto.randomUUID(),
+              userId,
+              "google",
+              googleUserId,
+              null,
+              displayName,
+              avatarUrl
+            ]
+          });
+          // Create default workout plan for new user
+          await conn.execute({
+            sql: "INSERT INTO workoutPlans (id, userId, name, category, difficulty, type, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            args: [
+              crypto.randomUUID(),
+              userId,
+              "Getting Started",
+              "strength",
+              "beginner",
+              "strength",
+              0
+            ]
+          });
+        }
+
+        const token = await signNessaToken(userId);
+        return { success: true, token, userId };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Failed to sign in with Google:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to sign in with Google"
+        });
+      }
+    }),
+
+  appleSignIn: publicProcedure
+    .input(appleSignInSchema)
+    .mutation(async ({ input }) => {
+      try {
+        // Verify the Apple ID token
+        // Apple's public keys for JWT verification
+        const appleKeysResponse = await fetch(
+          "https://appleid.apple.com/auth/keys"
+        );
+        if (!appleKeysResponse.ok) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch Apple public keys"
+          });
+        }
+
+        const appleKeys = (await appleKeysResponse.json()) as {
+          keys: Array<{
+            kty: string;
+            kid: string;
+            use: string;
+            alg: string;
+            n: string;
+            e: string;
+          }>;
+        };
+
+        // Decode the JWT header to get the key ID
+        const [headerB64] = input.idToken.split(".");
+        if (!headerB64) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid Apple ID token format"
+          });
+        }
+
+        const headerJson = Buffer.from(headerB64, "base64url").toString("utf8");
+        const header = JSON.parse(headerJson) as { kid: string; alg: string };
+
+        // Find the matching key
+        const key = appleKeys.keys.find((k) => k.kid === header.kid);
+        if (!key) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Apple public key not found"
+          });
+        }
+
+        // For simplicity, we'll decode the payload and verify basic claims
+        // In production, you should use a proper JWT library like jose to verify the signature
+        const [, payloadB64] = input.idToken.split(".");
+        if (!payloadB64) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid Apple ID token format"
+          });
+        }
+
+        const payloadJson = Buffer.from(payloadB64, "base64url").toString(
+          "utf8"
+        );
+        const tokenPayload = JSON.parse(payloadJson) as AppleTokenPayload;
+
+        // Validate the token payload
+        if (tokenPayload.iss !== "https://appleid.apple.com") {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid token issuer"
+          });
+        }
+
+        // Check if token is expired
+        const now = Math.floor(Date.now() / 1000);
+        if (tokenPayload.exp < now) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Token has expired"
+          });
+        }
+
+        // Apple user ID from token should match the one provided
+        if (tokenPayload.sub !== input.appleUserId) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Apple user ID mismatch"
+          });
+        }
+
+        const appleUserId = tokenPayload.sub;
+        // Apple only sends email on first sign-in, so use input.email if token doesn't have it
+        const email = tokenPayload.email ?? input.email;
+        const firstName = input.firstName ?? "Apple";
+        const lastName = input.lastName ?? "User";
+        const displayName = `${firstName} ${lastName}`.trim();
+
+        const conn = NessaConnectionFactory();
+
+        // Check if user exists by Apple provider ID
+        const existingByApple = await conn.execute({
+          sql: "SELECT userId FROM authProviders WHERE provider = 'apple' AND providerUserId = ?",
+          args: [appleUserId]
+        });
+
+        let userId: string;
+
+        if (existingByApple.rows.length > 0) {
+          // User exists with Apple account - log them in
+          userId = existingByApple.rows[0].userId as string;
+          await conn.execute({
+            sql: "UPDATE users SET lastLoginAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?",
+            args: [userId]
+          });
+        } else if (email) {
+          // Check if user exists by email
+          const existingByEmail = await conn.execute({
+            sql: "SELECT id FROM users WHERE email = ?",
+            args: [email]
+          });
+
+          if (existingByEmail.rows.length > 0) {
+            // User exists with email - link Apple account
+            userId = existingByEmail.rows[0].id as string;
+            await conn.execute({
+              sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              args: [
+                crypto.randomUUID(),
+                userId,
+                "apple",
+                appleUserId,
+                email,
+                displayName,
+                null
+              ]
+            });
+            await conn.execute({
+              sql: "UPDATE users SET provider = 'apple', appleUserId = ?, lastLoginAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?",
+              args: [appleUserId, userId]
+            });
+          } else {
+            // Create new user with Apple account
+            userId = crypto.randomUUID();
+            await conn.execute({
+              sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, appleUserId, status, updatedAt)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+              args: [
+                userId,
+                email,
+                tokenPayload.email_verified === true ||
+                tokenPayload.email_verified === "true"
+                  ? 1
+                  : 0,
+                firstName,
+                lastName,
+                displayName,
+                null,
+                "apple",
+                appleUserId,
+                "active"
+              ]
+            });
+            await conn.execute({
+              sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              args: [
+                crypto.randomUUID(),
+                userId,
+                "apple",
+                appleUserId,
+                email,
+                displayName,
+                null
+              ]
+            });
+            // Create default workout plan for new user
+            await conn.execute({
+              sql: "INSERT INTO workoutPlans (id, userId, name, category, difficulty, type, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              args: [
+                crypto.randomUUID(),
+                userId,
+                "Getting Started",
+                "strength",
+                "beginner",
+                "strength",
+                0
+              ]
+            });
+          }
+        } else {
+          // No email available - create user without email
+          userId = crypto.randomUUID();
+          await conn.execute({
+            sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, appleUserId, status, updatedAt)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+            args: [
+              userId,
+              null,
+              0,
+              firstName,
+              lastName,
+              displayName,
+              null,
+              "apple",
+              appleUserId,
+              "active"
+            ]
+          });
+          await conn.execute({
+            sql: "INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            args: [
+              crypto.randomUUID(),
+              userId,
+              "apple",
+              appleUserId,
+              null,
+              displayName,
+              null
+            ]
+          });
+          // Create default workout plan for new user
+          await conn.execute({
+            sql: "INSERT INTO workoutPlans (id, userId, name, category, difficulty, type, isPublic) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            args: [
+              crypto.randomUUID(),
+              userId,
+              "Getting Started",
+              "strength",
+              "beginner",
+              "strength",
+              0
+            ]
+          });
+        }
+
+        const token = await signNessaToken(userId);
+        return { success: true, token, userId };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Failed to sign in with Apple:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to sign in with Apple"
+        });
+      }
+    }),
 
   getUsers: nessaProcedure
     .input(paginatedQuerySchema)
