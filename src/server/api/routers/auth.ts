@@ -48,6 +48,7 @@ import {
   markPasswordResetTokenUsed
 } from "~/server/security";
 import { logAuditEvent } from "~/server/audit";
+import { getCookie, setCookie } from "vinxi/http";
 import type { H3Event } from "vinxi/http";
 import type { Context } from "../utils";
 import {
@@ -65,7 +66,7 @@ import {
   getAuthTokenFromEvent
 } from "~/server/auth";
 import { v4 as uuidV4 } from "uuid";
-import { SignJWT } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 import {
   generateLoginLinkEmail,
   generatePasswordResetEmail,
@@ -686,14 +687,6 @@ export const authRouter = createTRPCRouter({
         // Check if there's a valid JWT token with this code
         // We need to find the token that was generated for this email
         // Since we can't store tokens in DB efficiently, we'll verify against the cookie
-        const requested = getCookie(getH3Event(ctx), "emailLoginLinkRequested");
-        if (!requested) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "No login request found. Please request a new code."
-          });
-        }
-
         // Get the token from cookie (we'll store it when sending email)
         const storedToken = getCookie(getH3Event(ctx), "emailLoginToken");
         if (!storedToken) {
@@ -1219,7 +1212,7 @@ export const authRouter = createTRPCRouter({
 
         // Store the token in a cookie so it can be verified with the code later
         setCookie(getH3Event(ctx), "emailLoginToken", token, {
-          maxAge: COOLDOWN_TIMERS.EMAIL_LOGIN_LINK_COOKIE_MAX_AGE,
+          maxAge: expiryToSeconds(AUTH_CONFIG.EMAIL_LOGIN_LINK_EXPIRY),
           httpOnly: true,
           secure: env.NODE_ENV === "production",
           sameSite: "strict",
