@@ -2,14 +2,14 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import type { APIEvent } from "@solidjs/start/server";
 import { logVisit, enrichAnalyticsEntry } from "~/server/analytics";
 import { getRequestIP } from "vinxi/http";
-import { verifyCairnToken } from "~/server/cairn-auth";
+import { verifyNessaToken } from "~/server/nessa-auth";
 import { getAuthPayloadFromEvent } from "~/server/auth";
 
 export type Context = {
   event: APIEvent;
   userId: string | null;
   isAdmin: boolean;
-  cairnUserId: string | null;
+  nessaUserId: string | null;
 };
 
 /** Safely get a header value from either Fetch API Headers or Node.js IncomingHttpHeaders */
@@ -59,14 +59,14 @@ async function createContextInner(event: APIEvent): Promise<Context> {
     getHeader(event.request?.headers, "authorization") ||
     null;
 
-  let cairnUserId: string | null = null;
+  let nessaUserId: string | null = null;
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.replace("Bearer ", "").trim();
     try {
-      const payload = await verifyCairnToken(token);
-      cairnUserId = payload.sub;
+      const payload = await verifyNessaToken(token);
+      nessaUserId = payload.sub;
     } catch (error) {
-      console.error("Cairn JWT verification failed:", error);
+      console.error("Nessa JWT verification failed:", error);
     }
   }
 
@@ -88,7 +88,7 @@ async function createContextInner(event: APIEvent): Promise<Context> {
     event,
     userId,
     isAdmin,
-    cairnUserId
+    nessaUserId
   };
 }
 
@@ -128,21 +128,21 @@ const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
   });
 });
 
-const enforceCairnUser = t.middleware(({ ctx, next }) => {
-  if (!ctx.cairnUserId) {
+const enforceNessaUser = t.middleware(({ ctx, next }) => {
+  if (!ctx.nessaUserId) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "Cairn authentication required"
+      message: "Nessa authentication required"
     });
   }
   return next({
     ctx: {
       ...ctx,
-      cairnUserId: ctx.cairnUserId
+      nessaUserId: ctx.nessaUserId
     }
   });
 });
 
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 export const adminProcedure = t.procedure.use(enforceUserIsAdmin);
-export const cairnProcedure = t.procedure.use(enforceCairnUser);
+export const nessaProcedure = t.procedure.use(enforceNessaUser);

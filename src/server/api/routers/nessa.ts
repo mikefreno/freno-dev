@@ -1,12 +1,12 @@
-import { createTRPCRouter, cairnProcedure, publicProcedure } from "../utils";
+import { createTRPCRouter, nessaProcedure, publicProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { CairnConnectionFactory } from "~/server/database";
+import { NessaConnectionFactory } from "~/server/database";
 import { cache } from "~/server/cache";
 import { hashPassword, checkPasswordSafe } from "~/server/utils";
-import { signCairnToken } from "~/server/cairn-auth";
+import { signNessaToken } from "~/server/nessa-auth";
 
-const CAIRN_CACHE_TTL_MS = 5 * 60 * 1000;
+const NESSA_CACHE_TTL_MS = 5 * 60 * 1000;
 
 const paginatedQuerySchema = z.object({
   limit: z.number().int().min(1).max(100).optional(),
@@ -185,14 +185,14 @@ const loginSchema = z.object({
   password: z.string().min(1)
 });
 
-export const cairnDbRouter = createTRPCRouter({
-  health: cairnProcedure.query(async () => {
+export const nessaDbRouter = createTRPCRouter({
+  health: nessaProcedure.query(async () => {
     try {
-      const conn = CairnConnectionFactory();
+      const conn = NessaConnectionFactory();
       const result = await conn.execute("SELECT 1 as ok");
       return { success: true, ok: result.rows.length > 0 };
     } catch (error) {
-      console.error("Cairn remote DB health check failed:", error);
+      console.error("Nessa remote DB health check failed:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Remote database health check failed"
@@ -204,7 +204,7 @@ export const cairnDbRouter = createTRPCRouter({
     .input(registerSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const existing = await conn.execute({
           sql: "SELECT id FROM users WHERE email = ?",
           args: [input.email]
@@ -270,13 +270,13 @@ export const cairnDbRouter = createTRPCRouter({
           ]
         });
 
-        const token = await signCairnToken(userId);
+        const token = await signNessaToken(userId);
         return { success: true, token, userId };
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error("Failed to register Cairn user:", error);
+        console.error("Failed to register Nessa user:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to register user"
@@ -286,7 +286,7 @@ export const cairnDbRouter = createTRPCRouter({
 
   login: publicProcedure.input(loginSchema).mutation(async ({ input }) => {
     try {
-      const conn = CairnConnectionFactory();
+      const conn = NessaConnectionFactory();
       const result = await conn.execute({
         sql: "SELECT userId, email, provider, providerUserId FROM authProviders WHERE email = ? AND provider IN ('email', 'password')",
         args: [input.email]
@@ -333,7 +333,7 @@ export const cairnDbRouter = createTRPCRouter({
         });
       }
 
-      const token = await signCairnToken(emailProvider.userId);
+      const token = await signNessaToken(emailProvider.userId);
       await conn.execute({
         sql: "UPDATE users SET lastLoginAt = datetime('now'), updatedAt = datetime('now') WHERE id = ?",
         args: [emailProvider.userId]
@@ -344,7 +344,7 @@ export const cairnDbRouter = createTRPCRouter({
       if (error instanceof TRPCError) {
         throw error;
       }
-      console.error("Failed to login Cairn user:", error);
+      console.error("Failed to login Nessa user:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to login"
@@ -352,12 +352,12 @@ export const cairnDbRouter = createTRPCRouter({
     }
   }),
 
-  getUsers: cairnProcedure
+  getUsers: nessaProcedure
     .input(paginatedQuerySchema)
     .query(async ({ input, ctx }) => {
       const limit = input.limit ?? 50;
       const offset = input.offset ?? 0;
-      const cacheKey = `cairn-users:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
+      const cacheKey = `nessa-users:${ctx.nessaUserId}:${limit}:${offset}:${input.since ?? ""}`;
 
       const cached = await cache.get<{
         users: Array<{ id: string; email: string | null }>;
@@ -367,13 +367,13 @@ export const cairnDbRouter = createTRPCRouter({
       }
 
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const sql = input.since
           ? "SELECT id, email FROM users WHERE id = ? AND updatedAt > ? ORDER BY createdAt DESC LIMIT ? OFFSET ?"
           : "SELECT id, email FROM users WHERE id = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?";
         const args = input.since
-          ? [ctx.cairnUserId, input.since, limit, offset]
-          : [ctx.cairnUserId, limit, offset];
+          ? [ctx.nessaUserId, input.since, limit, offset]
+          : [ctx.nessaUserId, limit, offset];
         const result = await conn.execute({
           sql,
           args
@@ -383,23 +383,23 @@ export const cairnDbRouter = createTRPCRouter({
           users: result.rows as Array<{ id: string; email: string | null }>
         };
 
-        await cache.set(cacheKey, payload, CAIRN_CACHE_TTL_MS);
+        await cache.set(cacheKey, payload, NESSA_CACHE_TTL_MS);
         return payload;
       } catch (error) {
-        console.error("Failed to fetch Cairn users:", error);
+        console.error("Failed to fetch Nessa users:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch Cairn users"
+          message: "Failed to fetch Nessa users"
         });
       }
     }),
 
-  getPlans: cairnProcedure
+  getPlans: nessaProcedure
     .input(paginatedQuerySchema)
     .query(async ({ input, ctx }) => {
       const limit = input.limit ?? 50;
       const offset = input.offset ?? 0;
-      const cacheKey = `cairn-plans:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
+      const cacheKey = `nessa-plans:${ctx.nessaUserId}:${limit}:${offset}:${input.since ?? ""}`;
 
       const cached = await cache.get<{
         plans: Array<{ id: string; name: string; category: string }>;
@@ -409,13 +409,13 @@ export const cairnDbRouter = createTRPCRouter({
       }
 
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const sql = input.since
           ? "SELECT id, name, category FROM workoutPlans WHERE userId = ? AND updatedAt > ? ORDER BY createdAt DESC LIMIT ? OFFSET ?"
           : "SELECT id, name, category FROM workoutPlans WHERE userId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?";
         const args = input.since
-          ? [ctx.cairnUserId, input.since, limit, offset]
-          : [ctx.cairnUserId, limit, offset];
+          ? [ctx.nessaUserId, input.since, limit, offset]
+          : [ctx.nessaUserId, limit, offset];
         const result = await conn.execute({
           sql,
           args
@@ -429,23 +429,23 @@ export const cairnDbRouter = createTRPCRouter({
           }>
         };
 
-        await cache.set(cacheKey, payload, CAIRN_CACHE_TTL_MS);
+        await cache.set(cacheKey, payload, NESSA_CACHE_TTL_MS);
         return payload;
       } catch (error) {
-        console.error("Failed to fetch Cairn plans:", error);
+        console.error("Failed to fetch Nessa plans:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch Cairn plans"
+          message: "Failed to fetch Nessa plans"
         });
       }
     }),
 
-  getPlanDetails: cairnProcedure
+  getPlanDetails: nessaProcedure
     .input(paginatedQuerySchema)
     .query(async ({ input, ctx }) => {
       const limit = input.limit ?? 50;
       const offset = input.offset ?? 0;
-      const cacheKey = `cairn-plan-details:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
+      const cacheKey = `nessa-plan-details:${ctx.nessaUserId}:${limit}:${offset}:${input.since ?? ""}`;
 
       const cached = await cache.get<{
         plans: Array<{
@@ -500,13 +500,13 @@ export const cairnDbRouter = createTRPCRouter({
       }
 
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planSql = input.since
           ? "SELECT id, userId, name, description, category, difficulty, durationMinutes, type, isPublic, createdAt, updatedAt FROM workoutPlans WHERE userId = ? AND updatedAt > ? ORDER BY createdAt DESC LIMIT ? OFFSET ?"
           : "SELECT id, userId, name, description, category, difficulty, durationMinutes, type, isPublic, createdAt, updatedAt FROM workoutPlans WHERE userId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?";
         const planArgs = input.since
-          ? [ctx.cairnUserId, input.since, limit, offset]
-          : [ctx.cairnUserId, limit, offset];
+          ? [ctx.nessaUserId, input.since, limit, offset]
+          : [ctx.nessaUserId, limit, offset];
         const planResult = await conn.execute({
           sql: planSql,
           args: planArgs
@@ -516,8 +516,8 @@ export const cairnDbRouter = createTRPCRouter({
           ? "SELECT id, planId, exerciseId, name, category, orderIndex, notes, createdAt FROM planExercises WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ? AND updatedAt > ?) ORDER BY orderIndex ASC"
           : "SELECT id, planId, exerciseId, name, category, orderIndex, notes, createdAt FROM planExercises WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ?) ORDER BY orderIndex ASC";
         const planExercisesArgs = input.since
-          ? [ctx.cairnUserId, input.since]
-          : [ctx.cairnUserId];
+          ? [ctx.nessaUserId, input.since]
+          : [ctx.nessaUserId];
         const planExercisesResult = await conn.execute({
           sql: planExercisesSql,
           args: planExercisesArgs
@@ -527,8 +527,8 @@ export const cairnDbRouter = createTRPCRouter({
           ? "SELECT id, planExerciseId, setNumber, reps, weight, durationSeconds, rpe, restAfterSeconds, isWarmup, isDropset, notes, createdAt FROM planSets WHERE planExerciseId IN (SELECT id FROM planExercises WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ? AND updatedAt > ?)) ORDER BY setNumber ASC"
           : "SELECT id, planExerciseId, setNumber, reps, weight, durationSeconds, rpe, restAfterSeconds, isWarmup, isDropset, notes, createdAt FROM planSets WHERE planExerciseId IN (SELECT id FROM planExercises WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ?)) ORDER BY setNumber ASC";
         const planSetsArgs = input.since
-          ? [ctx.cairnUserId, input.since]
-          : [ctx.cairnUserId];
+          ? [ctx.nessaUserId, input.since]
+          : [ctx.nessaUserId];
         const planSetsResult = await conn.execute({
           sql: planSetsSql,
           args: planSetsArgs
@@ -538,8 +538,8 @@ export const cairnDbRouter = createTRPCRouter({
           ? "SELECT id, planId, latitude, longitude, orderIndex, isWaypoint, createdAt FROM routePoints WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ? AND updatedAt > ?) ORDER BY orderIndex ASC"
           : "SELECT id, planId, latitude, longitude, orderIndex, isWaypoint, createdAt FROM routePoints WHERE planId IN (SELECT id FROM workoutPlans WHERE userId = ?) ORDER BY orderIndex ASC";
         const routePointsArgs = input.since
-          ? [ctx.cairnUserId, input.since]
-          : [ctx.cairnUserId];
+          ? [ctx.nessaUserId, input.since]
+          : [ctx.nessaUserId];
         const routePointsResult = await conn.execute({
           sql: routePointsSql,
           args: routePointsArgs
@@ -594,23 +594,23 @@ export const cairnDbRouter = createTRPCRouter({
           }>
         };
 
-        await cache.set(cacheKey, payload, CAIRN_CACHE_TTL_MS);
+        await cache.set(cacheKey, payload, NESSA_CACHE_TTL_MS);
         return payload;
       } catch (error) {
-        console.error("Failed to fetch Cairn plan details:", error);
+        console.error("Failed to fetch Nessa plan details:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch Cairn plan details"
+          message: "Failed to fetch Nessa plan details"
         });
       }
     }),
 
-  getWorkouts: cairnProcedure
+  getWorkouts: nessaProcedure
     .input(paginatedQuerySchema)
     .query(async ({ input, ctx }) => {
       const limit = input.limit ?? 50;
       const offset = input.offset ?? 0;
-      const cacheKey = `cairn-workouts:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
+      const cacheKey = `nessa-workouts:${ctx.nessaUserId}:${limit}:${offset}:${input.since ?? ""}`;
 
       const cached = await cache.get<{
         workouts: Array<{ id: string; type: string; startDate: string }>;
@@ -620,13 +620,13 @@ export const cairnDbRouter = createTRPCRouter({
       }
 
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const sql = input.since
           ? "SELECT id, type, startDate FROM workouts WHERE userId = ? AND updatedAt > ? ORDER BY startDate DESC LIMIT ? OFFSET ?"
           : "SELECT id, type, startDate FROM workouts WHERE userId = ? ORDER BY startDate DESC LIMIT ? OFFSET ?";
         const args = input.since
-          ? [ctx.cairnUserId, input.since, limit, offset]
-          : [ctx.cairnUserId, limit, offset];
+          ? [ctx.nessaUserId, input.since, limit, offset]
+          : [ctx.nessaUserId, limit, offset];
         const result = await conn.execute({
           sql,
           args
@@ -640,23 +640,23 @@ export const cairnDbRouter = createTRPCRouter({
           }>
         };
 
-        await cache.set(cacheKey, payload, CAIRN_CACHE_TTL_MS);
+        await cache.set(cacheKey, payload, NESSA_CACHE_TTL_MS);
         return payload;
       } catch (error) {
-        console.error("Failed to fetch Cairn workouts:", error);
+        console.error("Failed to fetch Nessa workouts:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch Cairn workouts"
+          message: "Failed to fetch Nessa workouts"
         });
       }
     }),
 
-  getWorkoutDetails: cairnProcedure
+  getWorkoutDetails: nessaProcedure
     .input(paginatedQuerySchema)
     .query(async ({ input, ctx }) => {
       const limit = input.limit ?? 50;
       const offset = input.offset ?? 0;
-      const cacheKey = `cairn-workout-details:${ctx.cairnUserId}:${limit}:${offset}:${input.since ?? ""}`;
+      const cacheKey = `nessa-workout-details:${ctx.nessaUserId}:${limit}:${offset}:${input.since ?? ""}`;
 
       const cached = await cache.get<{
         workouts: Array<{
@@ -720,13 +720,13 @@ export const cairnDbRouter = createTRPCRouter({
       }
 
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const workoutSql = input.since
           ? "SELECT id, userId, planId, type, name, startDate, endDate, durationSeconds, distanceMeters, calories, averageHeartRate, maxHeartRate, averagePace, elevationGain, status, source, healthKitUUID, notes, createdAt, updatedAt, syncedAt FROM workouts WHERE userId = ? AND updatedAt > ? ORDER BY startDate DESC LIMIT ? OFFSET ?"
           : "SELECT id, userId, planId, type, name, startDate, endDate, durationSeconds, distanceMeters, calories, averageHeartRate, maxHeartRate, averagePace, elevationGain, status, source, healthKitUUID, notes, createdAt, updatedAt, syncedAt FROM workouts WHERE userId = ? ORDER BY startDate DESC LIMIT ? OFFSET ?";
         const workoutArgs = input.since
-          ? [ctx.cairnUserId, input.since, limit, offset]
-          : [ctx.cairnUserId, limit, offset];
+          ? [ctx.nessaUserId, input.since, limit, offset]
+          : [ctx.nessaUserId, limit, offset];
         const workoutResult = await conn.execute({
           sql: workoutSql,
           args: workoutArgs
@@ -736,8 +736,8 @@ export const cairnDbRouter = createTRPCRouter({
           ? "SELECT id, workoutId, timestamp, bpm, source FROM heartRateSamples WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ? AND updatedAt > ?) ORDER BY timestamp ASC"
           : "SELECT id, workoutId, timestamp, bpm, source FROM heartRateSamples WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ?) ORDER BY timestamp ASC";
         const heartRateArgs = input.since
-          ? [ctx.cairnUserId, input.since]
-          : [ctx.cairnUserId];
+          ? [ctx.nessaUserId, input.since]
+          : [ctx.nessaUserId];
         const heartRateResult = await conn.execute({
           sql: heartRateSql,
           args: heartRateArgs
@@ -747,8 +747,8 @@ export const cairnDbRouter = createTRPCRouter({
           ? "SELECT id, workoutId, timestamp, latitude, longitude, altitude, horizontalAccuracy, verticalAccuracy, speed, course FROM locationSamples WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ? AND updatedAt > ?) ORDER BY timestamp ASC"
           : "SELECT id, workoutId, timestamp, latitude, longitude, altitude, horizontalAccuracy, verticalAccuracy, speed, course FROM locationSamples WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ?) ORDER BY timestamp ASC";
         const locationArgs = input.since
-          ? [ctx.cairnUserId, input.since]
-          : [ctx.cairnUserId];
+          ? [ctx.nessaUserId, input.since]
+          : [ctx.nessaUserId];
         const locationResult = await conn.execute({
           sql: locationSql,
           args: locationArgs
@@ -758,8 +758,8 @@ export const cairnDbRouter = createTRPCRouter({
           ? "SELECT id, workoutId, splitNumber, distanceMeters, durationSeconds, startTimestamp, endTimestamp, averageHeartRate, averagePace, elevationGain, elevationLoss FROM workoutSplits WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ? AND updatedAt > ?) ORDER BY splitNumber ASC"
           : "SELECT id, workoutId, splitNumber, distanceMeters, durationSeconds, startTimestamp, endTimestamp, averageHeartRate, averagePace, elevationGain, elevationLoss FROM workoutSplits WHERE workoutId IN (SELECT id FROM workouts WHERE userId = ?) ORDER BY splitNumber ASC";
         const splitArgs = input.since
-          ? [ctx.cairnUserId, input.since]
-          : [ctx.cairnUserId];
+          ? [ctx.nessaUserId, input.since]
+          : [ctx.nessaUserId];
         const splitResult = await conn.execute({
           sql: splitSql,
           args: splitArgs
@@ -823,25 +823,25 @@ export const cairnDbRouter = createTRPCRouter({
           }>
         };
 
-        await cache.set(cacheKey, payload, CAIRN_CACHE_TTL_MS);
+        await cache.set(cacheKey, payload, NESSA_CACHE_TTL_MS);
         return payload;
       } catch (error) {
-        console.error("Failed to fetch Cairn workout details:", error);
+        console.error("Failed to fetch Nessa workout details:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch Cairn workout details"
+          message: "Failed to fetch Nessa workout details"
         });
       }
     }),
 
-  createUser: cairnProcedure
+  createUser: nessaProcedure
     .input(userInputSchema)
     .mutation(async ({ input, ctx }) => {
-      if (input.id !== ctx.cairnUserId) {
+      if (input.id !== ctx.nessaUserId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
       }
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO users (id, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, appleUserId, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -869,14 +869,14 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateUser: cairnProcedure
+  updateUser: nessaProcedure
     .input(userInputSchema)
     .mutation(async ({ input, ctx }) => {
-      if (input.id !== ctx.cairnUserId) {
+      if (input.id !== ctx.nessaUserId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
       }
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `UPDATE users SET email = ?, emailVerified = ?, firstName = ?, lastName = ?, displayName = ?, avatarUrl = ?, provider = ?, appleUserId = ?, status = ?, updatedAt = datetime('now') WHERE id = ?`,
           args: [
@@ -902,14 +902,14 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteUser: cairnProcedure
+  deleteUser: nessaProcedure
     .input(userIdSchema)
     .mutation(async ({ input, ctx }) => {
-      if (input.id !== ctx.cairnUserId) {
+      if (input.id !== ctx.nessaUserId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
       }
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: "DELETE FROM users WHERE id = ?",
           args: [input.id]
@@ -924,14 +924,14 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createWorkoutPlan: cairnProcedure
+  createWorkoutPlan: nessaProcedure
     .input(workoutPlanSchema)
     .mutation(async ({ input, ctx }) => {
-      if (input.userId != ctx.cairnUserId) {
+      if (input.userId != ctx.nessaUserId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
       }
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO workoutPlans (id, userId, name, description, category, difficulty, durationMinutes, type, isPublic)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -957,14 +957,14 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateWorkoutPlan: cairnProcedure
+  updateWorkoutPlan: nessaProcedure
     .input(workoutPlanSchema)
     .mutation(async ({ input, ctx }) => {
-      if (input.userId != ctx.cairnUserId) {
+      if (input.userId != ctx.nessaUserId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
       }
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `UPDATE workoutPlans SET name = ?, description = ?, category = ?, difficulty = ?, durationMinutes = ?, type = ?, isPublic = ?, updatedAt = datetime('now') WHERE id = ?`,
           args: [
@@ -988,16 +988,16 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteWorkoutPlan: cairnProcedure
+  deleteWorkoutPlan: nessaProcedure
     .input(planIdSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const check = await conn.execute({
           sql: "SELECT userId FROM workoutPlans WHERE id = ?",
           args: [input.id]
         });
-        if (!check.rows.length || check.rows[0].userId !== ctx.cairnUserId) {
+        if (!check.rows.length || check.rows[0].userId !== ctx.nessaUserId) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
         await conn.execute({
@@ -1014,18 +1014,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createPlanExercise: cairnProcedure
+  createPlanExercise: nessaProcedure
     .input(planExerciseSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT userId FROM workoutPlans WHERE id = ?",
           args: [input.planId]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1052,18 +1052,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updatePlanExercise: cairnProcedure
+  updatePlanExercise: nessaProcedure
     .input(planExerciseSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT userId FROM workoutPlans WHERE id = ?",
           args: [input.planId]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1088,18 +1088,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deletePlanExercise: cairnProcedure
+  deletePlanExercise: nessaProcedure
     .input(planExerciseIdSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN planExercises ON planExercises.planId = workoutPlans.id WHERE planExercises.id = ?",
           args: [input.id]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1117,18 +1117,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createPlanSet: cairnProcedure
+  createPlanSet: nessaProcedure
     .input(planSetSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN planExercises ON planExercises.planId = workoutPlans.id WHERE planExercises.id = ?",
           args: [input.planExerciseId]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1159,18 +1159,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updatePlanSet: cairnProcedure
+  updatePlanSet: nessaProcedure
     .input(planSetSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN planExercises ON planExercises.planId = workoutPlans.id INNER JOIN planSets ON planSets.planExerciseId = planExercises.id WHERE planSets.id = ?",
           args: [input.id]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1199,18 +1199,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deletePlanSet: cairnProcedure
+  deletePlanSet: nessaProcedure
     .input(planSetIdSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN planExercises ON planExercises.planId = workoutPlans.id INNER JOIN planSets ON planSets.planExerciseId = planExercises.id WHERE planSets.id = ?",
           args: [input.id]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1228,18 +1228,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createRoutePoint: cairnProcedure
+  createRoutePoint: nessaProcedure
     .input(routePointSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT userId FROM workoutPlans WHERE id = ?",
           args: [input.planId]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1265,18 +1265,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateRoutePoint: cairnProcedure
+  updateRoutePoint: nessaProcedure
     .input(routePointSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN routePoints ON routePoints.planId = workoutPlans.id WHERE routePoints.id = ?",
           args: [input.id]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1300,18 +1300,18 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteRoutePoint: cairnProcedure
+  deleteRoutePoint: nessaProcedure
     .input(routePointIdSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const planCheck = await conn.execute({
           sql: "SELECT workoutPlans.userId FROM workoutPlans INNER JOIN routePoints ON routePoints.planId = workoutPlans.id WHERE routePoints.id = ?",
           args: [input.id]
         });
         if (
           !planCheck.rows.length ||
-          planCheck.rows[0].userId !== ctx.cairnUserId
+          planCheck.rows[0].userId !== ctx.nessaUserId
         ) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
@@ -1329,14 +1329,14 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createWorkout: cairnProcedure
+  createWorkout: nessaProcedure
     .input(workoutSchema)
     .mutation(async ({ input, ctx }) => {
-      if (input.userId != ctx.cairnUserId) {
+      if (input.userId != ctx.nessaUserId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
       }
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO workouts (id, userId, planId, type, name, startDate, endDate, durationSeconds, distanceMeters, calories, averageHeartRate, maxHeartRate, averagePace, elevationGain, status, source, healthKitUUID, notes)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1371,14 +1371,14 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateWorkout: cairnProcedure
+  updateWorkout: nessaProcedure
     .input(workoutSchema)
     .mutation(async ({ input, ctx }) => {
-      if (input.userId != ctx.cairnUserId) {
+      if (input.userId != ctx.nessaUserId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
       }
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `UPDATE workouts SET planId = ?, type = ?, name = ?, startDate = ?, endDate = ?, durationSeconds = ?, distanceMeters = ?, calories = ?, averageHeartRate = ?, maxHeartRate = ?, averagePace = ?, elevationGain = ?, status = ?, source = ?, healthKitUUID = ?, notes = ?, updatedAt = datetime('now') WHERE id = ?`,
           args: [
@@ -1411,16 +1411,16 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteWorkout: cairnProcedure
+  deleteWorkout: nessaProcedure
     .input(workoutIdSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         const check = await conn.execute({
           sql: "SELECT userId FROM workouts WHERE id = ?",
           args: [input.id]
         });
-        if (!check.rows.length || check.rows[0].userId !== ctx.cairnUserId) {
+        if (!check.rows.length || check.rows[0].userId !== ctx.nessaUserId) {
           throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
         }
         await conn.execute({
@@ -1437,11 +1437,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createHeartRateSample: cairnProcedure
+  createHeartRateSample: nessaProcedure
     .input(heartRateSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO heartRateSamples (id, workoutId, timestamp, bpm, source)
                 VALUES (?, ?, ?, ?, ?)`,
@@ -1463,11 +1463,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateHeartRateSample: cairnProcedure
+  updateHeartRateSample: nessaProcedure
     .input(heartRateSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `UPDATE heartRateSamples SET timestamp = ?, bpm = ?, source = ? WHERE id = ?`,
           args: [input.timestamp, input.bpm, input.source ?? null, input.id]
@@ -1482,11 +1482,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteHeartRateSample: cairnProcedure
+  deleteHeartRateSample: nessaProcedure
     .input(heartRateSchema.pick({ id: true }))
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: "DELETE FROM heartRateSamples WHERE id = ?",
           args: [input.id]
@@ -1501,11 +1501,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createLocationSample: cairnProcedure
+  createLocationSample: nessaProcedure
     .input(locationSampleSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO locationSamples (id, workoutId, timestamp, latitude, longitude, altitude, horizontalAccuracy, verticalAccuracy, speed, course)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1532,11 +1532,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateLocationSample: cairnProcedure
+  updateLocationSample: nessaProcedure
     .input(locationSampleSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `UPDATE locationSamples SET timestamp = ?, latitude = ?, longitude = ?, altitude = ?, horizontalAccuracy = ?, verticalAccuracy = ?, speed = ?, course = ? WHERE id = ?`,
           args: [
@@ -1561,11 +1561,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteLocationSample: cairnProcedure
+  deleteLocationSample: nessaProcedure
     .input(locationSampleSchema.pick({ id: true }))
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: "DELETE FROM locationSamples WHERE id = ?",
           args: [input.id]
@@ -1580,11 +1580,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createWorkoutSplit: cairnProcedure
+  createWorkoutSplit: nessaProcedure
     .input(workoutSplitSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO workoutSplits (id, workoutId, splitNumber, distanceMeters, durationSeconds, startTimestamp, endTimestamp, averageHeartRate, averagePace, elevationGain, elevationLoss)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1612,11 +1612,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateWorkoutSplit: cairnProcedure
+  updateWorkoutSplit: nessaProcedure
     .input(workoutSplitSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `UPDATE workoutSplits SET splitNumber = ?, distanceMeters = ?, durationSeconds = ?, startTimestamp = ?, endTimestamp = ?, averageHeartRate = ?, averagePace = ?, elevationGain = ?, elevationLoss = ? WHERE id = ?`,
           args: [
@@ -1642,11 +1642,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteWorkoutSplit: cairnProcedure
+  deleteWorkoutSplit: nessaProcedure
     .input(workoutSplitSchema.pick({ id: true }))
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: "DELETE FROM workoutSplits WHERE id = ?",
           args: [input.id]
@@ -1661,11 +1661,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createExerciseLibrary: cairnProcedure
+  createExerciseLibrary: nessaProcedure
     .input(exerciseLibrarySchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO exerciseLibrary (id, name, category, muscleGroups, equipment, instructions, defaultSets, defaultReps, defaultRestSeconds, notes)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1692,11 +1692,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateExerciseLibrary: cairnProcedure
+  updateExerciseLibrary: nessaProcedure
     .input(exerciseLibrarySchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `UPDATE exerciseLibrary SET name = ?, category = ?, muscleGroups = ?, equipment = ?, instructions = ?, defaultSets = ?, defaultReps = ?, defaultRestSeconds = ?, notes = ?, updatedAt = datetime('now') WHERE id = ?`,
           args: [
@@ -1722,11 +1722,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteExerciseLibrary: cairnProcedure
+  deleteExerciseLibrary: nessaProcedure
     .input(exerciseIdSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: "DELETE FROM exerciseLibrary WHERE id = ?",
           args: [input.id]
@@ -1741,11 +1741,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  createAuthProvider: cairnProcedure
+  createAuthProvider: nessaProcedure
     .input(providerSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `INSERT INTO authProviders (id, userId, provider, providerUserId, email, displayName, avatarUrl)
                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -1769,11 +1769,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  updateAuthProvider: cairnProcedure
+  updateAuthProvider: nessaProcedure
     .input(providerSchema)
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: `UPDATE authProviders SET provider = ?, providerUserId = ?, email = ?, displayName = ?, avatarUrl = ?, lastUsedAt = datetime('now') WHERE id = ?`,
           args: [
@@ -1795,11 +1795,11 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  deleteAuthProvider: cairnProcedure
+  deleteAuthProvider: nessaProcedure
     .input(providerSchema.pick({ id: true }))
     .mutation(async ({ input }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
         await conn.execute({
           sql: "DELETE FROM authProviders WHERE id = ?",
           args: [input.id]
@@ -1814,15 +1814,15 @@ export const cairnDbRouter = createTRPCRouter({
       }
     }),
 
-  bulkUpsert: cairnProcedure
+  bulkUpsert: nessaProcedure
     .input(bulkSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const conn = CairnConnectionFactory();
+        const conn = NessaConnectionFactory();
 
         if (input.users?.length) {
           for (const user of input.users) {
-            if (user.id !== ctx.cairnUserId) {
+            if (user.id !== ctx.nessaUserId) {
               throw new TRPCError({
                 code: "FORBIDDEN",
                 message: "User mismatch"
@@ -1872,7 +1872,7 @@ export const cairnDbRouter = createTRPCRouter({
 
         if (input.workoutPlans?.length) {
           for (const plan of input.workoutPlans) {
-            if (plan.userId !== ctx.cairnUserId) {
+            if (plan.userId !== ctx.nessaUserId) {
               throw new TRPCError({
                 code: "FORBIDDEN",
                 message: "User mismatch"
@@ -1905,7 +1905,7 @@ export const cairnDbRouter = createTRPCRouter({
             });
             if (
               !planCheck.rows.length ||
-              planCheck.rows[0].userId !== ctx.cairnUserId
+              planCheck.rows[0].userId !== ctx.nessaUserId
             ) {
               throw new TRPCError({
                 code: "FORBIDDEN",
@@ -1942,7 +1942,7 @@ export const cairnDbRouter = createTRPCRouter({
               });
               if (
                 !planCheck.rows.length ||
-                planCheck.rows[0].userId !== ctx.cairnUserId
+                planCheck.rows[0].userId !== ctx.nessaUserId
               ) {
                 throw new TRPCError({
                   code: "FORBIDDEN",
@@ -1979,7 +1979,7 @@ export const cairnDbRouter = createTRPCRouter({
             });
             if (
               !planCheck.rows.length ||
-              planCheck.rows[0].userId !== ctx.cairnUserId
+              planCheck.rows[0].userId !== ctx.nessaUserId
             ) {
               throw new TRPCError({
                 code: "FORBIDDEN",
@@ -2004,7 +2004,7 @@ export const cairnDbRouter = createTRPCRouter({
 
         if (input.workouts?.length) {
           for (const workout of input.workouts) {
-            if (workout.userId !== ctx.cairnUserId) {
+            if (workout.userId !== ctx.nessaUserId) {
               throw new TRPCError({
                 code: "FORBIDDEN",
                 message: "User mismatch"
@@ -2046,7 +2046,7 @@ export const cairnDbRouter = createTRPCRouter({
             });
             if (
               !workoutCheck.rows.length ||
-              workoutCheck.rows[0].userId !== ctx.cairnUserId
+              workoutCheck.rows[0].userId !== ctx.nessaUserId
             ) {
               throw new TRPCError({
                 code: "FORBIDDEN",
@@ -2076,7 +2076,7 @@ export const cairnDbRouter = createTRPCRouter({
             });
             if (
               !workoutCheck.rows.length ||
-              workoutCheck.rows[0].userId !== ctx.cairnUserId
+              workoutCheck.rows[0].userId !== ctx.nessaUserId
             ) {
               throw new TRPCError({
                 code: "FORBIDDEN",
@@ -2111,7 +2111,7 @@ export const cairnDbRouter = createTRPCRouter({
             });
             if (
               !workoutCheck.rows.length ||
-              workoutCheck.rows[0].userId !== ctx.cairnUserId
+              workoutCheck.rows[0].userId !== ctx.nessaUserId
             ) {
               throw new TRPCError({
                 code: "FORBIDDEN",
@@ -2141,7 +2141,7 @@ export const cairnDbRouter = createTRPCRouter({
 
         if (input.authProviders?.length) {
           for (const provider of input.authProviders) {
-            if (provider.userId !== ctx.cairnUserId) {
+            if (provider.userId !== ctx.nessaUserId) {
               throw new TRPCError({
                 code: "FORBIDDEN",
                 message: "User mismatch"

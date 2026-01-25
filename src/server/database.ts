@@ -14,7 +14,7 @@ import {
 
 let mainDBConnection: ReturnType<typeof createClient> | null = null;
 let lineageDBConnection: ReturnType<typeof createClient> | null = null;
-let cairnDBConnection: ReturnType<typeof createClient> | null = null;
+let nessaDBConnection: ReturnType<typeof createClient> | null = null;
 
 export function ConnectionFactory() {
   if (!mainDBConnection) {
@@ -38,15 +38,15 @@ export function LineageConnectionFactory() {
   return lineageDBConnection;
 }
 
-export function CairnConnectionFactory() {
-  if (!cairnDBConnection) {
+export function NessaConnectionFactory() {
+  if (!nessaDBConnection) {
     const config = {
-      url: env.CAIRN_DB_URL,
-      authToken: env.CAIRN_DB_TOKEN
+      url: env.NESSA_DB_URL,
+      authToken: env.NESSA_DB_TOKEN
     };
-    cairnDBConnection = createClient(config);
+    nessaDBConnection = createClient(config);
   }
-  return cairnDBConnection;
+  return nessaDBConnection;
 }
 
 export async function LineageDBInit() {

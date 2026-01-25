@@ -1,24 +1,24 @@
 import { SignJWT, jwtVerify } from "jose";
 import { env } from "~/env/server";
 
-const CAIRN_JWT_EXPIRY = "30d";
+const NESSA_JWT_EXPIRY = "30d";
 
-export type CairnAuthPayload = {
+export type NessaAuthPayload = {
   sub: string;
   exp?: number;
   iat?: number;
 };
 
-export async function verifyCairnToken(
+export async function verifyNessaToken(
   token: string
-): Promise<CairnAuthPayload> {
-  const secret = new TextEncoder().encode(env.CAIRN_JWT_SECRET);
+): Promise<NessaAuthPayload> {
+  const secret = new TextEncoder().encode(env.NESSA_JWT_SECRET);
   const { payload } = await jwtVerify(token, secret, {
     algorithms: ["HS256"]
   });
 
   if (!payload.sub) {
-    throw new Error("Missing subject in Cairn JWT");
+    throw new Error("Missing subject in Nessa JWT");
   }
 
   return {
@@ -28,12 +28,12 @@ export async function verifyCairnToken(
   };
 }
 
-export async function signCairnToken(userId: string): Promise<string> {
-  const secret = new TextEncoder().encode(env.CAIRN_JWT_SECRET);
+export async function signNessaToken(userId: string): Promise<string> {
+  const secret = new TextEncoder().encode(env.NESSA_JWT_SECRET);
   return new SignJWT({})
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
-    .setExpirationTime(CAIRN_JWT_EXPIRY)
+    .setExpirationTime(NESSA_JWT_EXPIRY)
     .sign(secret);
 }
