@@ -46,8 +46,8 @@ export const miscRouter = createTRPCRouter({
       }
 
       const credentials = {
-        accessKeyId: env._AWS_ACCESS_KEY,
-        secretAccessKey: env._AWS_SECRET_KEY
+        accessKeyId: env.MY_AWS_ACCESS_KEY,
+        secretAccessKey: env.MY_AWS_SECRET_KEY
       };
 
       try {
@@ -80,8 +80,8 @@ export const miscRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       const credentials = {
-        accessKeyId: env._AWS_ACCESS_KEY,
-        secretAccessKey: env._AWS_SECRET_KEY
+        accessKeyId: env.MY_AWS_ACCESS_KEY,
+        secretAccessKey: env.MY_AWS_SECRET_KEY
       };
 
       try {
@@ -135,8 +135,8 @@ export const miscRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const credentials = {
-          accessKeyId: env._AWS_ACCESS_KEY,
-          secretAccessKey: env._AWS_SECRET_KEY
+          accessKeyId: env.MY_AWS_ACCESS_KEY,
+          secretAccessKey: env.MY_AWS_SECRET_KEY
         };
 
         const client = new S3Client({
@@ -195,8 +195,8 @@ export const miscRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const credentials = {
-          accessKeyId: env._AWS_ACCESS_KEY,
-          secretAccessKey: env._AWS_SECRET_KEY
+          accessKeyId: env.MY_AWS_ACCESS_KEY,
+          secretAccessKey: env.MY_AWS_SECRET_KEY
         };
 
         const s3params = {
@@ -234,8 +234,8 @@ export const miscRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const credentials = {
-          accessKeyId: env._AWS_ACCESS_KEY,
-          secretAccessKey: env._AWS_SECRET_KEY
+          accessKeyId: env.MY_AWS_ACCESS_KEY,
+          secretAccessKey: env.MY_AWS_SECRET_KEY
         };
 
         const s3params = {

@@ -366,7 +366,7 @@ export function LeftBar() {
   const getMainNavStyles = () => {
     const baseStyles = {
       "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
-      width: "250px",
+      width: windowWidth() < 1536 ? "250px" : "288px",
       "padding-top": "env(safe-area-inset-top)",
       "padding-bottom": "env(safe-area-inset-bottom)"
     };

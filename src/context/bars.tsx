@@ -1,8 +1,6 @@
 import { Accessor, createContext, useContext } from "solid-js";
 import { createSignal } from "solid-js";
 
-export const STATIC_BAR_SIZE = 250;
-
 const BarsContext = createContext<{
   leftBarVisible: Accessor<boolean>;
   setLeftBarVisible: (visible: boolean) => void;

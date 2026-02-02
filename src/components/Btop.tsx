@@ -39,10 +39,10 @@ export function Btop(props: BtopProps) {
 
   onMount(() => {
     if (typeof window !== "undefined") {
-      setIsMobile(window.innerWidth < BREAKPOINTS.MOBILE);
+      setIsMobile(window.innerWidth < BREAKPOINTS.MOBILE_MAX_WIDTH);
 
       const handleResize = () => {
-        setIsMobile(window.innerWidth < BREAKPOINTS.MOBILE);
+        setIsMobile(window.innerWidth < BREAKPOINTS.MOBILE_MAX_WIDTH);
       };
       window.addEventListener("resize", handleResize);
       onCleanup(() => window.removeEventListener("resize", handleResize));

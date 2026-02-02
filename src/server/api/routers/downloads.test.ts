@@ -27,8 +27,8 @@ vi.mock("@aws-sdk/s3-request-presigner", () => ({
 
 // Mock environment variables
 process.env.AWS_REGION = "us-east-1";
-process.env._AWS_ACCESS_KEY = "test-access-key";
-process.env._AWS_SECRET_KEY = "test-secret-key";
+process.env.MY_AWS_ACCESS_KEY = "test-access-key";
+process.env.MY_AWS_SECRET_KEY = "test-secret-key";
 process.env.VITE_DOWNLOAD_BUCKET_STRING = "test-bucket";
 
 describe("downloads router", () => {

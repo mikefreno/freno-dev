@@ -13,8 +13,8 @@ export async function GET(event: APIEvent) {
   const key = "api/Gaze/appcast.xml";
 
   const credentials = {
-    accessKeyId: env._AWS_ACCESS_KEY,
-    secretAccessKey: env._AWS_SECRET_KEY
+    accessKeyId: env.MY_AWS_ACCESS_KEY,
+    secretAccessKey: env.MY_AWS_SECRET_KEY
   };
 
   try {

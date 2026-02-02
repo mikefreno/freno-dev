@@ -160,10 +160,10 @@ function AppLayout(props: { children: any }) {
         <LeftBar />
         <div
           id="center-body"
-          class="bg-base relative h-screen w-screen overflow-x-hidden md:ml-62.5 md:w-[calc(100vw-500px)]"
+          class="bg-base relative h-screen w-screen overflow-x-hidden md:ml-62.5 md:w-[calc(100vw-500px)] 2xl:ml-72 2xl:w-[calc(100vw-576px)]"
         >
           <noscript>
-            <div class="bg-yellow text-crust border-text fixed top-0 z-150 border-b-2 p-4 text-center font-semibold md:w-[calc(100vw-500px)]">
+            <div class="bg-yellow text-crust border-text fixed top-0 z-150 border-b-2 p-4 text-center font-semibold md:w-[calc(100vw-500px)] xl:ml-72 xl:w-[calc(100vw-576px)]">
               JavaScript is disabled. Features will be limited.
             </div>
           </noscript>
