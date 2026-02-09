@@ -233,7 +233,7 @@ export function LeftBar() {
   const handleLinkClick = () => {
     if (
       typeof window !== "undefined" &&
-      window.innerWidth < BREAKPOINTS.MOBILE
+      window.innerWidth < BREAKPOINTS.MOBILE_MAX_WIDTH
     ) {
       setLeftBarVisible(false);
     }
@@ -301,7 +301,7 @@ export function LeftBar() {
 
     if (ref) {
       const handleKeyDown = (e: KeyboardEvent) => {
-        const isMobile = window.innerWidth < BREAKPOINTS.MOBILE;
+        const isMobile = window.innerWidth < BREAKPOINTS.MOBILE_MAX_WIDTH;
 
         if (!isMobile || !leftBarVisible()) return;
 
@@ -366,7 +366,7 @@ export function LeftBar() {
   const getMainNavStyles = () => {
     const baseStyles = {
       "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
-      width: windowWidth() < 1536 ? "250px" : "288px",
+      width: "250px",
       "padding-top": "env(safe-area-inset-top)",
       "padding-bottom": "env(safe-area-inset-bottom)"
     };
@@ -456,7 +456,7 @@ export function LeftBar() {
                     <a
                       href={`/blog/${post.title}`}
                       onClick={handleLinkClick}
-                      class="hover:text-subtext0 block w-52 transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
+                      class="hover:text-subtext0 block w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
                     >
                       <Typewriter class="flex flex-col" keepAlive={false}>
                         <div class="relative overflow-hidden">
@@ -607,14 +607,13 @@ export function RightBar() {
     <aside
       ref={ref}
       aria-label="Links and activity"
-      class="border-l-overlay2 bg-base fixed right-0 z-50 hidden h-dvh w-fit border-l-2 transition-transform duration-500 ease-out md:block"
+      class="border-l-overlay2 bg-base fixed right-0 z-50 hidden h-dvh w-62.5 border-l-2 transition-transform duration-500 ease-out md:block"
       classList={{
         "translate-x-full": !rightBarVisible(),
         "translate-x-0": rightBarVisible()
       }}
       style={{
         "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
-        width: "250px",
         "box-shadow": "inset 6px 0 16px -6px rgba(0, 0, 0, 0.1)",
         "padding-top": "env(safe-area-inset-top)",
         "padding-bottom": "env(safe-area-inset-bottom)",
