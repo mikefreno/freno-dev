@@ -180,7 +180,7 @@ function AppLayout(props: { children: any }) {
                 <CustomScrollbar
                   autoHide={true}
                   autoHideDelay={1500}
-                  rightOffset={window.innerWidth < 1536 ? 250 : 288}
+                  rightOffset={250}
                 >
                   {props.children}
                 </CustomScrollbar>
