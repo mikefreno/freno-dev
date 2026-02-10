@@ -616,6 +616,7 @@ export function RightBar() {
         "transition-timing-function": "cubic-bezier(0.4, 0, 0.2, 1)",
         "box-shadow": "inset 6px 0 16px -6px rgba(0, 0, 0, 0.1)",
         "padding-top": "env(safe-area-inset-top)",
+        width: "250px",
         "padding-bottom": "env(safe-area-inset-bottom)",
         "scrollbar-width": "none"
       }}
