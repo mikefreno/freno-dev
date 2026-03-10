@@ -188,15 +188,6 @@ export function RightBarContent() {
       <hr class="border-overlay0" />
       <div class="flex min-w-0 flex-col gap-6 px-4 pt-6">
         <RecentCommits
-          commits={githubCommits()}
-          title="Recent GitHub Commits"
-          loading={loading()}
-        />
-        <ActivityHeatmap
-          contributions={githubActivity()}
-          title="GitHub Activity"
-        />
-        <RecentCommits
           commits={giteaCommits()}
           title="Recent Gitea Commits"
           loading={loading()}
@@ -204,6 +195,15 @@ export function RightBarContent() {
         <ActivityHeatmap
           contributions={giteaActivity()}
           title="Gitea Activity"
+        />
+        <RecentCommits
+          commits={githubCommits()}
+          title="Recent GitHub Commits"
+          loading={loading()}
+        />
+        <ActivityHeatmap
+          contributions={githubActivity()}
+          title="GitHub Activity"
         />
       </div>
     </div>
