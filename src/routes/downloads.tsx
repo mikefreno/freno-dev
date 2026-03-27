@@ -92,18 +92,43 @@ export default function DownloadsPage() {
                 <span class="text-yellow">{">"}</span> {gazeText()}
               </h2>
 
-              <div class="flex flex-col items-center gap-3">
-                <span class="text-subtext0 font-mono text-sm">
-                  platform: macOS (14.6+)
-                </span>
-                <Button
-                  variant="download"
-                  size="lg"
-                  loading={loadingState()["gaze"]}
-                  onClick={() => download("gaze")}
-                >
-                  download.dmg
-                </Button>
+              <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
+                <div class="flex flex-col items-center gap-3">
+                  <span class="text-subtext0 font-mono text-sm">
+                    platform: macOS (14.6+)
+                  </span>
+                  <Button
+                    variant="download"
+                    size="lg"
+                    loading={loadingState()["gaze"]}
+                    onClick={() => download("gaze")}
+                  >
+                    download.dmg
+                  </Button>
+                </div>
+
+                <div class="flex flex-col items-center gap-3">
+                  <span class="text-subtext0 font-mono text-sm">
+                    variant: paid
+                  </span>
+                  <A
+                    class="transition-all duration-200 ease-out hover:scale-105 active:scale-95"
+                    href="https://apps.apple.com/us/app/gaze/id6757759498"
+                  >
+                    <DownloadOnAppStore size={50} />
+                  </A>
+                </div>
+                <div class="flex flex-col items-center gap-3">
+                  <span class="text-subtext0 font-mono text-sm">
+                    variant: free (coming soon)
+                  </span>
+                  <A
+                    class="transition-all duration-200 ease-out hover:scale-105 active:scale-95"
+                    href=""
+                  >
+                    <DownloadOnAppStore size={50} />
+                  </A>
+                </div>
               </div>
             </div>
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
