@@ -292,6 +292,10 @@ export default function PostPage() {
     return str.includes("<code") && str.includes("</code>");
   };
 
+  const hasMermaid = (str: string): boolean => {
+    return str.includes('data-type="mermaid"');
+  };
+
   return (
     <Show
       when={data()}
@@ -454,6 +458,7 @@ export default function PostPage() {
                         <PostBodyClient
                           body={p().body}
                           hasCodeBlock={hasCodeBlock(p().body)}
+                          hasMermaid={hasMermaid(p().body)}
                         />
 
                         <div

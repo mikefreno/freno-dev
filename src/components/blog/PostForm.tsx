@@ -1,9 +1,9 @@
-import { Show, createSignal, createEffect, onCleanup } from "solid-js";
+import { Show, createSignal, createEffect, onCleanup, lazy } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { api } from "~/lib/api";
 import { debounce } from "es-toolkit";
 import Dropzone from "~/components/blog/Dropzone";
-import TextEditor from "~/components/blog/TextEditor";
+const TextEditor = lazy(() => import("~/components/blog/TextEditor"));
 import TagMaker from "~/components/blog/TagMaker";
 import AddAttachmentSection from "~/components/blog/AddAttachmentSection";
 import XCircle from "~/components/icons/XCircle";

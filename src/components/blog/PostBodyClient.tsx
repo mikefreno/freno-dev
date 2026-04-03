@@ -1,4 +1,4 @@
-import { createEffect, createSignal, onMount, lazy } from "solid-js";
+import { createEffect, createSignal, onMount, lazy, Show } from "solid-js";
 import type { HLJSApi } from "highlight.js";
 
 const MermaidRenderer = lazy(() => import("./MermaidRenderer"));
@@ -6,6 +6,7 @@ const MermaidRenderer = lazy(() => import("./MermaidRenderer"));
 export interface PostBodyClientProps {
   body: string;
   hasCodeBlock: boolean;
+  hasMermaid: boolean;
 }
 
 async function loadHighlightJS(): Promise<HLJSApi> {
@@ -402,7 +403,9 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         class="text-text prose dark:prose-invert max-w-none"
         innerHTML={props.body}
       />
-      <MermaidRenderer />
+      <Show when={props.hasMermaid}>
+        <MermaidRenderer />
+      </Show>
     </div>
   );
 }
