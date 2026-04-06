@@ -46,43 +46,32 @@ interface ContributionDay {
   count: number;
 }
 
-interface GitActivityData {
-  githubCommits: GitCommit[];
-  giteaCommits: GitCommit[];
-  githubActivity: ContributionDay[];
-  giteaActivity: ContributionDay[];
+// Four independent cached promises — first RightBarContent instance to mount
+// starts each fetch; the second gets the already-in-flight promise.
+let ghCommitsPromise: Promise<GitCommit[]> | null = null;
+let gtCommitsPromise: Promise<GitCommit[]> | null = null;
+let ghActivityPromise: Promise<ContributionDay[]> | null = null;
+let gtActivityPromise: Promise<ContributionDay[]> | null = null;
+
+function getGhCommitsPromise(): Promise<GitCommit[]> {
+  return (ghCommitsPromise ??= api.gitActivity.getGitHubCommits
+    .query({ limit: 6 })
+    .catch(() => []));
 }
-
-// Shared fetch promise — whichever instance mounts first starts the fetch;
-// the second instance awaits the same Promise instead of firing its own requests.
-let gitActivityPromise: Promise<GitActivityData> | null = null;
-
-function fetchGitActivity(): Promise<GitActivityData> {
-  if (gitActivityPromise) return gitActivityPromise;
-
-  gitActivityPromise = (async () => {
-    const [ghCommits, gtCommits, ghActivity, gtActivity] = await Promise.all([
-      api.gitActivity.getGitHubCommits.query({ limit: 6 }).catch(() => []),
-      api.gitActivity.getGiteaCommits.query({ limit: 6 }).catch(() => []),
-      api.gitActivity.getGitHubActivity.query().catch(() => []),
-      api.gitActivity.getGiteaActivity.query().catch(() => [])
-    ]);
-
-    const displayedGithubCommits = ghCommits.slice(0, 3);
-    const githubShas = new Set(displayedGithubCommits.map((c) => c.sha));
-    const uniqueGiteaCommits = gtCommits
-      .filter((commit) => !githubShas.has(commit.sha))
-      .slice(0, 3);
-
-    return {
-      githubCommits: displayedGithubCommits,
-      giteaCommits: uniqueGiteaCommits,
-      githubActivity: ghActivity,
-      giteaActivity: gtActivity
-    };
-  })();
-
-  return gitActivityPromise;
+function getGtCommitsPromise(): Promise<GitCommit[]> {
+  return (gtCommitsPromise ??= api.gitActivity.getGiteaCommits
+    .query({ limit: 6 })
+    .catch(() => []));
+}
+function getGhActivityPromise(): Promise<ContributionDay[]> {
+  return (ghActivityPromise ??= api.gitActivity.getGitHubActivity
+    .query()
+    .catch(() => []));
+}
+function getGtActivityPromise(): Promise<ContributionDay[]> {
+  return (gtActivityPromise ??= api.gitActivity.getGiteaActivity
+    .query()
+    .catch(() => []));
 }
 
 export function RightBarContent() {
@@ -93,7 +82,8 @@ export function RightBarContent() {
     []
   );
   const [giteaActivity, setGiteaActivity] = createSignal<ContributionDay[]>([]);
-  const [loading, setLoading] = createSignal(true);
+  const [githubCommitsLoading, setGithubCommitsLoading] = createSignal(true);
+  const [giteaCommitsLoading, setGiteaCommitsLoading] = createSignal(true);
 
   const handleLinkClick = () => {
     if (
@@ -106,19 +96,22 @@ export function RightBarContent() {
 
   onMount(() => {
     setTimeout(() => {
-      fetchGitActivity()
-        .then((data) => {
-          setGithubCommits(data.githubCommits);
-          setGiteaCommits(data.giteaCommits);
-          setGithubActivity(data.githubActivity);
-          setGiteaActivity(data.giteaActivity);
-        })
-        .catch((error) => {
-          console.error("Failed to fetch git activity:", error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      getGhCommitsPromise().then((commits) => {
+        setGithubCommits(commits.slice(0, 3));
+        setGithubCommitsLoading(false);
+      });
+
+      // Deduplicate Gitea against whatever GitHub has resolved by the time this lands
+      getGtCommitsPromise().then((gtCommits) => {
+        const ghShas = new Set(githubCommits().map((c) => c.sha));
+        setGiteaCommits(
+          gtCommits.filter((c) => !ghShas.has(c.sha)).slice(0, 3)
+        );
+        setGiteaCommitsLoading(false);
+      });
+
+      getGhActivityPromise().then((activity) => setGithubActivity(activity));
+      getGtActivityPromise().then((activity) => setGiteaActivity(activity));
     }, 0);
   });
 
@@ -208,7 +201,7 @@ export function RightBarContent() {
         <RecentCommits
           commits={giteaCommits()}
           title="Recent Gitea Commits"
-          loading={loading()}
+          loading={giteaCommitsLoading()}
         />
         <ActivityHeatmap
           contributions={giteaActivity()}
@@ -217,7 +210,7 @@ export function RightBarContent() {
         <RecentCommits
           commits={githubCommits()}
           title="Recent GitHub Commits"
-          loading={loading()}
+          loading={githubCommitsLoading()}
         />
         <ActivityHeatmap
           contributions={githubActivity()}

@@ -33,7 +33,7 @@ export const gitActivityRouter = createTRPCRouter({
         `github-commits-${input.limit}`,
         CACHE_CONFIG.GIT_ACTIVITY_CACHE_TTL_MS,
         async () => {
-          // Use Events API to get recent push events - much more efficient
+          // Use Events API to get recent push events
           const eventsResponse = await fetchWithTimeout(
             `https://api.github.com/users/MikeFreno/events/public?per_page=100`,
             {
@@ -47,31 +47,66 @@ export const gitActivityRouter = createTRPCRouter({
 
           await checkResponse(eventsResponse);
           const events = await eventsResponse.json();
-          const allCommits: GitCommit[] = [];
 
-          // Extract commits directly from PushEvent payload — no per-commit API calls needed
+          // Collect (repo, sha) pairs from push events up front
+          const toFetch: { repoName: string; sha: string }[] = [];
           for (const event of events) {
             if (event.type !== "PushEvent") continue;
-            if (allCommits.length >= input.limit) break;
+            if (toFetch.length >= input.limit * 5) break;
+            toFetch.push({
+              repoName: event.repo.name,
+              sha: event.payload.head
+            });
+          }
 
-            const repoName = event.repo.name;
-            const payloadCommits: any[] = event.payload.commits || [];
+          // Fetch all commits in parallel instead of serially
+          const results = await Promise.allSettled(
+            toFetch.map(({ repoName, sha }) =>
+              fetchWithTimeout(
+                `https://api.github.com/repos/${repoName}/commits/${sha}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
+                    Accept: "application/vnd.github.v3+json"
+                  },
+                  timeout: 5000
+                }
+              )
+                .then((res) => (res.ok ? res.json() : null))
+                .catch(() => null)
+            )
+          );
 
-            for (const payloadCommit of payloadCommits) {
-              if (allCommits.length >= input.limit) break;
+          const allCommits: GitCommit[] = [];
+          for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.status === "rejected" || !result.value) continue;
+            const commit = result.value;
+            const { repoName } = toFetch[i];
+
+            if (
+              commit.author?.login === "MikeFreno" ||
+              commit.author?.login === "mikefreno" ||
+              commit.commit?.author?.email?.includes("mike")
+            ) {
               allCommits.push({
-                sha: payloadCommit.sha?.substring(0, 7) || "unknown",
-                message: payloadCommit.message?.split("\n")[0] || "No message",
-                author: payloadCommit.author?.name || "Unknown",
-                // event.created_at is the push timestamp — close enough to commit date
-                date: event.created_at || new Date().toISOString(),
+                sha: commit.sha?.substring(0, 7) || "unknown",
+                message: commit.commit?.message?.split("\n")[0] || "No message",
+                author:
+                  commit.commit?.author?.name ||
+                  commit.author?.login ||
+                  "Unknown",
+                date: commit.commit?.author?.date || new Date().toISOString(),
                 repo: repoName,
-                url: `https://github.com/${repoName}/commit/${payloadCommit.sha}`
+                url: `https://github.com/${repoName}/commit/${commit.sha}`
               });
             }
           }
 
-          // Events are already in reverse-chronological order
+          allCommits.sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+
           return allCommits.slice(0, input.limit);
         },
         { maxStaleMs: CACHE_CONFIG.GIT_ACTIVITY_MAX_STALE_MS }
