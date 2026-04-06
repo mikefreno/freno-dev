@@ -24,66 +24,76 @@ export function initPerformanceTracking() {
     return;
   }
 
+  const supported = new Set(PerformanceObserver.supportedEntryTypes ?? []);
+
   // Observe LCP
-  try {
-    const lcpObserver = new PerformanceObserver((entryList) => {
-      const entries = entryList.getEntries();
-      const lastEntry = entries[entries.length - 1] as any;
-      metrics.lcp = lastEntry.renderTime || lastEntry.loadTime;
-    });
-    lcpObserver.observe({ type: "largest-contentful-paint", buffered: true });
-  } catch (e) {
-    console.debug("LCP not supported");
+  if (supported.has("largest-contentful-paint")) {
+    try {
+      const lcpObserver = new PerformanceObserver((entryList) => {
+        const entries = entryList.getEntries();
+        const lastEntry = entries[entries.length - 1] as any;
+        metrics.lcp = lastEntry.renderTime || lastEntry.loadTime;
+      });
+      lcpObserver.observe({ type: "largest-contentful-paint", buffered: true });
+    } catch (e) {
+      console.debug("LCP observer failed");
+    }
   }
 
   // Observe CLS
-  try {
-    const clsObserver = new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries()) {
-        const layoutShift = entry as any;
-        if (!layoutShift.hadRecentInput) {
-          clsValue += layoutShift.value;
-          clsEntries.push(layoutShift.value);
+  if (supported.has("layout-shift")) {
+    try {
+      const clsObserver = new PerformanceObserver((entryList) => {
+        for (const entry of entryList.getEntries()) {
+          const layoutShift = entry as any;
+          if (!layoutShift.hadRecentInput) {
+            clsValue += layoutShift.value;
+            clsEntries.push(layoutShift.value);
+          }
         }
-      }
-      metrics.cls = clsValue;
-    });
-    clsObserver.observe({ type: "layout-shift", buffered: true });
-  } catch (e) {
-    console.debug("CLS not supported");
+        metrics.cls = clsValue;
+      });
+      clsObserver.observe({ type: "layout-shift", buffered: true });
+    } catch (e) {
+      console.debug("CLS observer failed");
+    }
   }
 
   // Observe FID
-  try {
-    const fidObserver = new PerformanceObserver((entryList) => {
-      const firstInput = entryList.getEntries()[0] as any;
-      if (firstInput) {
-        metrics.fid = firstInput.processingStart - firstInput.startTime;
-      }
-    });
-    fidObserver.observe({ type: "first-input", buffered: true });
-  } catch (e) {
-    console.debug("FID not supported");
+  if (supported.has("first-input")) {
+    try {
+      const fidObserver = new PerformanceObserver((entryList) => {
+        const firstInput = entryList.getEntries()[0] as any;
+        if (firstInput) {
+          metrics.fid = firstInput.processingStart - firstInput.startTime;
+        }
+      });
+      fidObserver.observe({ type: "first-input", buffered: true });
+    } catch (e) {
+      console.debug("FID observer failed");
+    }
   }
 
   // Observe INP (event timing)
-  try {
-    const interactions: number[] = [];
-    const inpObserver = new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries()) {
-        const eventEntry = entry as any;
-        if (eventEntry.interactionId) {
-          interactions.push(eventEntry.duration);
-          const sorted = [...interactions].sort((a, b) => b - a);
-          const p98Index = Math.floor(sorted.length * 0.02);
-          inpValue = sorted[p98Index] || sorted[0] || 0;
-          metrics.inp = inpValue;
+  if (supported.has("event")) {
+    try {
+      const interactions: number[] = [];
+      const inpObserver = new PerformanceObserver((entryList) => {
+        for (const entry of entryList.getEntries()) {
+          const eventEntry = entry as any;
+          if (eventEntry.interactionId) {
+            interactions.push(eventEntry.duration);
+            const sorted = [...interactions].sort((a, b) => b - a);
+            const p98Index = Math.floor(sorted.length * 0.02);
+            inpValue = sorted[p98Index] || sorted[0] || 0;
+            metrics.inp = inpValue;
+          }
         }
-      }
-    });
-    inpObserver.observe({ type: "event", buffered: true });
-  } catch (e) {
-    console.debug("INP not supported");
+      });
+      inpObserver.observe({ type: "event", buffered: true });
+    } catch (e) {
+      console.debug("INP observer failed");
+    }
   }
 
   // Get navigation timing metrics

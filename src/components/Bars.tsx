@@ -46,6 +46,45 @@ interface ContributionDay {
   count: number;
 }
 
+interface GitActivityData {
+  githubCommits: GitCommit[];
+  giteaCommits: GitCommit[];
+  githubActivity: ContributionDay[];
+  giteaActivity: ContributionDay[];
+}
+
+// Shared fetch promise — whichever instance mounts first starts the fetch;
+// the second instance awaits the same Promise instead of firing its own requests.
+let gitActivityPromise: Promise<GitActivityData> | null = null;
+
+function fetchGitActivity(): Promise<GitActivityData> {
+  if (gitActivityPromise) return gitActivityPromise;
+
+  gitActivityPromise = (async () => {
+    const [ghCommits, gtCommits, ghActivity, gtActivity] = await Promise.all([
+      api.gitActivity.getGitHubCommits.query({ limit: 6 }).catch(() => []),
+      api.gitActivity.getGiteaCommits.query({ limit: 6 }).catch(() => []),
+      api.gitActivity.getGitHubActivity.query().catch(() => []),
+      api.gitActivity.getGiteaActivity.query().catch(() => [])
+    ]);
+
+    const displayedGithubCommits = ghCommits.slice(0, 3);
+    const githubShas = new Set(displayedGithubCommits.map((c) => c.sha));
+    const uniqueGiteaCommits = gtCommits
+      .filter((commit) => !githubShas.has(commit.sha))
+      .slice(0, 3);
+
+    return {
+      githubCommits: displayedGithubCommits,
+      giteaCommits: uniqueGiteaCommits,
+      githubActivity: ghActivity,
+      giteaActivity: gtActivity
+    };
+  })();
+
+  return gitActivityPromise;
+}
+
 export function RightBarContent() {
   const { setLeftBarVisible } = useBars();
   const [githubCommits, setGithubCommits] = createSignal<GitCommit[]>([]);
@@ -66,41 +105,20 @@ export function RightBarContent() {
   };
 
   onMount(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch more commits to account for deduplication
-        const [ghCommits, gtCommits, ghActivity, gtActivity] =
-          await Promise.all([
-            api.gitActivity.getGitHubCommits
-              .query({ limit: 6 })
-              .catch(() => []),
-            api.gitActivity.getGiteaCommits.query({ limit: 6 }).catch(() => []),
-            api.gitActivity.getGitHubActivity.query().catch(() => []),
-            api.gitActivity.getGiteaActivity.query().catch(() => [])
-          ]);
-
-        // Take first 3 from GitHub
-        const displayedGithubCommits = ghCommits.slice(0, 3);
-
-        // Deduplicate Gitea commits - only against the 3 shown in GitHub section
-        const githubShas = new Set(displayedGithubCommits.map((c) => c.sha));
-        const uniqueGiteaCommits = gtCommits.filter(
-          (commit) => !githubShas.has(commit.sha)
-        );
-
-        setGithubCommits(displayedGithubCommits);
-        setGiteaCommits(uniqueGiteaCommits.slice(0, 3));
-        setGithubActivity(ghActivity);
-        setGiteaActivity(gtActivity);
-      } catch (error) {
-        console.error("Failed to fetch git activity:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     setTimeout(() => {
-      fetchData();
+      fetchGitActivity()
+        .then((data) => {
+          setGithubCommits(data.githubCommits);
+          setGiteaCommits(data.giteaCommits);
+          setGithubActivity(data.githubActivity);
+          setGiteaActivity(data.giteaActivity);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch git activity:", error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }, 0);
   });
 

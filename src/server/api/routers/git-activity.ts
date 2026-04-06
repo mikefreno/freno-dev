@@ -49,73 +49,29 @@ export const gitActivityRouter = createTRPCRouter({
           const events = await eventsResponse.json();
           const allCommits: GitCommit[] = [];
 
-          // Extract push events and fetch commit details
+          // Extract commits directly from PushEvent payload — no per-commit API calls needed
           for (const event of events) {
             if (event.type !== "PushEvent") continue;
-            if (allCommits.length >= input.limit * 5) break; // Get extra to ensure we have enough
+            if (allCommits.length >= input.limit) break;
 
             const repoName = event.repo.name;
-            const commitSha = event.payload.head;
+            const payloadCommits: any[] = event.payload.commits || [];
 
-            try {
-              // Fetch the actual commit details to get the message
-              const commitResponse = await fetchWithTimeout(
-                `https://api.github.com/repos/${repoName}/commits/${commitSha}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${env.GITHUB_API_TOKEN}`,
-                    Accept: "application/vnd.github.v3+json"
-                  },
-                  timeout: 5000
-                }
-              );
-
-              if (commitResponse.ok) {
-                const commit = await commitResponse.json();
-
-                // Filter for your commits
-                if (
-                  commit.author?.login === "MikeFreno" ||
-                  commit.author?.login === "mikefreno" ||
-                  commit.commit?.author?.email?.includes("mike")
-                ) {
-                  allCommits.push({
-                    sha: commit.sha?.substring(0, 7) || "unknown",
-                    message:
-                      commit.commit?.message?.split("\n")[0] || "No message",
-                    author:
-                      commit.commit?.author?.name ||
-                      commit.author?.login ||
-                      "Unknown",
-                    date:
-                      commit.commit?.author?.date || new Date().toISOString(),
-                    repo: repoName,
-                    url: `https://github.com/${repoName}/commit/${commit.sha}`
-                  });
-                }
-              }
-            } catch (error) {
-              if (
-                error instanceof NetworkError ||
-                error instanceof TimeoutError
-              ) {
-                console.warn(
-                  `Network error fetching commit ${commitSha} for ${repoName}, skipping`
-                );
-              } else {
-                console.error(
-                  `Error fetching commit ${commitSha} for ${repoName}:`,
-                  error
-                );
-              }
+            for (const payloadCommit of payloadCommits) {
+              if (allCommits.length >= input.limit) break;
+              allCommits.push({
+                sha: payloadCommit.sha?.substring(0, 7) || "unknown",
+                message: payloadCommit.message?.split("\n")[0] || "No message",
+                author: payloadCommit.author?.name || "Unknown",
+                // event.created_at is the push timestamp — close enough to commit date
+                date: event.created_at || new Date().toISOString(),
+                repo: repoName,
+                url: `https://github.com/${repoName}/commit/${payloadCommit.sha}`
+              });
             }
           }
 
-          // Already sorted by event date, but sort again by commit date to be precise
-          allCommits.sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-          );
-
+          // Events are already in reverse-chronological order
           return allCommits.slice(0, input.limit);
         },
         { maxStaleMs: CACHE_CONFIG.GIT_ACTIVITY_MAX_STALE_MS }
@@ -155,13 +111,11 @@ export const gitActivityRouter = createTRPCRouter({
 
           await checkResponse(reposResponse);
           const repos = await reposResponse.json();
-          const allCommits: GitCommit[] = [];
 
-          for (const repo of repos) {
-            if (allCommits.length >= input.limit * 3) break; // Get extra to sort later
-
-            try {
-              const commitsResponse = await fetchWithTimeout(
+          // Fetch commits for all repos in parallel instead of serially
+          const commitResults = await Promise.allSettled(
+            repos.map((repo: any) =>
+              fetchWithTimeout(
                 `${env.GITEA_URL}/api/v1/repos/Mike/${repo.name}/commits?limit=5`,
                 {
                   headers: {
@@ -170,46 +124,36 @@ export const gitActivityRouter = createTRPCRouter({
                   },
                   timeout: 10000
                 }
-              );
+              )
+                .then((res) => (res.ok ? res.json() : []))
+                .catch(() => [])
+            )
+          );
 
-              if (commitsResponse.ok) {
-                const commits = await commitsResponse.json();
-                for (const commit of commits) {
-                  if (
-                    (commit.commit?.author?.email &&
-                      commit.commit.author.email.includes(
-                        "michael@freno.me"
-                      )) ||
-                    commit.commit.author.email.includes(
-                      "michaelt.freno@gmail.com"
-                    ) // Filter for your commits
-                  ) {
-                    allCommits.push({
-                      sha: commit.sha?.substring(0, 7) || "unknown",
-                      message:
-                        commit.commit?.message?.split("\n")[0] || "No message",
-                      author: commit.commit?.author?.name || repo.owner.login,
-                      date:
-                        commit.commit?.author?.date || new Date().toISOString(),
-                      repo: repo.full_name,
-                      url: `${env.GITEA_URL}/${repo.full_name}/commit/${commit.sha}`
-                    });
-                  }
-                }
-              }
-            } catch (error) {
+          const allCommits: GitCommit[] = [];
+          for (let i = 0; i < commitResults.length; i++) {
+            const result = commitResults[i];
+            if (result.status === "rejected") continue;
+            const repo = repos[i];
+            const commits: any[] = result.value;
+            for (const commit of commits) {
+              const email: string = commit.commit?.author?.email ?? "";
               if (
-                error instanceof NetworkError ||
-                error instanceof TimeoutError
+                email.includes("michael@freno.me") ||
+                email.includes("michaelt.freno@gmail.com")
               ) {
-                console.warn(
-                  `Network error fetching commits for ${repo.name}, skipping`
-                );
-              } else {
-                console.error(
-                  `Error fetching commits for ${repo.name}:`,
-                  error
-                );
+                allCommits.push({
+                  sha: commit.sha?.substring(0, 7) || "unknown",
+                  message:
+                    commit.commit?.message?.split("\n")[0] || "No message",
+                  author:
+                    commit.commit?.author?.name ||
+                    repo.owner?.login ||
+                    "Unknown",
+                  date: commit.commit?.author?.date || new Date().toISOString(),
+                  repo: repo.full_name,
+                  url: `${env.GITEA_URL}/${repo.full_name}/commit/${commit.sha}`
+                });
               }
             }
           }
@@ -336,11 +280,13 @@ export const gitActivityRouter = createTRPCRouter({
 
         const threeMonthsAgo = new Date();
         threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        const sinceParam = threeMonthsAgo.toISOString();
 
-        for (const repo of repos) {
-          try {
-            const commitsResponse = await fetchWithTimeout(
-              `${env.GITEA_URL}/api/v1/repos/${repo.owner.login}/${repo.name}/commits?limit=100`,
+        // Fetch commits for all repos in parallel, scoped to the 3-month window
+        const commitResults = await Promise.allSettled(
+          repos.map((repo: any) =>
+            fetchWithTimeout(
+              `${env.GITEA_URL}/api/v1/repos/${repo.owner.login}/${repo.name}/commits?limit=100&since=${sinceParam}`,
               {
                 headers: {
                   Authorization: `token ${env.GITEA_TOKEN}`,
@@ -348,31 +294,23 @@ export const gitActivityRouter = createTRPCRouter({
                 },
                 timeout: 10000
               }
-            );
+            )
+              .then((res) => (res.ok ? res.json() : []))
+              .catch(() => [])
+          )
+        );
 
-            if (commitsResponse.ok) {
-              const commits = await commitsResponse.json();
-              for (const commit of commits) {
-                const date = new Date(commit.commit.author.date)
-                  .toISOString()
-                  .split("T")[0];
-                contributionsByDay.set(
-                  date,
-                  (contributionsByDay.get(date) || 0) + 1
-                );
-              }
-            }
-          } catch (error) {
-            if (
-              error instanceof NetworkError ||
-              error instanceof TimeoutError
-            ) {
-              console.warn(
-                `Network error fetching commits for ${repo.name}, skipping`
-              );
-            } else {
-              console.error(`Error fetching commits for ${repo.name}:`, error);
-            }
+        for (const result of commitResults) {
+          if (result.status === "rejected") continue;
+          const commits: any[] = result.value;
+          for (const commit of commits) {
+            const date = new Date(commit.commit.author.date)
+              .toISOString()
+              .split("T")[0];
+            contributionsByDay.set(
+              date,
+              (contributionsByDay.get(date) || 0) + 1
+            );
           }
         }
 

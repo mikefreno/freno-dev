@@ -1,167 +1,89 @@
 /**
- * Redis-backed Cache for Serverless
+ * In-memory cache with TTL
  *
- * Uses Redis for persistent caching across serverless invocations.
- * Redis provides:
- * - Fast in-memory storage
- * - Built-in TTL expiration (automatic cleanup)
- * - Persistence across function invocations
- * - Native support in Vercel and other platforms
+ * Redis was replaced because on a low-traffic site the cache TTL almost always
+ * expires between visits, so every request paid Redis connection + round-trip
+ * overhead with no benefit. A module-level Map has zero network latency:
+ * cache hits are a single dictionary lookup, misses fall through immediately.
  */
 
-import { createClient } from "redis";
-import { env } from "~/env/server";
 import { CACHE_CONFIG } from "~/config";
 
-let redisClient: ReturnType<typeof createClient> | null = null;
-let isConnecting = false;
-let connectionError: Error | null = null;
-
-/**
- * Get or create Redis client (singleton pattern)
- */
-async function getRedisClient() {
-  if (redisClient && redisClient.isOpen) {
-    return redisClient;
-  }
-
-  if (isConnecting) {
-    // Wait for existing connection attempt
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    return getRedisClient();
-  }
-
-  if (connectionError) {
-    throw connectionError;
-  }
-
-  try {
-    isConnecting = true;
-    redisClient = createClient({ url: env.REDIS_URL });
-
-    redisClient.on("error", (err) => {
-      console.error("Redis Client Error:", err);
-      connectionError = err;
-    });
-
-    await redisClient.connect();
-    isConnecting = false;
-    connectionError = null;
-    return redisClient;
-  } catch (error) {
-    isConnecting = false;
-    connectionError = error as Error;
-    console.error("Failed to connect to Redis:", error);
-    throw error;
-  }
+interface CacheEntry<T> {
+  data: T;
+  /** Absolute timestamp (ms) after which this entry is considered stale */
+  expiresAt: number;
+  /** Absolute timestamp (ms) after which stale fallback is also discarded */
+  staleExpiresAt: number;
 }
 
-/**
- * Redis-backed cache interface
- */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const store = new Map<string, CacheEntry<any>>();
+
 export const cache = {
-  async get<T>(key: string): Promise<T | null> {
-    try {
-      const client = await getRedisClient();
-      const value = await client.get(key);
+  get<T>(key: string): T | null {
+    const entry = store.get(key) as CacheEntry<T> | undefined;
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) return null;
+    return entry.data;
+  },
 
-      if (!value) {
-        return null;
-      }
+  set<T>(key: string, data: T, ttlMs: number): void {
+    const existing = store.get(key);
+    store.set(key, {
+      data,
+      expiresAt: Date.now() + ttlMs,
+      // Preserve an existing stale expiry if it's longer, otherwise default
+      staleExpiresAt:
+        existing?.staleExpiresAt ?? Date.now() + CACHE_CONFIG.MAX_STALE_DATA_MS
+    });
+  },
 
-      return JSON.parse(value) as T;
-    } catch (error) {
-      console.error(`Cache get error for key "${key}":`, error);
-      return null;
+  delete(key: string): void {
+    store.delete(key);
+  },
+
+  deleteByPrefix(prefix: string): void {
+    for (const key of store.keys()) {
+      if (key.startsWith(prefix)) store.delete(key);
     }
   },
 
-  async set<T>(key: string, data: T, ttlMs: number): Promise<void> {
-    try {
-      const client = await getRedisClient();
-      const value = JSON.stringify(data);
-
-      // Redis SET with EX (expiry in seconds)
-      await client.set(key, value, {
-        EX: Math.ceil(ttlMs / 1000)
-      });
-    } catch (error) {
-      console.error(`Cache set error for key "${key}":`, error);
-    }
+  clear(): void {
+    store.clear();
   },
 
-  async delete(key: string): Promise<void> {
-    try {
-      const client = await getRedisClient();
-      await client.del(key);
-    } catch (error) {
-      console.error(`Cache delete error for key "${key}":`, error);
-    }
-  },
-
-  async deleteByPrefix(prefix: string): Promise<void> {
-    try {
-      const client = await getRedisClient();
-      const keys = await client.keys(`${prefix}*`);
-
-      if (keys.length > 0) {
-        await client.del(keys);
-      }
-    } catch (error) {
-      console.error(
-        `Cache deleteByPrefix error for prefix "${prefix}":`,
-        error
-      );
-    }
-  },
-
-  async clear(): Promise<void> {
-    try {
-      const client = await getRedisClient();
-      await client.flushDb();
-    } catch (error) {
-      console.error("Cache clear error:", error);
-    }
-  },
-
-  async has(key: string): Promise<boolean> {
-    try {
-      const client = await getRedisClient();
-      const exists = await client.exists(key);
-      return exists === 1;
-    } catch (error) {
-      console.error(`Cache has error for key "${key}":`, error);
-      return false;
-    }
+  has(key: string): boolean {
+    const entry = store.get(key);
+    if (!entry) return false;
+    return Date.now() <= entry.expiresAt;
   }
 };
 
 /**
- * Execute function with Redis caching
+ * Execute function with in-memory caching.
  */
 export async function withCache<T>(
   key: string,
   ttlMs: number,
   fn: () => Promise<T>
 ): Promise<T> {
-  const cached = await cache.get<T>(key);
-  if (cached !== null) {
-    return cached;
-  }
+  const cached = cache.get<T>(key);
+  if (cached !== null) return cached;
 
   const result = await fn();
-  await cache.set(key, result, ttlMs);
+  cache.set(key, result, ttlMs);
   return result;
 }
 
 /**
- * Execute function with Redis caching and stale data fallback
+ * Execute function with caching and stale-data fallback.
  *
  * Strategy:
- * 1. Try to get fresh cached data (within TTL)
- * 2. If not found, execute function
- * 3. If function fails, try to get stale data (ignore TTL)
- * 4. Store result with TTL for future requests
+ * 1. Return data if fresh (within TTL).
+ * 2. Otherwise run fn().
+ * 3. If fn() throws, return stale data if still within maxStaleMs.
+ * 4. Store fresh result for future requests.
  */
 export async function withCacheAndStale<T>(
   key: string,
@@ -175,34 +97,29 @@ export async function withCacheAndStale<T>(
   const { maxStaleMs = CACHE_CONFIG.MAX_STALE_DATA_MS, logErrors = true } =
     options;
 
-  // Try fresh cache
-  const cached = await cache.get<T>(key);
-  if (cached !== null) {
-    return cached;
-  }
+  const now = Date.now();
+  const entry = store.get(key) as CacheEntry<T> | undefined;
+
+  // Fresh hit
+  if (entry && entry.expiresAt > now) return entry.data;
 
   try {
-    // Execute function
     const result = await fn();
-    await cache.set(key, result, ttlMs);
-    // Also store with longer TTL for stale fallback
-    const staleKey = `${key}:stale`;
-    await cache.set(staleKey, result, maxStaleMs);
+    store.set(key, {
+      data: result,
+      expiresAt: now + ttlMs,
+      staleExpiresAt: now + maxStaleMs
+    });
     return result;
   } catch (error) {
     if (logErrors) {
       console.error(`Error fetching data for cache key "${key}":`, error);
     }
 
-    // Try stale cache with longer TTL key
-    const staleKey = `${key}:stale`;
-    const staleData = await cache.get<T>(staleKey);
-
-    if (staleData !== null) {
-      if (logErrors) {
-        console.log(`Serving stale data for cache key "${key}"`);
-      }
-      return staleData;
+    // Stale fallback
+    if (entry && entry.staleExpiresAt > now) {
+      if (logErrors) console.log(`Serving stale data for cache key "${key}"`);
+      return entry.data;
     }
 
     throw error;
