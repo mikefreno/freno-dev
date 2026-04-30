@@ -16,23 +16,24 @@ const assets: Record<string, string> = {
 };
 
 /**
- * Get the latest Gaze DMG from S3 by finding the most recent file in downloads/ folder
+ * Get the latest DMG from S3 by finding the most recent file with the given prefix
  */
-async function getLatestGazeDMG(
+async function getLatestDMG(
   client: S3Client,
-  bucket: string
+  bucket: string,
+  prefix: string
 ): Promise<string> {
   try {
     const listCommand = new ListObjectsV2Command({
       Bucket: bucket,
-      Prefix: "downloads/Gaze-",
+      Prefix: prefix,
       MaxKeys: 100
     });
 
     const response = await client.send(listCommand);
 
     if (!response.Contents || response.Contents.length === 0) {
-      throw new Error("No Gaze DMG files found in S3");
+      throw new Error(`No DMG files found in S3 with prefix ${prefix}`);
     }
 
     // Filter for .dmg files only and sort by LastModified (newest first)
@@ -45,16 +46,36 @@ async function getLatestGazeDMG(
     });
 
     if (dmgFiles.length === 0) {
-      throw new Error("No .dmg files found in downloads/Gaze-* prefix");
+      throw new Error(`No .dmg files found in ${prefix} prefix`);
     }
 
     const latestFile = dmgFiles[0].Key!;
-    console.log(`Latest Gaze DMG: ${latestFile}`);
+    console.log(`Latest DMG: ${latestFile}`);
     return latestFile;
   } catch (error) {
-    console.error("Error finding latest Gaze DMG:", error);
+    console.error(`Error finding latest DMG for ${prefix}:`, error);
     throw error;
   }
+}
+
+/**
+ * Get the latest Gaze DMG from S3
+ */
+async function getLatestGazeDMG(
+  client: S3Client,
+  bucket: string
+): Promise<string> {
+  return getLatestDMG(client, bucket, "downloads/Gaze-");
+}
+
+/**
+ * Get the latest InputHalo DMG from S3
+ */
+async function getLatestInputHaloDMG(
+  client: S3Client,
+  bucket: string
+): Promise<string> {
+  return getLatestDMG(client, bucket, "downloads/InputHalo-");
 }
 
 export const downloadsRouter = createTRPCRouter({
@@ -76,9 +97,11 @@ export const downloadsRouter = createTRPCRouter({
       try {
         let fileKey: string;
 
-        // Special handling for Gaze - find latest version automatically
+        // Special handling for macOS apps - find latest version automatically
         if (input.asset_name === "gaze") {
           fileKey = await getLatestGazeDMG(client, bucket);
+        } else if (input.asset_name === "inputhalo") {
+          fileKey = await getLatestInputHaloDMG(client, bucket);
         } else {
           // Use static mapping for other assets
           fileKey = assets[input.asset_name];

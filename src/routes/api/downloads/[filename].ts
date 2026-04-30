@@ -3,12 +3,12 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { env } from "~/env/server";
 
 /**
- * Serves Gaze DMG files and delta updates from S3
+ * Serves macOS app DMG files and delta updates from S3
  * This endpoint is used by Sparkle updater to download updates
  *
  * Handles:
- * - Full DMG files: /api/downloads/Gaze-0.2.2.dmg
- * - Delta updates: /api/downloads/Gaze3-2.delta
+ * - Full DMG files: /api/downloads/Gaze-0.2.2.dmg, /api/downloads/InputHalo-0.1.0.dmg
+ * - Delta updates: /api/downloads/Gaze3-2.delta, /api/downloads/InputHalo3-2.delta
  *
  * URL: https://freno.me/api/downloads/[filename]
  */
@@ -24,9 +24,11 @@ export async function GET(event: APIEvent) {
     });
   }
 
-  // Validate filename format (only allow Gaze files)
+  // Validate filename format (only allow Gaze or InputHalo files)
+  const validPrefixes = ["Gaze", "InputHalo"];
+  const isValidPrefix = validPrefixes.some((prefix) => filename.startsWith(prefix));
   if (
-    !filename.startsWith("Gaze") ||
+    !isValidPrefix ||
     (!filename.endsWith(".dmg") && !filename.endsWith(".delta"))
   ) {
     return new Response("Invalid file format", {

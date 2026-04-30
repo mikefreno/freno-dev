@@ -10,6 +10,7 @@ export default function DownloadsPage() {
   const [SwAText, setSwAText] = createSignal("Shapes with Abigail!");
   const [corkText, setCorkText] = createSignal("Cork");
   const [gazeText, setGazeText] = createSignal("Gaze");
+  const [inputHaloText, setInputHaloText] = createSignal("InputHalo");
 
   // Track loading states for each download button
   const [loadingState, setLoadingState] = createSignal<Record<string, boolean>>(
@@ -17,7 +18,8 @@ export default function DownloadsPage() {
       lineage: false,
       cork: false,
       gaze: false,
-      "shapes-with-abigail": false
+      "shapes-with-abigail": false,
+      inputhalo: false
     }
   );
 
@@ -53,12 +55,14 @@ export default function DownloadsPage() {
     const swaInterval = glitchText(SwAText(), setSwAText);
     const corkInterval = glitchText(corkText(), setCorkText);
     const gazeInterval = glitchText(gazeText(), setGazeText);
+    const inputHaloInterval = glitchText(inputHaloText(), setInputHaloText);
 
     onCleanup(() => {
       clearInterval(lalInterval);
       clearInterval(swaInterval);
       clearInterval(corkInterval);
       clearInterval(gazeInterval);
+      clearInterval(inputHaloInterval);
     });
   });
 
@@ -66,7 +70,7 @@ export default function DownloadsPage() {
     <>
       <PageHead
         title="Downloads"
-        description="Download Life and Lineage, Shapes with Abigail, and Cork for macOS. Available on iOS, Android, and macOS."
+        description="Download InputHalo, Gaze, Life and Lineage, Shapes with Abigail, and Cork. Available on iOS, Android, and macOS."
       />
 
       <div class="bg-base relative min-h-screen overflow-hidden px-4 pt-[15vh] pb-12 md:px-8">
@@ -86,6 +90,52 @@ export default function DownloadsPage() {
             Ordered by date of initial release
           </div>
           <div class="mx-auto max-w-5xl space-y-16">
+            {/* InputHalo */}
+            <div class="border-overlay0 rounded-lg border p-6 md:p-8">
+              <h2 class="text-text mb-6 font-mono text-2xl">
+                <span class="text-yellow">{">"}</span> {inputHaloText()}
+              </h2>
+
+              <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
+                <div class="flex flex-col items-center gap-3">
+                  <span class="text-subtext0 font-mono text-sm">
+                    platform: macOS (14.6+)
+                  </span>
+                  <Button
+                    variant="download"
+                    size="lg"
+                    loading={loadingState()["inputhalo"]}
+                    onClick={() => download("inputhalo")}
+                  >
+                    download.dmg
+                  </Button>
+                </div>
+
+                <div class="flex flex-col items-center gap-3">
+                  <span class="text-subtext0 font-mono text-sm">
+                    variant: paid (coming soon)
+                  </span>
+                  <A
+                    class="transition-all duration-200 ease-out hover:scale-105 active:scale-95"
+                    href="https://apps.apple.com/us/app/inputhalo/"
+                  >
+                    <DownloadOnAppStore size={50} />
+                  </A>
+                </div>
+                <div class="flex flex-col items-center gap-3">
+                  <span class="text-subtext0 font-mono text-sm">
+                    variant: free (coming soon)
+                  </span>
+                  <A
+                    class="transition-all duration-200 ease-out hover:scale-105 active:scale-95"
+                    href=""
+                  >
+                    <DownloadOnAppStore size={50} />
+                  </A>
+                </div>
+              </div>
+            </div>
+
             {/* Gaze */}
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
               <h2 class="text-text mb-6 font-mono text-2xl">
