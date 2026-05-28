@@ -135,3 +135,56 @@ export async function fetchWithRetry<T>(
 
   throw lastError;
 }
+
+// ============================================================
+// CLOUDFLARE TURNSTILE VERIFICATION
+// ============================================================
+
+interface TurnstileResponse {
+  success: boolean;
+  "challenge-ts"?: string;
+  action?: string;
+  cdata?: string;
+  "error-codes"?: string[];
+}
+
+export async function verifyTurnstileToken(
+  token: string,
+  secretKey: string,
+  verifyUrl: string = "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+  timeoutMs: number = 10000
+): Promise<boolean> {
+  if (!token || token.trim() === "") {
+    return false;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    const response = await fetch(verifyUrl, {
+      method: "POST",
+      body: new URLSearchParams({
+        secret: secretKey,
+        response: token,
+      }),
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error(`Turnstile verification failed with status ${response.status}`);
+      return false;
+    }
+
+    const data = (await response.json()) as TurnstileResponse;
+    return data.success === true;
+  } catch (error) {
+    console.error("Turnstile verification error:", error);
+    return false;
+  }
+}

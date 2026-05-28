@@ -19,9 +19,10 @@ import {
   fetchWithRetry,
   NetworkError,
   TimeoutError,
-  APIError
+  APIError,
+  verifyTurnstileToken
 } from "~/server/fetch-utils";
-import { NETWORK_CONFIG, COOLDOWN_TIMERS, VALIDATION_CONFIG } from "~/config";
+import { NETWORK_CONFIG, COOLDOWN_TIMERS, VALIDATION_CONFIG, TURNSTILE_CONFIG } from "~/config";
 const assets: Record<string, string> = {
   "shapes-with-abigail": "shapes-with-abigail.apk",
   "magic-delve": "magic-delve.apk",
@@ -304,10 +305,27 @@ export const miscRouter = createTRPCRouter({
         message: z
           .string()
           .min(1)
-          .max(VALIDATION_CONFIG.MAX_CONTACT_MESSAGE_LENGTH)
+          .max(VALIDATION_CONFIG.MAX_CONTACT_MESSAGE_LENGTH),
+        turnstileToken: z.string().min(1, "Please complete the security check")
       })
     )
     .mutation(async ({ input }) => {
+      // Verify Cloudflare Turnstile token
+      const turnstileValid = await verifyTurnstileToken(
+        input.turnstileToken,
+        env.TURNSTILE_SECRET_KEY,
+        TURNSTILE_CONFIG.VERIFY_URL,
+        TURNSTILE_CONFIG.RESPONSE_TIMEOUT_MS
+      );
+
+      if (!turnstileValid) {
+        console.error("Turnstile verification failed for contact form submission");
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Security verification failed. Please refresh the page and try again."
+        });
+      }
+
       const contactExp = getCookie("contactRequestSent");
       let remaining = 0;
 

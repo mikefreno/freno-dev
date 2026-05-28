@@ -7,6 +7,7 @@ export interface ClientEnv {
   VITE_GITHUB_CLIENT_ID: string;
   VITE_WEBSOCKET: string;
   VITE_INFILL_ENDPOINT: string;
+  VITE_TURNSTILE_SITE_KEY: string
 }
 
 const requiredKeys: (keyof ClientEnv)[] = [
@@ -17,7 +18,8 @@ const requiredKeys: (keyof ClientEnv)[] = [
   "VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE",
   "VITE_GITHUB_CLIENT_ID",
   "VITE_WEBSOCKET",
-  "VITE_INFILL_ENDPOINT"
+  "VITE_INFILL_ENDPOINT",
+  "VITE_TURNSTILE_SITE_KEY"
 ];
 
 export const validateClientEnv = (

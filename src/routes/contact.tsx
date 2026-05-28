@@ -26,13 +26,15 @@ import {
   fetchWithRetry,
   NetworkError,
   TimeoutError,
-  APIError
+  APIError,
+  verifyTurnstileToken
 } from "~/server/fetch-utils";
 import {
   NETWORK_CONFIG,
   COOLDOWN_TIMERS,
   VALIDATION_CONFIG,
-  COUNTDOWN_CONFIG
+  COUNTDOWN_CONFIG,
+  TURNSTILE_CONFIG
 } from "~/config";
 
 const getContactData = query(async () => {
@@ -53,6 +55,7 @@ const sendContactEmail = action(async (formData: FormData) => {
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
   const message = formData.get("message") as string;
+  const turnstileToken = formData.get("cf-turnstile-response") as string;
 
   const schema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -69,6 +72,18 @@ const sendContactEmail = action(async (formData: FormData) => {
     return redirect(
       `/contact?error=${encodeURIComponent(err.errors[0]?.message || "Invalid input")}`
     );
+  }
+
+  // Verify Cloudflare Turnstile token
+  const turnstileValid = await verifyTurnstileToken(
+    turnstileToken,
+    env.TURNSTILE_SECRET_KEY,
+    TURNSTILE_CONFIG.VERIFY_URL,
+    TURNSTILE_CONFIG.RESPONSE_TIMEOUT_MS
+  );
+
+  if (!turnstileValid) {
+    return redirect("/contact?error=Security verification failed. Please refresh and try again.");
   }
 
   const contactExp = getCookie("contactRequestSent");
@@ -164,11 +179,31 @@ export default function ContactPage() {
   const [loading, setLoading] = createSignal<boolean>(false);
   const [user, setUser] = createSignal<UserProfile | null>(null);
   const [jsEnabled, setJsEnabled] = createSignal<boolean>(false);
+  const [turnstileToken, setTurnstileToken] = createSignal<string>("");
 
   const { remainingTime, startCountdown, setRemainingTime } = useCountdown();
 
   onMount(() => {
     setJsEnabled(true);
+
+    // Load Cloudflare Turnstile script
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    // Get Turnstile token after widget renders
+    setTimeout(() => {
+      if (typeof window !== "undefined" && (window as any).turnstile) {
+        const widgetEl = document.getElementById("turnstile-widget-1");
+        if (widgetEl) {
+          const widgetId = widgetEl.getAttribute("data-widget-id");
+          const token = (window as any).turnstile.getResponse(widgetId || "");
+          if (token) setTurnstileToken(token);
+        }
+      }
+    }, 1000);
 
     api.user.getProfile
       .query()
@@ -206,13 +241,29 @@ export default function ContactPage() {
     if (!jsEnabled()) return;
 
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
+    const form = e.target as unknown as HTMLFormElement;
+    const formData = new FormData(form);
 
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const message = formData.get("message") as string;
 
     if (name && email && message) {
+      // Get fresh Turnstile token
+      let currentToken = turnstileToken();
+      if (!currentToken && typeof window !== "undefined" && (window as any).turnstile) {
+        const widgetEl = document.querySelector(".turnstile-widget");
+        if (widgetEl) {
+          currentToken = (window as any).turnstile.getResponse("");
+        }
+      }
+
+      if (!currentToken || currentToken.trim() === "") {
+        setError("Please complete the security check.");
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError("");
       setEmailSent(false);
@@ -221,13 +272,23 @@ export default function ContactPage() {
         const res = await api.misc.sendContactRequest.mutate({
           name,
           email,
-          message
+          message,
+          turnstileToken: currentToken
         });
 
         if (res.message === "email sent") {
           setEmailSent(true);
           setError("");
-          (e.target as HTMLFormElement).reset();
+          form.reset();
+
+          // Reset Turnstile widget
+          if (typeof window !== "undefined" && (window as any).turnstile) {
+            const widgetEl = document.getElementById("turnstile-widget-1");
+            if (widgetEl) {
+              (window as any).turnstile.reset(widgetEl.getAttribute("data-widget-id") || "");
+            }
+          }
+          setTurnstileToken("");
 
           // Set countdown directly - cookie might not be readable immediately
           const expirationTime = new Date(
@@ -354,6 +415,16 @@ export default function ContactPage() {
             action={sendContactEmail}
             class="w-full"
           >
+            {/* Cloudflare Turnstile Widget */}
+            <div class="mb-4 flex justify-center">
+              <div
+                class="turnstile-widget"
+                data-sitekey={env.TURNSTILE_SITE_KEY}
+                data-theme="dark"
+                id="turnstile-widget-1"
+              ></div>
+            </div>
+
             <div class="flex w-full flex-col justify-evenly">
               <div class="mx-auto w-full justify-evenly md:flex md:flex-row">
                 <Input

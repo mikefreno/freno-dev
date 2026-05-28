@@ -245,6 +245,15 @@ export const TEXT_EDITOR_CONFIG = {
 } as const;
 
 // ============================================================
+// CLOUDFLARE TURNSTILE (BOT PROTECTION)
+// ============================================================
+
+export const TURNSTILE_CONFIG = {
+  VERIFY_URL: "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+  RESPONSE_TIMEOUT_MS: 10000
+} as const;
+
+// ============================================================
 // VALIDATION
 // ============================================================
 

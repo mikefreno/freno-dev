@@ -33,7 +33,9 @@ const serverEnvSchema = z.object({
   REDIS_URL: z.string().min(1),
   NESSA_DB_URL: z.string().min(1),
   NESSA_DB_TOKEN: z.string().min(1),
-  NESSA_JWT_SECRET: z.string().min(1)
+  NESSA_JWT_SECRET: z.string().min(1),
+  VITE_TURNSTILE_SITE_KEY: z.string().min(1),
+  TURNSTILE_SECRET_KEY: z.string().min(1)
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
