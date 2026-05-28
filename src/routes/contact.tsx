@@ -20,6 +20,7 @@ import type { UserProfile } from "~/types/user";
 import { getCookie, setCookie } from "vinxi/http";
 import { z } from "zod";
 import { env } from "~/env/server";
+import { env as clientEnv } from "~/env/client";
 import {
   fetchWithTimeout,
   checkResponse,
@@ -419,7 +420,7 @@ export default function ContactPage() {
             <div class="mb-4 flex justify-center">
               <div
                 class="turnstile-widget"
-                data-sitekey={env.TURNSTILE_SITE_KEY}
+                data-sitekey={clientEnv.VITE_TURNSTILE_SITE_KEY}
                 data-theme="dark"
                 id="turnstile-widget-1"
               ></div>
