@@ -1173,10 +1173,10 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Generate 6-digit code
-        const loginCode = Math.floor(
-          100000 + Math.random() * 900000
-        ).toString();
+        // Generate cryptographically secure 6-digit code (p8-010)
+        const randomBytes = new Uint32Array(1);
+        crypto.getRandomValues(randomBytes);
+        const loginCode = (100000 + (randomBytes[0] % 900000)).toString();
 
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         const token = await new SignJWT({

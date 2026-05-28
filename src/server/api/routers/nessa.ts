@@ -1,6 +1,7 @@
 import { createTRPCRouter, nessaProcedure, publicProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { jwtVerify, importJWK } from "jose";
 import { NessaConnectionFactory } from "~/server/database";
 import { cache } from "~/server/cache";
 import { hashPassword, checkPasswordSafe } from "~/server/utils";
@@ -628,45 +629,30 @@ export const nessaDbRouter = createTRPCRouter({
         const header = JSON.parse(headerJson) as { kid: string; alg: string };
 
         // Find the matching key
-        const key = appleKeys.keys.find((k) => k.kid === header.kid);
-        if (!key) {
+        const jwk = appleKeys.keys.find((k) => k.kid === header.kid);
+        if (!jwk) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Apple public key not found"
           });
         }
 
-        // For simplicity, we'll decode the payload and verify basic claims
-        // In production, you should use a proper JWT library like jose to verify the signature
-        const [, payloadB64] = input.idToken.split(".");
-        if (!payloadB64) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid Apple ID token format"
-          });
-        }
+        // Import the Apple JWK key for signature verification
+        const publicKey = await importJWK(jwk, "RS256");
 
-        const payloadJson = Buffer.from(payloadB64, "base64url").toString(
-          "utf8"
+        // Verify the Apple ID token signature and claims using jose
+        const jwtOptions: Parameters<typeof jwtVerify>[2] = {
+          algorithms: ["RS256"],
+          issuer: "https://appleid.apple.com"
+        };
+        if (env.APPLE_CLIENT_ID) {
+          jwtOptions.audience = env.APPLE_CLIENT_ID;
+        }
+        const { payload: tokenPayload } = await jwtVerify(
+          input.idToken,
+          publicKey,
+          jwtOptions
         );
-        const tokenPayload = JSON.parse(payloadJson) as AppleTokenPayload;
-
-        // Validate the token payload
-        if (tokenPayload.iss !== "https://appleid.apple.com") {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid token issuer"
-          });
-        }
-
-        // Check if token is expired
-        const now = Math.floor(Date.now() / 1000);
-        if (tokenPayload.exp < now) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Token has expired"
-          });
-        }
 
         // Apple user ID from token should match the one provided
         if (tokenPayload.sub !== input.appleUserId) {
@@ -676,7 +662,7 @@ export const nessaDbRouter = createTRPCRouter({
           });
         }
 
-        const appleUserId = tokenPayload.sub;
+        const appleUserId = tokenPayload.sub as string;
         // Apple only sends email on first sign-in, so use input.email if token doesn't have it
         const email = tokenPayload.email ?? input.email;
         const firstName = input.firstName ?? "Apple";

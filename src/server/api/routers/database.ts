@@ -372,7 +372,7 @@ export const databaseRouter = createTRPCRouter({
         body: z.string().nullable(),
         banner_photo: z.string().nullable(),
         published: z.boolean(),
-        tags: z.array(z.string()).nullable(),
+        tags: z.array(z.string().max(50).trim()).nullable(),
         author_id: z.string()
       })
     )
@@ -405,12 +405,13 @@ export const databaseRouter = createTRPCRouter({
         const results = await conn.execute({ sql: query, args: params });
 
         if (input.tags && input.tags.length > 0) {
-          let tagQuery = "INSERT INTO Tag (value, post_id) VALUES ";
-          let values = input.tags.map(
-            (tag) => `("${tag}", ${results.lastInsertRowid})`
-          );
-          tagQuery += values.join(", ");
-          await conn.execute(tagQuery);
+          const validTags = input.tags.filter((t) => t.length > 0);
+          for (const tag of validTags) {
+            await conn.execute({
+              sql: "INSERT INTO Tag (value, post_id) VALUES (?, ?)",
+              args: [tag, results.lastInsertRowid]
+            });
+          }
         }
 
         await cache.deleteByPrefix("blog-");
@@ -434,7 +435,7 @@ export const databaseRouter = createTRPCRouter({
         body: z.string().nullable().optional(),
         banner_photo: z.string().nullable().optional(),
         published: z.boolean().nullable().optional(),
-        tags: z.array(z.string()).nullable().optional(),
+        tags: z.array(z.string().max(50).trim()).nullable().optional(),
         author_id: z.string()
       })
     )
@@ -523,10 +524,13 @@ export const databaseRouter = createTRPCRouter({
         });
 
         if (input.tags && input.tags.length > 0) {
-          let tagQuery = "INSERT INTO Tag (value, post_id) VALUES ";
-          let values = input.tags.map((tag) => `("${tag}", ${input.id})`);
-          tagQuery += values.join(", ");
-          await conn.execute(tagQuery);
+          const validTags = input.tags.filter((t) => t.length > 0);
+          for (const tag of validTags) {
+            await conn.execute({
+              sql: "INSERT INTO Tag (value, post_id) VALUES (?, ?)",
+              args: [tag, input.id]
+            });
+          }
         }
 
         await cache.deleteByPrefix("blog-");

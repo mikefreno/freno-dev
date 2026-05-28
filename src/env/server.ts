@@ -1,3 +1,26 @@
+// ──────────────────────────────────────────────
+// 🔒 GUARD: This module MUST NEVER be imported client-side.
+// It contains secrets: DB tokens, JWT keys, AWS credentials, API tokens.
+// ──────────────────────────────────────────────
+
+// Build-time guard — Vite dead-code eliminates everything below when SSR=true.
+// If this module is bundled client-side, it throws before any secrets are parsed.
+if (!import.meta.env.SSR) {
+  throw new Error(
+    "[SERVER-ONLY] src/env/server.ts was imported client-side! " +
+      "This module contains server-only secrets (database credentials, JWT keys, API tokens) " +
+      "and must never be bundled in client code."
+  );
+}
+
+// Runtime defense-in-depth — throws if somehow evaluated in a browser context.
+if (typeof window !== "undefined") {
+  throw new Error(
+    "[SERVER-ONLY] src/env/server.ts was loaded in a browser context. " +
+      "This is a critical security violation."
+  );
+}
+
 import { z } from "zod";
 
 const serverEnvSchema = z.object({
@@ -34,6 +57,7 @@ const serverEnvSchema = z.object({
   NESSA_DB_URL: z.string().min(1),
   NESSA_DB_TOKEN: z.string().min(1),
   NESSA_JWT_SECRET: z.string().min(1),
+  APPLE_CLIENT_ID: z.string().min(1).optional(),
   VITE_TURNSTILE_SITE_KEY: z.string().min(1),
   TURNSTILE_SECRET_KEY: z.string().min(1)
 });

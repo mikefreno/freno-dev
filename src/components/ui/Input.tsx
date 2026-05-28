@@ -1,10 +1,11 @@
-import { JSX, splitProps } from "solid-js";
+import { type JSX, splitProps } from "solid-js";
 
 export interface InputProps extends JSX.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
   ref?: HTMLInputElement | ((el: HTMLInputElement) => void);
+  containerClass?: string;
 }
 
 export default function Input(props: InputProps) {
@@ -12,11 +13,16 @@ export default function Input(props: InputProps) {
     "label",
     "error",
     "helperText",
-    "ref"
+    "ref",
+    "containerClass"
   ]);
 
+  const containerClasses = ["input-group", local.containerClass]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div class="input-group">
+    <div class={containerClasses}>
       <input
         {...others}
         ref={local.ref}

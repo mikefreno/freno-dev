@@ -1,16 +1,10 @@
 import { createSignal, onMount, createEffect, Show } from "solid-js";
-import {
-  useSearchParams,
-  useNavigate,
-  useLocation,
-  query,
-  createAsync
-} from "@solidjs/router";
+import { useSearchParams, query, createAsync } from "@solidjs/router";
 import { A } from "@solidjs/router";
 import { action, redirect } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
 import { api } from "~/lib/api";
-import { getClientCookie, setClientCookie } from "~/lib/cookies.client";
+import { getClientCookie } from "~/lib/cookies.client";
 import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import RevealDropDown from "~/components/RevealDropDown";
 import Input from "~/components/ui/Input";
@@ -19,7 +13,6 @@ import { useCountdown } from "~/lib/useCountdown";
 import type { UserProfile } from "~/types/user";
 import { getCookie, setCookie } from "vinxi/http";
 import { z } from "zod";
-import { env } from "~/env/server";
 import { env as clientEnv } from "~/env/client";
 import {
   fetchWithTimeout,
@@ -84,7 +77,9 @@ const sendContactEmail = action(async (formData: FormData) => {
   );
 
   if (!turnstileValid) {
-    return redirect("/contact?error=Security verification failed. Please refresh and try again.");
+    return redirect(
+      "/contact?error=Security verification failed. Please refresh and try again."
+    );
   }
 
   const contactExp = getCookie("contactRequestSent");
@@ -162,8 +157,6 @@ const sendContactEmail = action(async (formData: FormData) => {
 
 export default function ContactPage() {
   const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const navigate = useNavigate();
   const viewer = () => searchParams.viewer ?? "default";
 
   // Load server data using createAsync
@@ -175,36 +168,45 @@ export default function ContactPage() {
     searchParams.success === "true"
   );
   const [error, setError] = createSignal<string>(
-    searchParams.error ? decodeURIComponent(searchParams.error) : ""
+    searchParams.error ? decodeURIComponent(String(searchParams.error)) : ""
   );
   const [loading, setLoading] = createSignal<boolean>(false);
   const [user, setUser] = createSignal<UserProfile | null>(null);
   const [jsEnabled, setJsEnabled] = createSignal<boolean>(false);
   const [turnstileToken, setTurnstileToken] = createSignal<string>("");
+  const [turnstileWidgetId, setTurnstileWidgetId] = createSignal<string | null>(
+    null
+  );
 
   const { remainingTime, startCountdown, setRemainingTime } = useCountdown();
 
   onMount(() => {
     setJsEnabled(true);
 
-    // Load Cloudflare Turnstile script
+    // Load Cloudflare Turnstile script with explicit rendering
     const script = document.createElement("script");
     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
     script.async = true;
     script.defer = true;
-    document.head.appendChild(script);
-
-    // Get Turnstile token after widget renders
-    setTimeout(() => {
+    script.onload = () => {
       if (typeof window !== "undefined" && (window as any).turnstile) {
-        const widgetEl = document.getElementById("turnstile-widget-1");
-        if (widgetEl) {
-          const widgetId = widgetEl.getAttribute("data-widget-id");
-          const token = (window as any).turnstile.getResponse(widgetId || "");
-          if (token) setTurnstileToken(token);
+        const container = document.getElementById("turnstile-widget-1");
+        if (container) {
+          const id = (window as any).turnstile.render(container, {
+            sitekey: clientEnv.VITE_TURNSTILE_SITE_KEY,
+            theme: "dark",
+            callback: (token: string) => {
+              setTurnstileToken(token);
+            },
+            "expired-callback": () => {
+              setTurnstileToken("");
+            }
+          });
+          setTurnstileWidgetId(id);
         }
       }
-    }, 1000);
+    };
+    document.head.appendChild(script);
 
     api.user.getProfile
       .query()
@@ -252,10 +254,15 @@ export default function ContactPage() {
     if (name && email && message) {
       // Get fresh Turnstile token
       let currentToken = turnstileToken();
-      if (!currentToken && typeof window !== "undefined" && (window as any).turnstile) {
-        const widgetEl = document.querySelector(".turnstile-widget");
+      if (
+        !currentToken &&
+        typeof window !== "undefined" &&
+        (window as any).turnstile
+      ) {
+        const widgetEl = document.getElementById("turnstile-widget-1");
         if (widgetEl) {
-          currentToken = (window as any).turnstile.getResponse("");
+          const id = turnstileWidgetId();
+          currentToken = (window as any).turnstile.getResponse(id || widgetEl);
         }
       }
 
@@ -286,7 +293,8 @@ export default function ContactPage() {
           if (typeof window !== "undefined" && (window as any).turnstile) {
             const widgetEl = document.getElementById("turnstile-widget-1");
             if (widgetEl) {
-              (window as any).turnstile.reset(widgetEl.getAttribute("data-widget-id") || "");
+              const id = turnstileWidgetId();
+              (window as any).turnstile.reset(id || widgetEl);
             }
           }
           setTurnstileToken("");
@@ -416,16 +424,6 @@ export default function ContactPage() {
             action={sendContactEmail}
             class="w-full"
           >
-            {/* Cloudflare Turnstile Widget */}
-            <div class="mb-4 flex justify-center">
-              <div
-                class="turnstile-widget"
-                data-sitekey={clientEnv.VITE_TURNSTILE_SITE_KEY}
-                data-theme="dark"
-                id="turnstile-widget-1"
-              ></div>
-            </div>
-
             <div class="flex w-full flex-col justify-evenly">
               <div class="mx-auto w-full justify-evenly md:flex md:flex-row">
                 <Input
@@ -464,7 +462,8 @@ export default function ContactPage() {
                   <label class="underlinedInputLabel">Message</label>
                 </div>
               </div>
-              <div class="mx-auto flex w-full justify-end pt-4">
+              <div class="mx-auto flex w-full justify-between pt-4">
+                <div id="turnstile-widget-1"></div>
                 <Show
                   when={
                     remainingTime() > 0 ||

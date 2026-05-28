@@ -252,17 +252,34 @@ async function cleanupExpiredRateLimits(): Promise<void> {
 }
 
 /**
- * Get client IP address from request headers
+ * Get client IP address from request headers.
+ * Only trusts X-Forwarded-For in production (set by Vercel edge network).
+ * In development/test, uses socket address to prevent header spoofing.
  */
 export function getClientIP(event: H3Event): string {
-  const forwarded = getHeaderValue(event, "x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
+  // In production on Vercel, X-Forwarded-For is set by the edge network
+  // and cannot be spoofed by clients. In dev/test, ignore it.
+  if (env.NODE_ENV === "production") {
+    const forwarded = getHeaderValue(event, "x-forwarded-for");
+    if (forwarded) {
+      return forwarded.split(",")[0].trim();
+    }
+    const realIP = getHeaderValue(event, "x-real-ip");
+    if (realIP) {
+      return realIP;
+    }
   }
 
-  const realIP = getHeaderValue(event, "x-real-ip");
-  if (realIP) {
-    return realIP;
+  // Fallback: try socket remote address
+  try {
+    const nodeReq = event.node.req;
+    if (nodeReq?.socket?.remoteAddress) {
+      const addr = nodeReq.socket.remoteAddress;
+      // Clean up IPv6-mapped IPv4 addresses
+      return addr.replace(/^::ffff:/, "");
+    }
+  } catch {
+    // socket access failed
   }
 
   return "unknown";

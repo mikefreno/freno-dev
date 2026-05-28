@@ -189,7 +189,7 @@ export const miscRouter = createTRPCRouter({
       z.object({
         key: z.string(),
         newAttachmentString: z.string(),
-        type: z.string(),
+        type: z.enum(["Post", "Comment", "User"]),
         id: z.number()
       })
     )
@@ -214,6 +214,7 @@ export const miscRouter = createTRPCRouter({
         const res = await client.send(command);
 
         const conn = ConnectionFactory();
+        // input.type is validated by z.enum allowlist above — safe for identifier use
         const query = `UPDATE ${input.type} SET attachments = ? WHERE id = ?`;
         await conn.execute({
           sql: query,
@@ -344,13 +345,22 @@ export const miscRouter = createTRPCRouter({
       const apiKey = env.SENDINBLUE_KEY;
       const apiUrl = "https://api.sendinblue.com/v3/smtp/email";
 
+      // HTML-escape user input to prevent HTML injection in email (p8-006)
+      const escapeHtml = (str: string) =>
+        str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+
       const sendinblueData = {
         sender: {
           name: "freno.me",
           email: "michael@freno.me"
         },
         to: [{ email: "michael@freno.me" }],
-        htmlContent: `<html><head></head><body><div>Request Name: ${input.name}</div><div>Request Email: ${input.email}</div><div>Request Message: ${input.message}</div></body></html>`,
+        htmlContent: `<html><head></head><body><div>Request Name: ${escapeHtml(input.name)}</div><div>Request Email: ${escapeHtml(input.email)}</div><div>Request Message: ${escapeHtml(input.message)}</div></body></html>`,
         subject: "freno.me Contact Request"
       };
 

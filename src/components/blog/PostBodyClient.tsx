@@ -3,6 +3,46 @@ import type { HLJSApi } from "highlight.js";
 
 const MermaidRenderer = lazy(() => import("./MermaidRenderer"));
 
+/**
+ * Sanitize HTML content to prevent XSS when rendering user-generated blog content.
+ * Removes dangerous elements (script, iframe, object, etc.) and event handlers.
+ */
+function sanitizeHtml(html: string): string {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+
+  // Remove dangerous elements
+  doc
+    .querySelectorAll(
+      "script, iframe, object, embed, form, link, meta, base, svg script"
+    )
+    .forEach((el) => el.remove());
+
+  // Remove event handler attributes and dangerous URLs from all elements
+  doc.querySelectorAll("[on*], [href], [style], [action]").forEach((el) => {
+    const attrs = Array.from(el.attributes);
+    attrs.forEach((attr) => {
+      const name = attr.name;
+      const value = attr.value;
+      if (
+        name.startsWith("on") ||
+        (name === "href" &&
+          (value.startsWith("javascript:") ||
+            value.startsWith("data:text/html"))) ||
+        (name === "style" &&
+          (value.includes("expression(") ||
+            value.includes("url(") ||
+            value.includes("javascript:"))) ||
+        (name === "action" && value.startsWith("javascript:"))
+      ) {
+        el.removeAttribute(name);
+      }
+    });
+  });
+
+  return doc.body.innerHTML;
+}
+
 export interface PostBodyClientProps {
   body: string;
   hasCodeBlock: boolean;
@@ -21,10 +61,10 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   const processCodeBlocks = () => {
     if (!contentRef) return;
 
-    const codeBlocks = contentRef.querySelectorAll("pre code");
+    const codeBlocks = contentRef.querySelectorAll<HTMLElement>("pre code");
 
     codeBlocks.forEach((codeBlock) => {
-      const pre = codeBlock.parentElement;
+      const pre = codeBlock.parentElement as HTMLPreElement | null;
       if (!pre) return;
 
       if (pre.dataset.type === "mermaid") return;
@@ -228,7 +268,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     const referencesHeadingText =
       marker?.getAttribute("data-heading") || "References";
 
-    const headings = contentRef.querySelectorAll("h2");
+    const headings = contentRef.querySelectorAll<HTMLElement>("h2");
     let referencesSection: HTMLElement | null = null;
 
     headings.forEach((heading) => {
@@ -401,7 +441,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         id="post-content-body"
         ref={contentRef}
         class="text-text prose dark:prose-invert max-w-none"
-        innerHTML={props.body}
+        innerHTML={sanitizeHtml(props.body)}
       />
       <Show when={props.hasMermaid}>
         <MermaidRenderer />

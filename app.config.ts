@@ -7,7 +7,7 @@ export default defineConfig({
     build: {
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
+          manualChunks: (id: string) => {
             // Bundle highlight.js and lowlight together
             if (id.includes("highlight.js") || id.includes("lowlight")) {
               return "highlight";

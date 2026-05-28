@@ -6,8 +6,6 @@ import {
 } from "~/server/utils";
 import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
-import { OAuth2Client } from "google-auth-library";
-import { jwtVerify } from "jose";
 import { createTRPCRouter, publicProcedure } from "~/server/api/utils";
 import {
   fetchWithTimeout,
@@ -18,84 +16,8 @@ import {
 } from "~/server/fetch-utils";
 
 export const lineageDatabaseRouter = createTRPCRouter({
-  credentials: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        provider: z.enum(["email", "google", "apple"]),
-        authToken: z.string()
-      })
-    )
-    .mutation(async ({ input }) => {
-      const { email, provider, authToken } = input;
-
-      try {
-        let valid_request = false;
-
-        if (provider === "email") {
-          const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-          const { payload } = await jwtVerify(authToken, secret);
-          if (payload.email === email) {
-            valid_request = true;
-          }
-        } else if (provider === "google") {
-          const CLIENT_ID = env.VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE;
-          if (!CLIENT_ID) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Google client ID not configured"
-            });
-          }
-          const client = new OAuth2Client(CLIENT_ID);
-          const ticket = await client.verifyIdToken({
-            idToken: authToken,
-            audience: CLIENT_ID
-          });
-          if (ticket.getPayload()?.email === email) {
-            valid_request = true;
-          }
-        } else {
-          const conn = LineageConnectionFactory();
-          const query = "SELECT * FROM User WHERE apple_user_string = ?";
-          const res = await conn.execute({ sql: query, args: [authToken] });
-          if (res.rows.length > 0 && res.rows[0].email === email) {
-            valid_request = true;
-          }
-        }
-
-        if (valid_request) {
-          const conn = LineageConnectionFactory();
-          const query = "SELECT * FROM User WHERE email = ? LIMIT 1";
-          const params = [email];
-          const res = await conn.execute({ sql: query, args: params });
-
-          if (res.rows.length === 1) {
-            const user = res.rows[0];
-            return {
-              success: true,
-              db_name: user.database_name as string,
-              db_token: user.database_token as string
-            };
-          }
-
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "No user found"
-          });
-        } else {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Invalid credentials"
-          });
-        }
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Authentication failed"
-        });
-      }
-    }),
+  // credentials endpoint removed (p8-008): was exposing persistent DB tokens to clients.
+  // Database access should be proxied through tRPC server-side procedures.
 
   deletionInit: publicProcedure
     .input(
@@ -155,6 +77,14 @@ export const lineageDatabaseRouter = createTRPCRouter({
 
       if (skip_cron) {
         if (send_dump_target) {
+          // Validate dump target matches the authenticated user's email (p8-005)
+          if (send_dump_target !== email) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Dump target must match account email"
+            });
+          }
+
           const dumpRes = await dumpAndSendDB({
             dbName: db_name,
             dbToken: db_token,

@@ -10,7 +10,7 @@ import {
 } from "~/server/utils";
 import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify, importJWK } from "jose";
 import { LibsqlError } from "@libsql/client/web";
 import { createClient as createAPIClient } from "@tursodatabase/api";
 
@@ -354,11 +354,68 @@ export const lineageAuthRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email().optional(),
-        userString: z.string(),
+        idToken: z.string(),
       })
     )
     .mutation(async ({ input }) => {
-      const { email, userString } = input;
+      const { email } = input;
+
+      // Verify Apple ID token signature using JWKS
+      const appleKeysResponse = await fetch(
+        "https://appleid.apple.com/auth/keys"
+      );
+      if (!appleKeysResponse.ok) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch Apple public keys",
+        });
+      }
+
+      const appleKeys = (await appleKeysResponse.json()) as {
+        keys: Array<{
+          kty: string;
+          kid: string;
+          use: string;
+          alg: string;
+          n: string;
+          e: string;
+        }>;
+      };
+
+      // Decode JWT header to find matching key
+      const [headerB64] = input.idToken.split(".");
+      if (!headerB64) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid Apple ID token format",
+        });
+      }
+      const headerJson = Buffer.from(headerB64, "base64url").toString("utf8");
+      const header = JSON.parse(headerJson) as { kid: string };
+      const jwk = appleKeys.keys.find((k) => k.kid === header.kid);
+      if (!jwk) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Apple public key not found",
+        });
+      }
+
+      const publicKey = await importJWK(jwk, "RS256");
+      const jwtOptions: Parameters<typeof jwtVerify>[2] = {
+        algorithms: ["RS256"],
+        issuer: "https://appleid.apple.com",
+      };
+      if (env.APPLE_CLIENT_ID) {
+        jwtOptions.audience = env.APPLE_CLIENT_ID;
+      }
+      const { payload: tokenPayload } = await jwtVerify(
+        input.idToken,
+        publicKey,
+        jwtOptions
+      );
+
+      // Use verified Apple user ID from token (not from user input)
+      const userString = tokenPayload.sub as string;
 
       let dbName;
       let dbToken;
