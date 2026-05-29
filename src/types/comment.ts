@@ -26,7 +26,9 @@ export type ReactionType =
   | "moneyEye"
   | "sick"
   | "upsideDown"
-  | "worried";
+  | "worried"
+  | "upVote"
+  | "downVote";
 
 export interface UserPublicData {
   email?: string;

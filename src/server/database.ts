@@ -11,43 +11,13 @@ import {
   TimeoutError,
   APIError
 } from "~/server/fetch-utils";
-
-let mainDBConnection: ReturnType<typeof createClient> | null = null;
-let lineageDBConnection: ReturnType<typeof createClient> | null = null;
-let nessaDBConnection: ReturnType<typeof createClient> | null = null;
-
-export function ConnectionFactory() {
-  if (!mainDBConnection) {
-    const config = {
-      url: env.TURSO_DB_URL,
-      authToken: env.TURSO_DB_TOKEN
-    };
-    mainDBConnection = createClient(config);
-  }
-  return mainDBConnection;
-}
-
-export function LineageConnectionFactory() {
-  if (!lineageDBConnection) {
-    const config = {
-      url: env.TURSO_LINEAGE_URL,
-      authToken: env.TURSO_LINEAGE_TOKEN
-    };
-    lineageDBConnection = createClient(config);
-  }
-  return lineageDBConnection;
-}
-
-export function NessaConnectionFactory() {
-  if (!nessaDBConnection) {
-    const config = {
-      url: env.NESSA_DB_URL,
-      authToken: env.NESSA_DB_TOKEN
-    };
-    nessaDBConnection = createClient(config);
-  }
-  return nessaDBConnection;
-}
+import {
+  ConnectionFactory,
+  LineageConnectionFactory,
+  NessaConnectionFactory
+} from "~/server/db-connections";
+// Re-export connection factories to avoid circular import with auth.ts
+export { ConnectionFactory, LineageConnectionFactory, NessaConnectionFactory };
 
 export async function LineageDBInit() {
   const turso = createAPIClient({
@@ -209,7 +179,7 @@ export async function getUserBasicInfo(event: H3Event): Promise<{
       return { email: null, isAuthenticated: false };
     }
 
-    const user = res.rows[0] as { email: string | null };
+    const user = res.rows[0] as unknown as { email: string | null };
     return {
       email: user.email,
       isAuthenticated: true

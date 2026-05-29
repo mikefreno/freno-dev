@@ -271,11 +271,12 @@ export default function PostBodyClient(props: PostBodyClientProps) {
     const headings = contentRef.querySelectorAll<HTMLElement>("h2");
     let referencesSection: HTMLElement | null = null;
 
-    headings.forEach((heading) => {
+    for (const heading of headings) {
       if (heading.textContent?.trim() === referencesHeadingText) {
         referencesSection = heading;
+        break;
       }
-    });
+    }
 
     if (referencesSection) {
       referencesSection.className = "text-2xl font-bold mb-4 text-text";
@@ -285,7 +286,7 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         parentDiv.classList.add("references-heading");
       }
 
-      let currentElement = referencesSection.nextElementSibling;
+      let currentElement: Element | null = referencesSection.nextElementSibling;
 
       while (currentElement) {
         if (currentElement.tagName === "P") {

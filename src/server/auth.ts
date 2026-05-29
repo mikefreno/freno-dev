@@ -1,10 +1,10 @@
 import type { H3Event } from "vinxi/http";
-import { getCookie, setCookie } from "vinxi/http";
+import { getCookie, setCookie, getHeader } from "vinxi/http";
 import { OAuth2Client } from "google-auth-library";
 import type { Row } from "@libsql/client/web";
 import { SignJWT, jwtVerify } from "jose";
 import { env } from "~/env/server";
-import { ConnectionFactory } from "./database";
+import { ConnectionFactory } from "./db-connections";
 import { AUTH_CONFIG, expiryToSeconds, getAccessTokenExpiry } from "~/config";
 
 export const authCookieName = "auth_token";
@@ -30,7 +30,7 @@ function getAuthCookieOptions(rememberMe: boolean) {
 }
 
 function getAuthHeaderToken(event: H3Event): string | null {
-  const requestHeader = event.request?.headers?.get?.("authorization") || null;
+  const requestHeader = getHeader(event, "authorization") || null;
   const eventHeader = event.headers
     ? typeof (event.headers as any).get === "function"
       ? (event.headers as any).get("authorization")
@@ -199,6 +199,7 @@ export async function validateLineageRequest({
         return false;
       }
     } catch (err) {
+      console.error("Failed to verify email auth token:", err);
       return false;
     }
   } else if (provider == "apple") {

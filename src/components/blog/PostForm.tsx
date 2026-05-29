@@ -22,7 +22,7 @@ interface PostFormProps {
     published: boolean;
     tags: string[];
   };
-  userID: number;
+  userID: string;
 }
 
 export default function PostForm(props: PostFormProps) {
@@ -89,7 +89,7 @@ export default function PostForm(props: PostFormProps) {
       tags: null,
       author_id: props.userID
     });
-    const newId = result.data as number;
+    const newId = Number(result.data);
     setCreatedPostId(newId);
     setHasSaved(true);
     return newId;

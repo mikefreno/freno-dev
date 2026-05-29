@@ -6,7 +6,8 @@ import type {
   UserPublicData,
   ReactionType,
   ModificationType,
-  SortingMode
+  SortingMode,
+  CommentSectionProps
 } from "~/types/comment";
 import CommentInputBlock from "./CommentInputBlock";
 import CommentSortingSelect from "./CommentSortingSelect";

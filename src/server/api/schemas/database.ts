@@ -155,7 +155,9 @@ export const reactionTypeSchema = z.enum([
   "moneyEye",
   "sick",
   "upsideDown",
-  "worried"
+  "worried",
+  "upVote",
+  "downVote"
 ]);
 
 /**

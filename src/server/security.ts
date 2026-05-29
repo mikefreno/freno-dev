@@ -51,7 +51,12 @@ function getCookieValue(event: H3Event, name: string): string | undefined {
   try {
     const value = getCookie(event, name);
     if (value) return value;
-  } catch (e) {}
+  } catch (e) {
+    console.warn(
+      "[security] getCookie failed, falling back to header parse:",
+      e
+    );
+  }
 
   try {
     const cookieHeader =

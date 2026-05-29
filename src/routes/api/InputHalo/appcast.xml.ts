@@ -8,7 +8,7 @@ import { env } from "~/env/server";
  *
  * URL: https://freno.me/api/InputHalo/appcast.xml
  */
-export async function GET(event: APIEvent) {
+export async function GET(_event: APIEvent) {
   const bucket = env.VITE_DOWNLOAD_BUCKET_STRING;
   const key = "api/InputHalo/appcast.xml";
 
@@ -47,7 +47,7 @@ export async function GET(event: APIEvent) {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "public, max-age=300", // Cache for 5 minutes
-        "Access-Control-Allow-Origin": "*" // Allow CORS for appcast
+        "Access-Control-Allow-Origin": "*" // Allow CORS for Sparkle appcast
       }
     });
   } catch (error) {

@@ -5,7 +5,7 @@ import LikeIcon from "~/components/icons/LikeIcon";
 export interface PostLike {
   id: number;
   user_id: string;
-  post_id: string;
+  post_id: number;
 }
 
 export interface AuthenticatedLikeProps {
@@ -36,15 +36,15 @@ export default function AuthenticatedLike(props: AuthenticatedLikeProps) {
       if (initialHasLiked) {
         const result = await api.database.removePostLike.mutate({
           user_id: props.currentUserID,
-          post_id: props.projectID.toString()
+          post_id: props.projectID
         });
-        setLikes(result.newLikes as PostLike[]);
+        setLikes(result.newLikes as unknown as PostLike[]);
       } else {
         const result = await api.database.addPostLike.mutate({
           user_id: props.currentUserID,
-          post_id: props.projectID.toString()
+          post_id: props.projectID
         });
-        setLikes(result.newLikes as PostLike[]);
+        setLikes(result.newLikes as unknown as PostLike[]);
       }
       setInstantOffset(0);
     } catch (error) {
