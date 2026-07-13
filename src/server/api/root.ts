@@ -12,6 +12,7 @@ import { infillRouter } from "./routers/infill";
 import { accountRouter } from "./routers/account";
 import { downloadsRouter } from "./routers/downloads";
 import { nessaDbRouter } from "./routers/nessa";
+import { nessaCommunityRouter } from "./routers/nessa-community";
 import { appleNotificationsRouter } from "./routers/apple-notifications";
 import { createTRPCRouter, createTRPCContext, t } from "./utils";
 import type { H3Event } from "h3";
@@ -32,6 +33,9 @@ export const appRouter = createTRPCRouter({
   account: accountRouter,
   downloads: downloadsRouter,
   nessaDb: nessaDbRouter,
+  // Community features (clubs, challenges, social feed) — ported from the
+  // standalone nessa-api Express prototype. Exposes nessa.community.*.
+  nessa: createTRPCRouter({ community: nessaCommunityRouter }),
   appleNotifications: appleNotificationsRouter
 });
 
