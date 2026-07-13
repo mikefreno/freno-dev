@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../../utils";
+import { createTRPCRouter, publicProcedure, adminProcedure } from "../../utils";
 import { z } from "zod";
 import { LineageConnectionFactory } from "~/server/utils";
 import { env } from "~/env/server";
@@ -92,4 +92,42 @@ export const lineageMiscRouter = createTRPCRouter({
   offlineSecret: publicProcedure.query(() => {
     return { secret: env.LINEAGE_OFFLINE_SERIALIZATION_SECRET };
   }),
+
+  getLineageStats: adminProcedure.query(async () => {
+    const conn = LineageConnectionFactory();
+
+    try {
+      const res = await conn.execute({
+        sql: `SELECT * FROM Analytics`,
+        args: [],
+      });
+
+      const rows = res.rows.map((row: any) => ({
+        playerID: row.playerID as string,
+        dungeonProgression: safeJsonParse(row.dungeonProgression),
+        playerClass: row.playerClass as string,
+        spellCount: row.spellCount as number,
+        proficiencies: safeJsonParse(row.proficiencies),
+        jobs: safeJsonParse(row.jobs),
+        resistanceTable: safeJsonParse(row.resistanceTable),
+        damageTable: safeJsonParse(row.damageTable),
+      }));
+
+      return { success: true, players: rows };
+    } catch (e) {
+      console.error("Failed to fetch lineage analytics:", e);
+      return { success: false, players: [] };
+    }
+  }),
 });
+
+function safeJsonParse(val: unknown): unknown {
+  if (typeof val === "string") {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return val;
+    }
+  }
+  return val;
+}
