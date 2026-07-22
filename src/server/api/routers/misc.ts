@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../utils";
+import { createTRPCRouter, publicProcedure, protectedProcedure, csrfProtectedProcedure } from "../utils";
 import { z } from "zod";
 import {
   S3Client,
@@ -11,7 +11,6 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
 import { ConnectionFactory } from "~/server/utils";
-import * as bcrypt from "bcrypt";
 import { getCookie, setCookie } from "vinxi/http";
 import {
   fetchWithTimeout,
@@ -23,6 +22,35 @@ import {
   verifyTurnstileToken
 } from "~/server/fetch-utils";
 import { NETWORK_CONFIG, COOLDOWN_TIMERS, VALIDATION_CONFIG, TURNSTILE_CONFIG } from "~/config";
+
+// Allowed S3 key types — prevents path traversal via type parameter (p8-008)
+const ALLOWED_S3_TYPES = ["blog", "attachments", "avatars", "users"] as const;
+export const s3TypeSchema = z.enum(ALLOWED_S3_TYPES);
+
+/** Sanitize a user-provided string for use in S3 key path components */
+export function sanitizeS3PathComponent(value: string): string {
+  // Strip path traversal characters and normalize whitespace
+  return value
+    .replace(/\s+/g, "-")
+    .replace(/[\/\\]/g, "-")
+    .replace(/\.\./g, "")
+    .replace(/[^a-zA-Z0-9_-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 255);
+}
+
+/** Verify that the S3 key belongs to the authenticated user */
+function assertS3KeyOwnership(key: string, userId: string): void {
+  // Keys should be scoped by user ID: attachments/{userId}/... or avatars/{userId}/...
+  const parts = key.split("/");
+  if (parts.length < 2 || parts[1] !== userId) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Access denied: S3 object does not belong to user"
+    });
+  }
+}
 const assets: Record<string, string> = {
   "shapes-with-abigail": "shapes-with-abigail.apk",
   "magic-delve": "magic-delve.apk",
@@ -71,15 +99,48 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  getPreSignedURL: publicProcedure
+  getPreSignedURL: csrfProtectedProcedure
     .input(
       z.object({
-        type: z.string(),
-        title: z.string(),
-        filename: z.string()
+        type: s3TypeSchema,
+        title: z.string().min(1).max(255),
+        filename: z.string().min(1).max(255)
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // Validate type is in allowlist (done by zod schema)
+      const validatedType = input.type;
+
+      // Sanitize title and filename for S3 key construction (p8-008)
+      const sanitizedTitle = sanitizeS3PathComponent(input.title);
+      const sanitizedFilename = sanitizeS3PathComponent(input.filename);
+
+      if (!sanitizedTitle || !sanitizedFilename) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid title or filename after sanitization"
+        });
+      }
+
+      // Construct S3 key with user ID for ownership scoping (p8-001)
+      const Key = `${validatedType}/${ctx.userId}/${sanitizedTitle}/${sanitizedFilename}`;
+
+      const ext = /^.+\.([^.]+)$/.exec(input.filename);
+      if (!ext) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid filename: must include an extension"
+        });
+      }
+
+      const validExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+      if (!validExtensions.includes(ext[1].toLowerCase())) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid file extension"
+        });
+      }
+
       const credentials = {
         accessKeyId: env.MY_AWS_ACCESS_KEY,
         secretAccessKey: env.MY_AWS_SECRET_KEY
@@ -91,24 +152,10 @@ export const miscRouter = createTRPCRouter({
           credentials: credentials
         });
 
-        const sanitizeForS3 = (str: string) => {
-          return str
-            .replace(/\s+/g, "-")
-            .replace(/[^\w\-\.]/g, "")
-            .replace(/\-+/g, "-")
-            .replace(/^-+|-+$/g, "");
-        };
-
-        const sanitizedTitle = sanitizeForS3(input.title);
-        const sanitizedFilename = sanitizeForS3(input.filename);
-        const Key = `${input.type}/${sanitizedTitle}/${sanitizedFilename}`;
-
-        const ext = /^.+\.([^.]+)$/.exec(input.filename);
-
         const s3params = {
           Bucket: env.AWS_S3_BUCKET_NAME,
           Key,
-          ContentType: `image/${ext![1]}`
+          ContentType: `image/${ext[1]}`
         };
 
         const command = new PutObjectCommand(s3params);
@@ -126,14 +173,29 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  listAttachments: publicProcedure
+  listAttachments: protectedProcedure
     .input(
       z.object({
-        type: z.string(),
-        title: z.string()
+        type: s3TypeSchema,
+        title: z.string().min(1).max(255)
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // Validate type is in allowlist (done by zod schema)
+      const validatedType = input.type;
+
+      // Sanitize title for S3 key construction (p8-008)
+      const sanitizedTitle = sanitizeS3PathComponent(input.title);
+      if (!sanitizedTitle) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid title after sanitization"
+        });
+      }
+
+      // Scope prefix to authenticated user (p8-001)
+      const prefix = `${validatedType}/${ctx.userId}/${sanitizedTitle}/`;
+
       try {
         const credentials = {
           accessKeyId: env.MY_AWS_ACCESS_KEY,
@@ -144,17 +206,6 @@ export const miscRouter = createTRPCRouter({
           region: env.AWS_REGION,
           credentials: credentials
         });
-
-        const sanitizeForS3 = (str: string) => {
-          return str
-            .replace(/\s+/g, "-")
-            .replace(/[^\w\-\.]/g, "")
-            .replace(/\-+/g, "-")
-            .replace(/^-+|-+$/g, "");
-        };
-
-        const sanitizedTitle = sanitizeForS3(input.title);
-        const prefix = `${input.type}/${sanitizedTitle}/`;
 
         const command = new ListObjectsV2Command({
           Bucket: env.AWS_S3_BUCKET_NAME,
@@ -184,7 +235,7 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  deleteImage: publicProcedure
+  deleteImage: csrfProtectedProcedure
     .input(
       z.object({
         key: z.string(),
@@ -193,7 +244,10 @@ export const miscRouter = createTRPCRouter({
         id: z.number()
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // Verify S3 key ownership (p8-001)
+      assertS3KeyOwnership(input.key, ctx.userId);
+
       try {
         const credentials = {
           accessKeyId: env.MY_AWS_ACCESS_KEY,
@@ -231,9 +285,12 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  simpleDeleteImage: publicProcedure
+  simpleDeleteImage: csrfProtectedProcedure
     .input(z.object({ key: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // Verify S3 key ownership (p8-001)
+      assertS3KeyOwnership(input.key, ctx.userId);
+
       try {
         const credentials = {
           accessKeyId: env.MY_AWS_ACCESS_KEY,
@@ -263,42 +320,7 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  hashPassword: publicProcedure
-    .input(z.object({ password: z.string().min(8) }))
-    .mutation(async ({ input }) => {
-      try {
-        const saltRounds = 10;
-        const salt = await bcrypt.genSalt(saltRounds);
-        const hashedPassword = await bcrypt.hash(input.password, salt);
-        return { hashedPassword };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to hash password"
-        });
-      }
-    }),
-
-  checkPassword: publicProcedure
-    .input(
-      z.object({
-        password: z.string(),
-        hash: z.string()
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const match = await bcrypt.compare(input.password, input.hash);
-        return { match };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to check password"
-        });
-      }
-    }),
-
-  sendContactRequest: publicProcedure
+  sendContactRequest: csrfProtectedProcedure
     .input(
       z.object({
         name: z.string().min(1),
@@ -429,7 +451,7 @@ export const miscRouter = createTRPCRouter({
       }
     }),
 
-  sendDeletionRequestEmail: publicProcedure
+  sendDeletionRequestEmail: csrfProtectedProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
       const deletionExp = getCookie("deletionRequestSent");
