@@ -2,6 +2,11 @@ import { createTRPCRouter, nessaProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { NessaConnectionFactory } from "~/server/database";
+import {
+  requireClubMembership,
+  resolveClubIdFromPost,
+  resolveClubIdFromChallenge
+} from "./nessa-community-authz";
 
 /**
  * nessa.community.* — Community features (clubs, challenges, social feed).
@@ -230,23 +235,9 @@ interface CommentRow {
   authorAvatarUrl: string | null;
 }
 
-/** Require that the calling user is a member of the club (or is the owner). */
-async function requireClubMembership(
-  conn: ReturnType<typeof NessaConnectionFactory>,
-  clubId: string,
-  userId: string
-): Promise<void> {
-  const result = await conn.execute({
-    sql: "SELECT id FROM clubMemberships WHERE clubId = ? AND userId = ?",
-    args: [clubId, userId]
-  });
-  if (!result.rows.length) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Not a member of this club"
-    });
-  }
-}
+// Membership gating helpers (`requireClubMembership`, `resolveClubIdFromPost`,
+// `resolveClubIdFromChallenge`) live in `./nessa-community-authz` and are
+// shared by every membership-gated endpoint below — see p8-003.
 
 // ---------------------------------------------------------------------------
 // Router
@@ -947,6 +938,8 @@ export const nessaCommunityRouter = createTRPCRouter({
       .mutation(async ({ input, ctx }) => {
         try {
           const conn = NessaConnectionFactory();
+          const clubId = await resolveClubIdFromChallenge(conn, input.id);
+          await requireClubMembership(conn, clubId, ctx.nessaUserId);
           await conn.execute({
             sql: "DELETE FROM clubChallengeParticipations WHERE challengeId = ? AND userId = ?",
             args: [input.id, ctx.nessaUserId]
@@ -967,6 +960,11 @@ export const nessaCommunityRouter = createTRPCRouter({
       .mutation(async ({ input, ctx }) => {
         try {
           const conn = NessaConnectionFactory();
+          const clubId = await resolveClubIdFromChallenge(
+            conn,
+            input.challengeId
+          );
+          await requireClubMembership(conn, clubId, ctx.nessaUserId);
 
           // Upsert participation: create if absent, update progress.
           const existing = await conn.execute({
@@ -1102,6 +1100,8 @@ export const nessaCommunityRouter = createTRPCRouter({
       .query(async ({ input, ctx }) => {
         try {
           const conn = NessaConnectionFactory();
+          const clubId = await resolveClubIdFromPost(conn, input.id);
+          await requireClubMembership(conn, clubId, ctx.nessaUserId);
           const result = await conn.execute({
             sql: `SELECT p.id, p.clubId, p.userId, p.content, p.postType, p.challengeId,
                     p.createdAt, p.updatedAt,
@@ -1166,6 +1166,8 @@ export const nessaCommunityRouter = createTRPCRouter({
       .mutation(async ({ input, ctx }) => {
         try {
           const conn = NessaConnectionFactory();
+          const clubId = await resolveClubIdFromPost(conn, input.postId);
+          await requireClubMembership(conn, clubId, ctx.nessaUserId);
           const existing = await conn.execute({
             sql: "SELECT id FROM clubPostLikes WHERE postId = ? AND userId = ?",
             args: [input.postId, ctx.nessaUserId]
@@ -1193,6 +1195,8 @@ export const nessaCommunityRouter = createTRPCRouter({
       .mutation(async ({ input, ctx }) => {
         try {
           const conn = NessaConnectionFactory();
+          const clubId = await resolveClubIdFromPost(conn, input.postId);
+          await requireClubMembership(conn, clubId, ctx.nessaUserId);
           await conn.execute({
             sql: "DELETE FROM clubPostLikes WHERE postId = ? AND userId = ?",
             args: [input.postId, ctx.nessaUserId]
@@ -1213,6 +1217,8 @@ export const nessaCommunityRouter = createTRPCRouter({
       .mutation(async ({ input, ctx }) => {
         try {
           const conn = NessaConnectionFactory();
+          const clubId = await resolveClubIdFromPost(conn, input.postId);
+          await requireClubMembership(conn, clubId, ctx.nessaUserId);
           const commentId = crypto.randomUUID();
           await conn.execute({
             sql: `INSERT INTO clubPostComments (id, postId, userId, content)
@@ -1232,9 +1238,11 @@ export const nessaCommunityRouter = createTRPCRouter({
 
     comments: nessaProcedure
       .input(postLikeSchema)
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         try {
           const conn = NessaConnectionFactory();
+          const clubId = await resolveClubIdFromPost(conn, input.postId);
+          await requireClubMembership(conn, clubId, ctx.nessaUserId);
           const result = await conn.execute({
             sql: `SELECT c.id, c.postId, c.userId, c.content, c.createdAt, c.updatedAt,
                     u.displayName AS authorDisplayName, u.avatarUrl AS authorAvatarUrl
