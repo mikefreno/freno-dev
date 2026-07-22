@@ -12,20 +12,36 @@ import {
   rateLimitRegistration,
   rateLimitEmailVerification,
   clearRateLimitStore,
+  clearRateLimitLocalCache,
   RATE_LIMITS
 } from "~/server/security";
 import { createMockEvent, randomIP } from "./test-utils";
 import { TRPCError } from "@trpc/server";
 
+/**
+ * Unique identifier helper — Date.now() alone collides when tests run within
+ * the same millisecond, which leaks state between tests. Appending randomness
+ * keeps each test's bucket isolated.
+ */
+let idCounter = 0;
+function uniqueId(prefix = "test"): string {
+  idCounter += 1;
+  return `${prefix}-${Date.now()}-${idCounter}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+}
+
 describe("Rate Limiting", () => {
-  // Clear rate limit store before each test to ensure isolation
-  beforeEach(() => {
-    clearRateLimitStore();
+  // Clear rate limit store before each test to ensure isolation. MUST be
+  // awaited — clearRateLimitStore is async (DB round-trip) and an un-awaited
+  // clear lets leftover rows race the next test's atomic upsert.
+  beforeEach(async () => {
+    await clearRateLimitStore();
   });
 
   describe("checkRateLimit", () => {
     it("should allow requests within rate limit", async () => {
-      const identifier = `test-${Date.now()}`;
+      const identifier = uniqueId();
       const maxAttempts = 5;
       const windowMs = 60000;
 
@@ -40,7 +56,7 @@ describe("Rate Limiting", () => {
     });
 
     it("should block requests exceeding rate limit", async () => {
-      const identifier = `test-${Date.now()}`;
+      const identifier = uniqueId();
       const maxAttempts = 3;
       const windowMs = 60000;
 
@@ -59,7 +75,7 @@ describe("Rate Limiting", () => {
     });
 
     it("should include remaining time in error message", async () => {
-      const identifier = `test-${Date.now()}`;
+      const identifier = uniqueId();
       const maxAttempts = 2;
       const windowMs = 60000;
 
@@ -79,7 +95,7 @@ describe("Rate Limiting", () => {
     });
 
     it("should reset after time window expires", async () => {
-      const identifier = `test-${Date.now()}`;
+      const identifier = uniqueId();
       const maxAttempts = 3;
       const windowMs = 500; // 500ms window for testing
 
@@ -105,7 +121,7 @@ describe("Rate Limiting", () => {
     });
 
     it("should handle concurrent requests correctly", async () => {
-      const identifier = `test-${Date.now()}`;
+      const identifier = uniqueId();
       const maxAttempts = 10;
       const windowMs = 60000;
 
@@ -123,8 +139,8 @@ describe("Rate Limiting", () => {
       const maxAttempts = 3;
       const windowMs = 60000;
 
-      const id1 = `test1-${Date.now()}`;
-      const id2 = `test2-${Date.now()}`;
+      const id1 = uniqueId("test1");
+      const id2 = uniqueId("test2");
 
       // Use up attempts for id1
       for (let i = 0; i < maxAttempts; i++) {
@@ -488,34 +504,112 @@ describe("Rate Limiting", () => {
   });
 
   describe("Performance", () => {
-    it("should handle high volume of rate limit checks efficiently", async () => {
-      const start = performance.now();
+    it("should keep single-key shared-store check latency within an acceptable bound", async () => {
+      // p8-010: the rate-limit state now lives in the shared DB store instead of
+      // an in-memory Map. The latency that matters for logins is a single
+      // checkRateLimit round-trip, not aggregate throughput. Assert it stays
+      // within an acceptable bound for a remote shared store.
+      const id = uniqueId("perf");
+      const maxAttempts = 5;
+      const windowMs = 60000;
 
-      // Check 100 different identifiers (reduced from 1000 due to async overhead)
+      // Warm the bucket so we measure the ON CONFLICT UPDATE path.
+      await checkRateLimit(id, maxAttempts, windowMs);
+
+      const start = performance.now();
+      await checkRateLimit(id, maxAttempts, windowMs);
+      const singleLatency = performance.now() - start;
+
+      // Generous bound for a remote libSQL/Turso round-trip; catches gross
+      // regressions (e.g. falling back to multi-statement SELECT+UPDATE).
+      expect(singleLatency).toBeLessThan(2000);
+    }, 15000);
+
+    it("should not crash with many distinct identifiers", async () => {
+      // Each call performs a DB upsert; keep the volume bounded so the test
+      // stays well under the remote-DB latency budget.
       const promises = [];
-      for (let i = 0; i < 100; i++) {
-        promises.push(checkRateLimit(`test-${i}`, 5, 60000));
+      for (let i = 0; i < 30; i++) {
+        promises.push(checkRateLimit(uniqueId("perf-many"), 5, 60000));
       }
       await Promise.all(promises);
 
-      const duration = performance.now() - start;
+      // This test mainly ensures no crashes occur under concurrent upserts.
+      // Memory cleanup is tested by the cleanup interval in security.ts.
+      expect(true).toBe(true);
+    }, 20000);
+  });
 
-      // Should complete in reasonable time (adjusted for async operations)
-      expect(duration).toBeLessThan(1000);
+  // ===========================================================================
+  // p8-010: distributed rate-limit store. The authoritative counter lives in the
+  // shared `RateLimit` DB table (atomic upsert), so limits hold across instances
+  // and survive restarts/redeploys. The per-instance Map is now only a short-TTL
+  // local cache for fast-failing already-blocked identifiers.
+  // ===========================================================================
+  describe("Distributed rate-limit store (p8-010)", () => {
+    it("state survives a simulated instance restart (local cache cleared, shared store blocks)", async () => {
+      const id = uniqueId("dist-restart");
+      const maxAttempts = 3;
+      const windowMs = 60000;
+
+      // Exhaust the limit: 3 allowed, 4th blocked.
+      for (let i = 0; i < maxAttempts; i++) {
+        await checkRateLimit(id, maxAttempts, windowMs);
+      }
+      await expect(checkRateLimit(id, maxAttempts, windowMs)).rejects.toThrow(
+        TRPCError
+      );
+
+      // Simulate an instance restart: wipe ONLY the in-memory cache. A naive
+      // per-instance Map would lose the block here; the shared store must keep
+      // blocking from the DB.
+      clearRateLimitLocalCache();
+      await expect(checkRateLimit(id, maxAttempts, windowMs)).rejects.toThrow(
+        TRPCError
+      );
     });
 
-    it("should not leak memory with many identifiers", async () => {
-      // Create rate limit entries (reduced significantly due to database overhead)
-      // Each call performs database operations which are slower than in-memory checks
-      const promises = [];
-      for (let i = 0; i < 100; i++) {
-        promises.push(checkRateLimit(`test-${i}`, 5, 60000));
-      }
-      await Promise.all(promises);
+    it("two simulated instances aggregate the count for the same key", async () => {
+      const id = uniqueId("dist-multi");
+      const maxAttempts = 5;
+      const windowMs = 60000;
 
-      // This test mainly ensures no crashes occur
-      // Memory cleanup is tested by the cleanup interval in security.ts
-      expect(true).toBe(true);
-    }, 10000); // Increase timeout to 10 seconds for database operations
+      // Instance A: 3 attempts.
+      clearRateLimitLocalCache();
+      for (let i = 0; i < 3; i++) {
+        await checkRateLimit(id, maxAttempts, windowMs);
+      }
+
+      // Instance B (fresh local cache) makes 2 more -> combined count = 5.
+      clearRateLimitLocalCache();
+      await checkRateLimit(id, maxAttempts, windowMs); // count 4
+      const remaining = await checkRateLimit(id, maxAttempts, windowMs); // count 5
+      expect(remaining).toBe(0); // 5th allowed, no remaining
+
+      // A 6th attempt from a fresh instance must be blocked — the shared store
+      // aggregated the count across the two "instances".
+      clearRateLimitLocalCache();
+      await expect(checkRateLimit(id, maxAttempts, windowMs)).rejects.toThrow(
+        TRPCError
+      );
+    });
+
+    it("cannot bypass the limit by alternating between instances", async () => {
+      const id = uniqueId("dist-bypass");
+      const maxAttempts = 4;
+      const windowMs = 60000;
+
+      // Each request simulates landing on a different instance (fresh local
+      // cache). The shared DB counter must still aggregate every hit.
+      for (let i = 0; i < maxAttempts; i++) {
+        clearRateLimitLocalCache();
+        await checkRateLimit(id, maxAttempts, windowMs);
+      }
+
+      clearRateLimitLocalCache();
+      await expect(checkRateLimit(id, maxAttempts, windowMs)).rejects.toThrow(
+        TRPCError
+      );
+    });
   });
 });

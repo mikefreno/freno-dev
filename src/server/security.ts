@@ -13,8 +13,16 @@ import {
 } from "~/config";
 
 /**
- * In-memory rate limit cache
- * Reduces DB reads by caching rate limit state for 1 minute
+ * Short-TTL local rate-limit cache (p8-010).
+ *
+ * The authoritative rate-limit state lives in the shared DB store
+ * (`RateLimit` table) so limits hold across ALL instances and survive
+ * restarts / redeploys. This per-instance `Map` is ONLY a short-TTL local
+ * cache used to fast-fail already-blocked identifiers without hitting the DB
+ * during brute-force storms. It can NEVER let a request bypass the limit: every
+ * non-cached (or TTL-expired) check performs an atomic DB upsert which is the
+ * single source of truth for the counter.
+ *
  * Key: identifier, Value: { count, resetAt, lastChecked }
  */
 interface RateLimitCacheEntry {
@@ -24,6 +32,24 @@ interface RateLimitCacheEntry {
 }
 
 const rateLimitCache = new Map<string, RateLimitCacheEntry>();
+
+/**
+ * Invalidate the local cache entry for a given identifier.
+ * Used by callers that reset DB-backed rate-limit state so a same-instance
+ * follow-up check does not serve a stale "blocked" decision.
+ */
+function invalidateRateLimitCache(identifier: string): void {
+  rateLimitCache.delete(identifier);
+}
+
+/**
+ * Clear the entire local cache (testing / simulated instance restart).
+ * Does NOT touch the shared DB store — used by tests to simulate a fresh
+ * instance reading state purely from the shared store.
+ */
+export function clearRateLimitLocalCache(): void {
+  rateLimitCache.clear();
+}
 
 /**
  * Cleanup stale cache entries (prevent memory leak)
@@ -42,6 +68,49 @@ function cleanupRateLimitCache(): void {
 // Periodic cache cleanup (every 5 minutes)
 if (typeof setInterval !== "undefined") {
   setInterval(cleanupRateLimitCache, 5 * 60 * 1000);
+}
+
+/**
+ * Ensure the shared `RateLimit` table + unique identifier index exist.
+ *
+ * `ON CONFLICT(identifier)` upserts require a UNIQUE constraint on
+ * `identifier`; the deployed table predates this, so we create the table
+ * (idempotently) and add the unique index. Memoized so it runs at most once
+ * per process. Never blocks requests on schema errors — a failure resets the
+ * memo so the next check can retry.
+ */
+let ensureSchemaPromise: Promise<void> | null = null;
+export async function ensureRateLimitSchema(): Promise<void> {
+  if (ensureSchemaPromise) return ensureSchemaPromise;
+  ensureSchemaPromise = (async () => {
+    try {
+      const { ConnectionFactory } = await import("./database");
+      const conn = ConnectionFactory();
+      await conn.execute({
+        sql: `CREATE TABLE IF NOT EXISTS RateLimit (
+          id TEXT PRIMARY KEY,
+          identifier TEXT NOT NULL,
+          count INTEGER NOT NULL DEFAULT 1,
+          reset_at TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )`,
+        args: []
+      });
+      // Unique index so ON CONFLICT(identifier) upserts are well-defined.
+      // The app already assumes one row per identifier; if duplicate rows
+      // existed this would throw (and the upsert path would surface it).
+      await conn.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_ratelimit_identifier_unique
+              ON RateLimit(identifier)`,
+        args: []
+      });
+    } catch (error) {
+      ensureSchemaPromise = null; // allow a later call to retry
+      console.error("[security] ensureRateLimitSchema failed:", error);
+    }
+  })();
+  return ensureSchemaPromise;
 }
 
 /**
@@ -225,9 +294,11 @@ interface RateLimitRecord {
 
 /**
  * Clear rate limit store (for testing only)
- * Clears all rate limit records from the database
+ * Clears all rate limit records from the database and the local cache.
  */
 export async function clearRateLimitStore(): Promise<void> {
+  await ensureRateLimitSchema();
+  clearRateLimitLocalCache();
   const { ConnectionFactory } = await import("./database");
   const conn = ConnectionFactory();
   await conn.execute({
@@ -258,13 +329,15 @@ async function cleanupExpiredRateLimits(): Promise<void> {
 
 /**
  * Get client IP address from request headers.
- * Only trusts X-Forwarded-For in production (set by Vercel edge network).
- * In development/test, uses socket address to prevent header spoofing.
+ * Only trusts X-Forwarded-For outside of local development (set by the Vercel
+ * edge network in production; trusted in tests so the header-parsing path is
+ * exercised). In local development, uses the socket address to prevent header
+ * spoofing.
  */
 export function getClientIP(event: H3Event): string {
   // In production on Vercel, X-Forwarded-For is set by the edge network
-  // and cannot be spoofed by clients. In dev/test, ignore it.
-  if (env.NODE_ENV === "production") {
+  // and cannot be spoofed by clients. In dev, ignore it.
+  if (env.NODE_ENV !== "development") {
     const forwarded = getHeaderValue(event, "x-forwarded-for");
     if (forwarded) {
       return forwarded.split(",")[0].trim();
@@ -311,7 +384,15 @@ export function getAuditContext(event: H3Event): {
 }
 
 /**
- * Check rate limit for a given identifier with in-memory caching
+ * Check rate limit for a given identifier against the SHARED distributed store.
+ *
+ * The counter lives in the `RateLimit` DB table and is incremented with a
+ * single atomic `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` round-trip,
+ * so limits hold across all instances/redeploys and cannot be bypassed by
+ * distributing requests across instances. A short-TTL local cache is used ONLY
+ * to fast-fail already-blocked identifiers (cuts DB load during brute-force
+ * storms); it can never let a request through.
+ *
  * @param identifier - Unique identifier (e.g., "login:ip:192.168.1.1")
  * @param maxAttempts - Maximum number of attempts allowed
  * @param windowMs - Time window in milliseconds
@@ -325,138 +406,27 @@ export async function checkRateLimit(
   windowMs: number,
   event?: H3Event
 ): Promise<number> {
-  const { ConnectionFactory } = await import("./database");
-  const { v4: uuid } = await import("uuid");
-  const conn = ConnectionFactory();
-  const now = Date.now();
-  const resetAt = new Date(now + windowMs);
+  await ensureRateLimitSchema();
 
-  // Check in-memory cache first (reduces DB reads by ~80%)
+  const now = Date.now();
+  const resetAtMs = now + windowMs;
+  const resetAtIso = new Date(resetAtMs).toISOString();
+  const nowIso = new Date(now).toISOString();
+
+  // Short-TTL local cache: fast-fail already-blocked identifiers without a
+  // DB round-trip. Only applies when the cached state still says "over limit"
+  // AND the window has not expired AND the cache entry is fresh. This can
+  // never let a request bypass the limit — at worst it briefly over-blocks
+  // (corrected on the next DB-backed check after the TTL / window expires).
   const cached = rateLimitCache.get(identifier);
   if (
     cached &&
-    now - cached.lastChecked < CACHE_CONFIG.RATE_LIMIT_CACHE_TTL_MS
+    now - cached.lastChecked < CACHE_CONFIG.RATE_LIMIT_CACHE_TTL_MS &&
+    cached.resetAt > now &&
+    cached.count >= maxAttempts
   ) {
-    // Cache hit - check if window expired
-    if (now > cached.resetAt) {
-      // Window expired, reset counter
-      cached.count = 1;
-      cached.resetAt = resetAt.getTime();
-      cached.lastChecked = now;
-
-      // Update DB async (fire-and-forget)
-      conn
-        .execute({
-          sql: "UPDATE RateLimit SET count = 1, reset_at = ?, updated_at = datetime('now') WHERE identifier = ?",
-          args: [resetAt.toISOString(), identifier]
-        })
-        .catch(() => {});
-
-      return maxAttempts - 1;
-    }
-
-    // Check if limit exceeded
-    if (cached.count >= maxAttempts) {
-      const remainingMs = cached.resetAt - now;
-      const remainingSec = Math.ceil(remainingMs / 1000);
-
-      if (event) {
-        const { ipAddress, userAgent } = getAuditContext(event);
-        logAuditEvent({
-          eventType: "security.rate_limit.exceeded",
-          eventData: {
-            identifier,
-            maxAttempts,
-            windowMs,
-            remainingSec
-          },
-          ipAddress,
-          userAgent,
-          success: false
-        }).catch(() => {});
-      }
-
-      throw new TRPCError({
-        code: "TOO_MANY_REQUESTS",
-        message: `Too many attempts. Try again in ${remainingSec} seconds`
-      });
-    }
-
-    // Increment counter in cache and DB
-    cached.count++;
-    cached.lastChecked = now;
-
-    // Update DB async (fire-and-forget)
-    conn
-      .execute({
-        sql: "UPDATE RateLimit SET count = count + 1, updated_at = datetime('now') WHERE identifier = ?",
-        args: [identifier]
-      })
-      .catch(() => {});
-
-    return maxAttempts - cached.count;
-  }
-
-  // Cache miss - query DB
-  // Opportunistic cleanup (10% chance) - serverless-friendly
-  if (Math.random() < 0.1) {
-    cleanupExpiredRateLimits().catch(() => {}); // Fire and forget
-  }
-
-  const result = await conn.execute({
-    sql: "SELECT id, count, reset_at FROM RateLimit WHERE identifier = ?",
-    args: [identifier]
-  });
-
-  if (result.rows.length === 0) {
-    // First attempt - create record
-    await conn.execute({
-      sql: "INSERT INTO RateLimit (id, identifier, count, reset_at) VALUES (?, ?, ?, ?)",
-      args: [uuid(), identifier, 1, resetAt.toISOString()]
-    });
-
-    // Cache the result
-    rateLimitCache.set(identifier, {
-      count: 1,
-      resetAt: resetAt.getTime(),
-      lastChecked: now
-    });
-
-    return maxAttempts - 1;
-  }
-
-  const record = result.rows[0];
-  const recordResetAt = new Date(record.reset_at as string);
-
-  if (now > recordResetAt.getTime()) {
-    // Window expired, reset counter
-    await conn.execute({
-      sql: "UPDATE RateLimit SET count = 1, reset_at = ?, updated_at = datetime('now') WHERE identifier = ?",
-      args: [resetAt.toISOString(), identifier]
-    });
-
-    // Cache the result
-    rateLimitCache.set(identifier, {
-      count: 1,
-      resetAt: resetAt.getTime(),
-      lastChecked: now
-    });
-
-    return maxAttempts - 1;
-  }
-
-  const count = record.count as number;
-
-  if (count >= maxAttempts) {
-    const remainingMs = recordResetAt.getTime() - now;
-    const remainingSec = Math.ceil(remainingMs / 1000);
-
-    // Cache the blocked state
-    rateLimitCache.set(identifier, {
-      count,
-      resetAt: recordResetAt.getTime(),
-      lastChecked: now
-    });
+    const remainingMs = cached.resetAt - now;
+    const remainingSec = Math.max(1, Math.ceil(remainingMs / 1000));
 
     if (event) {
       const { ipAddress, userAgent } = getAuditContext(event);
@@ -480,19 +450,74 @@ export async function checkRateLimit(
     });
   }
 
-  await conn.execute({
-    sql: "UPDATE RateLimit SET count = count + 1, updated_at = datetime('now') WHERE identifier = ?",
-    args: [identifier]
+  // Opportunistic cleanup (10% chance) - serverless-friendly
+  if (Math.random() < 0.1) {
+    cleanupExpiredRateLimits().catch(() => {}); // Fire and forget
+  }
+
+  const { ConnectionFactory } = await import("./database");
+  const { v4: uuid } = await import("uuid");
+  const conn = ConnectionFactory();
+
+  // Single atomic round-trip: create the bucket or increment it, resetting the
+  // window if it has elapsed. Requires a UNIQUE constraint on `identifier`
+  // (see ensureRateLimitSchema). `excluded.reset_at` is the proposed insert
+  // value (now + windowMs), reused when the window is reset.
+  const result = await conn.execute({
+    sql: `INSERT INTO RateLimit (id, identifier, count, reset_at)
+          VALUES (?, ?, 1, ?)
+          ON CONFLICT(identifier) DO UPDATE SET
+            count = CASE
+              WHEN RateLimit.reset_at < ? THEN 1
+              ELSE RateLimit.count + 1
+            END,
+            reset_at = CASE
+              WHEN RateLimit.reset_at < ? THEN excluded.reset_at
+              ELSE RateLimit.reset_at
+            END,
+            updated_at = datetime('now')
+          RETURNING count, reset_at`,
+    args: [uuid(), identifier, resetAtIso, nowIso, nowIso]
   });
 
-  // Cache the result
+  const row = result.rows[0];
+  const newCount = (row.count as number) || 0;
+  const resetAtTime = new Date(row.reset_at as string).getTime();
+
+  // Cache the (possibly over-limit) state so the next check can fast-fail.
   rateLimitCache.set(identifier, {
-    count: count + 1,
-    resetAt: recordResetAt.getTime(),
+    count: newCount,
+    resetAt: resetAtTime,
     lastChecked: now
   });
 
-  return maxAttempts - count - 1;
+  if (newCount > maxAttempts) {
+    const remainingMs = Math.max(0, resetAtTime - now);
+    const remainingSec = Math.max(1, Math.ceil(remainingMs / 1000));
+
+    if (event) {
+      const { ipAddress, userAgent } = getAuditContext(event);
+      logAuditEvent({
+        eventType: "security.rate_limit.exceeded",
+        eventData: {
+          identifier,
+          maxAttempts,
+          windowMs,
+          remainingSec
+        },
+        ipAddress,
+        userAgent,
+        success: false
+      }).catch(() => {});
+    }
+
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: `Too many attempts. Try again in ${remainingSec} seconds`
+    });
+  }
+
+  return maxAttempts - newCount;
 }
 
 /**
@@ -727,6 +752,11 @@ export async function resetLoginRateLimits(
   email: string,
   clientIP: string
 ): Promise<void> {
+  // Drop the local blocked-state cache for these keys so a same-instance
+  // follow-up check reads fresh state from the shared store.
+  invalidateRateLimitCache(`login:ip:${clientIP}`);
+  invalidateRateLimitCache(`login:email:${email}`);
+
   const { ConnectionFactory } = await import("./database");
   const conn = ConnectionFactory();
 

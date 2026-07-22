@@ -140,5 +140,21 @@ export const model: { [key: string]: string } = {
     );
     CREATE INDEX IF NOT EXISTS idx_history_post_id ON PostHistory (post_id);
     CREATE INDEX IF NOT EXISTS idx_history_parent_id ON PostHistory (parent_id);
+  `,
+  RateLimit: `
+    CREATE TABLE RateLimit
+    (
+      id TEXT PRIMARY KEY,
+      identifier TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 1,
+      reset_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    -- Unique constraint on identifier so ON CONFLICT(identifier) atomic upserts
+    -- (see src/server/security.ts checkRateLimit) are well-defined. This makes
+    -- the rate-limit state shared across all instances (p8-010).
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ratelimit_identifier_unique ON RateLimit (identifier);
+    CREATE INDEX IF NOT EXISTS idx_ratelimit_reset_at ON RateLimit (reset_at);
   `
 };
