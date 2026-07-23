@@ -15,7 +15,6 @@ import type { Client } from "@libsql/client/web";
 // Prevent the env/server.ts client-side guard from throwing during tests
 mock.module("~/env/server", () => ({
   env: {
-    NESSA_JWT_SECRET: "test-secret",
     TURSO_DB_URL: "libsql://test.turso.io",
     TURSO_DB_TOKEN: "test-token",
     NESSA_DB_URL: "libsql://nessa-test.turso.io",

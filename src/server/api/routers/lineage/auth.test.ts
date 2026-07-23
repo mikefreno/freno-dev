@@ -43,7 +43,6 @@ mock.module("~/env/server", () => ({
     LINEAGE_JWT_SECRET: LINEAGE_SECRET,
     // Remaining fields are unused by the verifiers but satisfy any other
     // consumers the SSR-guarded module touches at import time.
-    NESSA_JWT_SECRET: "nessa-test-secret",
     TURSO_DB_URL: "libsql://test.turso.io",
     TURSO_DB_TOKEN: "test-token",
     TURSO_LINEAGE_URL: "libsql://lineage-test.turso.io",

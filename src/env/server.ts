@@ -56,10 +56,8 @@ const serverEnvSchema = z.object({
   REDIS_URL: z.string().min(1),
   NESSA_DB_URL: z.string().min(1),
   NESSA_DB_TOKEN: z.string().min(1),
-  // NESSA_JWT_SECRET retained for backwards-compat; removed from nessa-auth in task 02.
-  // Delete in task 11 once all other references are gone.
-  NESSA_JWT_SECRET: z.string().min(1).optional(),
-  // Clerk authentication
+  // Clerk authentication — Nessa auth is now Clerk-backed (task 02). The
+  // legacy self-issued JWT signing env var was removed in task 11.
   NESSA_CLERK_SECRET: z.string().min(1),
   NESSA_CLERK_JWT_ISSUER: z.string().min(1),
   // Clerk webhook signing secret (Svix). Used to verify `user.created` /
@@ -176,7 +174,6 @@ export const getMissingEnvVars = (): string[] => {
     "REDIS_URL",
     "NESSA_DB_URL",
     "NESSA_DB_TOKEN",
-    // NESSA_JWT_SECRET moved to optional — removed from nessa-auth in task 02
     "NESSA_CLERK_SECRET",
     "NESSA_CLERK_JWT_ISSUER",
     "NESSA_CLERK_WEBHOOK_SECRET",
