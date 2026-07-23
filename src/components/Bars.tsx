@@ -205,8 +205,14 @@ function SubdomainNavLink(props: { item: NavItem; onClick: () => void }) {
 /** The shared simplified nav list rendered by both subdomain bars. */
 function SubdomainNavList(props: { onClick: () => void }) {
   const site = useSite();
+  // Auth items intentionally omitted — subdomains don't use the web (freno.me)
+  // JWT auth (Nessa uses Clerk; Lineage uses its mobile JWT), so no subdomain
+  // nav item sets showLoggedIn/showLoggedOut today. filterNavByAuth is therefore
+  // a no-op right now but is kept so future admin items behave correctly
+  // without re-touching the renderer. Filtering here keeps LeftBar + RightBar
+  // consistent.
   return (
-    <For each={NAV_CONFIG[site().id]}>
+    <For each={filterNavByAuth(NAV_CONFIG[site().id], false)}>
       {(item) => <SubdomainNavLink item={item} onClick={props.onClick} />}
     </For>
   );
@@ -244,7 +250,6 @@ function BackToFrenoLink() {
 /** Inner content for the LeftBar on subdomain sites. */
 function SubdomainLeftBarContent() {
   const { setLeftBarVisible } = useBars();
-  const site = useSite();
   const handleLinkClick = () => {
     if (
       typeof window !== "undefined" &&
@@ -257,15 +262,8 @@ function SubdomainLeftBarContent() {
     <div class="text-text flex h-full flex-col px-4 pb-4 text-xl font-bold">
       <SubdomainBrand />
       <div class="flex flex-col gap-4 py-8">
-        {/* Auth items intentionally omitted — subdomains don't use web auth.
-            filterNavByAuth is a no-op today (no subdomain item sets
-            showLoggedIn/showLoggedOut) but kept so future admin items
-            behave correctly without re-touching the renderer. */}
-        <For each={filterNavByAuth(NAV_CONFIG[site().id], false)}>
-          {(item) => (
-            <SubdomainNavLink item={item} onClick={handleLinkClick} />
-          )}
-        </For>
+        {/* Auth items intentionally omitted — see SubdomainNavList. */}
+        <SubdomainNavList onClick={handleLinkClick} />
       </div>
 
       <div class="mt-auto flex flex-col gap-4">
@@ -569,9 +567,17 @@ function MainLeftBarContent() {
   const navigate = useNavigate();
 
   return (
-    <div class="text-text flex flex-1 flex-col px-4 pb-4 text-xl font-bold">
-      <div class="flex flex-col py-8">
-        <span class="text-lg font-semibold">Recent Posts</span>
+    <>
+      <Typewriter speed={10} keepAlive={10000} class="z-50 pr-8 pl-4">
+        <h3 class="hover:text-subtext0 w-fit pt-6 text-center text-3xl underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105">
+          <a href="/" onClick={handleLinkClick}>
+            {formatDomainName(env.VITE_DOMAIN)}
+          </a>
+        </h3>
+      </Typewriter>
+      <div class="text-text flex flex-1 flex-col px-4 pb-4 text-xl font-bold">
+        <div class="flex flex-col py-8">
+          <span class="text-lg font-semibold">Recent Posts</span>
         <div class="flex max-h-[50dvh] flex-col gap-3 pt-4">
           <Show
             when={recentPosts()}
@@ -736,6 +742,7 @@ function MainLeftBarContent() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

@@ -56,7 +56,7 @@ export interface NavItem {
 
 /** Apex/host link used as a "back to freno.me" affordance on subdomains. */
 export const BACK_TO_FRENO: NavItem = {
-  label: "freno.me",
+  label: "back to freno.me",
   href: "https://freno.me",
   icon: "back",
   external: true
