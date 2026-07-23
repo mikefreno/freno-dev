@@ -331,7 +331,7 @@ export default function ContactPage() {
                 <div class="pb-2">
                   You can find the entire privacy policy{" "}
                   <A
-                    href="/privacy-policy/life-and-lineage"
+                    href="https://lineage.freno.me/privacy"
                     class="text-blue underline-offset-4 hover:underline"
                   >
                     here
