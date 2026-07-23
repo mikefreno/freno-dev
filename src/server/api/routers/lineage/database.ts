@@ -6,7 +6,7 @@ import {
 } from "~/server/utils";
 import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure } from "~/server/api/utils";
+import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "~/server/api/utils";
 import {
   fetchWithTimeout,
   checkResponse,
@@ -19,7 +19,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
   // credentials endpoint removed (p8-008): was exposing persistent DB tokens to clients.
   // Database access should be proxied through tRPC server-side procedures.
 
-  deletionInit: publicProcedure
+  deletionInit: csrfProtectedProcedure
     .input(
       z.object({
         email: z.string().email(),
@@ -226,7 +226,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
       }
     }),
 
-  deletionCheck: publicProcedure
+  deletionCheck: csrfProtectedProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
       const { email } = input;
@@ -256,7 +256,7 @@ export const lineageDatabaseRouter = createTRPCRouter({
       }
     }),
 
-  deletionCancel: publicProcedure
+  deletionCancel: csrfProtectedProcedure
     .input(
       z.object({
         email: z.string().email(),

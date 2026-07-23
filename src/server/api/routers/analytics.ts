@@ -1,4 +1,4 @@
-import { createTRPCRouter, adminProcedure, publicProcedure } from "../utils";
+import { createTRPCRouter, adminProcedure, publicProcedure, csrfProtectedProcedure } from "../utils";
 import { z } from "zod";
 import {
   queryAnalytics,
@@ -33,7 +33,7 @@ function getHeader(
 }
 
 export const analyticsRouter = createTRPCRouter({
-  logPerformance: publicProcedure
+  logPerformance: csrfProtectedProcedure
     .input(
       z.object({
         path: z.string(),

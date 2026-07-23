@@ -258,10 +258,11 @@ export const TURNSTILE_CONFIG = {
 // ============================================================
 
 export const VALIDATION_CONFIG = {
-  MIN_PASSWORD_LENGTH: 8,
+  /** Minimum password length (must match securePasswordSchema in schemas/user.ts) */
+  MIN_PASSWORD_LENGTH: 12,
   PASSWORD_REQUIRE_UPPERCASE: true,
   PASSWORD_REQUIRE_NUMBER: true,
-  PASSWORD_REQUIRE_SPECIAL: false,
+  PASSWORD_REQUIRE_SPECIAL: true,
   MAX_CONTACT_MESSAGE_LENGTH: 500,
   MIN_PASSWORD_CONF_LENGTH_FOR_ERROR: 6
 } as const;
@@ -272,7 +273,15 @@ export const VALIDATION_CONFIG = {
 
 export const LINEAGE_CONFIG = {
   DELETION_GRACE_PERIOD_MS: 24 * 60 * 60 * 1000,
-  PVP_OPPONENTS_COUNT: 3
+  PVP_OPPONENTS_COUNT: 3,
+  /**
+   * JWT issuer/audience claims that distinguish Lineage mobile-app tokens
+   * from web session tokens (p8-005). These MUST differ from any web JWT
+   * claims so a token issued for one surface cannot be replayed against
+   * the other, even if a signing secret were ever shared.
+   */
+  JWT_ISSUER: "lineage" as const,
+  JWT_AUDIENCE: "lineage-app" as const
 } as const;
 
 // ============================================================

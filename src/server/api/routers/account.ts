@@ -1,4 +1,4 @@
-import { createTRPCRouter, protectedProcedure } from "../utils";
+import { createTRPCRouter, protectedProcedure, csrfProtectedProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getProviderSummary, unlinkProvider } from "~/server/provider-helpers";
@@ -29,7 +29,7 @@ export const accountRouter = createTRPCRouter({
   /**
    * Unlink an authentication provider
    */
-  unlinkProvider: protectedProcedure
+  unlinkProvider: csrfProtectedProcedure
     .input(
       z.object({
         provider: z.enum(["email", "google", "github"])

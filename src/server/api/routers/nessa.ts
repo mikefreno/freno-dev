@@ -2,12 +2,69 @@ import { createTRPCRouter, nessaProcedure, publicProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { jwtVerify, importJWK } from "jose";
+import { OAuth2Client } from "google-auth-library";
+import { env } from "~/env/server";
 import { NessaConnectionFactory } from "~/server/database";
 import { cache } from "~/server/cache";
 import { hashPassword, checkPasswordSafe } from "~/server/utils";
 import { signNessaToken } from "~/server/nessa-auth";
+import type { Client } from "@libsql/client/web";
 
 const NESSA_CACHE_TTL_MS = 5 * 60 * 1000;
+
+/** Assert that the workout identified by workoutId is owned by userId */
+export async function assertWorkoutOwned(
+  conn: Client,
+  workoutId: string,
+  userId: string
+) {
+  const row = await conn.execute({
+    sql: "SELECT userId FROM workouts WHERE id = ?",
+    args: [workoutId]
+  });
+  if (row.rows.length === 0) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Workout not found" });
+  }
+  if ((row.rows[0] as any).userId !== userId) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Not the workout owner" });
+  }
+}
+
+/** Assert that the auth provider record identified by providerId is owned by userId */
+export async function assertAuthProviderOwned(
+  conn: Client,
+  providerId: string,
+  userId: string
+) {
+  const row = await conn.execute({
+    sql: "SELECT userId FROM authProviders WHERE id = ?",
+    args: [providerId]
+  });
+  if (row.rows.length === 0) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Auth provider not found" });
+  }
+  if ((row.rows[0] as any).userId !== userId) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Not the auth provider owner" });
+  }
+}
+
+/** Assert that the exercise library record identified by exerciseId is owned by userId */
+export async function assertExerciseLibraryOwned(
+  conn: Client,
+  exerciseId: string,
+  userId: string
+) {
+  const row = await conn.execute({
+    sql: "SELECT userId FROM exerciseLibrary WHERE id = ?",
+    args: [exerciseId]
+  });
+  if (row.rows.length === 0) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Exercise not found" });
+  }
+  if ((row.rows[0] as any).userId !== userId) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Not the exercise owner" });
+  }
+}
 
 const paginatedQuerySchema = z.object({
   limit: z.number().int().min(1).max(100).optional(),
@@ -38,6 +95,7 @@ const userInputSchema = z.object({
 
 const exerciseLibrarySchema = z.object({
   id: z.string().min(1),
+  userId: z.string().min(1),
   name: z.string().min(1),
   category: z.string().min(1),
   muscleGroups: z.string().nullable().optional(),
@@ -200,21 +258,6 @@ const appleSignInSchema = z.object({
   lastName: z.string().optional(),
   appleUserId: z.string().min(1)
 });
-
-interface GoogleTokenPayload {
-  iss: string;
-  azp: string;
-  aud: string;
-  sub: string;
-  email?: string;
-  email_verified?: boolean;
-  name?: string;
-  picture?: string;
-  given_name?: string;
-  family_name?: string;
-  iat: number;
-  exp: number;
-}
 
 interface AppleTokenPayload {
   iss: string;
@@ -399,22 +442,40 @@ export const nessaDbRouter = createTRPCRouter({
     .input(googleSignInSchema)
     .mutation(async ({ input }) => {
       try {
-        // Verify the Google ID token
-        const tokenInfoResponse = await fetch(
-          `https://oauth2.googleapis.com/tokeninfo?id_token=${input.idToken}`
-        );
+        const client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+        let ticket;
+        try {
+          // verifyIdToken fetches Google's JWKS and verifies the signature
+          // locally — the token is sent in the POST body, never in a URL query
+          // string (unlike the deprecated HTTP lookup endpoint). audience ===
+          // env.GOOGLE_CLIENT_ID enforces the `aud` claim so a token minted for
+          // a different OAuth client (or a tampered/expired token) is rejected.
+          ticket = await client.verifyIdToken({
+            idToken: input.idToken,
+            audience: env.GOOGLE_CLIENT_ID
+          });
+        } catch (verifyErr) {
+          // Signature failure, wrong audience, expired token, malformed JWT —
+          // all surface as a thrown Error from verifyIdToken. Map every
+          // verification failure to UNAUTHORIZED so the caller cannot tell
+          // signature vs audience vs expiry apart (avoid leaking which check
+          // failed).
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid Google ID token"
+          });
+        }
+        const tokenPayload = ticket.getPayload();
 
-        if (!tokenInfoResponse.ok) {
+        if (!tokenPayload) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Invalid Google ID token"
           });
         }
 
-        const tokenPayload =
-          (await tokenInfoResponse.json()) as GoogleTokenPayload;
-
-        // Validate the token payload
+        // Validate the issuer (verifyIdToken already checks this, but we
+        // assert explicitly for defense-in-depth).
         if (
           tokenPayload.iss !== "accounts.google.com" &&
           tokenPayload.iss !== "https://accounts.google.com"
@@ -425,12 +486,14 @@ export const nessaDbRouter = createTRPCRouter({
           });
         }
 
-        // Check if token is expired
-        const now = Math.floor(Date.now() / 1000);
-        if (tokenPayload.exp < now) {
+        // Email must be verified for email-based account linking.
+        // google-auth-library's verified TokenPayload types email_verified
+        // as a boolean (true when verified).
+        const emailVerified = tokenPayload.email_verified === true;
+        if (tokenPayload.email && !emailVerified) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "Token has expired"
+            message: "Google email is not verified"
           });
         }
 
@@ -1907,9 +1970,10 @@ export const nessaDbRouter = createTRPCRouter({
 
   createHeartRateSample: nessaProcedure
     .input(heartRateSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        await assertWorkoutOwned(conn, input.workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: `INSERT INTO heartRateSamples (id, workoutId, timestamp, bpm, source)
                 VALUES (?, ?, ?, ?, ?)`,
@@ -1933,9 +1997,17 @@ export const nessaDbRouter = createTRPCRouter({
 
   updateHeartRateSample: nessaProcedure
     .input(heartRateSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        const sample = await conn.execute({
+          sql: "SELECT workoutId FROM heartRateSamples WHERE id = ?",
+          args: [input.id]
+        });
+        if (sample.rows.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Heart rate sample not found" });
+        }
+        await assertWorkoutOwned(conn, (sample.rows[0] as any).workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: `UPDATE heartRateSamples SET timestamp = ?, bpm = ?, source = ? WHERE id = ?`,
           args: [input.timestamp, input.bpm, input.source ?? null, input.id]
@@ -1952,9 +2024,17 @@ export const nessaDbRouter = createTRPCRouter({
 
   deleteHeartRateSample: nessaProcedure
     .input(heartRateSchema.pick({ id: true }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        const sample = await conn.execute({
+          sql: "SELECT workoutId FROM heartRateSamples WHERE id = ?",
+          args: [input.id]
+        });
+        if (sample.rows.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Heart rate sample not found" });
+        }
+        await assertWorkoutOwned(conn, (sample.rows[0] as any).workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: "DELETE FROM heartRateSamples WHERE id = ?",
           args: [input.id]
@@ -1971,9 +2051,10 @@ export const nessaDbRouter = createTRPCRouter({
 
   createLocationSample: nessaProcedure
     .input(locationSampleSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        await assertWorkoutOwned(conn, input.workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: `INSERT INTO locationSamples (id, workoutId, timestamp, latitude, longitude, altitude, horizontalAccuracy, verticalAccuracy, speed, course)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -2002,9 +2083,17 @@ export const nessaDbRouter = createTRPCRouter({
 
   updateLocationSample: nessaProcedure
     .input(locationSampleSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        const sample = await conn.execute({
+          sql: "SELECT workoutId FROM locationSamples WHERE id = ?",
+          args: [input.id]
+        });
+        if (sample.rows.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Location sample not found" });
+        }
+        await assertWorkoutOwned(conn, (sample.rows[0] as any).workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: `UPDATE locationSamples SET timestamp = ?, latitude = ?, longitude = ?, altitude = ?, horizontalAccuracy = ?, verticalAccuracy = ?, speed = ?, course = ? WHERE id = ?`,
           args: [
@@ -2031,9 +2120,17 @@ export const nessaDbRouter = createTRPCRouter({
 
   deleteLocationSample: nessaProcedure
     .input(locationSampleSchema.pick({ id: true }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        const sample = await conn.execute({
+          sql: "SELECT workoutId FROM locationSamples WHERE id = ?",
+          args: [input.id]
+        });
+        if (sample.rows.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Location sample not found" });
+        }
+        await assertWorkoutOwned(conn, (sample.rows[0] as any).workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: "DELETE FROM locationSamples WHERE id = ?",
           args: [input.id]
@@ -2050,9 +2147,10 @@ export const nessaDbRouter = createTRPCRouter({
 
   createWorkoutSplit: nessaProcedure
     .input(workoutSplitSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        await assertWorkoutOwned(conn, input.workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: `INSERT INTO workoutSplits (id, workoutId, splitNumber, distanceMeters, durationSeconds, startTimestamp, endTimestamp, averageHeartRate, averagePace, elevationGain, elevationLoss)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -2082,9 +2180,17 @@ export const nessaDbRouter = createTRPCRouter({
 
   updateWorkoutSplit: nessaProcedure
     .input(workoutSplitSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        const split = await conn.execute({
+          sql: "SELECT workoutId FROM workoutSplits WHERE id = ?",
+          args: [input.id]
+        });
+        if (split.rows.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Workout split not found" });
+        }
+        await assertWorkoutOwned(conn, (split.rows[0] as any).workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: `UPDATE workoutSplits SET splitNumber = ?, distanceMeters = ?, durationSeconds = ?, startTimestamp = ?, endTimestamp = ?, averageHeartRate = ?, averagePace = ?, elevationGain = ?, elevationLoss = ? WHERE id = ?`,
           args: [
@@ -2112,9 +2218,17 @@ export const nessaDbRouter = createTRPCRouter({
 
   deleteWorkoutSplit: nessaProcedure
     .input(workoutSplitSchema.pick({ id: true }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        const split = await conn.execute({
+          sql: "SELECT workoutId FROM workoutSplits WHERE id = ?",
+          args: [input.id]
+        });
+        if (split.rows.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Workout split not found" });
+        }
+        await assertWorkoutOwned(conn, (split.rows[0] as any).workoutId, ctx.nessaUserId);
         await conn.execute({
           sql: "DELETE FROM workoutSplits WHERE id = ?",
           args: [input.id]
@@ -2131,14 +2245,18 @@ export const nessaDbRouter = createTRPCRouter({
 
   createExerciseLibrary: nessaProcedure
     .input(exerciseLibrarySchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId !== ctx.nessaUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = NessaConnectionFactory();
         await conn.execute({
-          sql: `INSERT INTO exerciseLibrary (id, name, category, muscleGroups, equipment, instructions, defaultSets, defaultReps, defaultRestSeconds, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          sql: `INSERT INTO exerciseLibrary (id, userId, name, category, muscleGroups, equipment, instructions, defaultSets, defaultReps, defaultRestSeconds, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           args: [
             input.id,
+            input.userId,
             input.name,
             input.category,
             input.muscleGroups ?? null,
@@ -2162,9 +2280,10 @@ export const nessaDbRouter = createTRPCRouter({
 
   updateExerciseLibrary: nessaProcedure
     .input(exerciseLibrarySchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        await assertExerciseLibraryOwned(conn, input.id, ctx.nessaUserId);
         await conn.execute({
           sql: `UPDATE exerciseLibrary SET name = ?, category = ?, muscleGroups = ?, equipment = ?, instructions = ?, defaultSets = ?, defaultReps = ?, defaultRestSeconds = ?, notes = ?, updatedAt = datetime('now') WHERE id = ?`,
           args: [
@@ -2192,9 +2311,10 @@ export const nessaDbRouter = createTRPCRouter({
 
   deleteExerciseLibrary: nessaProcedure
     .input(exerciseIdSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        await assertExerciseLibraryOwned(conn, input.id, ctx.nessaUserId);
         await conn.execute({
           sql: "DELETE FROM exerciseLibrary WHERE id = ?",
           args: [input.id]
@@ -2211,7 +2331,10 @@ export const nessaDbRouter = createTRPCRouter({
 
   createAuthProvider: nessaProcedure
     .input(providerSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId !== ctx.nessaUserId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "User mismatch" });
+      }
       try {
         const conn = NessaConnectionFactory();
         await conn.execute({
@@ -2239,9 +2362,10 @@ export const nessaDbRouter = createTRPCRouter({
 
   updateAuthProvider: nessaProcedure
     .input(providerSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        await assertAuthProviderOwned(conn, input.id, ctx.nessaUserId);
         await conn.execute({
           sql: `UPDATE authProviders SET provider = ?, providerUserId = ?, email = ?, displayName = ?, avatarUrl = ?, lastUsedAt = datetime('now') WHERE id = ?`,
           args: [
@@ -2265,9 +2389,10 @@ export const nessaDbRouter = createTRPCRouter({
 
   deleteAuthProvider: nessaProcedure
     .input(providerSchema.pick({ id: true }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const conn = NessaConnectionFactory();
+        await assertAuthProviderOwned(conn, input.id, ctx.nessaUserId);
         await conn.execute({
           sql: "DELETE FROM authProviders WHERE id = ?",
           args: [input.id]
@@ -2318,12 +2443,19 @@ export const nessaDbRouter = createTRPCRouter({
 
         if (input.exerciseLibrary?.length) {
           for (const exercise of input.exerciseLibrary) {
+            if (exercise.userId !== ctx.nessaUserId) {
+              throw new TRPCError({
+                code: "FORBIDDEN",
+                message: "User mismatch"
+              });
+            }
             await conn.execute({
-              sql: `INSERT INTO exerciseLibrary (id, name, category, muscleGroups, equipment, instructions, defaultSets, defaultReps, defaultRestSeconds, notes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(id) DO UPDATE SET name = excluded.name, category = excluded.category, muscleGroups = excluded.muscleGroups, equipment = excluded.equipment, instructions = excluded.instructions, defaultSets = excluded.defaultSets, defaultReps = excluded.defaultReps, defaultRestSeconds = excluded.defaultRestSeconds, notes = excluded.notes, updatedAt = datetime('now')`,
+              sql: `INSERT INTO exerciseLibrary (id, userId, name, category, muscleGroups, equipment, instructions, defaultSets, defaultReps, defaultRestSeconds, notes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET userId = excluded.userId, name = excluded.name, category = excluded.category, muscleGroups = excluded.muscleGroups, equipment = excluded.equipment, instructions = excluded.instructions, defaultSets = excluded.defaultSets, defaultReps = excluded.defaultReps, defaultRestSeconds = excluded.defaultRestSeconds, notes = excluded.notes, updatedAt = datetime('now')`,
               args: [
                 exercise.id,
+                exercise.userId,
                 exercise.name,
                 exercise.category,
                 exercise.muscleGroups ?? null,

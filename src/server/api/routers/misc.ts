@@ -40,11 +40,12 @@ export function sanitizeS3PathComponent(value: string): string {
     .slice(0, 255);
 }
 
-/** Verify that the S3 key belongs to the authenticated user */
-function assertS3KeyOwnership(key: string, userId: string): void {
+/** Verify that the S3 key belongs to the authenticated user.
+ * Exported for direct regression testing (p8-001/p8-008). */
+export function assertS3KeyOwnership(key: string, userId: string | null): void {
   // Keys should be scoped by user ID: attachments/{userId}/... or avatars/{userId}/...
   const parts = key.split("/");
-  if (parts.length < 2 || parts[1] !== userId) {
+  if (!userId || parts.length < 2 || parts[1] !== userId) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Access denied: S3 object does not belong to user"

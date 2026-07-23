@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../utils";
+import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "../utils";
 import { ConnectionFactory } from "~/server/utils";
 import { withCacheAndStale } from "~/server/cache";
 import { incrementPostReadSchema } from "../schemas/blog";
@@ -81,7 +81,7 @@ export const blogRouter = createTRPCRouter({
     return getAllPostsData(isAdmin);
   }),
 
-  incrementPostRead: publicProcedure
+  incrementPostRead: csrfProtectedProcedure
     .input(incrementPostReadSchema)
     .mutation(async ({ input }) => {
       const conn = ConnectionFactory();

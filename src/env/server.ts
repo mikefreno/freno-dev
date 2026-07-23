@@ -49,6 +49,7 @@ const serverEnvSchema = z.object({
   VITE_DOWNLOAD_BUCKET_STRING: z.string().min(1),
   VITE_GOOGLE_CLIENT_ID: z.string().min(1),
   VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE: z.string().min(1),
+  GOOGLE_CLIENT_ID: z.string().min(1),
   VITE_GITHUB_CLIENT_ID: z.string().min(1),
   VITE_WEBSOCKET: z.string().min(1),
   VITE_INFILL_ENDPOINT: z.string().min(1),
@@ -57,6 +58,9 @@ const serverEnvSchema = z.object({
   NESSA_DB_URL: z.string().min(1),
   NESSA_DB_TOKEN: z.string().min(1),
   NESSA_JWT_SECRET: z.string().min(1),
+  // p8-005: dedicated Lineage game JWT signing secret, isolated from the
+  // web JWT_SECRET_KEY so a web admin secret cannot mint Lineage tokens.
+  LINEAGE_JWT_SECRET: z.string().min(32),
   APPLE_CLIENT_ID: z.string().min(1).optional(),
   VITE_TURNSTILE_SITE_KEY: z.string().min(1),
   TURNSTILE_SECRET_KEY: z.string().min(1)
@@ -160,12 +164,14 @@ export const getMissingEnvVars = (): string[] => {
     "VITE_DOWNLOAD_BUCKET_STRING",
     "VITE_GOOGLE_CLIENT_ID",
     "VITE_GOOGLE_CLIENT_ID_MAGIC_DELVE",
+    "GOOGLE_CLIENT_ID",
     "VITE_GITHUB_CLIENT_ID",
     "VITE_WEBSOCKET",
     "REDIS_URL",
     "NESSA_DB_URL",
     "NESSA_DB_TOKEN",
-    "NESSA_JWT_SECRET"
+    "NESSA_JWT_SECRET",
+    "LINEAGE_JWT_SECRET"
   ];
 
   return requiredServerVars.filter((varName) => isMissingEnvVar(varName));

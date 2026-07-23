@@ -5,7 +5,7 @@ import type { Row } from "@libsql/client/web";
 import { SignJWT, jwtVerify } from "jose";
 import { env } from "~/env/server";
 import { ConnectionFactory } from "./db-connections";
-import { AUTH_CONFIG, expiryToSeconds, getAccessTokenExpiry } from "~/config";
+import { AUTH_CONFIG, LINEAGE_CONFIG, expiryToSeconds, getAccessTokenExpiry } from "~/config";
 
 export const authCookieName = "auth_token";
 
@@ -77,6 +77,43 @@ export async function getAuthPayloadFromEvent(
   if (!token) return null;
   return verifyAuthToken(token);
 }
+
+/**
+ * Verify a Lineage game (mobile-app) email JWT.
+ *
+ * p8-005: Lineage tokens are signed with the dedicated `LINEAGE_JWT_SECRET`
+ * (NOT the web `JWT_SECRET_KEY`) and carry distinct `iss: "lineage"` /
+ * `aud: "lineage-app"` claims. Enforcing the issuer + audience here guarantees
+ * that a token minted by the web app (which uses a different secret and no
+ * lineage claims) can never authenticate against a Lineage-protected endpoint,
+ * even if the two secrets were accidentally shared.
+ */
+export async function verifyLineageAuthToken(
+  token: string
+): Promise<LineageAuthTokenPayload | null> {
+  try {
+    const secret = new TextEncoder().encode(env.LINEAGE_JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret, {
+      issuer: LINEAGE_CONFIG.JWT_ISSUER,
+      audience: LINEAGE_CONFIG.JWT_AUDIENCE
+    });
+    if (!payload.userId) {
+      return null;
+    }
+    return {
+      userId: payload.userId as string,
+      email: (payload.email as string | null) ?? null
+    };
+  } catch (error) {
+    console.error("Lineage auth token verification failed:", error);
+    return null;
+  }
+}
+
+type LineageAuthTokenPayload = {
+  userId: string;
+  email: string | null;
+};
 
 export async function issueAuthToken({
   event,
@@ -194,7 +231,9 @@ export async function validateLineageRequest({
   const { provider, email } = userRow;
   if (provider === "email") {
     try {
-      const payload = await verifyAuthToken(auth_token);
+      // p8-005: Lineage email JWTs are signed with the dedicated
+      // LINEAGE_JWT_SECRET and enforce lineage issuer/audience claims.
+      const payload = await verifyLineageAuthToken(auth_token);
       if (!payload || email !== payload.email) {
         return false;
       }

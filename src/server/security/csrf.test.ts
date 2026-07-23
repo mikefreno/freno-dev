@@ -8,9 +8,12 @@ import {
   generateCSRFToken,
   setCSRFToken,
   validateCSRFToken,
-  csrfProtection
+  csrfProtection,
+  csrfProtectedProcedure
 } from "~/server/security";
 import { createMockEvent } from "./test-utils";
+import { TRPCError } from "@trpc/server";
+import { initTRPC } from "@trpc/server";
 
 describe("CSRF Protection", () => {
   describe("generateCSRFToken", () => {
@@ -315,6 +318,244 @@ describe("CSRF Protection", () => {
 
       // Should validate 10000 tokens in less than 100ms
       expect(duration).toBeLessThan(100);
+    });
+  });
+
+  describe("csrfProtection middleware", () => {
+    // Build a minimal router with a CSRF-protected mutation for testing
+    const t = initTRPC.create();
+    const testRouter = t.router({
+      testMutation: t.procedure
+        .use(csrfProtection)
+        .mutation(async () => ({ success: true })),
+    });
+    const createCaller = t.createCallerFactory(testRouter);
+
+    // The csrfProtection middleware accesses ctx.event.nativeEvent (the H3Event).
+    // In production ctx.event is an APIEvent wrapping the H3Event, so we wrap
+    // our mock event the same way: { event: { nativeEvent: mockEvent } }.
+    function makeCtx(event: ReturnType<typeof createMockEvent>) {
+      return { event: { nativeEvent: event } };
+    }
+
+    it("should allow mutation with valid CSRF header and cookie", async () => {
+      const token = generateCSRFToken();
+      const event = createMockEvent({
+        headers: { "x-csrf-token": token },
+        cookies: { "csrf-token": token }
+      });
+
+      const caller = createCaller(makeCtx(event));
+      const result = await caller.testMutation(null as any);
+      expect(result).toEqual({ success: true });
+    });
+
+    it("should reject mutation without CSRF header (FORBIDDEN)", async () => {
+      const event = createMockEvent({
+        cookies: { "csrf-token": "some-token" }
+        // No x-csrf-token header
+      });
+
+      const caller = createCaller(makeCtx(event));
+      await expect(caller.testMutation(null as any)).rejects.toThrow(TRPCError);
+      try {
+        await caller.testMutation(null as any);
+      } catch (error: any) {
+        expect(error.code).toBe("FORBIDDEN");
+        expect(error.message).toBe("Invalid CSRF token");
+      }
+    });
+
+    it("should reject mutation without CSRF cookie (FORBIDDEN)", async () => {
+      const event = createMockEvent({
+        headers: { "x-csrf-token": "some-token" }
+        // No csrf-token cookie
+      });
+
+      const caller = createCaller(makeCtx(event));
+      await expect(caller.testMutation(null as any)).rejects.toThrow(TRPCError);
+      try {
+        await caller.testMutation(null as any);
+      } catch (error: any) {
+        expect(error.code).toBe("FORBIDDEN");
+        expect(error.message).toBe("Invalid CSRF token");
+      }
+    });
+
+    it("should reject mutation with mismatched tokens (FORBIDDEN)", async () => {
+      const event = createMockEvent({
+        headers: { "x-csrf-token": "token-from-header" },
+        cookies: { "csrf-token": "token-from-cookie" }
+      });
+
+      const caller = createCaller(makeCtx(event));
+      await expect(caller.testMutation(null as any)).rejects.toThrow(TRPCError);
+      try {
+        await caller.testMutation(null as any);
+      } catch (error: any) {
+        expect(error.code).toBe("FORBIDDEN");
+        expect(error.message).toBe("Invalid CSRF token");
+      }
+    });
+
+    it("should reject tokens from a different session", async () => {
+      const sessionAToken = generateCSRFToken();
+      const sessionBToken = generateCSRFToken();
+
+      // Session A's cookie with Session B's header token
+      const event = createMockEvent({
+        headers: { "x-csrf-token": sessionBToken },
+        cookies: { "csrf-token": sessionAToken }
+      });
+
+      const caller = createCaller(makeCtx(event));
+      await expect(caller.testMutation(null as any)).rejects.toThrow(TRPCError);
+      try {
+        await caller.testMutation(null as any);
+      } catch (error: any) {
+        expect(error.code).toBe("FORBIDDEN");
+      }
+    });
+
+    it("should reject empty header token", async () => {
+      const event = createMockEvent({
+        headers: { "x-csrf-token": "" },
+        cookies: { "csrf-token": "valid-token" }
+      });
+
+      const caller = createCaller(makeCtx(event));
+      await expect(caller.testMutation(null as any)).rejects.toThrow(TRPCError);
+      try {
+        await caller.testMutation(null as any);
+      } catch (error: any) {
+        expect(error.code).toBe("FORBIDDEN");
+      }
+    });
+
+    it("should reject empty cookie token", async () => {
+      const event = createMockEvent({
+        headers: { "x-csrf-token": "valid-token" },
+        cookies: { "csrf-token": "" }
+      });
+
+      const caller = createCaller(makeCtx(event));
+      await expect(caller.testMutation(null as any)).rejects.toThrow(TRPCError);
+      try {
+        await caller.testMutation(null as any);
+      } catch (error: any) {
+        expect(error.code).toBe("FORBIDDEN");
+      }
+    });
+  });
+
+  describe("csrfProtectedProcedure", () => {
+    // Build a router using csrfProtectedProcedure for testing
+    const t = initTRPC.create();
+    const testRouter = t.router({
+      protectedMutation: csrfProtectedProcedure.mutation(async () => ({
+        success: true,
+      })),
+      protectedMutationWithInput: csrfProtectedProcedure
+        .input((val: unknown) => {
+          if (typeof val === "string") return val;
+          throw new Error("Input must be a string");
+        })
+        .mutation(async ({ input }) => ({ received: input })),
+    });
+    const createCaller = t.createCallerFactory(testRouter);
+
+    function makeCtx(event: ReturnType<typeof createMockEvent>) {
+      return { event: { nativeEvent: event } };
+    }
+
+    it("should be a procedure that applies CSRF protection", () => {
+      expect(csrfProtectedProcedure).toBeDefined();
+      expect(typeof csrfProtectedProcedure.input).toBe("function");
+      expect(typeof csrfProtectedProcedure.mutation).toBe("function");
+      expect(typeof csrfProtectedProcedure.query).toBe("function");
+    });
+
+    it("should reject mutation requests without CSRF token", async () => {
+      const event = createMockEvent({
+        headers: {},
+        cookies: {}
+      });
+
+      const caller = createCaller(makeCtx(event));
+      await expect(caller.protectedMutation(null as any)).rejects.toThrow(
+        TRPCError
+      );
+      try {
+        await caller.protectedMutation(null as any);
+      } catch (error: any) {
+        expect(error.code).toBe("FORBIDDEN");
+        expect(error.message).toBe("Invalid CSRF token");
+      }
+    });
+
+    it("should allow mutation requests with valid CSRF token", async () => {
+      const token = generateCSRFToken();
+      const event = createMockEvent({
+        headers: { "x-csrf-token": token },
+        cookies: { "csrf-token": token }
+      });
+
+      const caller = createCaller(makeCtx(event));
+      const result = await caller.protectedMutation(null as any);
+      expect(result).toEqual({ success: true });
+    });
+
+    it("should work with input validation before CSRF check", async () => {
+      const token = generateCSRFToken();
+      const event = createMockEvent({
+        headers: { "x-csrf-token": token },
+        cookies: { "csrf-token": token }
+      });
+
+      const caller = createCaller(makeCtx(event));
+      const result = await caller.protectedMutationWithInput("test-input");
+      expect(result).toEqual({ received: "test-input" });
+    });
+  });
+
+  describe("CSRF end-to-end flow", () => {
+    it("should issue CSRF token on setCSRFToken then validate it", () => {
+      const event = createMockEvent({});
+
+      // Step 1: Login issues CSRF token
+      const token = setCSRFToken(event);
+      expect(token).toBeDefined();
+      expect(typeof token).toBe("string");
+
+      // Step 2: Subsequent mutation sends token back
+      const mutationEvent = createMockEvent({
+        headers: { "x-csrf-token": token },
+        cookies: { "csrf-token": token }
+      });
+
+      const isValid = validateCSRFToken(mutationEvent);
+      expect(isValid).toBe(true);
+    });
+
+    it("should reject cross-origin POST without CSRF token", () => {
+      // Simulated cross-site POST: attacker can read cookies but not set headers
+      const attackEvent = createMockEvent({
+        // No x-csrf-token header (cross-origin requests can't set custom headers)
+        cookies: { "csrf-token": "victim-token" }
+      });
+
+      const isValid = validateCSRFToken(attackEvent);
+      expect(isValid).toBe(false);
+    });
+
+    it("should reject forged CSRF token", () => {
+      const attackEvent = createMockEvent({
+        headers: { "x-csrf-token": "forged-token-12345" },
+        cookies: { "csrf-token": "real-token-67890" }
+      });
+
+      const isValid = validateCSRFToken(attackEvent);
+      expect(isValid).toBe(false);
     });
   });
 });

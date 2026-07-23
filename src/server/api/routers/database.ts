@@ -1,7 +1,8 @@
 import {
   createTRPCRouter,
   publicProcedure,
-  protectedProcedure
+  protectedProcedure,
+  csrfProtectedProcedure
 } from "../utils";
 import { z } from "zod";
 import { ConnectionFactory } from "~/server/utils";
@@ -57,7 +58,7 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  addCommentReaction: publicProcedure
+  addCommentReaction: csrfProtectedProcedure
     .input(toggleCommentReactionMutationSchema)
     .mutation(async ({ input }) => {
       try {
@@ -86,7 +87,7 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  removeCommentReaction: publicProcedure
+  removeCommentReaction: csrfProtectedProcedure
     .input(toggleCommentReactionMutationSchema)
     .mutation(async ({ input }) => {
       try {
@@ -134,7 +135,7 @@ export const databaseRouter = createTRPCRouter({
     }
   }),
 
-  deleteComment: protectedProcedure
+  deleteComment: csrfProtectedProcedure
     .input(deleteCommentWithTypeSchema)
     .mutation(async ({ input, ctx }) => {
       try {
@@ -363,7 +364,7 @@ export const databaseRouter = createTRPCRouter({
       );
     }),
 
-  createPost: publicProcedure
+  createPost: csrfProtectedProcedure
     .input(
       z.object({
         category: z.literal("blog"),
@@ -426,7 +427,7 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  updatePost: publicProcedure
+  updatePost: csrfProtectedProcedure
     .input(
       z.object({
         id: z.number(),
@@ -545,7 +546,7 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  deletePost: publicProcedure.input(idSchema).mutation(async ({ input }) => {
+  deletePost: csrfProtectedProcedure.input(idSchema).mutation(async ({ input }) => {
     try {
       const conn = ConnectionFactory();
 
@@ -581,7 +582,7 @@ export const databaseRouter = createTRPCRouter({
     }
   }),
 
-  addPostLike: publicProcedure
+  addPostLike: csrfProtectedProcedure
     .input(togglePostLikeMutationSchema)
     .mutation(async ({ input }) => {
       try {
@@ -607,7 +608,7 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  removePostLike: publicProcedure
+  removePostLike: csrfProtectedProcedure
     .input(togglePostLikeMutationSchema)
     .mutation(async ({ input }) => {
       try {
@@ -716,7 +717,7 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  updateUserImage: publicProcedure
+  updateUserImage: csrfProtectedProcedure
     .input(updateUserImageSchema)
     .mutation(async ({ input }) => {
       try {
@@ -738,7 +739,7 @@ export const databaseRouter = createTRPCRouter({
       }
     }),
 
-  updateUserEmail: publicProcedure
+  updateUserEmail: csrfProtectedProcedure
     .input(updateUserEmailSchema)
     .mutation(async ({ input }) => {
       try {

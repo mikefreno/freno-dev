@@ -2,6 +2,7 @@ import { createTRPCRouter, nessaProcedure } from "../utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { NessaConnectionFactory } from "~/server/database";
+import { sanitizeCommunityContent } from "~/server/lib/sanitize";
 import {
   requireClubMembership,
   resolveClubIdFromPost,
@@ -1071,6 +1072,11 @@ export const nessaCommunityRouter = createTRPCRouter({
           const conn = NessaConnectionFactory();
           await requireClubMembership(conn, input.clubId, ctx.nessaUserId);
 
+          // Sanitize content before storage — strip all HTML (p8-012).
+          // Community content is plain text; the iOS client renders with
+          // SwiftUI Text(), not a WebView.
+          const content = sanitizeCommunityContent(input.content);
+
           const postId = crypto.randomUUID();
           await conn.execute({
             sql: `INSERT INTO clubPosts (id, clubId, userId, content, postType, challengeId)
@@ -1079,7 +1085,7 @@ export const nessaCommunityRouter = createTRPCRouter({
               postId,
               input.clubId,
               ctx.nessaUserId,
-              input.content,
+              content,
               input.postType,
               input.challengeId ?? null
             ]
@@ -1219,11 +1225,15 @@ export const nessaCommunityRouter = createTRPCRouter({
           const conn = NessaConnectionFactory();
           const clubId = await resolveClubIdFromPost(conn, input.postId);
           await requireClubMembership(conn, clubId, ctx.nessaUserId);
+
+          // Sanitize content before storage — strip all HTML (p8-012).
+          const content = sanitizeCommunityContent(input.content);
+
           const commentId = crypto.randomUUID();
           await conn.execute({
             sql: `INSERT INTO clubPostComments (id, postId, userId, content)
                   VALUES (?, ?, ?, ?)`,
-            args: [commentId, input.postId, ctx.nessaUserId, input.content]
+            args: [commentId, input.postId, ctx.nessaUserId, content]
           });
           return { success: true, commentId };
         } catch (error) {

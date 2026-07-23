@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../../utils";
+import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "../../utils";
 import { z } from "zod";
 import {
   LineageConnectionFactory,
@@ -9,6 +9,7 @@ import {
   LINEAGE_JWT_EXPIRY,
 } from "~/server/utils";
 import { env } from "~/env/server";
+import { LINEAGE_CONFIG } from "~/config";
 import { TRPCError } from "@trpc/server";
 import { SignJWT, jwtVerify, importJWK } from "jose";
 import { LibsqlError } from "@libsql/client/web";
@@ -54,9 +55,14 @@ export const lineageAuthRouter = createTRPCRouter({
         });
       }
 
-      const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
+      // p8-005: sign with the dedicated Lineage JWT secret (not the web
+      // secret) and stamp distinct issuer/audience claims so the token
+      // cannot be replayed against the web app (and vice versa).
+      const secret = new TextEncoder().encode(env.LINEAGE_JWT_SECRET);
       const token = await new SignJWT({ userId: user.id, email: user.email })
         .setProtectedHeader({ alg: "HS256" })
+        .setIssuer(LINEAGE_CONFIG.JWT_ISSUER)
+        .setAudience(LINEAGE_CONFIG.JWT_AUDIENCE)
         .setExpirationTime(LINEAGE_JWT_EXPIRY)
         .sign(secret);
 
@@ -125,7 +131,7 @@ export const lineageAuthRouter = createTRPCRouter({
       }
     }),
 
-  emailVerification: publicProcedure
+  emailVerification: csrfProtectedProcedure
     .input(
       z.object({
         email: z.string().email(),
@@ -140,8 +146,14 @@ export const lineageAuthRouter = createTRPCRouter({
       let dbToken;
 
       try {
-        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-        const { payload } = await jwtVerify(token, secret);
+        // p8-005: verification enforces the Lineage-dedicated secret AND
+        // the lineage issuer/audience claims, so a web-secret token (which
+        // lacks these claims) is always rejected.
+        const secret = new TextEncoder().encode(env.LINEAGE_JWT_SECRET);
+        const { payload } = await jwtVerify(token, secret, {
+          issuer: LINEAGE_CONFIG.JWT_ISSUER,
+          audience: LINEAGE_CONFIG.JWT_AUDIENCE,
+        });
 
         if (payload.email !== userEmail) {
           throw new TRPCError({
@@ -205,7 +217,7 @@ export const lineageAuthRouter = createTRPCRouter({
       }
     }),
 
-  refreshVerification: publicProcedure
+  refreshVerification: csrfProtectedProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
       const { email } = input;
@@ -242,14 +254,19 @@ export const lineageAuthRouter = createTRPCRouter({
       const { token } = input;
 
       try {
-        const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-        const { payload } = await jwtVerify(token, secret);
+        const secret = new TextEncoder().encode(env.LINEAGE_JWT_SECRET);
+        const { payload } = await jwtVerify(token, secret, {
+          issuer: LINEAGE_CONFIG.JWT_ISSUER,
+          audience: LINEAGE_CONFIG.JWT_AUDIENCE,
+        });
 
         const newToken = await new SignJWT({
           userId: payload.userId,
           email: payload.email,
         })
           .setProtectedHeader({ alg: "HS256" })
+          .setIssuer(LINEAGE_CONFIG.JWT_ISSUER)
+          .setAudience(LINEAGE_CONFIG.JWT_AUDIENCE)
           .setExpirationTime(LINEAGE_JWT_EXPIRY)
           .sign(secret);
 
@@ -529,7 +546,7 @@ export const lineageAuthRouter = createTRPCRouter({
       }
     }),
 
-  appleGetEmail: publicProcedure
+  appleGetEmail: csrfProtectedProcedure
     .input(z.object({ userString: z.string() }))
     .mutation(async ({ input }) => {
       const { userString } = input;

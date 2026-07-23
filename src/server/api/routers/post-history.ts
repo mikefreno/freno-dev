@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../utils";
+import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "../utils";
 import { ConnectionFactory } from "~/server/utils";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -74,7 +74,7 @@ async function reconstructContent(
 }
 
 export const postHistoryRouter = createTRPCRouter({
-  save: publicProcedure
+  save: csrfProtectedProcedure
     .input(
       z.object({
         postId: z.number(),

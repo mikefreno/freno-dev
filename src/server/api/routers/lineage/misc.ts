@@ -1,11 +1,11 @@
-import { createTRPCRouter, publicProcedure, adminProcedure } from "../../utils";
+import { createTRPCRouter, publicProcedure, adminProcedure, csrfProtectedProcedure } from "../../utils";
 import { z } from "zod";
 import { LineageConnectionFactory } from "~/server/utils";
 import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
 
 export const lineageMiscRouter = createTRPCRouter({
-  analytics: publicProcedure
+  analytics: csrfProtectedProcedure
     .input(
       z.object({
         playerID: z.string(),
@@ -61,7 +61,7 @@ export const lineageMiscRouter = createTRPCRouter({
       }
     }),
 
-  tokens: publicProcedure
+  tokens: csrfProtectedProcedure
     .input(z.object({ token: z.string() }))
     .mutation(async ({ input }) => {
       const { token } = input;

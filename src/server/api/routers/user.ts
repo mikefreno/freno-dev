@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../utils";
+import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "../utils";
 import { TRPCError } from "@trpc/server";
 import { ConnectionFactory, hashPassword, checkPassword } from "~/server/utils";
 import type { User } from "~/db/types";
@@ -45,7 +45,7 @@ export const userRouter = createTRPCRouter({
     return toUserProfile(user);
   }),
 
-  updateEmail: publicProcedure
+  updateEmail: csrfProtectedProcedure
     .input(updateEmailSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
@@ -75,7 +75,7 @@ export const userRouter = createTRPCRouter({
       return toUserProfile(user);
     }),
 
-  updateDisplayName: publicProcedure
+  updateDisplayName: csrfProtectedProcedure
     .input(updateDisplayNameSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
@@ -104,7 +104,7 @@ export const userRouter = createTRPCRouter({
       return toUserProfile(user);
     }),
 
-  updateProfileImage: publicProcedure
+  updateProfileImage: csrfProtectedProcedure
     .input(updateProfileImageSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
@@ -133,7 +133,7 @@ export const userRouter = createTRPCRouter({
       return toUserProfile(user);
     }),
 
-  changePassword: publicProcedure
+  changePassword: csrfProtectedProcedure
     .input(changePasswordSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
@@ -197,7 +197,7 @@ export const userRouter = createTRPCRouter({
       return { success: true, message: "success" };
     }),
 
-  setPassword: publicProcedure
+  setPassword: csrfProtectedProcedure
     .input(setPasswordSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
@@ -300,7 +300,7 @@ export const userRouter = createTRPCRouter({
       return { success: true, message: "success" };
     }),
 
-  deleteAccount: publicProcedure
+  deleteAccount: csrfProtectedProcedure
     .input(deleteAccountSchema)
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
@@ -382,7 +382,7 @@ export const userRouter = createTRPCRouter({
     }));
   }),
 
-  unlinkProvider: publicProcedure
+  unlinkProvider: csrfProtectedProcedure
     .input(
       z.object({
         provider: z.enum(["email", "google", "github"])

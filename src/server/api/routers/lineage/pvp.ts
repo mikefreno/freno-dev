@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../../utils";
+import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "../../utils";
 import { z } from "zod";
 import { LineageConnectionFactory } from "~/server/utils";
 import { TRPCError } from "@trpc/server";
@@ -21,7 +21,7 @@ const characterSchema = z.object({
 });
 
 export const lineagePvpRouter = createTRPCRouter({
-  registerCharacter: publicProcedure
+  registerCharacter: csrfProtectedProcedure
     .input(
       z.object({
         character: characterSchema,
@@ -190,7 +190,7 @@ export const lineagePvpRouter = createTRPCRouter({
     }
   }),
 
-  battleResult: publicProcedure
+  battleResult: csrfProtectedProcedure
     .input(
       z.object({
         winnerLinkID: z.string(),

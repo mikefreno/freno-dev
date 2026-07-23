@@ -32,6 +32,7 @@ import {
 import {
   setCSRFToken,
   csrfProtection,
+  csrfProtectedProcedure,
   getClientIP,
   getUserAgent,
   getAuditContext,
@@ -784,7 +785,7 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  emailVerification: publicProcedure
+  emailVerification: csrfProtectedProcedure
     .input(
       z.object({
         email: z.string().email(),
@@ -1245,7 +1246,7 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  requestPasswordReset: publicProcedure
+  requestPasswordReset: csrfProtectedProcedure
     .input(requestPasswordResetSchema)
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
@@ -1356,7 +1357,7 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  resetPassword: publicProcedure
+  resetPassword: csrfProtectedProcedure
     .input(resetPasswordSchema)
     .mutation(async ({ input, ctx }) => {
       const { token, newPassword, newPasswordConfirmation } = input;
@@ -1453,7 +1454,7 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  resendEmailVerification: publicProcedure
+  resendEmailVerification: csrfProtectedProcedure
     .input(requestPasswordResetSchema)
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
@@ -1573,7 +1574,7 @@ export const authRouter = createTRPCRouter({
       }
     }),
 
-  refreshToken: publicProcedure.mutation(async ({ ctx }) => {
+  refreshToken: csrfProtectedProcedure.mutation(async ({ ctx }) => {
     try {
       const event = getH3Event(ctx);
       const authToken = getAuthTokenFromEvent(event);
@@ -1626,7 +1627,7 @@ export const authRouter = createTRPCRouter({
     }
   }),
 
-  signOut: publicProcedure.mutation(async ({ ctx }) => {
+  signOut: csrfProtectedProcedure.mutation(async ({ ctx }) => {
     try {
       const event = getH3Event(ctx);
       const auth = await checkAuthStatus(event);

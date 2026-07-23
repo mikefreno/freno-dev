@@ -89,16 +89,9 @@ export function validatePassword(password: string): {
   let strength: PasswordStrength = "weak";
 
   if (errors.length === 0) {
-    if (includesSpecial) {
-      if (password.length >= 14) {
-        strength = "strong";
-      } else if (password.length >= VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
-        strength = "good";
-      }
-    }
-    if (password.length >= 16) {
+    if (password.length >= 20) {
       strength = "strong";
-    } else if (password.length >= 12) {
+    } else if (password.length >= 16) {
       strength = "good";
     } else if (password.length >= VALIDATION_CONFIG.MIN_PASSWORD_LENGTH) {
       strength = "fair";

@@ -24,11 +24,15 @@ export function createMockEvent(options: {
     url = "http://localhost:3000/"
   } = options;
 
+  // Build the cookie header string from the cookies object only
   const cookieString = Object.entries(cookies)
     .map(([key, value]) => `${key}=${value}`)
     .join("; ");
 
-  const allHeaders = {
+  // Build request headers: spread individual headers, then add the cookie header
+  // This keeps headers and cookies separate — headers stay as headers,
+  // cookies are serialized into the Cookie header only.
+  const allHeaders: Record<string, string> = {
     ...headers,
     ...(cookieString ? { cookie: cookieString } : {})
   };
