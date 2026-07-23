@@ -1,4 +1,30 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "has": [{ "type": "host", "value": "gaze.freno.me" }],
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/api/(.*)",
+      "has": [{ "type": "host", "value": "inputhalo.freno.me" }],
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/api/(.*)",
+      "has": [{ "type": "host", "value": "nessa.freno.me" }],
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/api/(.*)",
+      "has": [{ "type": "host", "value": "lineage.freno.me" }],
+      "destination": "/api/$1"
+    },
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "nessa.freno.me" }], "destination": "/nessa/$1" },
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "lineage.freno.me" }], "destination": "/lineage/$1" },
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "gaze.freno.me" }], "destination": "/gaze/$1" },
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "inputhalo.freno.me" }], "destination": "/inputhalo/$1" }
+  ],
   "headers": [
     {
       "source": "/",

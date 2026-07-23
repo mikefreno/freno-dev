@@ -15,6 +15,7 @@ import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
 import { BarsProvider, useBars } from "./context/bars";
 import { DarkModeProvider } from "./context/darkMode";
 import { AuthProvider } from "./context/auth";
+import { SiteProvider } from "./context/SiteContext";
 import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 import { MOBILE_CONFIG } from "./config";
 import CustomScrollbar from "./components/CustomScrollbar";
@@ -203,17 +204,19 @@ export default function App() {
         )}
       >
         <DarkModeProvider>
-          <BarsProvider>
-            <Router
-              root={(props) => (
-                <AuthProvider>
-                  <AppLayout>{props.children}</AppLayout>
-                </AuthProvider>
-              )}
-            >
-              <FileRoutes />
-            </Router>
-          </BarsProvider>
+          <SiteProvider>
+            <BarsProvider>
+              <Router
+                root={(props) => (
+                  <AuthProvider>
+                    <AppLayout>{props.children}</AppLayout>
+                  </AuthProvider>
+                )}
+              >
+                <FileRoutes />
+              </Router>
+            </BarsProvider>
+          </SiteProvider>
         </DarkModeProvider>
       </ErrorBoundary>
     </MetaProvider>
