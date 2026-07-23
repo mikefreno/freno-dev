@@ -57,10 +57,9 @@ const serverEnvSchema = z.object({
   NESSA_DB_URL: z.string().min(1),
   NESSA_DB_TOKEN: z.string().min(1),
   NESSA_JWT_SECRET: z.string().min(1),
-  // p8-005: dedicated Lineage game JWT signing secret, isolated from the
-  // web JWT_SECRET_KEY so a web admin secret cannot mint Lineage tokens.
   LINEAGE_JWT_SECRET: z.string().min(32),
-  APPLE_CLIENT_ID: z.string().min(1).optional(),
+  APPLE_CLIENT_ID_NESSA: z.string().min(1).optional(),
+  APPLE_CLIENT_ID_LINEAGE: z.string().min(1).optional(),
   VITE_TURNSTILE_SITE_KEY: z.string().min(1),
   TURNSTILE_SECRET_KEY: z.string().min(1)
 });

@@ -426,8 +426,8 @@ export const lineageAuthRouter = createTRPCRouter({
         algorithms: ["RS256"],
         issuer: "https://appleid.apple.com"
       };
-      if (env.APPLE_CLIENT_ID) {
-        jwtOptions.audience = env.APPLE_CLIENT_ID;
+      if (env.APPLE_CLIENT_ID_LINEAGE) {
+        jwtOptions.audience = env.APPLE_CLIENT_ID_LINEAGE;
       }
       const { payload: tokenPayload } = await jwtVerify(
         input.idToken,

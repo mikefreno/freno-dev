@@ -26,7 +26,10 @@ export async function assertWorkoutOwned(
     throw new TRPCError({ code: "NOT_FOUND", message: "Workout not found" });
   }
   if ((row.rows[0] as any).userId !== userId) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Not the workout owner" });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Not the workout owner"
+    });
   }
 }
 
@@ -41,10 +44,16 @@ export async function assertAuthProviderOwned(
     args: [providerId]
   });
   if (row.rows.length === 0) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Auth provider not found" });
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Auth provider not found"
+    });
   }
   if ((row.rows[0] as any).userId !== userId) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Not the auth provider owner" });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Not the auth provider owner"
+    });
   }
 }
 
@@ -62,7 +71,10 @@ export async function assertExerciseLibraryOwned(
     throw new TRPCError({ code: "NOT_FOUND", message: "Exercise not found" });
   }
   if ((row.rows[0] as any).userId !== userId) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Not the exercise owner" });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Not the exercise owner"
+    });
   }
 }
 
@@ -708,8 +720,8 @@ export const nessaDbRouter = createTRPCRouter({
           algorithms: ["RS256"],
           issuer: "https://appleid.apple.com"
         };
-        if (env.APPLE_CLIENT_ID) {
-          jwtOptions.audience = env.APPLE_CLIENT_ID;
+        if (env.APPLE_CLIENT_ID_NESSA) {
+          jwtOptions.audience = env.APPLE_CLIENT_ID_NESSA;
         }
         const { payload: tokenPayload } = await jwtVerify(
           input.idToken,
@@ -2005,9 +2017,16 @@ export const nessaDbRouter = createTRPCRouter({
           args: [input.id]
         });
         if (sample.rows.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Heart rate sample not found" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Heart rate sample not found"
+          });
         }
-        await assertWorkoutOwned(conn, (sample.rows[0] as any).workoutId, ctx.nessaUserId);
+        await assertWorkoutOwned(
+          conn,
+          (sample.rows[0] as any).workoutId,
+          ctx.nessaUserId
+        );
         await conn.execute({
           sql: `UPDATE heartRateSamples SET timestamp = ?, bpm = ?, source = ? WHERE id = ?`,
           args: [input.timestamp, input.bpm, input.source ?? null, input.id]
@@ -2032,9 +2051,16 @@ export const nessaDbRouter = createTRPCRouter({
           args: [input.id]
         });
         if (sample.rows.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Heart rate sample not found" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Heart rate sample not found"
+          });
         }
-        await assertWorkoutOwned(conn, (sample.rows[0] as any).workoutId, ctx.nessaUserId);
+        await assertWorkoutOwned(
+          conn,
+          (sample.rows[0] as any).workoutId,
+          ctx.nessaUserId
+        );
         await conn.execute({
           sql: "DELETE FROM heartRateSamples WHERE id = ?",
           args: [input.id]
@@ -2091,9 +2117,16 @@ export const nessaDbRouter = createTRPCRouter({
           args: [input.id]
         });
         if (sample.rows.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Location sample not found" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Location sample not found"
+          });
         }
-        await assertWorkoutOwned(conn, (sample.rows[0] as any).workoutId, ctx.nessaUserId);
+        await assertWorkoutOwned(
+          conn,
+          (sample.rows[0] as any).workoutId,
+          ctx.nessaUserId
+        );
         await conn.execute({
           sql: `UPDATE locationSamples SET timestamp = ?, latitude = ?, longitude = ?, altitude = ?, horizontalAccuracy = ?, verticalAccuracy = ?, speed = ?, course = ? WHERE id = ?`,
           args: [
@@ -2128,9 +2161,16 @@ export const nessaDbRouter = createTRPCRouter({
           args: [input.id]
         });
         if (sample.rows.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Location sample not found" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Location sample not found"
+          });
         }
-        await assertWorkoutOwned(conn, (sample.rows[0] as any).workoutId, ctx.nessaUserId);
+        await assertWorkoutOwned(
+          conn,
+          (sample.rows[0] as any).workoutId,
+          ctx.nessaUserId
+        );
         await conn.execute({
           sql: "DELETE FROM locationSamples WHERE id = ?",
           args: [input.id]
@@ -2188,9 +2228,16 @@ export const nessaDbRouter = createTRPCRouter({
           args: [input.id]
         });
         if (split.rows.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Workout split not found" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Workout split not found"
+          });
         }
-        await assertWorkoutOwned(conn, (split.rows[0] as any).workoutId, ctx.nessaUserId);
+        await assertWorkoutOwned(
+          conn,
+          (split.rows[0] as any).workoutId,
+          ctx.nessaUserId
+        );
         await conn.execute({
           sql: `UPDATE workoutSplits SET splitNumber = ?, distanceMeters = ?, durationSeconds = ?, startTimestamp = ?, endTimestamp = ?, averageHeartRate = ?, averagePace = ?, elevationGain = ?, elevationLoss = ? WHERE id = ?`,
           args: [
@@ -2226,9 +2273,16 @@ export const nessaDbRouter = createTRPCRouter({
           args: [input.id]
         });
         if (split.rows.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Workout split not found" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Workout split not found"
+          });
         }
-        await assertWorkoutOwned(conn, (split.rows[0] as any).workoutId, ctx.nessaUserId);
+        await assertWorkoutOwned(
+          conn,
+          (split.rows[0] as any).workoutId,
+          ctx.nessaUserId
+        );
         await conn.execute({
           sql: "DELETE FROM workoutSplits WHERE id = ?",
           args: [input.id]
