@@ -56,7 +56,16 @@ const serverEnvSchema = z.object({
   REDIS_URL: z.string().min(1),
   NESSA_DB_URL: z.string().min(1),
   NESSA_DB_TOKEN: z.string().min(1),
-  NESSA_JWT_SECRET: z.string().min(1),
+  // NESSA_JWT_SECRET retained for backwards-compat; removed from nessa-auth in task 02.
+  // Delete in task 11 once all other references are gone.
+  NESSA_JWT_SECRET: z.string().min(1).optional(),
+  // Clerk authentication
+  NESSA_CLERK_SECRET: z.string().min(1),
+  NESSA_CLERK_JWT_ISSUER: z.string().min(1),
+  // Clerk webhook signing secret (Svix). Used to verify `user.created` /
+  // `user.updated` webhook payloads. Find it under Clerk Dashboard →
+  // Webhooks → your endpoint → Signing Secret (starts with `whsec_`).
+  NESSA_CLERK_WEBHOOK_SECRET: z.string().min(1),
   LINEAGE_JWT_SECRET: z.string().min(32),
   APPLE_CLIENT_ID_NESSA: z.string().min(1).optional(),
   APPLE_CLIENT_ID_LINEAGE: z.string().min(1).optional(),
@@ -167,7 +176,10 @@ export const getMissingEnvVars = (): string[] => {
     "REDIS_URL",
     "NESSA_DB_URL",
     "NESSA_DB_TOKEN",
-    "NESSA_JWT_SECRET",
+    // NESSA_JWT_SECRET moved to optional — removed from nessa-auth in task 02
+    "NESSA_CLERK_SECRET",
+    "NESSA_CLERK_JWT_ISSUER",
+    "NESSA_CLERK_WEBHOOK_SECRET",
     "LINEAGE_JWT_SECRET"
   ];
 

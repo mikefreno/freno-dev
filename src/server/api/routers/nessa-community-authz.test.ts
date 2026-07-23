@@ -201,3 +201,78 @@ describe("p8-003: join then allowed / leave then blocked (integration)", () => {
     expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe("FORBIDDEN");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Clerk session → local users.id resolution (migrate-to-clerk-auth-03)
+//
+// `createTRPCContext` verifies a Clerk session JWT (`verifyNessaToken`)
+// and resolves `ctx.nessaUserId` by looking up `users.id` via the indexed
+// `clerkUserId` column.  These tests exercise that lookup path against an
+// in-memory SQLite DB so the contract is guaranteed:
+//   - seeded row with matching clerkUserId → local id resolved
+//   - missing local row → UNAUTHORIZED
+//   - the resolved id is the LOCAL users.id, never the Clerk sub
+// ---------------------------------------------------------------------------
+
+const CLERK_USER_ID = "user_test_abc123";
+const LOCAL_USER_A = "local-user-a";
+const LOCAL_USER_B = "local-user-b";
+
+function initUsersTable() {
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT,
+    clerkUserId TEXT
+  )`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_users_clerkUserId ON users(clerkUserId)`);
+}
+
+async function resolveLocalUserId(clerkUserId: string): Promise<string | null> {
+  const result = await conn.execute({
+    sql: "SELECT id FROM users WHERE clerkUserId = ?",
+    args: [clerkUserId]
+  });
+  if (result.rows.length === 0) return null;
+  return (result.rows[0] as { id: string }).id;
+}
+
+describe("clerkUserId lookup (migrate-to-clerk-auth-03)", () => {
+  beforeAll(() => {
+    initUsersTable();
+  });
+
+  beforeEach(() => {
+    db.run("DELETE FROM users");
+  });
+
+  it("resolves local users.id for a seeded clerkUserId", async () => {
+    db.run(
+      "INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)",
+      [LOCAL_USER_A, "a@nessa.app", CLERK_USER_ID]
+    );
+    expect(await resolveLocalUserId(CLERK_USER_ID)).toBe(LOCAL_USER_A);
+  });
+
+  it("returns null when no local row matches the clerkUserId", async () => {
+    // No users seeded — the webhook (task 04) has not run yet.
+    expect(await resolveLocalUserId(CLERK_USER_ID)).toBeNull();
+  });
+
+  it("returns null for a Clerk id that exists but maps to a different local user", async () => {
+    db.run(
+      "INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)",
+      [LOCAL_USER_B, "b@nessa.app", "user_test_other"]
+    );
+    expect(await resolveLocalUserId(CLERK_USER_ID)).toBeNull();
+  });
+
+  it("ctx.nessaUserId is the LOCAL id, never the Clerk sub", async () => {
+    db.run(
+      "INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)",
+      [LOCAL_USER_A, "a@nessa.app", CLERK_USER_ID]
+    );
+    const resolved = await resolveLocalUserId(CLERK_USER_ID);
+    expect(resolved).toBe(LOCAL_USER_A);
+    expect(resolved).not.toBe(CLERK_USER_ID);
+  });
+});

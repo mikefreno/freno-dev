@@ -1,39 +1,49 @@
-import { SignJWT, jwtVerify } from "jose";
+// ───────────────────────────────────────────────────────────────────────
+// Nessa auth — Clerk session JWT verification (RS256 / JWKS)
+//
+// Migrated from self-signed HS256 tokens to Clerk session token
+// verification.  Incoming `Authorization: Bearer <token>` headers are
+// verified against Clerk's JWKS endpoint via `@clerk/backend`.
+//
+// Public API is unchanged so callers need not be modified:
+//   * verifyNessaToken(token) → { sub, exp?, iat? }
+//   * NessaAuthPayload type
+//
+// signNessaToken was removed — the frontend now supplies Clerk session
+// tokens directly; the backend only verifies.
+// ───────────────────────────────────────────────────────────────────────
+
+import { verifyToken } from "@clerk/backend";
 import { env } from "~/env/server";
 
-const NESSA_JWT_EXPIRY = "30d";
-
 export type NessaAuthPayload = {
-  sub: string;
+  sub: string; // Clerk user id
   exp?: number;
   iat?: number;
 };
 
+/**
+ * Verify a Clerk session JWT and return the subject (user id).
+ *
+ * Uses the Clerk Backend API secret key to fetch the JWKS and verify the
+ * RS256 signature.  Rejects expired, malformed, or improperly signed tokens.
+ */
 export async function verifyNessaToken(
   token: string
 ): Promise<NessaAuthPayload> {
-  const secret = new TextEncoder().encode(env.NESSA_JWT_SECRET);
-  const { payload } = await jwtVerify(token, secret, {
-    algorithms: ["HS256"]
+  const payload = await verifyToken(token, {
+    secretKey: env.NESSA_CLERK_SECRET,
+    // Optional: restrict to specific issuers / apps
+    // audience: env.NESSA_CLERK_JWT_ISSUER,
   });
 
   if (!payload.sub) {
-    throw new Error("Missing subject in Nessa JWT");
+    throw new Error("Missing subject in Clerk session token");
   }
 
   return {
-    sub: payload.sub as string,
-    exp: payload.exp as number | undefined,
-    iat: payload.iat as number | undefined
+    sub: payload.sub,
+    exp: payload.exp,
+    iat: payload.iat,
   };
-}
-
-export async function signNessaToken(userId: string): Promise<string> {
-  const secret = new TextEncoder().encode(env.NESSA_JWT_SECRET);
-  return new SignJWT({})
-    .setProtectedHeader({ alg: "HS256" })
-    .setSubject(userId)
-    .setIssuedAt()
-    .setExpirationTime(NESSA_JWT_EXPIRY)
-    .sign(secret);
 }

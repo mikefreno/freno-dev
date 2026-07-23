@@ -50,7 +50,10 @@ mock.module("~/env/server", () => ({
     TURSO_LINEAGE_TOKEN: "test-token",
     TURSO_DB_API_TOKEN: "test-token",
     NESSA_DB_URL: "libsql://nessa-test.turso.io",
-    NESSA_DB_TOKEN: "test-token"
+    NESSA_DB_TOKEN: "test-token",
+    // Clerk env vars (required after migration in task 02)
+    NESSA_CLERK_SECRET: "sk_test_test-secret",
+    NESSA_CLERK_JWT_ISSUER: "https://nessa-test.clerk.accounts.dev"
   },
   validateServerEnv: () => ({}),
   isMissingEnvVar: () => false,

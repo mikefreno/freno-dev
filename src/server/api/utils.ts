@@ -4,6 +4,7 @@ import { logVisit, enrichAnalyticsEntry } from "~/server/analytics";
 import { getRequestIP } from "vinxi/http";
 import { verifyNessaToken } from "~/server/nessa-auth";
 import { getAuthPayloadFromEvent } from "~/server/auth";
+import { NessaConnectionFactory } from "~/server/database";
 
 export type Context = {
   event: APIEvent;
@@ -63,9 +64,32 @@ async function createContextInner(event: APIEvent): Promise<Context> {
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.replace("Bearer ", "").trim();
     try {
-      const payload = await verifyNessaToken(token);
-      nessaUserId = payload.sub;
+      // Verify the Clerk session JWT — `sub` is the Clerk user id.
+      const clerkPayload = await verifyNessaToken(token);
+
+      // Resolve the Clerk user id to the local users.id via the indexed
+      // clerkUserId column.  One indexed query per request is acceptable;
+      // no premature caching (the row is created by the Clerk webhook).
+      const conn = NessaConnectionFactory();
+      const result = await conn.execute({
+        sql: "SELECT id FROM users WHERE clerkUserId = ?",
+        args: [clerkPayload.sub]
+      });
+      if (result.rows.length === 0) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Nessa user not found — Clerk account not linked"
+        });
+      }
+      // `nessaUserId` is the LOCAL users.id — router bodies reference it
+      // exactly as before (club ownership, membership, row scoping).
+      nessaUserId = (result.rows[0] as { id: string }).id;
     } catch (error) {
+      // Re-throw typed TRPCError (lookup miss) so the caller gets UNAUTHORIZED;
+      // swallow Clerk verification failures (expired/invalid token) the same
+      // way the legacy path did — the enforceNessaUser middleware rejects
+      // null nessaUserId with UNAUTHORIZED.
+      if (error instanceof TRPCError) throw error;
       console.error("Nessa JWT verification failed:", error);
     }
   }
