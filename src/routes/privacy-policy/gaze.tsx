@@ -1,110 +1,25 @@
-import { A } from "@solidjs/router";
-import { PageHead } from "~/components/PageHead";
-
-export default function PrivacyPolicy() {
-  return (
-    <>
-      <PageHead
-        title="Privacy Policy - Gaze"
-        description="Privacy policy for Gaze, a macOS eye health reminder app."
-      />
-      <div class="min-h-screen px-[8vw] py-[10vh]">
-        <div class="py-4 text-xl">Gaze&apos;s Privacy Policy</div>
-        <div class="py-2">Last Updated: February 9, 2026</div>
-        <div class="py-2">
-          Welcome to Gaze (&apos;We&apos;, &apos;Us&apos;, &apos;Our&apos;).
-          Your privacy is important to us. This privacy policy will help you
-          understand our policies and procedures related to the collection, use,
-          and storage of personal information from our users.
-        </div>
-        <ol>
-          <div class="py-2">
-            <div class="pb-2 text-lg">
-              <span class="-ml-4 pr-2">1.</span> Personal Information
-            </div>
-            <div class="pl-4">
-              <div class="pb-2">
-                <div class="-ml-6">(a) Collection of Personal Data:</div> Gaze
-                is designed with privacy as a core principle. We currently do
-                not collect, store, or share any personal information from our
-                users. The app runs entirely on your device and does not require
-                any account creation or data transmission to external servers.
-              </div>
-              <div class="pb-2">
-                <div class="-ml-6">(b) Future Data Collection:</div> We may in
-                the future implement optional features such as analytics or
-                crash reporting. If we do, we will clearly inform users through
-                a privacy policy update and obtain explicit consent before
-                collecting any data.
-              </div>
-              <div class="pb-2">
-                <div class="-ml-6">(c) Data Removal:</div> Since we do not
-                collect any personal information, there is no data to remove. If
-                you have any concerns about our practices, please contact{" "}
-                <A href="/contact" class="text-blue hover-underline-animation">
-                  here
-                </A>
-                .
-              </div>
-            </div>
-          </div>
-
-          <div class="py-2">
-            <div class="pb-2 text-lg">
-              <span class="-ml-4 pr-2">2.</span> Third-Party Access
-            </div>
-            <div class="pb-2 pl-4">
-              <div class="-ml-6">(a) No Third-Party Sharing:</div> We do not
-              share, sell, or transfer any personal information to third
-              parties. Currently, Gaze does not utilize any third-party services
-              that would collect user data. Any future third-party services we
-              may use will be transparently disclosed in our privacy policy.
-            </div>
-          </div>
-
-          <div class="py-2">
-            <div class="pb-2 text-lg">
-              <span class="-ml-4 pr-2">3.</span> Security
-            </div>
-            <div class="pb-2 pl-4">
-              <div class="-ml-6">(a) Data Protection:</div> Because Gaze does
-              not collect or store any personal information, there is minimal
-              data security risk. The app runs locally on your device using
-              standard macOS security practices. Any configuration data stored
-              locally on your device is encrypted using system-provided
-              mechanisms.
-            </div>
-          </div>
-
-          <div class="py-2">
-            <div class="pb-2 text-lg">
-              <span class="-ml-4 pr-2">4.</span> Changes to the Privacy Policy
-            </div>
-            <div class="pb-2 pl-4">
-              <div class="-ml-6">(a) Updates:</div> We may update this privacy
-              policy periodically, especially if we introduce new features that
-              involve data collection. Any changes to this privacy policy will
-              be posted on this page. We encourage users to review this policy
-              regularly to stay informed about how we protect their information.
-            </div>
-          </div>
-
-          <div class="py-2">
-            <div class="pb-2 text-lg">
-              <span class="-ml-4 pr-2">5.</span> Contact Us
-            </div>
-            <div class="pb-2 pl-4">
-              <div class="-ml-6">(a) Reaching Out:</div> If there are any
-              questions or comments regarding this privacy policy, you can
-              contact us{" "}
-              <A href="/contact" class="text-blue hover-underline-animation">
-                here
-              </A>
-              .
-            </div>
-          </div>
-        </ol>
-      </div>
-    </>
-  );
+/**
+ * Legacy Gaze privacy policy route — now a 308 permanent redirect to the Gaze
+ * subdomain (task 10).
+ *
+ * The privacy policy content has been migrated to
+ * `src/routes/gaze/privacy.tsx`, served at `gaze.freno.me/privacy`
+ * (vercel.json host rewrites map the Gaze subdomain to the internal
+ * `/gaze/*` prefix). Keeping this route as a permanent (308) server-side
+ * redirect — rather than a client `<Navigate>` — preserves SEO equity and
+ * gives installed / linked URLs a stable resolution path, mirroring how the
+ * legacy Life and Lineage marketing page was redirected in task 08.
+ *
+ * Implemented as a SolidStart API route (`GET` handler returning a Response)
+ * so the redirect happens before any rendering; the route no longer ships a
+ * page component.
+ */
+export function GET() {
+  return new Response(null, {
+    status: 308,
+    headers: {
+      Location: "https://gaze.freno.me/privacy",
+      "Cache-Control": "public, max-age=0, must-revalidate"
+    }
+  });
 }
