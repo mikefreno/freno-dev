@@ -5,7 +5,12 @@ import type { Row } from "@libsql/client/web";
 import { SignJWT, jwtVerify } from "jose";
 import { env } from "~/env/server";
 import { ConnectionFactory } from "./db-connections";
-import { AUTH_CONFIG, LINEAGE_CONFIG, expiryToSeconds, getAccessTokenExpiry } from "~/config";
+import {
+  AUTH_CONFIG,
+  LINEAGE_CONFIG,
+  expiryToSeconds,
+  getAccessTokenExpiry
+} from "~/config";
 
 export const authCookieName = "auth_token";
 
@@ -65,7 +70,17 @@ export async function verifyAuthToken(
       exp: payload.exp
     };
   } catch (error) {
-    console.error("Auth token verification failed:", error);
+    // Signature mismatch, expired token, malformed JWT — these are expected
+    // when a user has a stale/invalid cookie and are NOT server errors. Only
+    // log unexpected failures to keep prod console noise-free.
+    const code = (error as { code?: string }).code;
+    if (
+      code !== "ERR_JWS_SIGNATURE_VERIFICATION_FAILED" &&
+      code !== "ERR_JWT_EXPIRED" &&
+      code !== "ERR_JWT_MALFORMED"
+    ) {
+      console.error("Auth token verification failed:", error);
+    }
     return null;
   }
 }

@@ -1,4 +1,8 @@
-import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "../../utils";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  csrfProtectedProcedure
+} from "../../utils";
 import { z } from "zod";
 import {
   LineageConnectionFactory,
@@ -6,7 +10,7 @@ import {
   hashPassword,
   checkPassword,
   sendEmailVerification,
-  LINEAGE_JWT_EXPIRY,
+  LINEAGE_JWT_EXPIRY
 } from "~/server/utils";
 import { env } from "~/env/server";
 import { LINEAGE_CONFIG } from "~/config";
@@ -20,7 +24,7 @@ export const lineageAuthRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
-        password: z.string().min(8),
+        password: z.string().min(8)
       })
     )
     .mutation(async ({ input }) => {
@@ -34,7 +38,7 @@ export const lineageAuthRouter = createTRPCRouter({
       if (res.rows.length === 0) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid Credentials",
+          message: "Invalid Credentials"
         });
       }
 
@@ -43,7 +47,7 @@ export const lineageAuthRouter = createTRPCRouter({
       if (user.email_verified === 0) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Email not yet verified!",
+          message: "Email not yet verified!"
         });
       }
 
@@ -51,7 +55,7 @@ export const lineageAuthRouter = createTRPCRouter({
       if (!valid) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid Credentials",
+          message: "Invalid Credentials"
         });
       }
 
@@ -70,7 +74,7 @@ export const lineageAuthRouter = createTRPCRouter({
         success: true,
         message: "Login successful",
         token,
-        email,
+        email
       };
     }),
 
@@ -79,7 +83,7 @@ export const lineageAuthRouter = createTRPCRouter({
       z.object({
         email: z.string().email(),
         password: z.string().min(8),
-        password_conf: z.string().min(8),
+        password_conf: z.string().min(8)
       })
     )
     .mutation(async ({ input }) => {
@@ -88,7 +92,7 @@ export const lineageAuthRouter = createTRPCRouter({
       if (password !== password_conf) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Password mismatch",
+          message: "Password mismatch"
         });
       }
 
@@ -107,12 +111,12 @@ export const lineageAuthRouter = createTRPCRouter({
         if (emailResult.success && emailResult.messageId) {
           return {
             success: true,
-            message: "Email verification sent!",
+            message: "Email verification sent!"
           };
         } else {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: emailResult.message || "Failed to send verification email",
+            message: emailResult.message || "Failed to send verification email"
           });
         }
       } catch (e) {
@@ -120,13 +124,13 @@ export const lineageAuthRouter = createTRPCRouter({
         if (e instanceof LibsqlError && e.code === "SQLITE_CONSTRAINT") {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "User already exists",
+            message: "User already exists"
           });
         }
         if (e instanceof TRPCError) throw e;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "An error occurred while creating the user",
+          message: "An error occurred while creating the user"
         });
       }
     }),
@@ -135,7 +139,7 @@ export const lineageAuthRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
-        token: z.string(),
+        token: z.string()
       })
     )
     .mutation(async ({ input }) => {
@@ -152,13 +156,13 @@ export const lineageAuthRouter = createTRPCRouter({
         const secret = new TextEncoder().encode(env.LINEAGE_JWT_SECRET);
         const { payload } = await jwtVerify(token, secret, {
           issuer: LINEAGE_CONFIG.JWT_ISSUER,
-          audience: LINEAGE_CONFIG.JWT_AUDIENCE,
+          audience: LINEAGE_CONFIG.JWT_AUDIENCE
         });
 
         if (payload.email !== userEmail) {
           throw new TRPCError({
             code: "UNAUTHORIZED",
-            message: "Authentication failed: email mismatch",
+            message: "Authentication failed: email mismatch"
           });
         }
 
@@ -178,7 +182,7 @@ export const lineageAuthRouter = createTRPCRouter({
         return {
           success: true,
           message:
-            "Email verification success. You may close this window and sign in within the app.",
+            "Email verification success. You may close this window and sign in within the app."
         };
       } catch (err) {
         console.error("Error in email verification:", err);
@@ -187,7 +191,7 @@ export const lineageAuthRouter = createTRPCRouter({
           try {
             const turso = createAPIClient({
               org: "mikefreno",
-              token: env.TURSO_DB_API_TOKEN,
+              token: env.TURSO_DB_API_TOKEN
             });
             await turso.databases.delete(dbName);
             console.log(`Database ${dbName} deleted due to error`);
@@ -200,7 +204,7 @@ export const lineageAuthRouter = createTRPCRouter({
           try {
             await conn.execute({
               sql: `UPDATE User SET email_verified = ?, database_name = ?, database_token = ? WHERE email = ?`,
-              args: [false, null, null, userEmail],
+              args: [false, null, null, userEmail]
             });
             console.log("User table update reverted");
           } catch (revertErr) {
@@ -212,7 +216,7 @@ export const lineageAuthRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            "Authentication failed: An error occurred during email verification. Please try again.",
+            "Authentication failed: An error occurred during email verification. Please try again."
         });
       }
     }),
@@ -230,7 +234,7 @@ export const lineageAuthRouter = createTRPCRouter({
       if (res.rows.length === 0 || res.rows[0].email_verified) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "Invalid Request",
+          message: "Invalid Request"
         });
       }
 
@@ -238,12 +242,12 @@ export const lineageAuthRouter = createTRPCRouter({
       if (emailResult.success && emailResult.messageId) {
         return {
           success: true,
-          message: "Email verification sent!",
+          message: "Email verification sent!"
         };
       } else {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: emailResult.message || "Failed to send verification email",
+          message: emailResult.message || "Failed to send verification email"
         });
       }
     }),
@@ -257,12 +261,12 @@ export const lineageAuthRouter = createTRPCRouter({
         const secret = new TextEncoder().encode(env.LINEAGE_JWT_SECRET);
         const { payload } = await jwtVerify(token, secret, {
           issuer: LINEAGE_CONFIG.JWT_ISSUER,
-          audience: LINEAGE_CONFIG.JWT_AUDIENCE,
+          audience: LINEAGE_CONFIG.JWT_AUDIENCE
         });
 
         const newToken = await new SignJWT({
           userId: payload.userId,
-          email: payload.email,
+          email: payload.email
         })
           .setProtectedHeader({ alg: "HS256" })
           .setIssuer(LINEAGE_CONFIG.JWT_ISSUER)
@@ -275,12 +279,12 @@ export const lineageAuthRouter = createTRPCRouter({
           ok: true,
           valid: true,
           token: newToken,
-          email: payload.email,
+          email: payload.email
         };
       } catch (error) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid or expired token",
+          message: "Invalid or expired token"
         });
       }
     }),
@@ -296,7 +300,7 @@ export const lineageAuthRouter = createTRPCRouter({
         const checkUserQuery = "SELECT * FROM User WHERE email = ?";
         const checkUserResult = await conn.execute({
           sql: checkUserQuery,
-          args: [email],
+          args: [email]
         });
 
         if (checkUserResult.rows.length > 0) {
@@ -307,18 +311,18 @@ export const lineageAuthRouter = createTRPCRouter({
           `;
           const updateRes = await conn.execute({
             sql: updateQuery,
-            args: ["google", email],
+            args: ["google", email]
           });
 
           if (updateRes.rowsAffected !== 0) {
             return {
               success: true,
-              message: "User information updated",
+              message: "User information updated"
             };
           } else {
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
-              message: "User update failed!",
+              message: "User update failed!"
             });
           }
         } else {
@@ -333,27 +337,27 @@ export const lineageAuthRouter = createTRPCRouter({
             `;
             await conn.execute({
               sql: insertQuery,
-              args: [email, true, "google", dbName, token],
+              args: [email, true, "google", dbName, token]
             });
 
             console.log("insert success");
 
             return {
               success: true,
-              message: "New user created",
+              message: "New user created"
             };
           } catch (error) {
             if (db_name) {
               const turso = createAPIClient({
                 org: "mikefreno",
-                token: env.TURSO_DB_API_TOKEN,
+                token: env.TURSO_DB_API_TOKEN
               });
               await turso.databases.delete(db_name);
             }
             console.error(error);
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to create user",
+              message: "Failed to create user"
             });
           }
         }
@@ -362,7 +366,7 @@ export const lineageAuthRouter = createTRPCRouter({
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "An error occurred while processing the request",
+          message: "An error occurred while processing the request"
         });
       }
     }),
@@ -371,7 +375,7 @@ export const lineageAuthRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email().optional(),
-        idToken: z.string(),
+        idToken: z.string()
       })
     )
     .mutation(async ({ input }) => {
@@ -384,7 +388,7 @@ export const lineageAuthRouter = createTRPCRouter({
       if (!appleKeysResponse.ok) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch Apple public keys",
+          message: "Failed to fetch Apple public keys"
         });
       }
 
@@ -404,7 +408,7 @@ export const lineageAuthRouter = createTRPCRouter({
       if (!headerB64) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid Apple ID token format",
+          message: "Invalid Apple ID token format"
         });
       }
       const headerJson = Buffer.from(headerB64, "base64url").toString("utf8");
@@ -413,14 +417,14 @@ export const lineageAuthRouter = createTRPCRouter({
       if (!jwk) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Apple public key not found",
+          message: "Apple public key not found"
         });
       }
 
       const publicKey = await importJWK(jwk, "RS256");
       const jwtOptions: Parameters<typeof jwtVerify>[2] = {
         algorithms: ["RS256"],
-        issuer: "https://appleid.apple.com",
+        issuer: "https://appleid.apple.com"
       };
       if (env.APPLE_CLIENT_ID) {
         jwtOptions.audience = env.APPLE_CLIENT_ID;
@@ -441,14 +445,14 @@ export const lineageAuthRouter = createTRPCRouter({
       try {
         let checkUserQuery = "SELECT * FROM User WHERE apple_user_string = ?";
 
-        let args: string[] = [userString];
+        const args: string[] = [userString];
         if (email) {
           args.push(email);
           checkUserQuery += " OR email = ?";
         }
         const checkUserResult = await conn.execute({
           sql: checkUserQuery,
-          args: args,
+          args: args
         });
 
         if (checkUserResult.rows.length > 0) {
@@ -474,19 +478,19 @@ export const lineageAuthRouter = createTRPCRouter({
           )} ${whereClause}`;
           const updateRes = await conn.execute({
             sql: updateQuery,
-            args: values,
+            args: values
           });
 
           if (updateRes.rowsAffected !== 0) {
             return {
               success: true,
               message: "User information updated",
-              email: checkUserResult.rows[0].email as string,
+              email: checkUserResult.rows[0].email as string
             };
           } else {
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
-              message: "User update failed!",
+              message: "User update failed!"
             });
           }
         } else {
@@ -501,27 +505,27 @@ export const lineageAuthRouter = createTRPCRouter({
             `;
             await conn.execute({
               sql: insertQuery,
-              args: [email, true, userString, "apple", dbName, dbToken],
+              args: [email, true, userString, "apple", dbName, dbToken]
             });
 
             return {
               success: true,
               message: "New user created",
               dbName,
-              dbToken,
+              dbToken
             };
           } catch (error) {
             if (dbName) {
               const turso = createAPIClient({
                 org: "mikefreno",
-                token: env.TURSO_DB_API_TOKEN,
+                token: env.TURSO_DB_API_TOKEN
               });
               await turso.databases.delete(dbName);
             }
             console.error(error);
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to create user",
+              message: "Failed to create user"
             });
           }
         }
@@ -530,7 +534,7 @@ export const lineageAuthRouter = createTRPCRouter({
           try {
             const turso = createAPIClient({
               org: "mikefreno",
-              token: env.TURSO_DB_API_TOKEN,
+              token: env.TURSO_DB_API_TOKEN
             });
             await turso.databases.delete(dbName);
           } catch (deleteErr) {
@@ -541,7 +545,7 @@ export const lineageAuthRouter = createTRPCRouter({
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "An error occurred while processing the request",
+          message: "An error occurred while processing the request"
         });
       }
     }),
@@ -560,8 +564,8 @@ export const lineageAuthRouter = createTRPCRouter({
       } else {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found",
+          message: "User not found"
         });
       }
-    }),
+    })
 });

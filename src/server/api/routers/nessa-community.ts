@@ -1272,5 +1272,333 @@ export const nessaCommunityRouter = createTRPCRouter({
           });
         }
       })
+  }),
+
+  // ==========================================================================
+  // Events (clubEvents)
+  // ==========================================================================
+  events: createTRPCRouter({
+    list: nessaProcedure
+      .input(paginationSchema.extend({
+        clubId: z.string().min(1).optional(),
+        eventType: z.string().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        location: z.string().optional(),
+        rsvpStatus: z.enum(["going", "maybe", "not-going"]).optional()
+      }))
+      .query(async ({ input, ctx }) => {
+        const limit = input.limit ?? 50;
+        const offset = input.offset ?? 0;
+
+        try {
+          const conn = NessaConnectionFactory();
+          const where: string[] = [];
+          const args: (string | number)[] = [];
+
+          if (input.clubId) {
+            where.push("e.clubId = ?");
+            args.push(input.clubId);
+          }
+          if (input.eventType) {
+            where.push("e.eventType = ?");
+            args.push(input.eventType);
+          }
+          if (input.startDate) {
+            where.push("e.startDate >= ?");
+            args.push(input.startDate);
+          }
+          if (input.endDate) {
+            where.push("e.startDate <= ?");
+            args.push(input.endDate);
+          }
+          if (input.location) {
+            where.push("(e.location LIKE ?)");
+            args.push(`%${input.location}%`);
+          }
+
+          const whereClause = where.length
+            ? `WHERE ${where.join(" AND ")}`
+            : "";
+          args.push(limit, offset);
+
+          const result = await conn.execute({
+            sql: `SELECT e.id, e.clubId, e.title, e.description, e.eventType,
+                    e.location, e.latitude, e.longitude, e.startDate, e.endDate,
+                    e.createdBy, e.maxParticipants, e.participantCount,
+                    e.createdAt, e.updatedAt,
+                    u.displayName AS creatorDisplayName, u.avatarUrl AS creatorAvatarUrl,
+                    (SELECT COUNT(*) FROM clubEventRSVPs WHERE eventId = e.id) AS rsvpCount,
+                    (SELECT status FROM clubEventRSVPs WHERE eventId = e.id AND userId = ?) AS userRsvpStatus
+                  FROM clubEvents e
+                  JOIN users u ON e.createdBy = u.id
+                  ${whereClause}
+                  ORDER BY e.startDate ASC LIMIT ? OFFSET ?`,
+            args: [...args, ctx.nessaUserId]
+          });
+
+          return { events: result.rows };
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("Failed to list Nessa events:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to list events"
+          });
+        }
+      }),
+
+    get: nessaProcedure
+      .input(idSchema)
+      .query(async ({ input, ctx }) => {
+        try {
+          const conn = NessaConnectionFactory();
+          const result = await conn.execute({
+            sql: `SELECT e.id, e.clubId, e.title, e.description, e.eventType,
+                    e.location, e.latitude, e.longitude, e.startDate, e.endDate,
+                    e.createdBy, e.maxParticipants, e.participantCount,
+                    e.createdAt, e.updatedAt,
+                    u.displayName AS creatorDisplayName, u.avatarUrl AS creatorAvatarUrl,
+                    (SELECT COUNT(*) FROM clubEventRSVPs WHERE eventId = e.id) AS rsvpCount,
+                    (SELECT status FROM clubEventRSVPs WHERE eventId = e.id AND userId = ?) AS userRsvpStatus
+                  FROM clubEvents e
+                  JOIN users u ON e.createdBy = u.id
+                  WHERE e.id = ?`,
+            args: [ctx.nessaUserId, input.id]
+          });
+          if (!result.rows.length) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+          }
+          return { event: result.rows[0] };
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("Failed to get Nessa event:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to get event"
+          });
+        }
+      }),
+
+    create: nessaProcedure
+      .input(z.object({
+        clubId: z.string().min(1),
+        title: z.string().min(1).max(200),
+        description: z.string().max(2000).nullable().optional(),
+        eventType: z.string().min(1),
+        location: z.string().nullable().optional(),
+        latitude: z.number().nullable().optional(),
+        longitude: z.number().nullable().optional(),
+        startDate: z.string().min(1),
+        endDate: z.string().nullable().optional(),
+        maxParticipants: z.number().int().min(1).nullable().optional()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const conn = NessaConnectionFactory();
+          await requireClubMembership(conn, input.clubId, ctx.nessaUserId);
+
+          const eventId = crypto.randomUUID();
+          await conn.execute({
+            sql: `INSERT INTO clubEvents
+                    (id, clubId, title, description, eventType, location, latitude, longitude,
+                     startDate, endDate, createdBy, maxParticipants)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [
+              eventId,
+              input.clubId,
+              input.title,
+              input.description ?? null,
+              input.eventType,
+              input.location ?? null,
+              input.latitude ?? null,
+              input.longitude ?? null,
+              input.startDate,
+              input.endDate ?? null,
+              ctx.nessaUserId,
+              input.maxParticipants ?? null
+            ]
+          });
+
+          return { success: true, eventId };
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("Failed to create Nessa event:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create event"
+          });
+        }
+      }),
+
+    update: nessaProcedure
+      .input(z.object({
+        id: z.string().min(1),
+        title: z.string().min(1).max(200).optional(),
+        description: z.string().max(2000).nullable().optional(),
+        eventType: z.string().min(1).optional(),
+        location: z.string().nullable().optional(),
+        latitude: z.number().nullable().optional(),
+        longitude: z.number().nullable().optional(),
+        startDate: z.string().min(1).optional(),
+        endDate: z.string().nullable().optional(),
+        maxParticipants: z.number().int().min(1).nullable().optional()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const conn = NessaConnectionFactory();
+
+          const ownerCheck = await conn.execute({
+            sql: "SELECT createdBy FROM clubEvents WHERE id = ?",
+            args: [input.id]
+          });
+          if (!ownerCheck.rows.length) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+          }
+          if ((ownerCheck.rows[0] as unknown as { createdBy: string }).createdBy !== ctx.nessaUserId) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Only the creator can update the event"
+            });
+          }
+
+          const fields: string[] = [];
+          const args: (string | number | null)[] = [];
+          const map: Record<string, string> = {
+            title: "title",
+            description: "description",
+            eventType: "eventType",
+            location: "location",
+            latitude: "latitude",
+            longitude: "longitude",
+            startDate: "startDate",
+            endDate: "endDate",
+            maxParticipants: "maxParticipants"
+          };
+          for (const [key, col] of Object.entries(map)) {
+            if ((input as Record<string, unknown>)[key] !== undefined) {
+              fields.push(`${col} = ?`);
+              args.push((input as Record<string, unknown>)[key] as string | number | null);
+            }
+          }
+          if (fields.length === 0) {
+            return { success: true };
+          }
+          fields.push("updatedAt = datetime('now')");
+          args.push(input.id);
+
+          await conn.execute({
+            sql: `UPDATE clubEvents SET ${fields.join(", ")} WHERE id = ?`,
+            args
+          });
+          return { success: true };
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("Failed to update Nessa event:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to update event"
+          });
+        }
+      }),
+
+    delete: nessaProcedure
+      .input(idSchema)
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const conn = NessaConnectionFactory();
+          const ownerCheck = await conn.execute({
+            sql: "SELECT createdBy FROM clubEvents WHERE id = ?",
+            args: [input.id]
+          });
+          if (!ownerCheck.rows.length) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+          }
+          if ((ownerCheck.rows[0] as unknown as { createdBy: string }).createdBy !== ctx.nessaUserId) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Only the creator can delete the event"
+            });
+          }
+          await conn.execute({
+            sql: "DELETE FROM clubEvents WHERE id = ?",
+            args: [input.id]
+          });
+          return { success: true };
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("Failed to delete Nessa event:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to delete event"
+          });
+        }
+      }),
+
+    rsvp: nessaProcedure
+      .input(z.object({
+        eventId: z.string().min(1),
+        status: z.enum(["going", "maybe", "not-going"]).default("going")
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const conn = NessaConnectionFactory();
+
+          const event = await conn.execute({
+            sql: "SELECT clubId FROM clubEvents WHERE id = ?",
+            args: [input.eventId]
+          });
+          if (!event.rows.length) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+          }
+          const clubId = (event.rows[0] as unknown as { clubId: string }).clubId;
+          await requireClubMembership(conn, clubId, ctx.nessaUserId);
+
+          // Delete existing RSVP if any
+          await conn.execute({
+            sql: "DELETE FROM clubEventRSVPs WHERE eventId = ? AND userId = ?",
+            args: [input.eventId, ctx.nessaUserId]
+          });
+
+          await conn.execute({
+            sql: "INSERT INTO clubEventRSVPs (id, eventId, userId, status) VALUES (?, ?, ?, ?)",
+            args: [crypto.randomUUID(), input.eventId, ctx.nessaUserId, input.status]
+          });
+
+          return { success: true, eventId: input.eventId, userId: ctx.nessaUserId, status: input.status };
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("Failed to RSVP to Nessa event:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to RSVP to event"
+          });
+        }
+      }),
+
+    participants: nessaProcedure
+      .input(idSchema)
+      .query(async ({ input }) => {
+        try {
+          const conn = NessaConnectionFactory();
+          const result = await conn.execute({
+            sql: `SELECT r.id, r.eventId, r.userId, r.status, r.createdAt,
+                    u.firstName, u.lastName, u.displayName, u.avatarUrl
+                  FROM clubEventRSVPs r
+                  JOIN users u ON r.userId = u.id
+                  WHERE r.eventId = ?
+                  ORDER BY r.createdAt ASC`,
+            args: [input.id]
+          });
+          return { participants: result.rows };
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("Failed to list event participants:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to list participants"
+          });
+        }
+      })
   })
 });
