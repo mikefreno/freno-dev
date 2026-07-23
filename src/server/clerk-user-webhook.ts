@@ -65,6 +65,15 @@ function resolveEmail(data: ClerkUserData): string | null {
   return primary?.email_address ?? null;
 }
 
+/** Resolve the primary email's verification status (1 = verified, 0 = unverified). */
+function resolveEmailVerified(data: ClerkUserData): number {
+  const addresses = data.email_addresses ?? [];
+  const primaryId = data.primary_email_address_id ?? null;
+  const primary =
+    addresses.find((e) => e.id === primaryId) ?? addresses[0] ?? null;
+  return primary?.verification?.status === "verified" ? 1 : 0;
+}
+
 /** Resolve a display name (first + last, falling back to username). */
 function resolveDisplayName(data: ClerkUserData): string | null {
   const first = (data.first_name ?? "").trim();
@@ -164,6 +173,7 @@ export async function handleClerkUserWebhook(opts: {
     const data = evt.data;
     const clerkUserId = data.id;
     const email = resolveEmail(data);
+    const emailVerified = resolveEmailVerified(data);
     const firstName = data.first_name ?? null;
     const lastName = data.last_name ?? null;
     const displayName = resolveDisplayName(data);
@@ -174,10 +184,11 @@ export async function handleClerkUserWebhook(opts: {
       // ON CONFLICT instead of erroring on a duplicate.
       await conn.execute({
         sql: `INSERT INTO users
-                (id, clerkUserId, email, firstName, lastName, displayName, avatarUrl, provider, status)
-              VALUES (?, ?, ?, ?, ?, ?, ?, 'clerk', 'active')
+                (id, clerkUserId, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, status)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clerk', 'active')
               ON CONFLICT(clerkUserId) DO UPDATE SET
                 email = excluded.email,
+                emailVerified = excluded.emailVerified,
                 firstName = excluded.firstName,
                 lastName = excluded.lastName,
                 displayName = excluded.displayName,
@@ -187,6 +198,7 @@ export async function handleClerkUserWebhook(opts: {
           crypto.randomUUID(),
           clerkUserId,
           email,
+          emailVerified,
           firstName,
           lastName,
           displayName,
@@ -198,13 +210,14 @@ export async function handleClerkUserWebhook(opts: {
       await conn.execute({
         sql: `UPDATE users SET
                 email = ?,
+                emailVerified = ?,
                 firstName = ?,
                 lastName = ?,
                 displayName = ?,
                 avatarUrl = ?,
                 updatedAt = datetime('now')
               WHERE clerkUserId = ?`,
-        args: [email, firstName, lastName, displayName, avatarUrl, clerkUserId]
+        args: [email, emailVerified, firstName, lastName, displayName, avatarUrl, clerkUserId]
       });
     }
 

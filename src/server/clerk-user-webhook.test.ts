@@ -165,13 +165,14 @@ async function call(
 function getUserByClerkId(clerkUserId: string) {
   const row = db
     .prepare(
-      "SELECT id, clerkUserId, email, firstName, lastName, displayName, avatarUrl, provider, status FROM users WHERE clerkUserId = ?"
+      "SELECT id, clerkUserId, email, emailVerified, firstName, lastName, displayName, avatarUrl, provider, status FROM users WHERE clerkUserId = ?"
     )
     .get(clerkUserId) as
     | {
         id: string;
         clerkUserId: string;
         email: string | null;
+        emailVerified: number;
         firstName: string | null;
         lastName: string | null;
         displayName: string | null;
@@ -194,6 +195,7 @@ describe("Clerk user.created webhook", () => {
     expect(user).toBeDefined();
     expect(user!.clerkUserId).toBe("user_abc123");
     expect(user!.email).toBe("jane@example.com");
+    expect(user!.emailVerified).toBe(1); // Clerk marked the email verified
     expect(user!.firstName).toBe("Jane");
     expect(user!.lastName).toBe("Doe");
     expect(user!.displayName).toBe("Jane Doe");
@@ -228,6 +230,26 @@ describe("Clerk user.created webhook", () => {
     const user = getUserByClerkId("user_abc123");
     expect(user!.displayName).toBe("janedoe");
   });
+
+  it("records emailVerified=0 when Clerk marks the email unverified", async () => {
+    const res = await call(
+      sign(
+        userCreatedPayload({
+          email_addresses: [
+            {
+              id: "idn_1",
+              email_address: "unverified@example.com",
+              verification: { status: "unverified" }
+            }
+          ],
+          primary_email_address_id: "idn_1"
+        })
+      )
+    );
+    expect(res.status).toBe(200);
+    const user = getUserByClerkId("user_abc123");
+    expect(user!.emailVerified).toBe(0);
+  });
 });
 
 describe("Clerk user.updated webhook", () => {
@@ -245,6 +267,7 @@ describe("Clerk user.updated webhook", () => {
     expect(after!.id).toBe(localId); // local UUID stable
     expect(after!.clerkUserId).toBe("user_abc123");
     expect(after!.email).toBe("jane.new@example.com");
+    expect(after!.emailVerified).toBe(1); // verification status carried through update
     expect(after!.lastName).toBe("Smith");
     expect(after!.displayName).toBe("Jane Smith");
     expect(after!.avatarUrl).toBe("https://cdn.clerk.com/avatar2.png");
