@@ -63,6 +63,15 @@
 - Types in `src/types/` (shared types) or co-located
 - Utils in `src/lib/` or `src/server/utils.ts`
 
+## Subdomain Routing
+
+This project serves four product subdomains (`nessa.freno.me`, `lineage.freno.me`, `gaze.freno.me`, `inputhalo.freno.me`) plus the personal site on `freno.me`. See `docs/subdomain-setup.md` for DNS/Vercel configuration.
+
+- **Route placement:** Subdomain pages live under `src/routes/<prefix>/*` (e.g. `src/routes/nessa/...`). The `vercel.json` host-based rewrites map each subdomain to its prefix.
+- **Site context:** Use `useSite()` (SolidJS) or `getSiteFromEvent`/`getSiteFromRequest` (server) from `src/lib/site-context.ts` to detect the current site. Never host-snoop in route files — SolidStart's router can't match on host.
+- **API routes:** `/api/*` is a shared pool — subdomain API requests pass through to existing routes via vercel.json pass-through rewrites (ordering matters).
+- **Auth:** Host-scoped only — no cookie domain broadening.
+
 ## Key Differences from React
 See `src/lib/SOLID-PATTERNS.md` for comprehensive React→Solid conversion guide. Key gotchas:
 - Signals must be called with `()` to read value
