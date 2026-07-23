@@ -1,31 +1,29 @@
-import { PageHead } from "~/components/PageHead";
-import DeletionForm from "~/components/DeletionForm";
+/**
+ * Legacy Life and Lineage account-deletion route — now a 308 permanent
+ * redirect to the Lineage subdomain (task 11).
+ *
+ * The deletion form has been migrated to `src/routes/lineage/deletion.tsx`
+ * served at `lineage.freno.me/deletion` (vercel.json host rewrites map the
+ * subdomain to the `/lineage/*` internal prefix). Keeping this route as a
+ * permanent (308) server-side redirect — rather than a client `<Navigate>` —
+ * preserves SEO equity and gives installed / linked / support-emailed URLs a
+ * stable resolution path to the new home.
+ *
+ * Implemented as a SolidStart API route (`GET` handler returning a Response)
+ * so the redirect happens before any rendering; the route no longer ships a
+ * page component. The redirect target is centralized in
+ * `~/routes/lineage/deletion-content.ts` (`LEGACY_DELETION_REDIRECT_TARGET`)
+ * so the unit test can assert the destination without importing this server
+ * module.
+ */
+import { LEGACY_DELETION_REDIRECT_TARGET } from "~/routes/lineage/deletion-content";
 
-export default function LifeAndLinageDeletionForm() {
-  return (
-    <>
-      <PageHead
-        title="Account Deletion - Life and Lineage"
-        description="Request account deletion for Life and Lineage. Remove all your data from our system with a 24-hour grace period."
-      />
-      <div class="pt-20">
-        <div class="mx-auto p-4 md:p-6 lg:p-12">
-          <div class="text-text w-full justify-center">
-            <div class="text-xl">
-              <em>What will happen</em>:
-            </div>
-            Once you send, if a match to the email provided is found in our
-            system, a 24hr grace period is started where you can request a
-            cancellation of the account deletion. Once the grace period ends,
-            the account's entry in our central database will be completely
-            removed, and your individual database storing your remote saves will
-            also be deleted. No data related to the account is retained in any
-            way.
-          </div>
-
-          <DeletionForm />
-        </div>
-      </div>
-    </>
-  );
+export function GET() {
+  return new Response(null, {
+    status: 308,
+    headers: {
+      Location: LEGACY_DELETION_REDIRECT_TARGET,
+      "Cache-Control": "public, max-age=0, must-revalidate"
+    }
+  });
 }

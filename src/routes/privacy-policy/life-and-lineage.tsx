@@ -36,7 +36,7 @@ export default function PrivacyPolicy() {
                 <div class="-ml-6">(b) Data Removal:</div> Users can request the
                 removal of all information related to them by visiting{" "}
                 <A
-                  href="/deletion/life-and-lineage"
+                  href="https://lineage.freno.me/deletion"
                   class="text-blue hover-underline-animation"
                 >
                   this page

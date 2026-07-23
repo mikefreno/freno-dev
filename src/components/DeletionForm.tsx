@@ -3,7 +3,32 @@ import CountdownCircleTimer from "~/components/CountdownCircleTimer";
 import { Spinner } from "~/components/Spinner";
 import { getClientCookie } from "~/lib/cookies.client";
 
-export default function DeletionForm() {
+/**
+ * Product discriminator forwarded to the generalized
+ * `misc.sendDeletionRequestEmail` mutation so the email copy + cooldown
+ * cookie are product-appropriate (task 11).
+ */
+export type DeletionProduct = "lineage" | "nessa";
+
+export interface DeletionFormProps {
+  /**
+   * Product whose account is being deleted. Determines the email branding
+   * AND the cooldown cookie name on the server. Defaults to `"lineage"`
+   * (the original / legacy flow) for backward compatibility.
+   */
+  product?: DeletionProduct;
+  /**
+   * Cooldown cookie name read on mount + written by the server response
+   * (the mutation sets its own cookie; this is only for the client-side
+   * countdown). Defaults to the legacy `deletionRequestSent` name so an
+   * in-flight Lineage cooldown survives the legacy redirect.
+   */
+  cookieName?: string;
+}
+
+export default function DeletionForm(props: DeletionFormProps = {}) {
+  const product = () => props.product ?? "lineage";
+  const cookieName = () => props.cookieName ?? "deletionRequestSent";
   const [countDown, setCountDown] = createSignal(0);
   const [emailSent, setEmailSent] = createSignal(false);
   const [error, setError] = createSignal("");
@@ -28,7 +53,7 @@ export default function DeletionForm() {
   };
 
   createEffect(() => {
-    const timer = getClientCookie("deletionRequestSent");
+    const timer = getClientCookie(cookieName());
     if (timer) {
       timerInterval = setInterval(
         () => calcRemainder(timer),
@@ -60,14 +85,14 @@ export default function DeletionForm() {
       const response = await fetch("/api/trpc/misc.sendDeletionRequestEmail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, product: product() })
       });
 
       const result = await response.json();
 
       if (response.ok && result.result?.data?.message === "request sent") {
         setEmailSent(true);
-        const timer = getClientCookie("deletionRequestSent");
+        const timer = getClientCookie(cookieName());
         if (timer) {
           if (timerInterval) {
             clearInterval(timerInterval);

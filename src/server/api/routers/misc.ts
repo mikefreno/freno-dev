@@ -52,6 +52,24 @@ export function assertS3KeyOwnership(key: string, userId: string | null): void {
     });
   }
 }
+
+// ============================================================
+// Account-deletion request email (task 11 — product-aware)
+// ============================================================
+//
+// Pure helpers live in `./deletion-email.ts` (env-free) so they can be unit-
+// tested in `bun:test` without a populated `.env`. Re-exported here for the
+// tRPC mutation below + for callers that already import from `misc`.
+export {
+  DELETION_PRODUCT_SCHEMA,
+  deletionCookieName,
+  deletionEmailContent
+} from "./deletion-email";
+export type {
+  DeletionProduct,
+  DeletionEmailContent
+} from "./deletion-email";
+
 const assets: Record<string, string> = {
   "shapes-with-abigail": "shapes-with-abigail.apk",
   "magic-delve": "magic-delve.apk",
@@ -453,9 +471,21 @@ export const miscRouter = createTRPCRouter({
     }),
 
   sendDeletionRequestEmail: csrfProtectedProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(
+      z.object({
+        email: z.string().email(),
+        /** Product discriminator (task 11) — defaults to "lineage" for backward compat. */
+        product: DELETION_PRODUCT_SCHEMA.default("lineage")
+      })
+    )
     .mutation(async ({ input }) => {
-      const deletionExp = getCookie("deletionRequestSent");
+      const cookieName = deletionCookieName(input.product);
+      const { subject, operatorHtml, userHtml } = deletionEmailContent(
+        input.product,
+        input.email
+      );
+
+      const deletionExp = getCookie(cookieName);
       let remaining = 0;
 
       if (deletionExp) {
@@ -479,8 +509,8 @@ export const miscRouter = createTRPCRouter({
           email: "michael@freno.me"
         },
         to: [{ email: "michael@freno.me" }],
-        htmlContent: `<html><head></head><body><div>Request Name: Life and Lineage Account Deletion</div><div>Request Email: ${input.email}</div></body></html>`,
-        subject: "Life and Lineage Acct Deletion"
+        htmlContent: operatorHtml,
+        subject
       };
 
       const sendinblueUserData = {
@@ -489,8 +519,8 @@ export const miscRouter = createTRPCRouter({
           email: "michael@freno.me"
         },
         to: [{ email: input.email }],
-        htmlContent: `<html><head></head><body><div>Request Name: Life and Lineage Account Deletion</div><div>Account to delete: ${input.email}</div><div>You can email michael@freno.me in the next 24hrs to cancel the deletion, email with subject line "Account Deletion Cancellation"</div></body></html>`,
-        subject: "Life and Lineage Acct Deletion"
+        htmlContent: userHtml,
+        subject
       };
 
       try {
@@ -538,7 +568,7 @@ export const miscRouter = createTRPCRouter({
         ]);
 
         const exp = new Date(Date.now() + COOLDOWN_TIMERS.CONTACT_REQUEST_MS);
-        setCookie("deletionRequestSent", exp.toUTCString(), {
+        setCookie(cookieName, exp.toUTCString(), {
           expires: exp,
           path: "/"
         });
