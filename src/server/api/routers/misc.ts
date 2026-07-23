@@ -21,7 +21,17 @@ import {
   APIError,
   verifyTurnstileToken
 } from "~/server/fetch-utils";
-import { NETWORK_CONFIG, COOLDOWN_TIMERS, VALIDATION_CONFIG, TURNSTILE_CONFIG } from "~/config";
+import {
+  NETWORK_CONFIG,
+  COOLDOWN_TIMERS,
+  VALIDATION_CONFIG,
+  TURNSTILE_CONFIG
+} from "~/config";
+import {
+  CONTACT_RECIPIENT_EMAIL,
+  CONTACT_SENDER,
+  buildContactSubject
+} from "~/lib/contact-config";
 
 // Allowed S3 key types — prevents path traversal via type parameter (p8-008)
 const ALLOWED_S3_TYPES = ["blog", "attachments", "avatars", "users"] as const;
@@ -348,7 +358,14 @@ export const miscRouter = createTRPCRouter({
           .string()
           .min(1)
           .max(VALIDATION_CONFIG.MAX_CONTACT_MESSAGE_LENGTH),
-        turnstileToken: z.string().min(1, "Please complete the security check")
+        turnstileToken: z.string().min(1, "Please complete the security check"),
+        /**
+         * Per-site subject prefix injected into the outbound email subject
+         * (task 09). Defaults to `"freno.me"` so existing callers (pre-task-09
+         * main-site contact form) keep emitting the byte-identical legacy
+         * subject `"freno.me Contact Request"`.
+         */
+        subjectPrefix: z.string().min(1).max(50).optional().default("freno.me")
       })
     )
     .mutation(async ({ input }) => {
@@ -395,14 +412,12 @@ export const miscRouter = createTRPCRouter({
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#039;");
 
+      const subject = buildContactSubject(input.subjectPrefix);
       const sendinblueData = {
-        sender: {
-          name: "freno.me",
-          email: "michael@freno.me"
-        },
-        to: [{ email: "michael@freno.me" }],
-        htmlContent: `<html><head></head><body><div>Request Name: ${escapeHtml(input.name)}</div><div>Request Email: ${escapeHtml(input.email)}</div><div>Request Message: ${escapeHtml(input.message)}</div></body></html>`,
-        subject: "freno.me Contact Request"
+        sender: { ...CONTACT_SENDER },
+        to: [{ email: CONTACT_RECIPIENT_EMAIL }],
+        htmlContent: `<html><head></head><body><div>Source: ${escapeHtml(input.subjectPrefix)}</div><div>Request Name: ${escapeHtml(input.name)}</div><div>Request Email: ${escapeHtml(input.email)}</div><div>Request Message: ${escapeHtml(input.message)}</div></body></html>`,
+        subject
       };
 
       try {
