@@ -1,17 +1,31 @@
 import { Title, Meta, Link } from "@solidjs/meta";
+import { useLocation } from "@solidjs/router";
+import { useSite } from "~/context/SiteContext";
+import {
+  resolvePageHeadMeta,
+  type PageHeadProps
+} from "~/components/page-head-meta";
 
-export interface PageHeadProps {
-  title: string;
-  description?: string;
-  ogImage?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  canonical?: string;
-}
+// Re-export the pure types + resolver so existing imports
+// (`import { PageHead } from "~/components/PageHead"`) plus any consumer that
+// wants the meta helper resolve from a single module path.
+export {
+  resolvePageHeadMeta,
+  type PageHeadProps,
+  type ResolvedPageHeadMeta
+} from "~/components/page-head-meta";
 
 /**
  * PageHead component for consistent page metadata across the application.
- * Automatically appends " | Michael Freno" to the title.
+ *
+ * Site-aware (task 02): reads `useSite()` for the per-site title suffix,
+ * canonical domain, and default OpenGraph image, so the same component
+ * renders `" | Michael Freno"` / `" | Nessa"` / … depending on the active
+ * subdomain. Canonical URLs are auto-derived from the site domain + the
+ * current router pathname unless an explicit `canonical` override is given.
+ *
+ * The actual derivation lives in the pure `resolvePageHeadMeta` helper (see
+ * `~/components/page-head-meta.ts`) so it can be unit-tested without a DOM.
  *
  * @example
  * ```tsx
@@ -23,27 +37,25 @@ export interface PageHeadProps {
  * ```
  */
 export default function PageHead(props: PageHeadProps) {
-  const fullTitle = () => `${props.title} | Michael Freno`;
+  const site = useSite();
+  const location = useLocation();
+
+  const meta = () => resolvePageHeadMeta(props, site(), location.pathname);
 
   return (
     <>
-      <Title>{fullTitle()}</Title>
-      {props.description && (
-        <Meta name="description" content={props.description} />
+      <Title>{meta().title}</Title>
+      {meta().description && (
+        <Meta name="description" content={meta().description} />
       )}
-      {props.canonical && <Link rel="canonical" href={props.canonical} />}
+      <Link rel="canonical" href={meta().canonical} />
 
       {/* Open Graph / Social Media Tags */}
-      {(props.ogTitle || props.title) && (
-        <Meta property="og:title" content={props.ogTitle || props.title} />
+      <Meta property="og:title" content={meta().ogTitle} />
+      {meta().ogDescription && (
+        <Meta property="og:description" content={meta().ogDescription} />
       )}
-      {(props.ogDescription || props.description) && (
-        <Meta
-          property="og:description"
-          content={props.ogDescription || props.description}
-        />
-      )}
-      {props.ogImage && <Meta property="og:image" content={props.ogImage} />}
+      <Meta property="og:image" content={meta().ogImage} />
     </>
   );
 }
