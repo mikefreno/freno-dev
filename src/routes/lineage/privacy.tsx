@@ -17,6 +17,7 @@
  */
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import SubdomainHeader from "~/components/SubdomainHeader";
 
 export default function LineagePrivacyPolicy() {
   return (
@@ -25,6 +26,7 @@ export default function LineagePrivacyPolicy() {
         title="Privacy Policy"
         description="Privacy policy for Life and Lineage mobile game, outlining data collection, usage, and user rights."
       />
+      <SubdomainHeader />
       <div class="min-h-screen px-[8vw] py-[10vh]">
         <div class="py-4 text-xl">Life and Lineage&apos;s Privacy Policy</div>
         <div class="py-2">Last Updated: October 22, 2024</div>
@@ -52,10 +54,7 @@ export default function LineagePrivacyPolicy() {
               <div class="pb-2">
                 <div class="-ml-6">(b) Data Removal:</div> Users can request the
                 removal of all information related to them by visiting{" "}
-                <A
-                  href="/deletion"
-                  class="text-blue hover-underline-animation"
-                >
+                <A href="/deletion" class="text-blue hover-underline-animation">
                   this page
                 </A>{" "}
                 and filling out the provided form.

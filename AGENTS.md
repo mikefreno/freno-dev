@@ -1,6 +1,7 @@
 # Agent Guidelines for freno-dev
 
 ### Tech Stack
+
 - **Framework**: SolidJS with SolidStart (Vinxi)
 - **Routing**: @solidjs/router
 - **API**: tRPC v10 with Zod validation
@@ -9,20 +10,33 @@
 - **Runtime**: Bun (Node >=22)
 - **Deployment**: Vercel preset
 
+## Content Rules
+
+### No Competitor Mentions
+
+- **Never mention a competitor's product by name** in any user-facing content (landing pages, marketing copy, comparison tables, meta descriptions, emails, FAQs, etc.).
+  - This includes but is not limited to products like Strava, Garmin, etc.
+  - Describe the product's own merits and positioning on its own terms. Use generic descriptions instead of naming competitors.
+  - This applies to ALL products (Nessa, Lineage, Gaze, InputHalo) and the main site.
+  - If existing content already names a competitor, remove or generalize it when working in that file.
+
 ## Code Style
 
 ### Naming Conventions
+
 - **Files/Components**: PascalCase (e.g., `Button.tsx`, `UserProfile.tsx`)
 - **Variables/Functions**: camelCase (e.g., `getUserID`, `displayName`)
 - **Types/Interfaces**: PascalCase (e.g., `User`, `ButtonProps`)
 - **Constants**: camelCase or UPPER_SNAKE_CASE for true constants
 
 ### Imports
+
 - Prefer named imports from solid-js: `import { createSignal, Show, For } from "solid-js"`
 - Use `~/*` path alias for src imports: `import { api } from "~/lib/api"`
 - Group imports: external deps → solid-js → local (~/)
 
 ### SolidJS Patterns (NOT React!)
+
 - **State**: Use `createSignal()` not `useState`. Always call signals: `count()` to read
 - **Effects**: Use `createEffect()` not `useEffect`. Auto-tracks dependencies (no array)
 - **Conditionals**: Prefer `<Show when={condition()}>` over `&&` or ternary
@@ -31,6 +45,7 @@
 - **Refs**: Use `let ref` binding or `createSignal()` for reactive refs
 
 ### TypeScript
+
 - **Strict mode enabled** - always type function params and returns
 - Use interfaces for props: `export interface ButtonProps extends JSX.HTMLAttributes<T>`
 - Use `splitProps()` for component prop destructuring
@@ -38,6 +53,7 @@
 - Database types: Cast with `as unknown as User` for SQL results
 
 ### API/Server Patterns
+
 - **tRPC routers**: Export from `src/server/api/routers/*.ts`
 - **Procedures**: Use `.query()` for reads, `.mutation()` for writes
 - **Validation**: Use Zod schemas in `.input()` - validate all user input
@@ -46,17 +62,20 @@
 - **Database**: Use `ConnectionFactory()` singleton, parameterized queries only
 
 ### Error Handling
+
 - Use TRPCError with semantic codes on server
 - Validate inputs with Zod schemas before processing
 - Check auth state before mutations: throw UNAUTHORIZED if missing userId
 - Return structured responses: `{ success: boolean, message?: string }`
 
 ### Comments
+
 - **Minimal comments** - prefer self-documenting code
 - JSDoc for exported functions/components only
 - Inline comments for non-obvious logic only
 
 ### File Organization
+
 - Routes in `src/routes/` (file-based routing)
 - Components in `src/components/` (reusable) or co-located with routes
 - API routers in `src/server/api/routers/`
@@ -73,7 +92,9 @@ This project serves four product subdomains (`nessa.freno.me`, `lineage.freno.me
 - **Auth:** Host-scoped only — no cookie domain broadening.
 
 ## Key Differences from React
+
 See `src/lib/SOLID-PATTERNS.md` for comprehensive React→Solid conversion guide. Key gotchas:
+
 - Signals must be called with `()` to read value
 - `onChange` → `onInput` for real-time input updates
 - `useEffect` → `createEffect` (auto-tracking, no deps array)

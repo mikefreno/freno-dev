@@ -1,8 +1,55 @@
+import { Switch, Match, type JSX } from "solid-js";
 import { PageHead } from "~/components/PageHead";
 import { DarkModeToggle } from "~/components/DarkModeToggle";
 import { Typewriter } from "~/components/Typewriter";
+import { useSite } from "~/context/SiteContext";
+import NessaLanding from "./nessa";
+import LineageLanding from "./lineage";
+import GazeLanding from "./gaze";
+import InputHaloLanding from "./inputhalo";
 
-export default function Home() {
+/**
+ * Root route handler.
+ *
+ * SolidStart's file router cannot match on host, so `vercel.json` host
+ * rewrites (`nessa.freno.me/(.*) → /nessa/$1`) map each subdomain onto its
+ * `src/routes/<prefix>/*` file route in production. The vinxi dev server
+ * ignores `vercel.json`, however — so in dev a subdomain root (`nessa.localhost/`)
+ * would otherwise fall through to this `index.tsx` and render Mike's personal
+ * page with only the sidebar changing.
+ *
+ * The AGENTS.md-sanctioned remedy is to branch on the resolved `Site` (via
+ * the `useSite()` accessor from `src/lib/site-context.ts`, NOT raw host
+ * sifting) and render the matching subdomain landing component here. This
+ * makes the subdomain roots render their unique landing pages in dev *and*
+ * acts as a production safety net should a Vercel rewrite ever fail to fire.
+ * In production the vercel rewrite still wins — `nessa.freno.me/` →
+ * `/nessa/index.tsx` directly — so the two paths render the same component:
+ * `NessaLanding`.
+ */
+export default function Home(): JSX.Element {
+  const site = useSite();
+
+  return (
+    <Switch fallback={<MainHome />}>
+      <Match when={site().id === "nessa"}>
+        <NessaLanding />
+      </Match>
+      <Match when={site().id === "lineage"}>
+        <LineageLanding />
+      </Match>
+      <Match when={site().id === "gaze"}>
+        <GazeLanding />
+      </Match>
+      <Match when={site().id === "inputhalo"}>
+        <InputHaloLanding />
+      </Match>
+    </Switch>
+  );
+}
+
+/** The freno.me personal site landing page (default/main host only). */
+function MainHome(): JSX.Element {
   return (
     <>
       <PageHead

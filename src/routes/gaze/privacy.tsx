@@ -15,6 +15,7 @@
  */
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import SubdomainHeader from "~/components/SubdomainHeader";
 
 export default function GazePrivacyPolicy() {
   return (
@@ -23,9 +24,10 @@ export default function GazePrivacyPolicy() {
         title="Privacy Policy"
         description="Privacy policy for Gaze, a macOS eye health reminder app."
       />
+      <SubdomainHeader />
       <div class="min-h-screen px-[8vw] py-[10vh]">
         <div class="py-4 text-xl">Gaze&apos;s Privacy Policy</div>
-        <div class="py-2">Last Updated: February 9, 2026</div>
+        <div class="py-2">Last Updated: July 23, 2026</div>
         <div class="py-2">
           Welcome to Gaze (&apos;We&apos;, &apos;Us&apos;, &apos;Our&apos;).
           Your privacy is important to us. This privacy policy will help you

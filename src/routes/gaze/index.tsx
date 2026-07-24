@@ -1,26 +1,30 @@
-import { createSignal } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import SubdomainHeader from "~/components/SubdomainHeader";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
 import Button from "~/components/ui/Button";
 import { useDarkMode } from "~/context/darkMode";
 import { downloadAsset } from "~/lib/download-asset";
 
-const GAZE_APP_STORE_URL =
-  "https://apps.apple.com/us/app/gaze/id6757759498";
-const GAZE_MIN_MACOS = "13.0";
+const GAZE_APP_STORE_URL = "https://apps.apple.com/us/app/gaze/id6757759498";
+const GAZE_MIN_MACOS = "14.6";
 
 const FEATURES = [
   {
-    title: "Take regular breaks",
-    body: "Gentle, dismissable reminders nudge you to step away from the screen so you can rest and reset."
+    title: "Blink reminders",
+    body: "Subtle prompts help you remember to blink more often, reducing dry-eye strain during long sessions."
   },
   {
-    title: "Eye health reminders",
+    title: "20-20-20 eye breaks",
     body: "Follow the 20-20-20 rule — every 20 minutes, look at something 20 feet away for 20 seconds."
   },
   {
-    title: "Posture reminders",
-    body: "Periodic check-ins help you catch slouching before it becomes a habit."
+    title: "Posture check-ins",
+    body: "Periodic reminders help you catch slouching before it becomes a habit."
+  },
+  {
+    title: "Customizable intervals",
+    body: "Set the reminder cadence that fits your workflow, from gentle nudges to strict schedules."
   },
   {
     title: "Lives in your menu bar",
@@ -53,11 +57,13 @@ export default function GazeLanding() {
     <>
       <PageHead
         title="Eye & posture health reminder for macOS"
-        description="Gaze is a macOS menu bar app for eye and posture health — gentle reminders to take breaks, rest your eyes, and sit up straight. Download Gaze for macOS."
+        description="Gaze is a macOS menu bar app for eye and posture health — blink reminders, 20-20-20 breaks, posture check-ins, and customizable reminder intervals."
         ogImage="/look-away.png"
         ogTitle="Gaze — Eye and posture health reminder for macOS"
-        ogDescription="A macOS menu bar app that helps you remember to take breaks and rest your eyes."
+        ogDescription="A macOS menu bar app that helps you remember to blink, take breaks, and sit up straight."
       />
+
+      <SubdomainHeader />
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <div class="relative flex min-h-screen flex-col">
@@ -65,7 +71,7 @@ export default function GazeLanding() {
           <img
             src="/look-away.png"
             alt="Look away — Gaze hero background"
-            class="h-full w-full select-none object-cover"
+            class="h-full w-full object-cover select-none"
             style={{ "pointer-events": "none" }}
           />
         </div>
@@ -120,17 +126,17 @@ export default function GazeLanding() {
           <h2 class="text-text mb-12 text-center text-3xl font-bold">
             Small reminders, healthier habits
           </h2>
-          <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
-            {FEATURES.map((feature) => (
-              <div
-                class="border-overlay0 bg-surface0 rounded-lg border p-6"
-              >
-                <h3 class="text-text mb-2 text-xl font-semibold">
-                  {feature.title}
-                </h3>
-                <p class="text-subtext0 leading-relaxed">{feature.body}</p>
-              </div>
-            ))}
+          <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <For each={FEATURES}>
+              {(feature) => (
+                <div class="border-overlay0 bg-surface0 rounded-lg border p-6">
+                  <h3 class="text-text mb-2 text-xl font-semibold">
+                    {feature.title}
+                  </h3>
+                  <p class="text-subtext0 leading-relaxed">{feature.body}</p>
+                </div>
+              )}
+            </For>
           </div>
         </div>
       </section>

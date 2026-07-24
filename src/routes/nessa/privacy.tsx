@@ -30,6 +30,7 @@
  */
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import SubdomainHeader from "~/components/SubdomainHeader";
 
 export default function NessaPrivacyPolicy() {
   return (
@@ -38,9 +39,10 @@ export default function NessaPrivacyPolicy() {
         title="Privacy Policy"
         description="Privacy policy for Nessa, a community platform for clubs, challenges, and social features."
       />
+      <SubdomainHeader />
       <div class="min-h-screen px-[8vw] py-[10vh]">
         <div class="py-4 text-xl">Nessa&apos;s Privacy Policy</div>
-        <div class="py-2">Last Updated: February 9, 2026</div>
+        <div class="py-2">Last Updated: July 23, 2026</div>
         <div class="py-2">
           Welcome to Nessa (&apos;We&apos;, &apos;Us&apos;, &apos;Our&apos;).
           Your privacy is important to us. This privacy policy will help you
@@ -86,18 +88,14 @@ export default function NessaPrivacyPolicy() {
                 <div class="-ml-6">(d) Data Removal:</div> You can request the
                 removal of your Nessa account and all associated content by
                 contacting us{" "}
-                <A
-                  href="/contact"
-                  class="text-blue hover-underline-animation"
-                >
+                <A href="/contact" class="text-blue hover-underline-animation">
                   here
                 </A>
-                . On receipt of your request we will remove your account
-                record, your club memberships, your challenges and
-                participation data, and your posts, comments, and likes from the
-                Nessa database, and we will request that Clerk delete the
-                corresponding user record. A short grace period may apply while
-                the deletion is processed.
+                . On receipt of your request we will remove your account record,
+                your club memberships, your challenges and participation data,
+                and your posts, comments, and likes from the Nessa database, and
+                we will request that Clerk delete the corresponding user record.
+                A short grace period may apply while the deletion is processed.
               </div>
             </div>
           </div>
@@ -120,13 +118,13 @@ export default function NessaPrivacyPolicy() {
               </div>
               <div class="pb-2">
                 <div class="-ml-6">(b) Clerk as Identity Provider:</div> Your
-                authentication credentials (such as your password, if you use
-                an email/password sign-in) are handled exclusively by Clerk
-                under Clerk&apos;s own privacy policy. Nessa never receives,
-                stores, or transmits your password. When you sign in, Nessa
-                receives a session token from Clerk that lets us identify you;
-                this token is verified on each request and is not persisted in
-                our database.
+                authentication credentials (such as your password, if you use an
+                email/password sign-in) are handled exclusively by Clerk under
+                Clerk&apos;s own privacy policy. Nessa never receives, stores,
+                or transmits your password. When you sign in, Nessa receives a
+                session token from Clerk that lets us identify you; this token
+                is verified on each request and is not persisted in our
+                database.
               </div>
             </div>
           </div>

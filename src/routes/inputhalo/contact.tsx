@@ -1,4 +1,5 @@
 import { ContactForm } from "~/components/ContactForm";
+import SubdomainHeader from "~/components/SubdomainHeader";
 
 /**
  * InputHalo contact page (`inputhalo.freno.me/contact`).
@@ -16,5 +17,10 @@ import { ContactForm } from "~/components/ContactForm";
  * `[InputHalo] Contact Request`.
  */
 export default function InputHaloContactPage() {
-  return <ContactForm />;
+  return (
+    <>
+      <SubdomainHeader />
+      <ContactForm />
+    </>
+  );
 }

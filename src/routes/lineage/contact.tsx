@@ -1,5 +1,5 @@
 import { ContactForm } from "~/components/ContactForm";
-import { LineageContactQuestions } from "~/routes/contact";
+import SubdomainHeader from "~/components/SubdomainHeader";
 
 /**
  * Life and Lineage contact page (`lineage.freno.me/contact`).
@@ -9,9 +9,9 @@ import { LineageContactQuestions } from "~/routes/contact";
  * — is derived from `useSite()` inside the component via
  * `CONTACT_CONTEXT.lineage`.
  *
- * Renders the Life-and-Lineage FAQ accordion (re-imported from the main-site
- * contact route so the canonical definition lives in one place) above the
- * form — the lineage subdomain is the natural home for product support Q&A.
+ * Subdomain contact pages intentionally render only the shared contact form —
+ * no Life-and-Lineage FAQ accordion and no main-site disclaimer subline
+ * (those remain exclusive to the main `freno.me/contact` page).
  *
  * vercel.json rewrites `lineage.freno.me/*` → the internal `/lineage/*` route
  * prefix; the browser URL stays `lineage.freno.me/contact`.
@@ -22,8 +22,9 @@ import { LineageContactQuestions } from "~/routes/contact";
  */
 export default function LineageContactPage() {
   return (
-    <ContactForm>
-      <LineageContactQuestions />
-    </ContactForm>
+    <>
+      <SubdomainHeader />
+      <ContactForm />
+    </>
   );
 }

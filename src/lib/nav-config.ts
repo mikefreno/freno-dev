@@ -69,8 +69,8 @@ export const BACK_TO_FRENO: NavItem = {
  *  - main: Home, Blog, Downloads, Resume, Contact, GitHub, LinkedIn
  *  - nessa: Home, Contact, Privacy
  *  - lineage: Home, Downloads, Contact, Privacy, Account Deletion
- *  - gaze: Home, Contact, Privacy
- *  - inputhalo: Home, Contact, Privacy
+ *  - gaze: Home, Contact, Privacy, Downloads
+ *  - inputhalo: Home, Contact, Privacy, Downloads
  */
 export const NAV_CONFIG: Record<SiteId, NavItem[]> = {
   main: [
@@ -107,12 +107,14 @@ export const NAV_CONFIG: Record<SiteId, NavItem[]> = {
   gaze: [
     { label: "Home", href: "/", icon: "home" },
     { label: "Contact", href: "/contact", icon: "contact" },
-    { label: "Privacy", href: "/privacy", icon: "privacy" }
+    { label: "Privacy", href: "/privacy", icon: "privacy" },
+    { label: "Downloads", href: "/downloads", icon: "downloads" }
   ],
   inputhalo: [
     { label: "Home", href: "/", icon: "home" },
     { label: "Contact", href: "/contact", icon: "contact" },
-    { label: "Privacy", href: "/privacy", icon: "privacy" }
+    { label: "Privacy", href: "/privacy", icon: "privacy" },
+    { label: "Downloads", href: "/downloads", icon: "downloads" }
   ]
 };
 

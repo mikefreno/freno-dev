@@ -31,6 +31,7 @@
 import { A } from "@solidjs/router";
 import { createSignal, onMount, onCleanup } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import SubdomainHeader from "~/components/SubdomainHeader";
 import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
 import Button from "~/components/ui/Button";
 import { glitchText } from "~/lib/client-utils";
@@ -71,10 +72,9 @@ export default function LineageDownloadsPage() {
 
   return (
     <>
-      <PageHead
-        title={PAGE_META.title}
-        description={PAGE_META.description}
-      />
+      <PageHead title={PAGE_META.title} description={PAGE_META.description} />
+
+      <SubdomainHeader />
 
       <div class="bg-base relative min-h-screen overflow-hidden px-4 pt-[15vh] pb-12 md:px-8">
         {/* Subtle scanline effect — consistent with the unified downloads page. */}
@@ -131,7 +131,7 @@ export default function LineageDownloadsPage() {
           </div>
 
           {/* Secondary CTA → landing page */}
-          <p class="mt-12 text-center text-sm text-subtext0">
+          <p class="text-subtext0 mt-12 text-center text-sm">
             <A
               href={LINEAGE_HOME_HREF}
               class="underline transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105"

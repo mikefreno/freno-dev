@@ -1,23 +1,16 @@
 /**
- * Deterministic `PageHead` metadata for the Nessa landing page (task 07).
+ * Deterministic `PageHead` metadata for the Nessa landing page.
  *
  * Pure module — imports NOTHING from solid-js / @solidjs/router / @solidjs/meta —
  * so the landing-page metadata can be unit-tested in `bun:test` without
  * spinning up the router / MetaProvider / DOM, mirroring the
  * `page-head-meta.ts` / `nav-config.ts` testability pattern.
  *
- * `index.tsx` imports `NESSA_LANDING_META` and feeds it to `<PageHead …/>`;
- * `meta.test.ts` asserts the *resolved* title / canonical / OG values against
- * the site-aware `resolvePageHeadMeta` helper (task 02) for the `nessa` site.
- *
- * Nessa-specific metadata contract:
- *  - `<title>` resolves to `"Nessa | Nessa"` (props.title + nessa.titleSuffix).
- *  - canonical resolves to `https://nessa.freno.me/` (auto-derived from
- *    `site.domain` + the browser pathname `/` — the vercel.json host rewrite
- *    targets the internal `/nessa` prefix but leaves the public URL clean).
- *  - `og:image` falls back to the site's `ogDefaultImage` (`/nessa/og-default.png`).
- *  - description emphasizes Nessa's community capabilities (clubs, challenges,
- *    social feed, events) — derived from `nessaCommunityRouter`, not fabricated.
+ * Nessa is positioned as a privacy-first fitness app and Strava alternative
+ * (per `~/code/Nessa/plans/2026-03-16-marketing-strategy-launch-positioning.md`).
+ * The description still mentions community features (clubs, challenges) because
+ * those are real free-tier capabilities, but it now leads with the product's
+ * actual purpose: fitness tracking.
  */
 import type { PageHeadProps } from "~/components/page-head-meta";
 
@@ -32,8 +25,8 @@ import type { PageHeadProps } from "~/components/page-head-meta";
 export const NESSA_LANDING_META: PageHeadProps = {
   title: "Nessa",
   description:
-    "Nessa is a community platform for building clubs, running challenges, sharing in a social feed, and organizing events.",
-  ogTitle: "Nessa — Build community. Run challenges. Stay connected.",
+    "Nessa is the fitness app that puts you first. Track running, cycling, swimming and more; compete on free segment leaderboards; and connect with friends through clubs, community challenges, and a social feed — all while keeping your data on your device.",
+  ogTitle: "Nessa — The fitness app that puts you first",
   ogDescription:
-    "Nessa brings clubs, challenges, social posts, and events together in one community platform."
+    "A privacy-first fitness app with segment leaderboards free forever, social clubs, community challenges, Apple Watch support, and premium tiers for less than Strava."
 };

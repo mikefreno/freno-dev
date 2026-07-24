@@ -160,12 +160,53 @@ export function resolveSiteFromHost(host: string | null | undefined): Site {
 }
 
 /**
+ * Resolve a `Site` from a URL pathname by matching a known subdomain route
+ * prefix (e.g. `/nessa/contact` → nessa, `/gaze/downloads` → gaze).
+ *
+ * Returns `null` when the path does not begin with a subdomain prefix so the
+ * caller can distinguish "no match" from "main" and decide whether to fall
+ * back to the host-based result.
+ *
+ * This is the dev-server safety net: on `localhost:3000/nessa/contact` the
+ * Host header is `localhost` (→ main), but the URL path still carries the
+ * subdomain prefix because vercel.json host rewrites do not run locally.
+ * Without this fallback, `useSite()` returns `main` on every subdomain page
+ * in dev, causing `<SubdomainHeader>` to render the main-site nav.
+ *
+ * In production the host rewrite strips the prefix, so the path is `/contact`
+ * (no prefix) and this returns `null` — the host-based result already
+ * resolved correctly.
+ *
+ * Pure & synchronous — no I/O, no env access.
+ */
+export function resolveSiteFromPath(
+  pathname: string | null | undefined
+): Site | null {
+  if (!pathname) return null;
+  for (const site of SUBDOMAIN_SITES) {
+    const prefix = site.baseRoutePrefix; // e.g. "/nessa"
+    // Exact prefix (`/nessa`) or prefix + `/` (`/nessa/contact`).
+    if (pathname === prefix || pathname.startsWith(prefix + "/")) {
+      return site;
+    }
+  }
+  return null;
+}
+
+/**
  * Resolve the active site from a client `window.location`, used by the
  * SolidJS `SiteContext` provider during hydration. Server codepaths should
  * use `getSiteFromEvent` / `getSiteFromRequest` instead.
+ *
+ * When the hostname does not identify a subdomain (e.g. `localhost` in dev),
+ * falls back to checking the URL pathname for a subdomain route prefix so
+ * that `localhost:3000/nessa/contact` resolves to nessa.
  */
 export function resolveSiteFromLocation(
-  hostname: string | null | undefined
+  hostname: string | null | undefined,
+  pathname?: string | null | undefined
 ): Site {
-  return resolveSiteFromHost(hostname);
+  const hostResult = resolveSiteFromHost(hostname);
+  if (hostResult.id !== "main") return hostResult;
+  return resolveSiteFromPath(pathname) ?? hostResult;
 }

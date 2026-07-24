@@ -1,4 +1,5 @@
 import { ContactForm } from "~/components/ContactForm";
+import SubdomainHeader from "~/components/SubdomainHeader";
 
 /**
  * Gaze contact page (`gaze.freno.me/contact`).
@@ -16,5 +17,10 @@ import { ContactForm } from "~/components/ContactForm";
  * `[Gaze] Contact Request`.
  */
 export default function GazeContactPage() {
-  return <ContactForm />;
+  return (
+    <>
+      <SubdomainHeader />
+      <ContactForm />
+    </>
+  );
 }

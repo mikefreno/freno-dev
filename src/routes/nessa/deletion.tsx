@@ -24,6 +24,7 @@
  * Acceptance: `nessa.localhost:3000/deletion` renders the deletion form.
  */
 import { PageHead } from "~/components/PageHead";
+import SubdomainHeader from "~/components/SubdomainHeader";
 import DeletionForm from "~/components/DeletionForm";
 import {
   DELETION_PRODUCT_KEY,
@@ -36,6 +37,7 @@ export default function NessaDeletionPage() {
   return (
     <>
       <PageHead title={PAGE_META.title} description={PAGE_META.description} />
+      <SubdomainHeader />
       <div class="pt-20">
         <div class="mx-auto p-4 md:p-6 lg:p-12">
           <div class="text-text w-full justify-center">

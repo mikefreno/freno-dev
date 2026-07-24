@@ -1,4 +1,9 @@
-import { createTRPCRouter, publicProcedure, protectedProcedure, csrfProtectedProcedure } from "../utils";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+  csrfProtectedProcedure
+} from "../utils";
 import { z } from "zod";
 import {
   S3Client,
@@ -42,7 +47,7 @@ export function sanitizeS3PathComponent(value: string): string {
   // Strip path traversal characters and normalize whitespace
   return value
     .replace(/\s+/g, "-")
-    .replace(/[\/\\]/g, "-")
+    .replace(/[/\\]/g, "-")
     .replace(/\.\./g, "")
     .replace(/[^a-zA-Z0-9_-]/g, "")
     .replace(/-+/g, "-")
@@ -70,15 +75,17 @@ export function assertS3KeyOwnership(key: string, userId: string | null): void {
 // Pure helpers live in `./deletion-email.ts` (env-free) so they can be unit-
 // tested in `bun:test` without a populated `.env`. Re-exported here for the
 // tRPC mutation below + for callers that already import from `misc`.
-export {
+// Import into local scope FIRST — `sendDeletionRequestEmail` below uses
+// these names directly. A bare `export { ... } from` re-export does NOT make
+// the bindings available locally, which caused a ReferenceError that crashed
+// the entire tRPC router (503 on every /api/trpc call).
+import {
   DELETION_PRODUCT_SCHEMA,
   deletionCookieName,
   deletionEmailContent
 } from "./deletion-email";
-export type {
-  DeletionProduct,
-  DeletionEmailContent
-} from "./deletion-email";
+export { DELETION_PRODUCT_SCHEMA, deletionCookieName, deletionEmailContent };
+export type { DeletionProduct, DeletionEmailContent } from "./deletion-email";
 
 const assets: Record<string, string> = {
   "shapes-with-abigail": "shapes-with-abigail.apk",
@@ -378,10 +385,13 @@ export const miscRouter = createTRPCRouter({
       );
 
       if (!turnstileValid) {
-        console.error("Turnstile verification failed for contact form submission");
+        console.error(
+          "Turnstile verification failed for contact form submission"
+        );
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Security verification failed. Please refresh the page and try again."
+          message:
+            "Security verification failed. Please refresh the page and try again."
         });
       }
 

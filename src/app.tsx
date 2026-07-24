@@ -5,6 +5,7 @@ import {
   ErrorBoundary,
   onMount,
   onCleanup,
+  Show,
   Suspense
 } from "solid-js";
 import "./app.css";
@@ -15,7 +16,7 @@ import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
 import { BarsProvider, useBars } from "./context/bars";
 import { DarkModeProvider } from "./context/darkMode";
 import { AuthProvider } from "./context/auth";
-import { SiteProvider } from "./context/SiteContext";
+import { SiteProvider, useSite } from "./context/SiteContext";
 import { createWindowWidth, isMobile } from "~/lib/resize-utils";
 import { MOBILE_CONFIG } from "./config";
 import CustomScrollbar from "./components/CustomScrollbar";
@@ -155,16 +156,52 @@ function AppLayout(props: { children: any }) {
     }
   };
 
+  const site = useSite();
+  const isMainSite = () => site().id === "main";
+
   return (
     <>
-      <div class="flex max-w-screen flex-row overflow-x-hidden">
-        <LeftBar />
-        <div
-          id="center-body"
-          class="bg-base relative h-screen w-screen overflow-x-hidden md:ml-[250px] md:w-[calc(100vw-500px)]"
-        >
+      <Show when={isMainSite()}>
+        <div class="flex max-w-screen flex-row overflow-x-hidden">
+          <LeftBar />
+          <div
+            id="center-body"
+            class="bg-base relative h-screen w-screen overflow-x-hidden md:ml-[250px] md:w-[calc(100vw-500px)]"
+          >
+            <noscript>
+              <div class="bg-yellow text-crust border-text fixed top-0 z-150 border-b-2 p-4 text-center font-semibold md:w-[calc(100vw-500px)]">
+                JavaScript is disabled. Features will be limited.
+              </div>
+            </noscript>
+            <ErrorBoundary
+              fallback={(error, reset) => (
+                <ErrorBoundaryFallback error={error} reset={reset} />
+              )}
+            >
+              <div
+                onMouseUp={handleCenterTapRelease}
+                onTouchEnd={handleCenterTapRelease}
+              >
+                <Suspense fallback={<TerminalSplash inverse />}>
+                  <CustomScrollbar
+                    autoHide={true}
+                    autoHideDelay={1500}
+                    rightOffset={250}
+                  >
+                    {props.children}
+                  </CustomScrollbar>
+                </Suspense>
+              </div>
+            </ErrorBoundary>
+          </div>
+          <RightBar />
+        </div>
+      </Show>
+
+      <Show when={!isMainSite()}>
+        <div class="bg-base min-h-screen w-full overflow-x-hidden">
           <noscript>
-            <div class="bg-yellow text-crust border-text fixed top-0 z-150 border-b-2 p-4 text-center font-semibold md:w-[calc(100vw-500px)]">
+            <div class="bg-yellow text-crust border-text fixed top-0 z-150 w-full border-b-2 p-4 text-center font-semibold">
               JavaScript is disabled. Features will be limited.
             </div>
           </noscript>
@@ -173,24 +210,12 @@ function AppLayout(props: { children: any }) {
               <ErrorBoundaryFallback error={error} reset={reset} />
             )}
           >
-            <div
-              onMouseUp={handleCenterTapRelease}
-              onTouchEnd={handleCenterTapRelease}
-            >
-              <Suspense fallback={<TerminalSplash inverse />}>
-                <CustomScrollbar
-                  autoHide={true}
-                  autoHideDelay={1500}
-                  rightOffset={250}
-                >
-                  {props.children}
-                </CustomScrollbar>
-              </Suspense>
-            </div>
+            <Suspense fallback={<TerminalSplash inverse />}>
+              {props.children}
+            </Suspense>
           </ErrorBoundary>
         </div>
-        <RightBar />
-      </div>
+      </Show>
     </>
   );
 }

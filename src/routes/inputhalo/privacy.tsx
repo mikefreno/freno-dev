@@ -24,6 +24,7 @@
  */
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import SubdomainHeader from "~/components/SubdomainHeader";
 
 export default function InputHaloPrivacyPolicy() {
   return (
@@ -32,15 +33,15 @@ export default function InputHaloPrivacyPolicy() {
         title="Privacy Policy"
         description="Privacy policy for InputHalo, a macOS menu bar productivity app."
       />
+      <SubdomainHeader />
       <div class="min-h-screen px-[8vw] py-[10vh]">
         <div class="py-4 text-xl">InputHalo&apos;s Privacy Policy</div>
-        <div class="py-2">Last Updated: February 9, 2026</div>
+        <div class="py-2">Last Updated: July 23, 2026</div>
         <div class="py-2">
           Welcome to InputHalo (&apos;We&apos;, &apos;Us&apos;,
-          &apos;Our&apos;). Your privacy is important to us. This privacy
-          policy will help you understand our policies and procedures related
-          to the collection, use, and storage of personal information from our
-          users.
+          &apos;Our&apos;). Your privacy is important to us. This privacy policy
+          will help you understand our policies and procedures related to the
+          collection, use, and storage of personal information from our users.
         </div>
         <ol>
           <div class="py-2">
@@ -52,17 +53,17 @@ export default function InputHaloPrivacyPolicy() {
                 <div class="-ml-6">(a) Collection of Personal Data:</div>{" "}
                 InputHalo is designed with privacy as a core principle. We
                 currently do not collect, store, or share any personal
-                information from our users. The app runs entirely on your
-                device as a menu bar utility and does not require any account
-                creation or data transmission to external servers.
+                information from our users. The app runs entirely on your device
+                as a menu bar utility and does not require any account creation
+                or data transmission to external servers.
               </div>
               <div class="pb-2">
                 <div class="-ml-6">(b) Local-Only Settings:</div> Any
                 preferences, configuration, or cached state InputHalo maintains
-                is stored locally on your device using standard macOS
-                mechanisms (such as the user defaults system). This data never
-                leaves your device and is not transmitted to us or to any
-                third-party service.
+                is stored locally on your device using standard macOS mechanisms
+                (such as the user defaults system). This data never leaves your
+                device and is not transmitted to us or to any third-party
+                service.
               </div>
               <div class="pb-2">
                 <div class="-ml-6">(c) Future Data Collection:</div> We may in

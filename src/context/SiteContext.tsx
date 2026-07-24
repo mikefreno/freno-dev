@@ -8,8 +8,10 @@
  *  - Client (hydration): reads the SSR-injected `window.__SITE__` id (written
  *    into the document shell by `entry-server.tsx`) so the post-hydration
  *    value matches the `data-site` attribute on `<html>`. Falls back to
- *    `resolveSiteFromHost(window.location.hostname)` if the injected id is
- *    missing (e.g. client-side navigation / hard refresh quirks).
+ *    `resolveSiteFromLocation(window.location.hostname, window.location.pathname)`
+ *    if the injected id is missing — the pathname fallback covers localhost
+ *    dev where the host is `localhost` but the URL still carries a subdomain
+ *    prefix (`/nessa/contact`).
  *
  * NOTE on race-safety: SSR of a personal site is single-render-per-request in
  * practice; the module-level holder is adequate here. Server functions that
@@ -29,6 +31,7 @@ import { isServer } from "solid-js/web";
 import {
   resolveSiteFromHost,
   resolveSiteFromLocation,
+  resolveSiteFromPath,
   SITE_CONFIG,
   MAIN_SITE,
   type Site,
@@ -59,7 +62,13 @@ export function resolveClientSite(): Site {
   if (typeof window === "undefined") return MAIN_SITE;
   const injected = window.__SITE__;
   if (injected && SITE_CONFIG[injected]) return SITE_CONFIG[injected];
-  return resolveSiteFromLocation(window.location.hostname);
+  // Fall back to hostname + URL-path prefix. On localhost (dev) the host is
+  // `localhost` (→ main) but the path carries the subdomain prefix
+  // (`/nessa/contact` → nessa), so we must consider both.
+  return resolveSiteFromLocation(
+    window.location.hostname,
+    window.location.pathname
+  );
 }
 
 // ── Context ──────────────────────────────────────────────────────────────
@@ -101,4 +110,4 @@ export function useSite(): Accessor<Site> {
 
 export { SITE_CONFIG, MAIN_SITE };
 export type { Site, SiteId };
-export { resolveSiteFromHost, resolveSiteFromLocation };
+export { resolveSiteFromHost, resolveSiteFromLocation, resolveSiteFromPath };

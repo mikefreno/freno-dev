@@ -16,13 +16,7 @@ import {
 } from "./nav-config";
 import { SITE_CONFIG, type SiteId } from "./site-context";
 
-const ALL_SITES: SiteId[] = [
-  "main",
-  "nessa",
-  "lineage",
-  "gaze",
-  "inputhalo"
-];
+const ALL_SITES: SiteId[] = ["main", "nessa", "lineage", "gaze", "inputhalo"];
 
 describe("NAV_CONFIG — per-site link sets", () => {
   it("main → Home, Blog, Downloads, Resume, Contact, GitHub, LinkedIn", () => {
@@ -55,12 +49,22 @@ describe("NAV_CONFIG — per-site link sets", () => {
     ]);
   });
 
-  it("gaze → Home, Contact, Privacy", () => {
-    expect(navLabelsFor("gaze")).toEqual(["Home", "Contact", "Privacy"]);
+  it("gaze → Home, Contact, Privacy, Downloads", () => {
+    expect(navLabelsFor("gaze")).toEqual([
+      "Home",
+      "Contact",
+      "Privacy",
+      "Downloads"
+    ]);
   });
 
-  it("inputhalo → Home, Contact, Privacy", () => {
-    expect(navLabelsFor("inputhalo")).toEqual(["Home", "Contact", "Privacy"]);
+  it("inputhalo → Home, Contact, Privacy, Downloads", () => {
+    expect(navLabelsFor("inputhalo")).toEqual([
+      "Home",
+      "Contact",
+      "Privacy",
+      "Downloads"
+    ]);
   });
 });
 
