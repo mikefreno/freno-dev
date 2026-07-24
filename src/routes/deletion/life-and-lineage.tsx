@@ -1,6 +1,6 @@
 /**
  * Legacy Life and Lineage account-deletion route — now a 308 permanent
- * redirect to the Lineage subdomain (task 11).
+ * redirect to the Lineage subdomain.
  *
  * The deletion form has been migrated to `src/routes/lineage/deletion.tsx`
  * served at `lineage.freno.me/deletion` (vercel.json host rewrites map the

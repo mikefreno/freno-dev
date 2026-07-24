@@ -1,18 +1,17 @@
 /**
  * Lineage per-subdomain downloads page — `lineage.freno.me/downloads`
- * (task 11).
+ * (see `./deletion-content.ts`).
  *
  * Served at the public browser path `/downloads` (vercel.json host rewrites
  * `lineage.freno.me/*` → the internal `/lineage/*` route prefix, leaving the
- * browser URL clean — task 02 canonical rule). The nav-config "Downloads"
- * entry and the landing page's Google Play badge both point at this path
- * (tasks 04 + 08).
+ * browser URL clean. The nav-config "Downloads"
+ * entry and the landing page's Google Play badge both point at this path.
  *
  * Download surface (mirrors the Lineage section of the unified
  * `freno.me/downloads` page, byte-identical asset source):
  *  - Android APK via tRPC `downloads.getDownloadUrl({ asset_name: "lineage" })`
  *    → S3 signed URL for `Life and Lineage.apk`. Reuses the shared
- *    `downloadAsset` helper (task 05) so the click → redirect → S3 flow is a
+ *    `downloadAsset` helper so the click → redirect → S3 flow is a
  *    single code path shared with the Gaze landing page.
  *  - iOS App Store link (`LINEAGE_APP_STORE_URL`) — absolute external URL,
  *    identical to the link surfaced on the landing page + unified downloads.
@@ -20,7 +19,7 @@
  * Site-awareness:
  *  - `<PageHead>` reads `useSite()` → the lineage `titleSuffix`
  *    (` | Life and Lineage`) + canonical `https://lineage.freno.me/downloads`
- *    are derived automatically (task 02); we pass only the base title here.
+ *    are derived automatically; we pass only the base title here.
  *  - No auth — Lineage's mobile JWT (`LINEAGE_JWT_SECRET`) is for the mobile
  *    app's API calls, not the web downloads page.
  *

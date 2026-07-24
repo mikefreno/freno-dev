@@ -1,11 +1,13 @@
 /**
  * Shared site definitions and host-to-site resolver.
  *
- * Pure module — intentionally imports NO env / server-only code — so it is
- * safe to import from both server and client (and from unit tests).
+ * Near-pure module — reads `import.meta.env.VITE_DOMAIN` (a Vite build-time
+ * var available on both client and server) to derive `BASE_DOMAIN`, but
+ * imports NO server-only code so it remains safe to import from client,
+ * server, and unit tests (with a fallback when the env var is absent).
  *
- * This is the keystone of the subdomain-routing feature (task 01). Every
- * content task (05-11) consumes `SITE_CONFIG` metadata via `useSite()`,
+ * This is the keystone of the subdomain-routing feature. Every
+ * content module consumes `SITE_CONFIG` metadata via `useSite()`,
  * and the server-side host detection in
  * `src/server/site-context-server.ts` builds on `resolveSiteFromHost`.
  */
@@ -37,11 +39,36 @@ export interface Site {
   faviconPath: string;
 }
 
+/**
+ * Derive the base domain from `VITE_DOMAIN`.
+ *
+ * `VITE_DOMAIN` is `http://localhost:3000` in dev and `https://freno.me`
+ * (or `.dev`) in prod. We extract the hostname so host matching works
+ * against whichever apex the deployment uses. Falls back to `"freno.me"`
+ * when the env var is absent (unit tests) or points at `localhost` (dev —
+ * where subdomain host matching isn't used anyway; the path-prefix fallback
+ * in `resolveSiteFromLocation` handles dev).
+ */
+function computeBaseDomain(): string {
+  try {
+    const v = (import.meta as { env?: Record<string, string | undefined> }).env
+      ?.VITE_DOMAIN;
+    if (!v) return "freno.me";
+    const hostname = new URL(v).hostname;
+    return hostname === "localhost" ? "freno.me" : hostname;
+  } catch {
+    return "freno.me";
+  }
+}
+
+/** The apex hostname derived from `VITE_DOMAIN` (e.g. `"freno.me"`). */
+export const BASE_DOMAIN = computeBaseDomain();
+
 export const SITE_CONFIG: Record<SiteId, Site> = {
   main: {
     id: "main",
     subdomain: "",
-    domain: "freno.me",
+    domain: BASE_DOMAIN,
     baseRoutePrefix: "",
     displayName: "Michael Freno",
     titleSuffix: " | Michael Freno",
@@ -52,7 +79,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
   nessa: {
     id: "nessa",
     subdomain: "nessa",
-    domain: "nessa.freno.me",
+    domain: `nessa.${BASE_DOMAIN}`,
     baseRoutePrefix: "/nessa",
     displayName: "Nessa",
     titleSuffix: " | Nessa",
@@ -63,7 +90,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
   lineage: {
     id: "lineage",
     subdomain: "lineage",
-    domain: "lineage.freno.me",
+    domain: `lineage.${BASE_DOMAIN}`,
     baseRoutePrefix: "/lineage",
     displayName: "Life and Lineage",
     titleSuffix: " | Life and Lineage",
@@ -74,7 +101,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
   gaze: {
     id: "gaze",
     subdomain: "gaze",
-    domain: "gaze.freno.me",
+    domain: `gaze.${BASE_DOMAIN}`,
     baseRoutePrefix: "/gaze",
     displayName: "Gaze",
     titleSuffix: " | Gaze",
@@ -85,7 +112,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
   inputhalo: {
     id: "inputhalo",
     subdomain: "inputhalo",
-    domain: "inputhalo.freno.me",
+    domain: `inputhalo.${BASE_DOMAIN}`,
     baseRoutePrefix: "/inputhalo",
     displayName: "InputHalo",
     titleSuffix: " | InputHalo",
@@ -102,8 +129,6 @@ const SUBDOMAIN_SITES: ReadonlyArray<Site> = [
   SITE_CONFIG.gaze,
   SITE_CONFIG.inputhalo
 ];
-
-const BASE_DOMAIN = "freno.me";
 
 /** Matches `<sub>.localhost` and `<sub>.localhost:<port>` (dev only). */
 const DEV_HOST_RE = /^([a-z0-9-]+)\.localhost$/i;
@@ -186,7 +211,7 @@ export function resolveSiteFromPath(
   for (const site of SUBDOMAIN_SITES) {
     const prefix = site.baseRoutePrefix; // e.g. "/nessa"
     // Exact prefix (`/nessa`) or prefix + `/` (`/nessa/contact`).
-    if (pathname === prefix || pathname.startsWith(prefix + "/")) {
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
       return site;
     }
   }
@@ -209,4 +234,64 @@ export function resolveSiteFromLocation(
   const hostResult = resolveSiteFromHost(hostname);
   if (hostResult.id !== "main") return hostResult;
   return resolveSiteFromPath(pathname) ?? hostResult;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// URL builders — derive full URLs from VITE_DOMAIN (no ~/env/client import
+// so this module stays safe for unit tests / pure content modules).
+//─────────────────────────────────────────────────────────────────────────
+
+/** Compute the site origin from VITE_DOMAIN (fallback for tests). */
+const SITE_ORIGIN = (() => {
+  try {
+    const v = (import.meta as { env?: Record<string, string | undefined> }).env
+      ?.VITE_DOMAIN;
+    return v || "https://freno.me";
+  } catch {
+    return "https://freno.me";
+  }
+})();
+
+/** True when VITE_DOMAIN points at localhost (dev server). */
+function isDevOrigin(): boolean {
+  try {
+    return new URL(SITE_ORIGIN).hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Build a full URL for a subdomain site.
+ *
+ * - Dev: path-based — `http://localhost:3000/nessa/contact`
+ *   (the dev server has no host rewrite, so subdomains live under `/<sub>/...`)
+ * - Prod: host-based — `https://nessa.freno.me/contact`
+ */
+export function buildSubdomainUrl(
+  subdomain: string,
+  path: string = "/"
+): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  if (isDevOrigin()) {
+    const pathSuffix = normalizedPath === "/" ? "" : normalizedPath;
+    return `${SITE_ORIGIN}/${subdomain}${pathSuffix}`;
+  }
+  try {
+    const url = new URL(SITE_ORIGIN);
+    return `${url.protocol}//${subdomain}.${url.hostname}${normalizedPath}`;
+  } catch {
+    return `https://${subdomain}.${BASE_DOMAIN}${normalizedPath}`;
+  }
+}
+
+/**
+ * Build a full URL for the main (apex) site.
+ *
+ * - Dev: `http://localhost:3000/contact`
+ * - Prod: `https://freno.me/contact`
+ */
+export function buildMainSiteUrl(path: string = "/"): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${SITE_ORIGIN}${normalizedPath === "/" ? "" : normalizedPath}`;
 }

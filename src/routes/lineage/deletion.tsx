@@ -1,14 +1,14 @@
 /**
  * Lineage per-subdomain account-deletion page — `lineage.freno.me/deletion`
- * (task 11).
+ * (see `./deletion-content.ts`).
  *
  * Migrated from `src/routes/deletion/life-and-lineage.tsx` (which is now a
  * 308 redirect to this public URL — see `LEGACY_DELETION_REDIRECT_TARGET`).
  *
  * Served at the public browser path `/deletion` (vercel.json host rewrites
  * `lineage.freno.me/*` → the internal `/lineage/*` route prefix, leaving the
- * browser URL clean — task 02 canonical rule). The nav-config "Account
- * Deletion" entry points at this path (task 04).
+ * browser URL clean. The nav-config "Account
+ * Deletion" entry points at this path.
  *
  * Deletion flow:
  *  - Reuses the shared `DeletionForm` component, now generalized to forward
@@ -25,7 +25,7 @@
  *
  * Site-awareness:
  *  - `<PageHead>` reads `useSite()` → lineage title suffix + canonical are
- *    derived automatically (task 02).
+ *    derived automatically.
  *  - No auth — the deletion request is email-based (the requester may be
  *    locked out of their account), NOT an authenticated self-delete.
  *

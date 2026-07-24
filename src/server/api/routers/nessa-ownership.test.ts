@@ -23,7 +23,7 @@ mock.module("~/env/server", () => ({
     TURSO_LINEAGE_TOKEN: "test-token",
     TURSO_DB_API_TOKEN: "test-token",
     NODE_ENV: "test",
-    // Clerk env vars (required after migration in task 02)
+    // Clerk env vars (required after migration)
     NESSA_CLERK_SECRET: "sk_test_test-secret",
     NESSA_CLERK_JWT_ISSUER: "https://nessa-test.clerk.accounts.dev"
   },
@@ -55,7 +55,11 @@ const PROVIDER_ID = "prov-1";
 //          create/update/deleteWorkoutSplit
 
 describe("assertWorkoutOwned helper", () => {
-  let assertWorkoutOwned: (conn: Client, workoutId: string, userId: string) => Promise<void>;
+  let assertWorkoutOwned: (
+    conn: Client,
+    workoutId: string,
+    userId: string
+  ) => Promise<void>;
 
   beforeEach(async () => {
     const mod = await import("./nessa");
@@ -64,16 +68,16 @@ describe("assertWorkoutOwned helper", () => {
 
   it("rejects when workout belongs to another user", async () => {
     const conn = makeMockConn([{ userId: USER_B }]);
-    await expect(
-      assertWorkoutOwned(conn, WORKOUT_ID, USER_A)
-    ).rejects.toThrow(/owner/);
+    await expect(assertWorkoutOwned(conn, WORKOUT_ID, USER_A)).rejects.toThrow(
+      /owner/
+    );
   });
 
   it("rejects when workout does not exist", async () => {
     const conn = makeMockConn([]);
-    await expect(
-      assertWorkoutOwned(conn, WORKOUT_ID, USER_A)
-    ).rejects.toThrow(/not found/i);
+    await expect(assertWorkoutOwned(conn, WORKOUT_ID, USER_A)).rejects.toThrow(
+      /not found/i
+    );
   });
 
   it("succeeds when workout belongs to the caller", async () => {
@@ -88,7 +92,11 @@ describe("assertWorkoutOwned helper", () => {
 // Used by: updateAuthProvider, deleteAuthProvider
 
 describe("assertAuthProviderOwned helper", () => {
-  let assertAuthProviderOwned: (conn: Client, providerId: string, userId: string) => Promise<void>;
+  let assertAuthProviderOwned: (
+    conn: Client,
+    providerId: string,
+    userId: string
+  ) => Promise<void>;
 
   beforeEach(async () => {
     const mod = await import("./nessa");
@@ -121,7 +129,11 @@ describe("assertAuthProviderOwned helper", () => {
 // Used by: updateExerciseLibrary, deleteExerciseLibrary
 
 describe("assertExerciseLibraryOwned helper", () => {
-  let assertExerciseLibraryOwned: (conn: Client, exerciseId: string, userId: string) => Promise<void>;
+  let assertExerciseLibraryOwned: (
+    conn: Client,
+    exerciseId: string,
+    userId: string
+  ) => Promise<void>;
 
   beforeEach(async () => {
     const mod = await import("./nessa");
@@ -273,9 +285,7 @@ describe("static audit: every targeted mutation handler uses ctx", () => {
   ];
 
   it("no mutation handler in the list uses async ({ input }) without ctx", async () => {
-    const source = await Bun.file(
-      import.meta.dir + "/nessa.ts"
-    ).text();
+    const source = await Bun.file(import.meta.dir + "/nessa.ts").text();
 
     for (const name of MUTATIONS) {
       // Match: name: nessaProcedure ... .mutation(async ({ input }) — but NOT ({ input, ctx
@@ -284,14 +294,15 @@ describe("static audit: every targeted mutation handler uses ctx", () => {
         "s"
       );
       const match = source.match(re);
-      expect(match, `${name} should not use async ({ input }) — must use ctx`).toBeNull();
+      expect(
+        match,
+        `${name} should not use async ({ input }) — must use ctx`
+      ).toBeNull();
     }
   });
 
   it("every mutation handler in the list references ctx", async () => {
-    const source = await Bun.file(
-      import.meta.dir + "/nessa.ts"
-    ).text();
+    const source = await Bun.file(import.meta.dir + "/nessa.ts").text();
 
     for (const name of MUTATIONS) {
       // Find the block for this mutation and check it references ctx
@@ -301,19 +312,16 @@ describe("static audit: every targeted mutation handler uses ctx", () => {
       );
       const match = source.match(re);
       expect(match, `${name} mutation block not found`).toBeTruthy();
-      expect(
-        match![0].includes("ctx"),
-        `${name} must reference ctx`
-      ).toBe(true);
+      expect(match![0].includes("ctx"), `${name} must reference ctx`).toBe(
+        true
+      );
     }
   });
 
   it("bulkUpsert filters exerciseLibrary by userId", async () => {
-    const source = await Bun.file(
-      import.meta.dir + "/nessa.ts"
-    ).text();
+    const source = await Bun.file(import.meta.dir + "/nessa.ts").text();
     const bulkSection = source.match(
-      /if \(input\.exerciseLibrary\?\.length\) \{[\s\S]*?\n        \}/
+      /if \(input\.exerciseLibrary\?\.length\) \{[\s\S]*?\n {8}\}/
     );
     expect(bulkSection).toBeTruthy();
     expect(bulkSection![0]).toContain("userId !== ctx.nessaUserId");

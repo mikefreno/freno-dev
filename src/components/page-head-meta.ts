@@ -1,5 +1,5 @@
 /**
- * Pure metadata derivation for `PageHead` (task 02).
+ * Pure metadata derivation for `PageHead`.
  *
  * Intentionally imports NOTHING from solid-js / @solidjs/router / @solidjs/meta
  * so it can be unit-tested in `bun:test` without spinning up the SolidJS

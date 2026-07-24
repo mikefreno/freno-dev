@@ -3,11 +3,12 @@ import { useSearchParams } from "@solidjs/router";
 import { A } from "@solidjs/router";
 import RevealDropDown from "~/components/RevealDropDown";
 import { ContactForm } from "~/components/ContactForm";
+import { buildSubdomainUrl } from "~/lib/site-context";
 
 /**
  * Main-site contact page (`freno.me/contact`).
  *
- * Refactored (task 09) to render the shared `<ContactForm>` — the form logic,
+ * Refactored to render the shared `<ContactForm>` — the form logic,
  * Turnstile widget, cooldown timer, email-verification flow, and tRPC
  * submission all live in the shared component now. This route remains a thin
  * wrapper that supplies:
@@ -51,7 +52,7 @@ export function LineageContactQuestions(): JSX.Element {
               <div class="pb-2">
                 You can find the entire privacy policy{" "}
                 <A
-                  href="https://lineage.freno.me/privacy"
+                  href={buildSubdomainUrl("lineage", "/privacy")}
                   class="text-blue underline-offset-4 hover:underline"
                 >
                   here

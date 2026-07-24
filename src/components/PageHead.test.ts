@@ -1,5 +1,5 @@
 /**
- * Unit tests for `PageHead` site-aware metadata derivation (task 02).
+ * Unit tests for `PageHead` site-aware metadata derivation.
  *
  * `resolvePageHeadMeta` is a pure function over (props, site, pathname), so
  * these tests mirror the acceptance matrix without a DOM / SolidJS router.
@@ -28,21 +28,13 @@ describe("resolvePageHeadMeta — title suffix per site", () => {
 
   for (const { id, suffix } of cases) {
     it(`${id} → title is "${BASE_PROPS.title}${suffix}"`, () => {
-      const meta = resolvePageHeadMeta(
-        BASE_PROPS,
-        SITE_CONFIG[id],
-        "/blog"
-      );
+      const meta = resolvePageHeadMeta(BASE_PROPS, SITE_CONFIG[id], "/blog");
       expect(meta.title).toBe(`${BASE_PROPS.title}${suffix}`);
     });
   }
 
   it("main produces 'Home | Michael Freno' for the homepage", () => {
-    const meta = resolvePageHeadMeta(
-      { title: "Home" },
-      SITE_CONFIG.main,
-      "/"
-    );
+    const meta = resolvePageHeadMeta({ title: "Home" }, SITE_CONFIG.main, "/");
     expect(meta.title).toBe("Home | Michael Freno");
   });
 });
@@ -64,11 +56,7 @@ describe("resolvePageHeadMeta — canonical URL derivation", () => {
   });
 
   it("nessa /contact → https://nessa.freno.me/contact", () => {
-    const meta = resolvePageHeadMeta(
-      BASE_PROPS,
-      SITE_CONFIG.nessa,
-      "/contact"
-    );
+    const meta = resolvePageHeadMeta(BASE_PROPS, SITE_CONFIG.nessa, "/contact");
     expect(meta.canonical).toBe("https://nessa.freno.me/contact");
   });
 

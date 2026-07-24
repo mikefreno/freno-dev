@@ -69,7 +69,7 @@ export function assertS3KeyOwnership(key: string, userId: string | null): void {
 }
 
 // ============================================================
-// Account-deletion request email (task 11 — product-aware)
+// Account-deletion request email — product-aware
 // ============================================================
 //
 // Pure helpers live in `./deletion-email.ts` (env-free) so they can be unit-
@@ -368,7 +368,7 @@ export const miscRouter = createTRPCRouter({
         turnstileToken: z.string().min(1, "Please complete the security check"),
         /**
          * Per-site subject prefix injected into the outbound email subject
-         * (task 09). Defaults to `"freno.me"` so existing callers (pre-task-09
+         * Defaults to `"freno.me"` so existing callers
          * main-site contact form) keep emitting the byte-identical legacy
          * subject `"freno.me Contact Request"`.
          */
@@ -499,7 +499,7 @@ export const miscRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
-        /** Product discriminator (task 11) — defaults to "lineage" for backward compat. */
+        /** Product discriminator — defaults to "lineage" for backward compat. */
         product: DELETION_PRODUCT_SCHEMA.default("lineage")
       })
     )

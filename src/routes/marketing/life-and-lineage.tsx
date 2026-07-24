@@ -1,6 +1,6 @@
 /**
  * Legacy Life and Lineage marketing route — now a 308 permanent redirect to
- * the Lineage subdomain (task 08).
+ * the Lineage subdomain.
  *
  * The marketing content has been migrated to `src/routes/lineage/index.tsx`
  * served at `lineage.freno.me` (vercel.json host rewrites map the subdomain to

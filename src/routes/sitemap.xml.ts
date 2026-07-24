@@ -1,11 +1,11 @@
 /**
- * Host-aware sitemap.xml route handler (task 03).
+ * Host-aware sitemap.xml route handler.
  *
  * Reads the `Host` header to determine the active site, then generates a
  * sitemap scoped to that site's routes with canonical URLs from the
  * corresponding domain.
  */
-import { APIEvent } from "@solidjs/start/server";
+import type { APIEvent } from "@solidjs/start/server";
 import { getSiteFromEvent } from "~/server/site-context-server";
 import { SITEMAP_ROUTES } from "~/lib/sitemap-routes";
 import { generateSitemap } from "~/lib/sitemap-generate";

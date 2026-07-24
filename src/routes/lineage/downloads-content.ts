@@ -1,6 +1,6 @@
 /**
  * Pure content + metadata for the Lineage per-subdomain downloads page
- * (task 11).
+ * (see `./downloads.tsx`).
  *
  * Mirrors the `landing-content.ts` / `page-head-meta.ts` / `nav-config.ts`
  * pattern: imports NOTHING from solid-js / @solidjs/router / @solidjs/meta so
@@ -12,7 +12,7 @@
  * values; keeping them externalized means changes to the download target /
  * store link surface as test failures rather than silent regressions.
  *
- * Cross-task contracts encoded here:
+ * Contracts encoded here:
  *  - `LINEAGE_DOWNLOAD_ASSET` is the tRPC `downloads.getDownloadUrl` asset key
  *    (`"lineage"`) → resolves to `Life and Lineage.apk` in
  *    `src/server/api/routers/downloads.ts`. It MUST match the key used by the
@@ -23,7 +23,7 @@
  *    unified downloads page, so the store front is consistent across origins.
  *  - `LINEAGE_DOWNLOADS_META` is consumed verbatim by `<PageHead>`; the
  *    per-site title suffix (` | Life and Lineage`) is appended automatically
- *    by `resolvePageHeadMeta` (task 02), so `title` here is the BASE title
+ *    by `resolvePageHeadMeta`, so `title` here is the BASE title
  *    only — do NOT include the suffix.
  */
 import type { PageHeadProps } from "~/components/page-head-meta";
@@ -55,7 +55,7 @@ export const LINEAGE_APP_STORE_URL =
  * Public browser path back to the Lineage landing page (subdomain-relative).
  *
  * vercel.json rewrites `lineage.freno.me/` → the internal `/lineage/` route
- * prefix while leaving the browser URL clean (task 02 canonical rule).
+ * prefix while leaving the browser URL clean.
  */
 export const LINEAGE_HOME_HREF = "/";
 

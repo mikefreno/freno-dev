@@ -1,10 +1,10 @@
 /**
  * Nessa per-subdomain account-deletion page — `nessa.freno.me/deletion`
- * (task 11).
+ * (see `./deletion-content.ts`).
  *
  * Served at the public browser path `/deletion` (vercel.json host rewrites
  * `nessa.freno.me/*` → the internal `/nessa/*` route prefix, leaving the
- * browser URL clean — task 02 canonical rule).
+ * browser URL clean.
  *
  * Nessa deletion assessment (see `./deletion-content.ts` for the full
  * rationale): Nessa stores user data (`users`, `workouts`, `workoutPlans`,
@@ -19,7 +19,7 @@
  * request is email-based (the requester may be locked out of their Clerk
  * session), NOT an authenticated self-delete. The nav-config does NOT list
  * a Nessa deletion link by default, so this page is reachable by direct URL
- * + from the Nessa privacy policy (task-provided).
+ * + from the Nessa privacy policy.
  *
  * Acceptance: `nessa.localhost:3000/deletion` renders the deletion form.
  */

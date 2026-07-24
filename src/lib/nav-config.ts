@@ -1,5 +1,5 @@
 /**
- * Per-site navigation configuration (task 04 — site-aware layout & navigation).
+ * Per-site navigation configuration — site-aware layout & navigation.
  *
  * Pure module — imports NOTHING from solid-js / @solidjs/router / @solidjs/meta —
  * so it can be unit-tested in `bun:test` without spinning up the router / Meta
@@ -27,6 +27,7 @@
  * authoritative only for the *link set* the unit tests assert against.
  */
 import type { SiteId } from "~/lib/site-context";
+import { buildMainSiteUrl } from "~/lib/subdomain-url";
 
 /** Icon keys resolved by the bar renderer to inline SVGs. */
 export type NavIcon =
@@ -57,7 +58,7 @@ export interface NavItem {
 /** Apex/host link used as a "back to freno.me" affordance on subdomains. */
 export const BACK_TO_FRENO: NavItem = {
   label: "back to freno.me",
-  href: "https://freno.me",
+  href: buildMainSiteUrl("/"),
   icon: "back",
   external: true
 };
@@ -65,7 +66,7 @@ export const BACK_TO_FRENO: NavItem = {
 /**
  * Per-site navigation link sets.
  *
- * Defined to exactly satisfy the task-04 acceptance matrix:
+ * Defined to satisfy the acceptance matrix:
  *  - main: Home, Blog, Downloads, Resume, Contact, GitHub, LinkedIn
  *  - nessa: Home, Contact, Privacy
  *  - lineage: Home, Downloads, Contact, Privacy, Account Deletion

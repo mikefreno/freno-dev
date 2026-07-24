@@ -3,7 +3,7 @@
  *
  * Serves `nessa.freno.me/` (and falls back from `src/routes/index.tsx`'s
  * `useSite()` branch in dev). Reflects Nessa's actual product: a
- * privacy-first Strava-alternative fitness app with segment leaderboards,
+ * privacy-first fitness app with segment leaderboards,
  * clubs, challenges, Apple Watch support, and Free / Plus / Pro pricing tiers.
  *
  * Content is sourced from `~/code/Nessa/plans/2026-03-16-marketing-strategy-launch-positioning.md`
@@ -16,6 +16,7 @@ import SubdomainHeader from "~/components/SubdomainHeader";
 import { useDarkMode } from "~/context/darkMode";
 import { useSite } from "~/context/SiteContext";
 import { A } from "@solidjs/router";
+import { buildMainSiteUrl } from "~/lib/site-context";
 import { NESSA_LANDING_META } from "./meta";
 import {
   TAGLINE,
@@ -158,7 +159,7 @@ export default function NessaLanding() {
           <div class="mx-auto max-w-6xl">
             <div class="mb-12 text-center">
               <h2 class="text-3xl font-bold md:text-4xl">
-                Premium features, half the price of Strava
+                Premium features, affordable pricing
               </h2>
               <p class="text-text/70 mx-auto mt-3 max-w-2xl text-base md:text-lg">
                 Choose the plan that fits your training.
@@ -229,20 +230,20 @@ export default function NessaLanding() {
           </div>
         </section>
 
-        {/* ─── Comparison vs Strava ─────────────────────────────────── */}
+        {/* ─── Feature highlights ─────────────────────────────────── */}
         <section class="relative z-10 px-4 py-16">
           <div class="mx-auto max-w-4xl">
             <h2 class="text-center text-3xl font-bold md:text-4xl">
-              See how we compare
+              What you get with Nessa
             </h2>
             <p class="text-text/70 mt-3 text-center text-base md:text-lg">
-              Get more for less with Nessa.
+              Free features other apps charge for, plus affordable premium
+              tiers.
             </p>
 
             <div class="border-surface0 mt-8 overflow-hidden rounded-2xl border-2">
-              <div class="bg-surface0/60 grid grid-cols-3 px-6 py-4 text-sm font-semibold">
+              <div class="bg-surface0/60 grid grid-cols-2 px-6 py-4 text-sm font-semibold">
                 <span>Feature</span>
-                <span class="text-center">Strava</span>
                 <span class="text-center" style={{ color: brandColor() }}>
                   Nessa
                 </span>
@@ -250,13 +251,12 @@ export default function NessaLanding() {
               <For each={COMPARISON}>
                 {(row, idx) => (
                   <div
-                    class="grid grid-cols-3 px-6 py-4 text-sm"
+                    class="grid grid-cols-2 px-6 py-4 text-sm"
                     classList={{
                       "bg-surface0/20": idx() % 2 === 1
                     }}
                   >
                     <span>{row.feature}</span>
-                    <span class="text-text/70 text-center">{row.strava}</span>
                     <span
                       class="text-center font-medium"
                       style={{ color: brandColor() }}
@@ -348,7 +348,7 @@ export default function NessaLanding() {
           <div class="text-text/60 mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm sm:flex-row">
             <span>{site().displayName}</span>
             <A
-              href="https://freno.me"
+              href={buildMainSiteUrl()}
               class="hover:text-text underline-offset-4 hover:underline"
             >
               freno.me

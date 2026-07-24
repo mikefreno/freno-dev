@@ -3,6 +3,7 @@ import { A } from "@solidjs/router";
 import { createSignal, onMount, onCleanup } from "solid-js";
 import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
 import { glitchText } from "~/lib/client-utils";
+import { buildSubdomainUrl } from "~/lib/subdomain-url";
 import Button from "~/components/ui/Button";
 
 export default function DownloadsPage() {
@@ -93,7 +94,13 @@ export default function DownloadsPage() {
             {/* InputHalo */}
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
               <h2 class="text-text mb-6 font-mono text-2xl">
-                <span class="text-yellow">{">"}</span> {inputHaloText()}
+                <span class="text-yellow">{">"}</span>{" "}
+                <A
+                  href={buildSubdomainUrl("inputhalo")}
+                  class="text-text hover:text-yellow transition-colors"
+                >
+                  {inputHaloText()}
+                </A>
               </h2>
 
               <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
@@ -139,7 +146,13 @@ export default function DownloadsPage() {
             {/* Gaze */}
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
               <h2 class="text-text mb-6 font-mono text-2xl">
-                <span class="text-yellow">{">"}</span> {gazeText()}
+                <span class="text-yellow">{">"}</span>{" "}
+                <A
+                  href={buildSubdomainUrl("gaze")}
+                  class="text-text hover:text-yellow transition-colors"
+                >
+                  {gazeText()}
+                </A>
               </h2>
 
               <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
@@ -183,7 +196,13 @@ export default function DownloadsPage() {
             </div>
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
               <h2 class="text-text mb-6 font-mono text-2xl">
-                <span class="text-yellow">{">"}</span> {LaLText()}
+                <span class="text-yellow">{">"}</span>{" "}
+                <A
+                  href={buildSubdomainUrl("lineage")}
+                  class="text-text hover:text-yellow transition-colors"
+                >
+                  {LaLText()}
+                </A>
               </h2>
 
               <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">

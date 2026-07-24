@@ -1,5 +1,5 @@
 /**
- * Unit tests for the per-subdomain sitemap generation (task 03).
+ * Unit tests for the per-subdomain sitemap generation.
  *
  * Covers:
  *  - `generateSitemap(site, entries)` returns correct XML for each site
@@ -30,7 +30,9 @@ describe("generateSitemap", () => {
 
     // Basic structure
     expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(xml).toContain(
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    );
 
     // All main site paths present with freno.me domain
     const locs = extractLocs(xml);
@@ -101,7 +103,10 @@ describe("generateSitemap", () => {
   });
 
   it("generates correct URLs for inputhalo site", () => {
-    const xml = generateSitemap(SITE_CONFIG.inputhalo, SITEMAP_ROUTES.inputhalo);
+    const xml = generateSitemap(
+      SITE_CONFIG.inputhalo,
+      SITEMAP_ROUTES.inputhalo
+    );
     const locs = extractLocs(xml);
 
     expect(locs).toContain("https://inputhalo.freno.me/");

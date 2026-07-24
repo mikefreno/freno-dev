@@ -12,7 +12,7 @@
 
 export const TAGLINE = "The fitness app that puts you first." as const;
 export const SUBTITLE =
-  "Tired of Strava's paywalls and price hikes? Track, train, and connect — without the paywall." as const;
+  "Track, train, and connect — without the paywall." as const;
 
 export const ICON_DEFAULT =
   "/Nessa Exports/Nessa-iOS-Default-1024x1024.png" as const;
@@ -152,35 +152,21 @@ export const PRICING: readonly PricingTier[] = [
   }
 ] as const;
 
-export interface ComparisonRow {
-  feature: string;
-  strava: string;
-  nessa: string;
-}
-
-export const COMPARISON: readonly ComparisonRow[] = [
-  {
-    feature: "Segment leaderboards",
-    strava: "Paywalled",
-    nessa: "Free forever"
-  },
-  { feature: "Privacy", strava: "Server-side data", nessa: "On-device first" },
-  { feature: "Premium price", strava: "$23.99/mo", nessa: "From $4.99/mo" },
-  {
-    feature: "Apple Watch",
-    strava: "Companion app",
-    nessa: "Native experience"
-  }
+export const COMPARISON: readonly { feature: string; nessa: string }[] = [
+  { feature: "Segment leaderboards", nessa: "Free forever" },
+  { feature: "Privacy", nessa: "On-device first" },
+  { feature: "Premium price", nessa: "From $4.99/mo" },
+  { feature: "Apple Watch", nessa: "Native experience" }
 ] as const;
 
 export const WHY_NESSA = [
   {
     title: "Segment leaderboards free forever",
-    body: "Strava's most complained-about paywall is included in Nessa's free tier."
+    body: "The features other apps gate behind a subscription are included in Nessa's free tier."
   },
   {
-    title: "Half the price of Strava",
-    body: "Premium tiers at 50–60% of Strava's cost, with no surprise paywalls."
+    title: "Affordable premium",
+    body: "Premium tiers start at $4.99/mo with no surprise paywalls."
   },
   {
     title: "Privacy-first",

@@ -18,7 +18,7 @@ export {
 /**
  * PageHead component for consistent page metadata across the application.
  *
- * Site-aware (task 02): reads `useSite()` for the per-site title suffix,
+ * Site-aware: reads `useSite()` for the per-site title suffix,
  * canonical domain, and default OpenGraph image, so the same component
  * renders `" | Michael Freno"` / `" | Nessa"` / … depending on the active
  * subdomain. Canonical URLs are auto-derived from the site domain + the

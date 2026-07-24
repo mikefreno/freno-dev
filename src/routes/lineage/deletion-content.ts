@@ -1,13 +1,16 @@
 /**
  * Pure content + metadata for the Lineage per-subdomain account-deletion page
- * (task 11).
+ * (see `./deletion.tsx`).
  *
  * Imports NOTHING from solid-js / @solidjs/router / @solidjs/meta so the
  * constants here can be unit-tested in `bun:test` without spinning up the
  * router / MetaProvider, mirroring the `landing-content.ts` /
  * `downloads-content.ts` pattern.
  *
- * Cross-task contracts encoded here:
+ * Imports `buildSubdomainUrl` from `~/lib/site-context` (near-pure — reads
+ * `import.meta.env.VITE_DOMAIN`) so redirect targets are env-aware.
+ *
+ * Contracts encoded here:
  *  - `DELETION_PRODUCT_KEY` is the `product` discriminator passed to the
  *    generalized `misc.sendDeletionRequestEmail` mutation
  *    (`src/server/api/routers/misc.ts`) so the email copy + cooldown cookie
@@ -32,6 +35,9 @@ import type { PageHeadProps } from "~/components/page-head-meta";
  * Product discriminator for the generalized `sendDeletionRequestEmail`
  * mutation. The Lineage flow is the original / default product.
  */
+
+import { buildSubdomainUrl } from "~/lib/site-context";
+
 export const DELETION_PRODUCT_KEY = "lineage" as const;
 
 /**
@@ -63,9 +69,11 @@ export const PAGE_META: PageHeadProps = {
 
 /**
  * Canonical absolute URL the legacy `/deletion/life-and-lineage` route
- * 308-redirects to (task 11). Kept here so tests can assert the redirect
+ * 308-redirects to. Kept here so tests can assert the redirect
  * target without importing the route module (which would pull the server
  * runtime).
  */
-export const LEGACY_DELETION_REDIRECT_TARGET =
-  "https://lineage.freno.me/deletion";
+export const LEGACY_DELETION_REDIRECT_TARGET = buildSubdomainUrl(
+  "lineage",
+  "/deletion"
+);

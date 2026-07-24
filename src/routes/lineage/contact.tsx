@@ -4,7 +4,7 @@ import SubdomainHeader from "~/components/SubdomainHeader";
 /**
  * Life and Lineage contact page (`lineage.freno.me/contact`).
  *
- * Thin wrapper over the shared `<ContactForm>` (task 09). Site awareness —
+ * Thin wrapper over the shared `<ContactForm>`. Site awareness —
  * subject prefix `[Lineage]`, recipient label, heading, and PageHead metadata
  * — is derived from `useSite()` inside the component via
  * `CONTACT_CONTEXT.lineage`.

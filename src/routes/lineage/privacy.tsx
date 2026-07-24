@@ -1,15 +1,15 @@
 /**
- * Life and Lineage privacy policy — `lineage.freno.me/privacy` (task 10).
+ * Life and Lineage privacy policy — `lineage.freno.me/privacy`.
  *
  * Migrated verbatim from the legacy
  * `src/routes/privacy-policy/life-and-lineage.tsx` route so there is zero
  * content loss; the old route now 308-redirects here (see
  * `src/routes/privacy-policy/life-and-lineage.tsx`). PageHead is site-aware
- * (task 02) so the Lineage `titleSuffix` (` | Life and Lineage`), canonical
+ * so the Lineage `titleSuffix` (` | Life and Lineage`), canonical
  * (`https://lineage.freno.me/privacy`), and OG image derive automatically —
  * we only pass the base title.
  *
- * Per task instructions, the account-deletion reference now points at the
+ * Per instructions, the account-deletion reference now points at the
  * Lineage subdomain's deletion flow, served at the **public subdomain-relative
  * path** `/deletion` (vercel.json rewrites to `/lineage/deletion`). The
  * contact link similarly uses `/contact` (public subdomain path), consistent

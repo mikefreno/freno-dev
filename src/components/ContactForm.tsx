@@ -1,10 +1,4 @@
-import {
-  createSignal,
-  onMount,
-  createEffect,
-  Show,
-  type JSX
-} from "solid-js";
+import { createSignal, onMount, createEffect, Show, type JSX } from "solid-js";
 import { useSearchParams, query, createAsync } from "@solidjs/router";
 import { action, redirect } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
@@ -43,7 +37,7 @@ import {
 } from "~/lib/contact-config";
 
 /**
- * Shared, site-aware contact form (task 09 — per-subdomain contact pages).
+ * Shared, site-aware contact form — per-subdomain contact pages.
  *
  * Extracted verbatim-in-spirit from the legacy `src/routes/contact.tsx` so the
  * main-site contact flow (`freno.me/contact`) keeps its exact Turnstile +
@@ -57,10 +51,10 @@ import {
  *    `CONTACT_CONTEXT[site().id]` (subjectPrefix, recipientLabel, heading,
  *    PageHead title + description). Props override the defaults.
  *  - Emits `<PageHead>` so every per-subdomain `/contact` route gets
- *    site-aware title / canonical / OG tags for free (task 02).
+ *    site-aware title / canonical / OG tags for free.
  *  - The Turnstile site key (`VITE_TURNSTILE_SITE_KEY`) is shared across all
  *    subdomains — ensure it is configured for `*.freno.me` in the Cloudflare
- *    Turnstile dashboard (see task notes).
+ *    Turnstile dashboard.
  *
  * Email routing:
  *  - JS path: `api.misc.sendContactRequest.mutate({ …, subjectPrefix })` — the
@@ -247,7 +241,8 @@ export function ContactForm(props: ContactFormProps) {
   const ctx = () => getContactContext(site().id);
 
   // Effective values — props override the site-context defaults.
-  const effectiveSubjectPrefix = () => props.subjectPrefix ?? ctx().subjectPrefix;
+  const effectiveSubjectPrefix = () =>
+    props.subjectPrefix ?? ctx().subjectPrefix;
   const effectiveRecipientLabel = () =>
     props.recipientLabel ?? ctx().recipientLabel;
   const effectiveHeading = () => props.heading ?? ctx().heading;
@@ -283,7 +278,7 @@ export function ContactForm(props: ContactFormProps) {
 
     // Load Cloudflare Turnstile script with explicit rendering.
     // The site key is shared across all subdomains — ensure it is configured
-    // for `*.freno.me` in the Cloudflare Turnstile dashboard (task notes).
+    // for `*.freno.me` in the Cloudflare Turnstile dashboard.
     const script = document.createElement("script");
     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
     script.async = true;

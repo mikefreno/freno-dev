@@ -1,6 +1,6 @@
 /**
  * Unit tests for the generalized account-deletion-request email helpers
- * (task 11).
+ * (see `misc.ts`).
  *
  * These are the pure, env-free helpers consumed by the
  * `misc.sendDeletionRequestEmail` tRPC mutation (re-exported from `misc.ts`).
@@ -25,11 +25,11 @@ import {
 } from "~/server/api/routers/deletion-email";
 
 describe("DELETION_PRODUCT_SCHEMA", () => {
-  it("accepts \"lineage\"", () => {
+  it('accepts "lineage"', () => {
     expect(DELETION_PRODUCT_SCHEMA.safeParse("lineage").success).toBe(true);
   });
 
-  it("accepts \"nessa\"", () => {
+  it('accepts "nessa"', () => {
     expect(DELETION_PRODUCT_SCHEMA.safeParse("nessa").success).toBe(true);
   });
 
@@ -50,9 +50,7 @@ describe("deletionCookieName", () => {
   });
 
   it("returns distinct names per product", () => {
-    expect(deletionCookieName("lineage")).not.toBe(
-      deletionCookieName("nessa")
-    );
+    expect(deletionCookieName("lineage")).not.toBe(deletionCookieName("nessa"));
   });
 });
 

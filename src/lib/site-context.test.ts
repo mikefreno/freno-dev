@@ -1,9 +1,8 @@
 /**
- * Unit tests for the shared site-context resolver (task 01).
+ * Unit tests for the shared site-context resolver.
  *
  * `resolveSiteFromHost` is pure — no env / no I/O — so the cases below are
- * straightforward synchronous assertions mirroring the acceptance matrix in
- * the task spec.
+ * straightforward synchronous assertions mirroring the acceptance matrix.
  */
 import { describe, it, expect } from "bun:test";
 import {

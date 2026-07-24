@@ -1,11 +1,10 @@
 /**
- * InputHalo privacy policy — `inputhalo.freno.me/privacy` (task 10).
+ * InputHalo privacy policy — `inputhalo.freno.me/privacy`.
  *
  * Net-new privacy policy for the InputHalo subdomain. InputHalo is a macOS
  * menu bar application (`LSUIElement: true`,
  * `LSApplicationCategoryType: public.app-category.productivity`) — a
- * productivity utility that lives in the system menu bar. Following the task
- * notes, Gaze&apos;s privacy policy is the template for macOS menu bar apps
+ * productivity utility that lives in the system menu bar. Gaze&apos;s privacy policy is the template for macOS menu bar apps
  * (both are local-only menu bar utilities), so this policy mirrors Gaze&apos;s
  * structure and language while describing InputHalo&apos;s own practices.
  *
@@ -16,7 +15,7 @@
  *  - Settings and any cached state are stored locally using standard
  *    macOS mechanisms and are never sent off-device.
  *
- * PageHead is site-aware (task 02): only the base title is supplied; the
+ * PageHead is site-aware: only the base title is supplied; the
  * ` | InputHalo` suffix, `https://inputhalo.freno.me/privacy` canonical, and
  * OG image are derived automatically. Internal links use public
  * subdomain-relative paths (`/contact`) consistent with nav-config.ts and

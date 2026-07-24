@@ -1,9 +1,9 @@
 /**
- * Unit tests for the Lineage per-subdomain downloads page content (task 11).
+ * Unit tests for the Lineage per-subdomain downloads page content.
  *
  * Mirrors the `landing-content.test.ts` pattern: assert against pure
  * constants exported from `downloads-content.ts` (no solid-js / router /
- * DOM). This covers the task-11 acceptance matrix that's structurally
+ * DOM). This covers the acceptance matrix that's structurally
  * verifiable without rendering:
  *  - APK asset key is `"lineage"` (the tRPC key the downloads router maps to
  *    `Life and Lineage.apk`) — must match the unified downloads page's key

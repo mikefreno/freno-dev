@@ -1,5 +1,5 @@
 /**
- * Regression test for the legacy `/deletion/life-and-lineage` route (task 11).
+ * Regression test for the legacy `/deletion/life-and-lineage` route.
  *
  * The route was converted from a rendered page into a 308 permanent redirect
  * to `lineage.freno.me/deletion`. Because the route file is a SolidStart
@@ -23,7 +23,7 @@ const SOURCE = readFileSync(
   "utf8"
 );
 
-describe("Legacy /deletion/life-and-lineage — redirect (task 11)", () => {
+describe("Legacy /deletion/life-and-lineage — redirect", () => {
   it("is a GET handler (API-route redirect, not a rendered page)", () => {
     expect(SOURCE).toContain("export function GET()");
     expect(SOURCE).not.toContain("export default function");

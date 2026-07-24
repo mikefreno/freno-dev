@@ -1,5 +1,5 @@
 /**
- * Unit tests for the InputHalo landing-page download flow (task 06).
+ * Unit tests for the InputHalo landing-page download flow.
  *
  * The helper in `./download.ts` is pure (no solid-js / router / meta imports),
  * so we exercise the acceptance criterion directly — "the download button
@@ -8,7 +8,7 @@
  *
  * Integration / visual checks (the rendered landing page, the tRPC client) are
  * covered by the build gate (`bun run build`) and the manual validation steps
- * in the task spec; the component is a thin wrapper over this helper.
+ * the component is a thin wrapper over this helper.
  */
 import { describe, it, expect, mock } from "bun:test";
 import {
@@ -49,12 +49,10 @@ describe("InputHalo download constants", () => {
 
 describe("queryInputHaloDownload", () => {
   it("calls the query with asset_name 'inputhalo' and returns the signed URL", async () => {
-    const query = mock(
-      (async (input: { asset_name: string }) => {
-        expect(input.asset_name).toBe("inputhalo");
-        return { downloadURL: "https://s3.example.com/InputHalo.dmg?signed=1" };
-      }) as DownloadQueryApi
-    );
+    const query = mock((async (input: { asset_name: string }) => {
+      expect(input.asset_name).toBe("inputhalo");
+      return { downloadURL: "https://s3.example.com/InputHalo.dmg?signed=1" };
+    }) as DownloadQueryApi);
 
     const url = await queryInputHaloDownload(query);
 
@@ -85,9 +83,9 @@ describe("performInputHaloDownload", () => {
   const SIGNED_URL = "https://s3.example.com/InputHalo-0.1.0.dmg?sig=abc";
 
   it("redirects to the signed S3 URL returned by the query", async () => {
-    const query = mock(
-      (async () => ({ downloadURL: SIGNED_URL })) as DownloadQueryApi
-    );
+    const query = mock((async () => ({
+      downloadURL: SIGNED_URL
+    })) as DownloadQueryApi);
     const redirect = mock((url: string) => url);
 
     const ok = await performInputHaloDownload(query, redirect);

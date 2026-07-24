@@ -1,6 +1,6 @@
 /**
  * Pure, side-effect-free download orchestration for the InputHalo landing
- * page (task 06).
+ * page.
  *
  * Extracted from the route component so the acceptance criterion —
  * "download button calls `api.downloads.getDownloadUrl` with `'inputhalo'`
@@ -36,9 +36,7 @@ export const INPUTHALO_ICON_DEFAULT =
  * Keeps the helper decoupled from the full `api` surface and testable with a
  * stub.
  */
-export interface DownloadQueryApi {
-  (input: { asset_name: string }): Promise<{ downloadURL: string }>;
-}
+export type DownloadQueryApi = (input: { asset_name: string }) => Promise<{ downloadURL: string }>
 
 /**
  * Resolve the signed S3 download URL for the InputHalo DMG.

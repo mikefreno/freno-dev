@@ -50,7 +50,7 @@ mock.module("~/env/server", () => ({
     TURSO_DB_API_TOKEN: "test-token",
     NESSA_DB_URL: "libsql://nessa-test.turso.io",
     NESSA_DB_TOKEN: "test-token",
-    // Clerk env vars (required after migration in task 02)
+    // Clerk env vars (required after migration)
     NESSA_CLERK_SECRET: "sk_test_test-secret",
     NESSA_CLERK_JWT_ISSUER: "https://nessa-test.clerk.accounts.dev"
   },
@@ -61,9 +61,8 @@ mock.module("~/env/server", () => ({
 
 // Import after env mock is registered. These are the real verification
 // functions used by web and Lineage surfaces respectively.
-const { verifyAuthToken, verifyLineageAuthToken } = await import(
-  "~/server/auth"
-);
+const { verifyAuthToken, verifyLineageAuthToken } =
+  await import("~/server/auth");
 // Issuer/audience claims the Lineage router stamps onto its tokens.
 const { LINEAGE_CONFIG } = await import("~/config");
 

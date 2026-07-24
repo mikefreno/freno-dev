@@ -1,9 +1,8 @@
 /**
- * Nessa privacy policy — `nessa.freno.me/privacy` (task 10).
+ * Nessa privacy policy — `nessa.freno.me/privacy`.
  *
  * Net-new privacy policy for the Nessa subdomain. Modeled on the Life and
- * Lineage policy (the template for products with user accounts, per the task
- * notes) but scoped to Nessa's real data practices:
+ * Lineage policy (the template for products with user accounts) but scoped to Nessa's real data practices:
  *
  *  - Authentication: user accounts are managed by Clerk
  *    (`src/server/nessa-auth.ts` verifies Clerk session JWTs via the Clerk
@@ -17,13 +16,13 @@
  *    (`NessaConnectionFactory` in `src/server/db-connections.ts`), separate
  *    from the freno.me main DB and the Lineage DB.
  *
- * PageHead is site-aware (task 02): only the base title is supplied; the
+ * PageHead is site-aware: only the base title is supplied; the
  * ` | Nessa` suffix, `https://nessa.freno.me/privacy` canonical, and OG image
  * are derived automatically. Internal links use public subdomain-relative
  * paths (`/contact`) consistent with nav-config.ts and page-head-meta.ts.
  *
  * Nessa does not yet ship a dedicated account-deletion form route; per the
- * task notes ("reference the deletion flow if Nessa has user accounts"),
+ * notes ("reference the deletion flow if Nessa has user accounts"),
  * account/data deletion is initiated by contacting us — Clerk user records
  * and the associated Nessa community content are then purged manually until a
  * self-serve flow is built.

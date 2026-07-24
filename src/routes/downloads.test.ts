@@ -1,5 +1,5 @@
 /**
- * Regression test for the unified `freno.me/downloads` page (task 11).
+ * Regression test for the unified `freno.me/downloads` page.
  *
  * Task 11's acceptance criteria require that the unified downloads page is
  * UNCHANGED — it keeps listing all five products (InputHalo, Gaze, Life and
@@ -38,7 +38,7 @@ describe("Unified downloads page — product list (regression)", () => {
 });
 
 describe("Unified downloads page — Lineage section (byte-identical APK)", () => {
-  it("still wires the Lineage APK button to the \"lineage\" tRPC asset key", () => {
+  it('still wires the Lineage APK button to the "lineage" tRPC asset key', () => {
     // Same asset key the per-subdomain lineage/downloads page uses → both
     // origins serve the byte-identical S3 object (`Life and Lineage.apk`).
     expect(SOURCE).toContain('download("lineage")');

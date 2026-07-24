@@ -1,10 +1,10 @@
 /**
- * Unit tests for the per-site navigation configuration (task 04).
+ * Unit tests for the per-site navigation configuration.
  *
  * `NAV_CONFIG` + helpers are pure (no solid-js / router / meta imports), so
  * these mirror the acceptance matrix directly. Integration / visual checks
  * (rendering on `nessa.localhost:3000`) are covered by the build gate and
- * manual validation described in the task; here we assert the data layer.
+ * manual validation; here we assert the data layer.
  */
 import { describe, it, expect } from "bun:test";
 import {
@@ -184,8 +184,12 @@ describe("filterNavByAuth", () => {
 });
 
 describe("BACK_TO_FRENO", () => {
-  it("links to the apex freno.me and is external", () => {
-    expect(BACK_TO_FRENO.href).toBe("https://freno.me");
+  it("links to the apex site (derived from VITE_DOMAIN) and is external", () => {
+    // href is now dynamically derived from VITE_DOMAIN via buildMainSiteUrl(),
+    // so we assert it's a non-empty absolute URL pointing at the main site,
+    // not a hardcoded string.
+    expect(BACK_TO_FRENO.href.length).toBeGreaterThan(0);
+    expect(BACK_TO_FRENO.href).toMatch(/^https?:\/\//);
     expect(BACK_TO_FRENO.external).toBe(true);
     expect(BACK_TO_FRENO.icon).toBe("back");
   });

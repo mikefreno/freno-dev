@@ -6,7 +6,7 @@ import { getClientCookie } from "~/lib/cookies.client";
 /**
  * Product discriminator forwarded to the generalized
  * `misc.sendDeletionRequestEmail` mutation so the email copy + cooldown
- * cookie are product-appropriate (task 11).
+ * cookie are product-appropriate.
  */
 export type DeletionProduct = "lineage" | "nessa";
 

@@ -1,9 +1,9 @@
 /**
  * Unit tests for the Lineage per-subdomain account-deletion page content
- * (task 11).
+ * (see `./deletion.tsx`).
  *
  * Asserts against pure constants exported from `deletion-content.ts` — no
- * solid-js / router / DOM. Covers the task-11 acceptance matrix:
+ * solid-js / router / DOM. Covers the acceptance matrix:
  *  - Product discriminator is `"lineage"` (selects Lineage-branded email).
  *  - Cooldown cookie name is the legacy `deletionRequestSent` so an in-flight
  *    cooldown survives the `/deletion/life-and-lineage` → subdomain redirect.
@@ -26,14 +26,14 @@ import {
 } from "~/server/api/routers/deletion-email";
 
 describe("Lineage deletion — product discriminator", () => {
-  it("is \"lineage\" (selects Lineage-branded email)", () => {
+  it('is "lineage" (selects Lineage-branded email)', () => {
     expect(DELETION_PRODUCT_KEY).toBe("lineage");
   });
 
   it("is accepted by the server-side product schema", () => {
-    expect(DELETION_PRODUCT_SCHEMA.safeParse(DELETION_PRODUCT_KEY).success).toBe(
-      true
-    );
+    expect(
+      DELETION_PRODUCT_SCHEMA.safeParse(DELETION_PRODUCT_KEY).success
+    ).toBe(true);
   });
 });
 
@@ -44,10 +44,8 @@ describe("Lineage deletion — cooldown cookie", () => {
     expect(DELETION_COOKIE_NAME).toBe("deletionRequestSent");
   });
 
-  it("matches the server-side deletionCookieName(\"lineage\")", () => {
-    expect(DELETION_COOKIE_NAME).toBe(
-      deletionCookieName(DELETION_PRODUCT_KEY)
-    );
+  it('matches the server-side deletionCookieName("lineage")', () => {
+    expect(DELETION_COOKIE_NAME).toBe(deletionCookieName(DELETION_PRODUCT_KEY));
   });
 });
 
@@ -79,14 +77,13 @@ describe("Lineage deletion — PageHead inputs", () => {
 });
 
 describe("Lineage deletion — legacy redirect target", () => {
-  it("points at the lineage subdomain deletion URL", () => {
-    expect(LEGACY_DELETION_REDIRECT_TARGET).toBe(
-      "https://lineage.freno.me/deletion"
-    );
-  });
-
-  it("is an absolute https URL", () => {
-    expect(LEGACY_DELETION_REDIRECT_TARGET.startsWith("https://")).toBe(true);
+  it("points at the lineage subdomain deletion URL (derived from VITE_DOMAIN)", () => {
+    // LEGACY_DELETION_REDIRECT_TARGET is now dynamically derived from
+    // VITE_DOMAIN via buildSubdomainUrl("lineage", "/deletion"). Assert it
+    // is a valid absolute URL containing the lineage + deletion segments.
+    expect(LEGACY_DELETION_REDIRECT_TARGET).toMatch(/^https?:\/\//);
+    expect(LEGACY_DELETION_REDIRECT_TARGET).toContain("lineage");
+    expect(LEGACY_DELETION_REDIRECT_TARGET).toContain("/deletion");
   });
 
   it("does not reference the legacy /deletion/life-and-lineage path", () => {

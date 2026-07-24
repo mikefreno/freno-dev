@@ -1,10 +1,10 @@
 /**
  * p8-001 / p8-008 regression tests — S3 procedure lockdown & input sanitization.
  *
- * These tests verify the security remediation from task 02 without standing up
+ * These tests verify the security remediation without standing up
  * the full tRPC router (which requires S3 / env / database / vinxi-runtime
  * mocking that is unreliable under `bun test`). They follow the proven pattern
- * from task 03 (p8-002): direct unit tests of the authz/sanitization helpers
+ * (p8-002): direct unit tests of the authz/sanitization helpers
  * plus a static source-code audit that the previously-`publicProcedure` S3
  * endpoints are now `csrfProtectedProcedure` (i.e. no longer anonymous).
  *
@@ -136,7 +136,9 @@ describe("p8-001 / p8-008 static source audit", () => {
   for (const proc of S3_PROCEDURES) {
     it(`${proc} is not declared as publicProcedure`, () => {
       // Match the procedure declaration line and ensure it is not publicProcedure.
-      const re = new RegExp(`\\b${proc}\\s*:\\s*(publicProcedure|csrfProtectedProcedure|protectedProcedure|adminProcedure|nessaProcedure)`);
+      const re = new RegExp(
+        `\\b${proc}\\s*:\\s*(publicProcedure|csrfProtectedProcedure|protectedProcedure|adminProcedure|nessaProcedure)`
+      );
       const m = SOURCE.match(re);
       expect(m, `${proc} declaration not found`).not.toBeNull();
       expect(m![1]).not.toBe("publicProcedure");
@@ -144,7 +146,9 @@ describe("p8-001 / p8-008 static source audit", () => {
   }
 
   it("getDownloadUrl (Sparkle updater) remains the only public S3 endpoint", () => {
-    const m = SOURCE.match(/\bgetDownloadUrl\s*:\s*(publicProcedure|csrfProtectedProcedure|protectedProcedure)/);
+    const m = SOURCE.match(
+      /\bgetDownloadUrl\s*:\s*(publicProcedure|csrfProtectedProcedure|protectedProcedure)/
+    );
     expect(m, "getDownloadUrl declaration not found").not.toBeNull();
     expect(m![1]).toBe("publicProcedure");
   });
@@ -153,7 +157,9 @@ describe("p8-001 / p8-008 static source audit", () => {
     // Both simpleDeleteImage and deleteImage must call the ownership guard.
     const deleteBlocks = SOURCE.split(/(\bsimpleDeleteImage:|\bdeleteImage:)/);
     // Count occurrences of the ownership call within the delete mutation bodies.
-    const occurrences = (SOURCE.match(/assertS3KeyOwnership\(input\.key/g) || []).length;
+    const occurrences = (
+      SOURCE.match(/assertS3KeyOwnership\(input\.key/g) || []
+    ).length;
     expect(occurrences).toBeGreaterThanOrEqual(2);
   });
 });

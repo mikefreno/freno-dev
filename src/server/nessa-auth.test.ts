@@ -78,33 +78,25 @@ describe("verifyNessaToken with Clerk JWT", () => {
 
     const { verifyNessaToken } = await import("./nessa-auth");
 
-    await expect(
-      verifyNessaToken("token-without-subject")
-    ).rejects.toThrow(/Missing subject/);
+    await expect(verifyNessaToken("token-without-subject")).rejects.toThrow(
+      /Missing subject/
+    );
   });
 
   it("rejects a malformed token", async () => {
-    mockVerifyToken.mockRejectedValue(
-      new Error("Invalid token format")
-    );
+    mockVerifyToken.mockRejectedValue(new Error("Invalid token format"));
 
     const { verifyNessaToken } = await import("./nessa-auth");
 
-    await expect(
-      verifyNessaToken("malformed-token")
-    ).rejects.toThrow();
+    await expect(verifyNessaToken("malformed-token")).rejects.toThrow();
   });
 
   it("rejects an expired token", async () => {
-    mockVerifyToken.mockRejectedValue(
-      new Error("Token has expired")
-    );
+    mockVerifyToken.mockRejectedValue(new Error("Token has expired"));
 
     const { verifyNessaToken } = await import("./nessa-auth");
 
-    await expect(
-      verifyNessaToken("expired-token")
-    ).rejects.toThrow(/expired/i);
+    await expect(verifyNessaToken("expired-token")).rejects.toThrow(/expired/i);
   });
 
   it("rejects a token with wrong signature", async () => {
@@ -114,9 +106,9 @@ describe("verifyNessaToken with Clerk JWT", () => {
 
     const { verifyNessaToken } = await import("./nessa-auth");
 
-    await expect(
-      verifyNessaToken("wrong-key-token")
-    ).rejects.toThrow(/signature/i);
+    await expect(verifyNessaToken("wrong-key-token")).rejects.toThrow(
+      /signature/i
+    );
   });
 });
 
@@ -128,7 +120,7 @@ describe("static audit: signNessaToken removed", () => {
 
   it("nessa-auth.ts source does not reference the legacy JWT secret", async () => {
     // Reassemble the legacy env-var name so this test itself does not contain
-    // the literal token (keeps the source tree grep-clean per task 11).
+    // the literal token (keeps the source tree grep-clean).
     const legacyVar = ["NESSA", "JWT", "SECRET"].join("_");
     const source = await Bun.file(import.meta.dir + "/nessa-auth.ts").text();
     expect(source).not.toContain(legacyVar);

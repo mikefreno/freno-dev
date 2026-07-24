@@ -19,7 +19,14 @@ export interface SitemapEntry {
   /**
    * Expected change frequency.
    */
-  changefreq: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+  changefreq:
+    | "always"
+    | "hourly"
+    | "daily"
+    | "weekly"
+    | "monthly"
+    | "yearly"
+    | "never";
 
   /**
    * Relative priority (0.0–1.0).
@@ -31,7 +38,7 @@ export interface SitemapEntry {
  * Per-site sitemap route definitions.
  *
  * Entries for subdomain pages (contact, privacy, downloads, etc.) are
- * populated as those pages are built in tasks 05–11.
+ * populated as those pages are built.
  */
 export const SITEMAP_ROUTES: Record<SiteId, SitemapEntry[]> = {
   main: [
@@ -44,7 +51,7 @@ export const SITEMAP_ROUTES: Record<SiteId, SitemapEntry[]> = {
   ],
 
   // ── Subdomain sites ──────────────────────────────────────────────────
-  // Populated as pages land in tasks 05–11.
+  // Populated as pages land.
 
   nessa: [
     { path: "/", changefreq: "weekly", priority: 1.0 },

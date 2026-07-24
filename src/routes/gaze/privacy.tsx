@@ -1,9 +1,9 @@
 /**
- * Gaze privacy policy — `gaze.freno.me/privacy` (task 10).
+ * Gaze privacy policy — `gaze.freno.me/privacy`.
  *
  * Migrated verbatim from the legacy `src/routes/privacy-policy/gaze.tsx`
  * route so there is zero content loss; the old route now 308-redirects here
- * (see `src/routes/privacy-policy/gaze.tsx`). PageHead is site-aware (task 02)
+ * (see `src/routes/privacy-policy/gaze.tsx`). PageHead is site-aware
  * so the Gaze `titleSuffix` (` | Gaze`), canonical
  * (`https://gaze.freno.me/privacy`), and OG image derive automatically — we
  * only pass the base title.

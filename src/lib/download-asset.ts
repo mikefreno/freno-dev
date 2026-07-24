@@ -2,7 +2,7 @@
  * Pure, testable helper for triggering a signed-S3 download via the tRPC
  * `downloads.getDownloadUrl` endpoint.
  *
- * Extracted (task 05) so the Gaze landing page's download button — and any
+ * Extracted so the Gaze landing page's download button — and any
  * other subdomain landing page that needs the same flow (InputHalo, Lineage,
  * …) — can share a single code path AND be unit-tested without importing
  * `~/lib/api` (which transitively imports solid-js / CSRF cookie access).
@@ -58,12 +58,7 @@ const defaultRedirect: DownloadRedirect = (url) => {
 export async function downloadAsset(
   options: DownloadAssetOptions
 ): Promise<void> {
-  const {
-    api,
-    assetName,
-    redirect = defaultRedirect,
-    onError
-  } = options;
+  const { api, assetName, redirect = defaultRedirect, onError } = options;
 
   try {
     const data = await api.downloads.getDownloadUrl.query({

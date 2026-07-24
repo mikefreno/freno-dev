@@ -1,15 +1,15 @@
 /**
- * Unit tests for the Lineage landing page content (task 08).
+ * Unit tests for the Lineage landing page content.
  *
  * Mirrors the `page-head-meta.ts` / `nav-config.ts` pattern: assert against
  * pure constants exported from `landing-content.ts` (no solid-js / router /
- * DOM). This covers the task-08 acceptance matrix that's structurally
+ * DOM). This covers the acceptance matrix that's structurally
  * verifiable without rendering:
  *  - App Store link is present and correct
  *  - Google Play / downloads link targets the subdomain `/downloads` path
  *    (public browser path, NOT the vercel-rewritten `/lineage/downloads`)
  *  - Feature highlights cover: dark fantasy, mobile, remote saves, PvP
- *  - PageHead base title + description (suffix is added by PageHead, task 02)
+ *  - PageHead base title + description (suffix is added by PageHead)
  *  - Legacy `/marketing/life-and-lineage` redirect target points at the
  *    Lineage subdomain.
  *
@@ -46,7 +46,7 @@ describe("Lineage landing — downloads link", () => {
   it("targets the subdomain-relative public browser path", () => {
     // NOT `/lineage/downloads` (the internal vercel-rewrite prefix) — vercel
     // rewrites `lineage.freno.me/downloads` → `/lineage/downloads` while
-    // leaving the browser URL clean, matching the canonical rule from task 02.
+    // leaving the browser URL clean, matching the canonical rule.
     expect(DOWNLOADS_HREF).toBe("/downloads");
   });
 
@@ -109,9 +109,7 @@ describe("Lineage landing — feature highlights", () => {
   });
 
   it("covers the dark-fantasy / mobile / saves / PvP themes", () => {
-    const blob = FEATURES.map(
-      (f) => `${f.title} ${f.description}`
-    )
+    const blob = FEATURES.map((f) => `${f.title} ${f.description}`)
       .join(" ")
       .toLowerCase();
     expect(blob).toContain("dark fantasy");
@@ -122,12 +120,16 @@ describe("Lineage landing — feature highlights", () => {
 });
 
 describe("Lineage landing — legacy redirect target", () => {
-  it("points at the lineage subdomain apex", () => {
-    expect(LEGACY_REDIRECT_TARGET).toBe("https://lineage.freno.me");
+  it("points at the lineage subdomain (derived from VITE_DOMAIN)", () => {
+    // LEGACY_REDIRECT_TARGET is now dynamically derived from VITE_DOMAIN
+    // via buildSubdomainUrl("lineage"). In dev it's path-based
+    // (http://localhost:3000/lineage); in prod it's host-based
+    // (https://lineage.freno.me). Assert it's a valid absolute URL.
+    expect(LEGACY_REDIRECT_TARGET).toMatch(/^https?:\/\/[^/]+\/[a-z]+$/i);
+    expect(LEGACY_REDIRECT_TARGET).toContain("lineage");
   });
 
-  it("is an https absolute URL with no trailing path", () => {
-    expect(LEGACY_REDIRECT_TARGET.startsWith("https://")).toBe(true);
+  it("has no trailing slash", () => {
     expect(LEGACY_REDIRECT_TARGET.endsWith("/")).toBe(false);
   });
 });

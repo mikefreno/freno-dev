@@ -1,6 +1,8 @@
+import { buildSubdomainUrl } from "~/lib/site-context";
+
 /**
- * Legacy `/marketing/gaze` route — redirected (task 05) to the new Gaze
- * subdomain landing page at `gaze.freno.me`.
+ * Legacy `/marketing/gaze` route — redirected to the new Gaze
+ * subdomain landing page.
  *
  * Kept as a permanent 308 redirect so existing inbound links keep resolving
  * to the canonical Gaze marketing home.
@@ -14,7 +16,7 @@ export default function GazeMarketingRedirect(): never {
   throw new Response(null, {
     status: 308,
     headers: {
-      Location: "https://gaze.freno.me",
+      Location: buildSubdomainUrl("gaze"),
       "Cache-Control": "public, max-age=86400"
     }
   });

@@ -56,8 +56,8 @@ const serverEnvSchema = z.object({
   REDIS_URL: z.string().min(1),
   NESSA_DB_URL: z.string().min(1),
   NESSA_DB_TOKEN: z.string().min(1),
-  // Clerk authentication — Nessa auth is now Clerk-backed (task 02). The
-  // legacy self-issued JWT signing env var was removed in task 11.
+  // Clerk authentication — Nessa auth is now Clerk-backed. The
+  // legacy self-issued JWT signing env var was removed.
   NESSA_CLERK_SECRET: z.string().min(1),
   NESSA_CLERK_JWT_ISSUER: z.string().min(1),
   // Clerk webhook signing secret (Svix). Used to verify `user.created` /

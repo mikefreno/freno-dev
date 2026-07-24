@@ -65,9 +65,15 @@ function initSchema() {
   db = new Database(":memory:");
   db.run("PRAGMA foreign_keys = ON");
 
-  db.run("CREATE TABLE clubMemberships (id TEXT PRIMARY KEY, clubId TEXT, userId TEXT, role TEXT, joinedAt TEXT)");
-  db.run("CREATE TABLE clubPosts (id TEXT PRIMARY KEY, clubId TEXT, userId TEXT, content TEXT, postType TEXT, challengeId TEXT, createdAt TEXT, updatedAt TEXT)");
-  db.run("CREATE TABLE clubChallenges (id TEXT PRIMARY KEY, clubId TEXT, title TEXT, description TEXT, goalType TEXT, goalValue REAL, startDate TEXT, endDate TEXT, createdBy TEXT, status TEXT, createdAt TEXT, updatedAt TEXT)");
+  db.run(
+    "CREATE TABLE clubMemberships (id TEXT PRIMARY KEY, clubId TEXT, userId TEXT, role TEXT, joinedAt TEXT)"
+  );
+  db.run(
+    "CREATE TABLE clubPosts (id TEXT PRIMARY KEY, clubId TEXT, userId TEXT, content TEXT, postType TEXT, challengeId TEXT, createdAt TEXT, updatedAt TEXT)"
+  );
+  db.run(
+    "CREATE TABLE clubChallenges (id TEXT PRIMARY KEY, clubId TEXT, title TEXT, description TEXT, goalType TEXT, goalValue REAL, startDate TEXT, endDate TEXT, createdBy TEXT, status TEXT, createdAt TEXT, updatedAt TEXT)"
+  );
 }
 
 function seed() {
@@ -86,7 +92,17 @@ function seed() {
   // Challenge CH in club C, created by A.
   db.run(
     "INSERT INTO clubChallenges (id, clubId, title, description, goalType, goalValue, startDate, endDate, createdBy, status, createdAt, updatedAt) VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))",
-    [CHALLENGE_CH, CLUB_C, "Run 5k", "distance", 5000, "2025-01-01", "2025-12-31", USER_A, "active"]
+    [
+      CHALLENGE_CH,
+      CLUB_C,
+      "Run 5k",
+      "distance",
+      5000,
+      "2025-01-01",
+      "2025-12-31",
+      USER_A,
+      "active"
+    ]
   );
 }
 
@@ -126,7 +142,9 @@ describe("p8-003: resolveClubIdFromPost", () => {
   });
 
   it("throws NOT_FOUND for a missing post", async () => {
-    expect(await errCode(resolveClubIdFromPost(conn, "no-such-post"))).toBe("NOT_FOUND");
+    expect(await errCode(resolveClubIdFromPost(conn, "no-such-post"))).toBe(
+      "NOT_FOUND"
+    );
   });
 });
 
@@ -136,17 +154,23 @@ describe("p8-003: resolveClubIdFromChallenge", () => {
   });
 
   it("throws NOT_FOUND for a missing challenge", async () => {
-    expect(await errCode(resolveClubIdFromChallenge(conn, "no-such-challenge"))).toBe("NOT_FOUND");
+    expect(
+      await errCode(resolveClubIdFromChallenge(conn, "no-such-challenge"))
+    ).toBe("NOT_FOUND");
   });
 });
 
 describe("p8-003: requireClubMembership", () => {
   it("passes silently for a member", async () => {
-    await expect(requireClubMembership(conn, CLUB_C, USER_A)).resolves.toBeUndefined();
+    await expect(
+      requireClubMembership(conn, CLUB_C, USER_A)
+    ).resolves.toBeUndefined();
   });
 
   it("throws FORBIDDEN for a non-member", async () => {
-    expect(await errCode(requireClubMembership(conn, CLUB_C, USER_B))).toBe("FORBIDDEN");
+    expect(await errCode(requireClubMembership(conn, CLUB_C, USER_B))).toBe(
+      "FORBIDDEN"
+    );
   });
 });
 
@@ -160,23 +184,31 @@ describe("p8-003: endpoint authorization sequences (resolve → require)", () =>
   // social.getPost / addComment / comments / like / unlike
   it("getPost/addComment/comments/like/unlike: non-member B rejected with FORBIDDEN", async () => {
     const clubId = await resolveClubIdFromPost(conn, POST_P);
-    expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe("FORBIDDEN");
+    expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe(
+      "FORBIDDEN"
+    );
   });
 
   it("getPost/addComment/comments/like/unlike: member A allowed", async () => {
     const clubId = await resolveClubIdFromPost(conn, POST_P);
-    await expect(requireClubMembership(conn, clubId, USER_A)).resolves.toBeUndefined();
+    await expect(
+      requireClubMembership(conn, clubId, USER_A)
+    ).resolves.toBeUndefined();
   });
 
   // challenges.leave / challenges.submitProgress
   it("challenges.leave / submitProgress: non-member B rejected with FORBIDDEN", async () => {
     const clubId = await resolveClubIdFromChallenge(conn, CHALLENGE_CH);
-    expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe("FORBIDDEN");
+    expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe(
+      "FORBIDDEN"
+    );
   });
 
   it("challenges.leave / submitProgress: member A allowed", async () => {
     const clubId = await resolveClubIdFromChallenge(conn, CHALLENGE_CH);
-    await expect(requireClubMembership(conn, clubId, USER_A)).resolves.toBeUndefined();
+    await expect(
+      requireClubMembership(conn, clubId, USER_A)
+    ).resolves.toBeUndefined();
   });
 });
 
@@ -184,21 +216,27 @@ describe("p8-003: join then allowed / leave then blocked (integration)", () => {
   it("B is blocked, allowed after joining C, blocked again after leaving", async () => {
     // Initially blocked.
     const clubId = await resolveClubIdFromPost(conn, POST_P);
-    expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe("FORBIDDEN");
+    expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe(
+      "FORBIDDEN"
+    );
 
     // B joins.
     db.run(
       "INSERT INTO clubMemberships (id, clubId, userId, role, joinedAt) VALUES (?, ?, ?, ?, datetime('now'))",
       ["mem-b", CLUB_C, USER_B, "member"]
     );
-    await expect(requireClubMembership(conn, clubId, USER_B)).resolves.toBeUndefined();
+    await expect(
+      requireClubMembership(conn, clubId, USER_B)
+    ).resolves.toBeUndefined();
 
     // B leaves.
     db.run("DELETE FROM clubMemberships WHERE clubId = ? AND userId = ?", [
       CLUB_C,
       USER_B
     ]);
-    expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe("FORBIDDEN");
+    expect(await errCode(requireClubMembership(conn, clubId, USER_B))).toBe(
+      "FORBIDDEN"
+    );
   });
 });
 
@@ -224,7 +262,9 @@ function initUsersTable() {
     email TEXT,
     clerkUserId TEXT
   )`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_users_clerkUserId ON users(clerkUserId)`);
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_users_clerkUserId ON users(clerkUserId)`
+  );
 }
 
 async function resolveLocalUserId(clerkUserId: string): Promise<string | null> {
@@ -246,31 +286,34 @@ describe("clerkUserId lookup (migrate-to-clerk-auth-03)", () => {
   });
 
   it("resolves local users.id for a seeded clerkUserId", async () => {
-    db.run(
-      "INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)",
-      [LOCAL_USER_A, "a@nessa.app", CLERK_USER_ID]
-    );
+    db.run("INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)", [
+      LOCAL_USER_A,
+      "a@nessa.app",
+      CLERK_USER_ID
+    ]);
     expect(await resolveLocalUserId(CLERK_USER_ID)).toBe(LOCAL_USER_A);
   });
 
   it("returns null when no local row matches the clerkUserId", async () => {
-    // No users seeded — the webhook (task 04) has not run yet.
+    // No users seeded — the webhook has not run yet.
     expect(await resolveLocalUserId(CLERK_USER_ID)).toBeNull();
   });
 
   it("returns null for a Clerk id that exists but maps to a different local user", async () => {
-    db.run(
-      "INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)",
-      [LOCAL_USER_B, "b@nessa.app", "user_test_other"]
-    );
+    db.run("INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)", [
+      LOCAL_USER_B,
+      "b@nessa.app",
+      "user_test_other"
+    ]);
     expect(await resolveLocalUserId(CLERK_USER_ID)).toBeNull();
   });
 
   it("ctx.nessaUserId is the LOCAL id, never the Clerk sub", async () => {
-    db.run(
-      "INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)",
-      [LOCAL_USER_A, "a@nessa.app", CLERK_USER_ID]
-    );
+    db.run("INSERT INTO users (id, email, clerkUserId) VALUES (?, ?, ?)", [
+      LOCAL_USER_A,
+      "a@nessa.app",
+      CLERK_USER_ID
+    ]);
     const resolved = await resolveLocalUserId(CLERK_USER_ID);
     expect(resolved).toBe(LOCAL_USER_A);
     expect(resolved).not.toBe(CLERK_USER_ID);

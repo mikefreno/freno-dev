@@ -1,5 +1,5 @@
 /**
- * Pure content + metadata for the Lineage subdomain landing page (task 08).
+ * Pure content + metadata for the Lineage subdomain landing page.
  *
  * Intentionally imports NOTHING from solid-js / @solidjs/router / @solidjs/meta
  * so the constant set here can be unit-tested in `bun:test` without spinning
@@ -12,27 +12,29 @@
  * title/description) is asserted against in `landing-content.test.ts` without
  * a DOM render.
  *
- * Cross-task contracts encoded here:
+ * Contracts encoded here:
  *  - `APP_STORE_URL` is the canonical App Store link the marketing page has
  *    always surfaced (kept stable across the migration).
  *  - `DOWNLOADS_HREF` is the **public browser path** on the lineage subdomain
  *    (`/downloads`), NOT the internal vercel-rewritten prefix `/lineage/downloads`.
- *    This matches the canonical-URL rule from task 02 and the nav-config rule
- *    from task 04: vercel.json maps `lineage.freno.me/downloads` →
+ *    This matches the canonical-URL rule and the nav-config rule
+ *    from the spec: vercel.json maps `lineage.freno.me/downloads` →
  *    `/lineage/downloads` server-side while the browser sees `/downloads`.
  *    Task 11 will create the matching `src/routes/lineage/downloads.tsx`.
  *  - `PAGE_META` is consumed verbatim by `<PageHead>`; the per-site title
  *    suffix (` | Life and Lineage`) is appended automatically by
- *    `resolvePageHeadMeta` (task 02), so the `title` here is the BASE title
+ *    `resolvePageHeadMeta`, so the `title` here is the BASE title
  *    only — do NOT include the suffix.
  */
+
+import { buildSubdomainUrl } from "~/lib/site-context";
 
 /** Apple App Store link — surfaced unchanged from the legacy marketing page. */
 export const APP_STORE_URL =
   "https://apps.apple.com/us/app/life-and-lineage/id6737252442";
 
 /**
- * Public browser path to the per-subdomain downloads page (task 11).
+ * Public browser path to the per-subdomain downloads page.
  * Subdomain-relative: renders `lineage.freno.me/downloads` in the browser.
  */
 export const DOWNLOADS_HREF = "/downloads";
@@ -99,4 +101,4 @@ export const FEATURES: readonly LineageFeature[] = [
  * so tests can assert the redirect target without importing the route module
  * (which would pull in the server runtime).
  */
-export const LEGACY_REDIRECT_TARGET = "https://lineage.freno.me";
+export const LEGACY_REDIRECT_TARGET = buildSubdomainUrl("lineage");

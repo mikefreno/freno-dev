@@ -4,7 +4,7 @@
  * Mirrors the `page-head-meta.ts` testability pattern — `nessa/meta.ts` is a
  * pure module (no solid-js / @solidjs/router / @solidjs/meta imports) so
  * `bun:test` can resolve it. Asserts the metadata matches Nessa's actual
- * product positioning as a privacy-first fitness / Strava-alternative app
+ * product positioning as a privacy-first fitness app
  * (per `~/code/Nessa/plans/2026-03-16-marketing-strategy-launch-positioning.md`).
  */
 import { describe, it, expect } from "bun:test";
@@ -72,13 +72,13 @@ describe("Nessa landing page — PageHead metadata", () => {
     expect(meta.description?.toLowerCase()).toContain("challenges");
   });
 
-  it("ogDescription mentions free leaderboards and Strava comparison", () => {
+  it("ogDescription mentions free leaderboards and affordable pricing", () => {
     const meta = resolvePageHeadMeta(
       NESSA_LANDING_META,
       SITE_CONFIG.nessa,
       "/"
     );
     expect(meta.ogDescription?.toLowerCase()).toContain("leaderboards");
-    expect(meta.ogDescription?.toLowerCase()).toContain("strava");
+    expect(meta.ogDescription?.toLowerCase()).toContain("affordable");
   });
 });

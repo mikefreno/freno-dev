@@ -1,6 +1,6 @@
 /**
  * Pure helpers for the generalized account-deletion-request email flow
- * (task 11).
+ * (see `misc.ts`).
  *
  * Extracted from `src/server/api/routers/misc.ts` so they can be unit-tested
  * in `bun:test` WITHOUT importing `~/env/server` (which validates ~30 secrets
@@ -49,7 +49,7 @@ export interface DeletionEmailContent {
  * The operator email identifies the request name + requester email; the user
  * email identifies the account being deleted + the 24h cancellation window.
  * The `product` discriminator switches branding between Lineage (the original
- * flow) and Nessa (task 11 — Nessa stores user data in its own Turso DB).
+ * flow) and Nessa (Nessa stores user data in its own Turso DB).
  *
  * `email` is interpolated verbatim into the HTML bodies. It has already been
  * validated as a well-formed email by the tRPC input schema, and Sendinblue

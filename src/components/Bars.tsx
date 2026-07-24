@@ -89,7 +89,7 @@ function getGtActivityPromise(): Promise<ContributionDay[]> {
     .catch(() => []));
 }
 
-// ── Subdomain nav rendering (task 04) ─────────────────────────────────────
+// ── Subdomain nav rendering ──────────────────────────────────────────────
 //
 // The main site retains its bespoke LeftBar / RightBarContent rendering
 // unchanged (Recent Posts, auth-aware Account/Login/SignOut, admin links,
@@ -578,170 +578,170 @@ function MainLeftBarContent() {
       <div class="text-text flex flex-1 flex-col px-4 pb-4 text-xl font-bold">
         <div class="flex flex-col py-8">
           <span class="text-lg font-semibold">Recent Posts</span>
-        <div class="flex max-h-[50dvh] flex-col gap-3 pt-4">
-          <Show
-            when={recentPosts()}
-            fallback={
-              <For each={[1, 2, 3]}>
-                {() => (
-                  <div class="flex w-52 flex-col">
-                    <div class="relative overflow-hidden">
-                      <SkeletonBox class="float-right ml-2 h-12 w-16" />
-                      <div class="flex flex-col">
-                        <SkeletonText class="h-6 w-full" />
-                        <SkeletonText class="mt-1.5 h-6 w-2/3" />
+          <div class="flex max-h-[50dvh] flex-col gap-3 pt-4">
+            <Show
+              when={recentPosts()}
+              fallback={
+                <For each={[1, 2, 3]}>
+                  {() => (
+                    <div class="flex w-52 flex-col">
+                      <div class="relative overflow-hidden">
+                        <SkeletonBox class="float-right ml-2 h-12 w-16" />
+                        <div class="flex flex-col">
+                          <SkeletonText class="h-6 w-full" />
+                          <SkeletonText class="mt-1.5 h-6 w-2/3" />
+                        </div>
                       </div>
+                      <SkeletonText class="mt-1.5 h-6 w-40" />
+                      <SkeletonText class="mt-1.5 h-4 w-1/2" />
                     </div>
-                    <SkeletonText class="mt-1.5 h-6 w-40" />
-                    <SkeletonText class="mt-1.5 h-4 w-1/2" />
-                  </div>
+                  )}
+                </For>
+              }
+            >
+              <For each={recentPosts()}>
+                {(post) => (
+                  <a
+                    href={`/blog/${post.title}`}
+                    onClick={handleLinkClick}
+                    class="hover:text-subtext0 block w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
+                  >
+                    <Typewriter class="flex flex-col" keepAlive={false}>
+                      <div class="relative overflow-hidden">
+                        <img
+                          src={getThumbnailUrl(post.banner_photo)}
+                          alt="post-cover"
+                          class="float-right mb-1 ml-2 h-12 w-16 rounded object-cover"
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            if (
+                              img.src !==
+                              (post.banner_photo || "/blueprint.jpg")
+                            ) {
+                              img.src = post.banner_photo || "/blueprint.jpg";
+                            }
+                          }}
+                        />
+                        <span class="inline wrap-break-word hyphens-auto">
+                          {insertSoftHyphens(post.title.replace(/_/g, " "))}
+                        </span>
+                      </div>
+
+                      <span class="text-subtext0 clear-both text-sm">
+                        {new Date(post.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric"
+                        })}
+                      </span>
+                    </Typewriter>
+                  </a>
                 )}
               </For>
-            }
-          >
-            <For each={recentPosts()}>
-              {(post) => (
-                <a
-                  href={`/blog/${post.title}`}
-                  onClick={handleLinkClick}
-                  class="hover:text-subtext0 block w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-105 hover:font-bold"
-                >
-                  <Typewriter class="flex flex-col" keepAlive={false}>
-                    <div class="relative overflow-hidden">
-                      <img
-                        src={getThumbnailUrl(post.banner_photo)}
-                        alt="post-cover"
-                        class="float-right mb-1 ml-2 h-12 w-16 rounded object-cover"
-                        onError={(e) => {
-                          const img = e.currentTarget;
-                          if (
-                            img.src !==
-                            (post.banner_photo || "/blueprint.jpg")
-                          ) {
-                            img.src = post.banner_photo || "/blueprint.jpg";
-                          }
-                        }}
-                      />
-                      <span class="inline wrap-break-word hyphens-auto">
-                        {insertSoftHyphens(post.title.replace(/_/g, " "))}
-                      </span>
-                    </div>
-
-                    <span class="text-subtext0 clear-both text-sm">
-                      {new Date(post.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric"
-                      })}
-                    </span>
-                  </Typewriter>
-                </a>
-              )}
-            </For>
-          </Show>
+            </Show>
+          </div>
         </div>
-      </div>
 
-      <div class="mt-auto">
-        <Typewriter keepAlive={false}>
-          <ul class="flex flex-col gap-4 pt-6">
-            <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-              <a href="/" onClick={handleLinkClick}>
-                Home
-              </a>
-            </li>
-            <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-              <a href="/blog" onClick={handleLinkClick}>
-                Blog
-              </a>
-            </li>
-            <Show when={isMounted() && isAdmin()}>
+        <div class="mt-auto">
+          <Typewriter keepAlive={false}>
+            <ul class="flex flex-col gap-4 pt-6">
               <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                <a href="/analytics" onClick={handleLinkClick}>
-                  Analytics
+                <a href="/" onClick={handleLinkClick}>
+                  Home
                 </a>
               </li>
-            </Show>
-            <li
-              class="hover:text-subtext0 w-fit cursor-pointer transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"
-              onClick={() => {
-                navigate("/account");
-                handleLinkClick();
-              }}
-            >
-              <Show
-                when={isMounted() && isAuthenticated()}
-                fallback={
-                  <a href="/login" onClick={handleLinkClick}>
-                    Login
+              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                <a href="/blog" onClick={handleLinkClick}>
+                  Blog
+                </a>
+              </li>
+              <Show when={isMounted() && isAdmin()}>
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <a href="/analytics" onClick={handleLinkClick}>
+                    Analytics
                   </a>
-                }
-              >
-                <A href="/account" onClick={handleLinkClick}>
-                  Account
-                  <Show when={email()}>
-                    <span class="text-subtext0 text-sm font-normal">
-                      {" "}
-                      ({email()})
-                    </span>
-                  </Show>
-                </A>
+                </li>
               </Show>
-            </li>
-            <Show when={isMounted() && isAuthenticated()}>
-              <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
-                <button
-                  onClick={handleSignOut}
-                  disabled={signOutLoading()}
-                  class="text-left disabled:opacity-50"
+              <li
+                class="hover:text-subtext0 w-fit cursor-pointer transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"
+                onClick={() => {
+                  navigate("/account");
+                  handleLinkClick();
+                }}
+              >
+                <Show
+                  when={isMounted() && isAuthenticated()}
+                  fallback={
+                    <a href="/login" onClick={handleLinkClick}>
+                      Login
+                    </a>
+                  }
                 >
-                  {signOutLoading() ? "Signing Out..." : "Sign Out"}
-                </button>
+                  <A href="/account" onClick={handleLinkClick}>
+                    Account
+                    <Show when={email()}>
+                      <span class="text-subtext0 text-sm font-normal">
+                        {" "}
+                        ({email()})
+                      </span>
+                    </Show>
+                  </A>
+                </Show>
               </li>
-            </Show>
-          </ul>
-        </Typewriter>
+              <Show when={isMounted() && isAuthenticated()}>
+                <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+                  <button
+                    onClick={handleSignOut}
+                    disabled={signOutLoading()}
+                    class="text-left disabled:opacity-50"
+                  >
+                    {signOutLoading() ? "Signing Out..." : "Sign Out"}
+                  </button>
+                </li>
+              </Show>
+            </ul>
+          </Typewriter>
 
-        <ul class="pt-4 pb-6">
-          <li
-            class="hover:text-subtext0 w-fit transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"
-            classList={{
-              "opacity-0 pointer-events-none": !getLostVisible(),
-              "opacity-100": getLostVisible()
-            }}
-          >
-            <button
-              onClick={() => {
-                const lostUrls = [
-                  "/dev/null",
-                  "/segfault",
-                  "/void",
-                  "/404",
-                  "/lost-and-still-lost"
-                ];
-                const randomUrl =
-                  lostUrls[Math.floor(Math.random() * lostUrls.length)];
-                navigate(randomUrl);
-                handleLinkClick();
+          <ul class="pt-4 pb-6">
+            <li
+              class="hover:text-subtext0 w-fit transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold"
+              classList={{
+                "opacity-0 pointer-events-none": !getLostVisible(),
+                "opacity-100": getLostVisible()
               }}
-              class="text-left font-mono transition-opacity duration-75"
-              style={{ "will-change": "contents" }}
             >
-              {getLostText()}
-            </button>
-          </li>
-        </ul>
+              <button
+                onClick={() => {
+                  const lostUrls = [
+                    "/dev/null",
+                    "/segfault",
+                    "/void",
+                    "/404",
+                    "/lost-and-still-lost"
+                  ];
+                  const randomUrl =
+                    lostUrls[Math.floor(Math.random() * lostUrls.length)];
+                  navigate(randomUrl);
+                  handleLinkClick();
+                }}
+                class="text-left font-mono transition-opacity duration-75"
+                style={{ "will-change": "contents" }}
+              >
+                {getLostText()}
+              </button>
+            </li>
+          </ul>
 
-        <hr class="border-overlay0 -mx-4 my-auto" />
-        <div class="my-auto">
-          <DarkModeToggle />
-        </div>
+          <hr class="border-overlay0 -mx-4 my-auto" />
+          <div class="my-auto">
+            <DarkModeToggle />
+          </div>
 
-        <div class="border-overlay0 -mx-4 border-t pt-8 md:hidden">
-          <RightBarContent />
+          <div class="border-overlay0 -mx-4 border-t pt-8 md:hidden">
+            <RightBarContent />
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 }
@@ -828,9 +828,7 @@ export function LeftBar() {
   // ("bars render appropriately styled per site — brand color hint from
   // SITE_CONFIG"). Main keeps the existing neutral styling.
   const accentBorder = () =>
-    site().id === "main"
-      ? undefined
-      : { "border-color": site().brandColor };
+    site().id === "main" ? undefined : { "border-color": site().brandColor };
 
   return (
     <nav

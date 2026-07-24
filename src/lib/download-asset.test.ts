@@ -1,5 +1,5 @@
 /**
- * Unit tests for the shared `downloadAsset` helper (task 05).
+ * Unit tests for the shared `downloadAsset` helper.
  *
  * The helper is a pure function over an injected `DownloadApi` + redirect sink,
  * so these tests verify the tRPC call shape, redirect, and error handling
@@ -54,7 +54,12 @@ describe("downloadAsset", () => {
     const sink = mock((u: string) => {});
     const errSink = mock((e: unknown) => {});
     await expect(
-      downloadAsset({ api, assetName: "gaze", redirect: sink, onError: errSink })
+      downloadAsset({
+        api,
+        assetName: "gaze",
+        redirect: sink,
+        onError: errSink
+      })
     ).resolves.toBeUndefined();
     expect(sink).not.toHaveBeenCalled();
     expect(errSink).toHaveBeenCalledTimes(1);

@@ -1,6 +1,6 @@
 /**
  * SiteContext — SolidJS provider exposing the active `Site` to the component
- * tree (task 01 keystone).
+ * tree (keystone).
  *
  * Resolution strategy:
  *  - Server (SSR): reads the module-level value bound by `setServerSite()`,

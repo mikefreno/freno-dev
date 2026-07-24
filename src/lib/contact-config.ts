@@ -1,5 +1,5 @@
 /**
- * Per-site contact form configuration (task 09 — per-subdomain contact pages).
+ * Per-site contact form configuration — per-subdomain contact pages.
  *
  * Pure module — imports NOTHING from solid-js / @solidjs/router / @solidjs/meta —
  * so it can be unit-tested in `bun:test` without spinning up the router / Meta
@@ -18,7 +18,7 @@
  *    `"freno.me Contact Request"` subject is byte-identical after the refactor
  *    (backwards compatibility for any inbox filters / saved searches). Each
  *    product subdomain uses a bracketed token (`"[Nessa]"`, `"[Lineage]"`,
- *    `"[Gaze]"`, `"[InputHalo]"`) per the task spec so inbound mail can be
+ *    `"[Gaze]"`, `"[InputHalo]"`) so inbound mail can be
  *    routed / triaged by source product.
  *  - All mail is delivered to `michael@freno.me` (single owner across every
  *    product); `recipientLabel` is a display-only affordance, not an alternate
@@ -32,7 +32,10 @@ import type { SiteId } from "~/lib/site-context";
 /** Canonical recipient for every contact submission (single product owner). */
 export const CONTACT_RECIPIENT_EMAIL = "michael@freno.me";
 /** Canonical sender identity shown on outbound contact mail. */
-export const CONTACT_SENDER = { name: "freno.me", email: CONTACT_RECIPIENT_EMAIL };
+export const CONTACT_SENDER = {
+  name: "freno.me",
+  email: CONTACT_RECIPIENT_EMAIL
+};
 
 export interface ContactContext {
   siteId: SiteId;

@@ -1,11 +1,11 @@
 /**
- * Unit tests for the per-site contact configuration (task 09).
+ * Unit tests for the per-site contact configuration.
  *
  * Mirrors the `meta.test.ts` / `nav-config.test.ts` testability pattern:
  * `contact-config.ts` is a pure module (no solid-js / @solidjs/router /
  * @solidjs/meta imports) so `bun:test` can resolve it directly.
  *
- * Asserts the task-09 acceptance criteria:
+ * Asserts the acceptance criteria:
  *  - Each subdomain has a distinct `subjectPrefix` (email routing differs per
  *    subdomain).
  *  - The main site prefix stays `"freno.me"` so the legacy subject

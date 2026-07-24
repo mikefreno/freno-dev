@@ -1,12 +1,12 @@
 /**
  * Pure content + metadata for the Nessa per-subdomain account-deletion page
- * (task 11).
+ * (see `./deletion.tsx`).
  *
  * Mirrors the `lineage/deletion-content.ts` pattern: imports NOTHING from
  * solid-js / @solidjs/router / @solidjs/meta so the constants here can be
  * unit-tested in `bun:test` without spinning up the router / MetaProvider.
  *
- * Nessa deletion assessment (see task 11 spec, step 5):
+ * Nessa deletion assessment:
  *  - Nessa DOES store user data. `src/server/api/routers/nessa.ts` defines
  *    per-user tables (`users`, `authProviders`, `workouts`, `workoutPlans`,
  *    `planExercises`, `planSets`, `routePoints`, `exerciseLibrary`) backed
@@ -24,7 +24,7 @@
  *    scope for the subdomain-routing feature); the email-request flow gives
  *    users a real, immediate deletion path today.
  *
- * Cross-task contracts:
+ * Contracts:
  *  - `DELETION_PRODUCT_KEY = "nessa"` selects Nessa branding + the
  *    `nessaDeletionRequestSent` cooldown cookie (server-side
  *    `deletionCookieName("nessa")`).
