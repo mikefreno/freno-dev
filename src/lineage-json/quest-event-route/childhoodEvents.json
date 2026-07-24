@@ -1,0 +1,525 @@
+{
+  "childhood_events": [
+    {
+      "id": "school_presentation",
+      "ageRange": { "min": 6, "max": 12 },
+      "category": "school",
+      "icon": "📚",
+      "title": "A Big Day at School",
+      "description": "It's your turn to give a presentation at school. All the other kids are watching.",
+      "weight": 1.0,
+      "cooldownTicks": 12,
+      "outcomes": [
+        {
+          "label": "Speak with confidence",
+          "description": "Stand tall and give an excellent presentation.",
+          "effects": [
+            { "kind": "sanity", "amount": 10 },
+            { "kind": "experience", "amount": 5 },
+            { "kind": "notification", "message": "The teacher praises your bravery!" }
+          ]
+        },
+        {
+          "label": "Mumble through it nervously",
+          "effects": [
+            { "kind": "sanity", "amount": -2 },
+            { "kind": "experience", "amount": 2 },
+            { "kind": "notification", "message": "It's over... You can breathe again." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "playground_friends",
+      "ageRange": { "min": 5, "max": 12 },
+      "category": "friendship",
+      "icon": "👫",
+      "title": "Making New Friends",
+      "description": "Some kids at the playground wave you over to join their game.",
+      "weight": 1.2,
+      "cooldownTicks": 10,
+      "outcomes": [
+        {
+          "label": "Join them eagerly",
+          "effects": [
+            { "kind": "sanity", "amount": 15 },
+            { "kind": "notification", "message": "You make friends and have a wonderful time!" }
+          ]
+        },
+        {
+          "label": "Watch from afar",
+          "effects": [
+            { "kind": "sanity", "amount": 3 },
+            { "kind": "notification", "message": "You enjoy the game from the sidelines." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "family_picnic",
+      "ageRange": { "min": 4, "max": 14 },
+      "category": "family",
+      "icon": "🧺",
+      "title": "A Family Picnic",
+      "description": "Your family has organized a picnic at the park. Everyone brings their favorite foods.",
+      "weight": 0.9,
+      "cooldownTicks": 16,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 20 },
+          { "kind": "health", "amount": 5 },
+          { "kind": "notification", "message": "A perfect day with family, laughing and eating by the river." }
+        ]
+      }
+    },
+    {
+      "id": "lost_toy",
+      "ageRange": { "min": 4, "max": 10 },
+      "category": "mishap",
+      "icon": "🧸",
+      "title": "Oh No, Lost My Toy!",
+      "description": "You can't find your favorite stuffed animal anywhere.",
+      "weight": 0.7,
+      "cooldownTicks": 20,
+      "outcomes": [
+        {
+          "label": "Search everywhere",
+          "effects": [
+            { "kind": "sanity", "amount": 5 },
+            { "kind": "notification", "message": "Found it behind the bed! You're so relieved." }
+          ]
+        },
+        {
+          "label": "Ask family for help",
+          "effects": [
+            { "kind": "sanity", "amount": 8 },
+            { "kind": "notification", "message": "Mom finds it in the closet. What a relief!" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "birthday_party",
+      "ageRange": { "min": 5, "max": 15 },
+      "category": "milestone",
+      "icon": "🎂",
+      "title": "Your Birthday!",
+      "description": "Today is your special day! There's cake, presents, and all your friends.",
+      "weight": 1.5,
+      "cooldownTicks": 52,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 25 },
+          { "kind": "health", "amount": 10 },
+          { "kind": "gold", "amount": 15 },
+          { "kind": "notification", "message": "The best day of the year! Cake, presents, and all your friends cheering!" }
+        ]
+      }
+    },
+    {
+      "id": "reading_first_book",
+      "ageRange": { "min": 6, "max": 9 },
+      "category": "achievement",
+      "icon": "📖",
+      "title": "Reading Your First Book!",
+      "description": "You've learned to read! You can finally read your first book by yourself.",
+      "weight": 1.0,
+      "cooldownTicks": 30,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 15 },
+          { "kind": "experience", "amount": 10 },
+          { "kind": "notification", "message": "The world of stories is now yours!" }
+        ]
+      }
+    },
+    {
+      "id": "garden_discovery",
+      "ageRange": { "min": 4, "max": 12 },
+      "category": "exploration",
+      "icon": "🌻",
+      "title": "A Secret Garden",
+      "description": "You find a hidden garden behind the old barn. Butterflies flutter everywhere.",
+      "weight": 0.8,
+      "cooldownTicks": 14,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 12 },
+          { "kind": "notification", "message": "Your own secret world, filled with flowers and butterflies." }
+        ]
+      }
+    },
+    {
+      "id": "learning_riding",
+      "ageRange": { "min": 8, "max": 14 },
+      "category": "skill",
+      "icon": "🐴",
+      "title": "Learning to Ride",
+      "description": "Your parents sign you up for riding lessons. The horse is bigger than you thought!",
+      "weight": 0.9,
+      "cooldownTicks": 18,
+      "outcomes": [
+        {
+          "label": "Be brave and ride",
+          "effects": [
+            { "kind": "sanity", "amount": 12 },
+            { "kind": "experience", "amount": 8 },
+            { "kind": "notification", "message": "You learn to sit tall and control the horse!" }
+          ]
+        },
+        {
+          "label": "Just pet the horse",
+          "effects": [
+            { "kind": "sanity", "amount": 5 },
+            { "kind": "notification", "message": "The horse is gentle and friendly. Maybe next time." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "first_pet",
+      "ageRange": { "min": 6, "max": 12 },
+      "category": "family",
+      "icon": "🐱",
+      "title": "You Get a Pet!",
+      "description": "Your parents bring home a new kitten for you!",
+      "weight": 1.3,
+      "cooldownTicks": 52,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 30 },
+          { "kind": "notification", "message": "A fluffy new friend to love and care for!" }
+        ]
+      }
+    },
+    {
+      "id": "rain_puddles",
+      "ageRange": { "min": 3, "max": 10 },
+      "category": "play",
+      "icon": "🌧️",
+      "title": "Jumping in Puddles",
+      "description": "It's raining! The street is full of puddles to jump in.",
+      "weight": 1.5,
+      "seasons": ["spring", "autumn"],
+      "cooldownTicks": 8,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 18 },
+          { "kind": "health", "amount": 3 },
+          { "kind": "notification", "message": "SPLASH! The best feeling in the world!" }
+        ]
+      }
+    },
+    {
+      "id": "snowman_building",
+      "ageRange": { "min": 4, "max": 14 },
+      "category": "play",
+      "icon": "⛄",
+      "title": "Building a Snowman",
+      "description": "It's snowing! Your friends want to build the biggest snowman ever.",
+      "weight": 1.2,
+      "seasons": ["winter"],
+      "cooldownTicks": 12,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 20 },
+          { "kind": "health", "amount": 5 },
+          { "kind": "notification", "message": "You build an enormous snowman with a carrot nose!" }
+        ]
+      }
+    },
+    {
+      "id": "firefly_catching",
+      "ageRange": { "min": 5, "max": 12 },
+      "category": "play",
+      "icon": "✨",
+      "title": "Catching Fireflies",
+      "description": "On a warm summer evening, fireflies light up the garden.",
+      "weight": 1.0,
+      "seasons": ["summer"],
+      "cooldownTicks": 14,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 15 },
+          { "kind": "notification", "message": "Little lights dance around you in the darkness." }
+        ]
+      }
+    },
+    {
+      "id": "scarecrow_encounter",
+      "ageRange": { "min": 5, "max": 12 },
+      "category": "mystery",
+      "icon": "🌾",
+      "title": "The Scarecrow Seems to Move",
+      "description": "You're walking past the fields and you think the scarecrow has turned.",
+      "weight": 0.6,
+      "cooldownTicks": 20,
+      "outcomes": [
+        {
+          "label": "Investigate bravely",
+          "effects": [
+            { "kind": "sanity", "amount": 5 },
+            { "kind": "notification", "message": "It was just the wind. Phew!" }
+          ]
+        },
+        {
+          "label": "Run home quickly",
+          "effects": [
+            { "kind": "sanity", "amount": -5 },
+            { "kind": "notification", "message": "Better safe than sorry!" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sharing_treats",
+      "ageRange": { "min": 4, "max": 12 },
+      "category": "friendship",
+      "icon": "🍪",
+      "title": "Sharing Treats",
+      "description": "You have a special cookie. There's one other kid who looks hungry.",
+      "weight": 1.0,
+      "cooldownTicks": 10,
+      "outcomes": [
+        {
+          "label": "Share the cookie",
+          "effects": [
+            { "kind": "sanity", "amount": 12 },
+            { "kind": "notification", "message": "The other kid thanks you and smiles. Sharing is nice." }
+          ]
+        },
+        {
+          "label": "Eat it yourself",
+          "effects": [
+            { "kind": "health", "amount": 3 },
+            { "kind": "notification", "message": "Cookies are delicious!" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "helping_elder",
+      "ageRange": { "min": 8, "max": 14 },
+      "category": "kindness",
+      "icon": "👴",
+      "title": "An Elder Needs Help",
+      "description": "An old man is struggling to carry his groceries. He looks like he needs some help.",
+      "weight": 0.9,
+      "cooldownTicks": 16,
+      "outcomes": [
+        {
+          "label": "Help carry the groceries",
+          "effects": [
+            { "kind": "sanity", "amount": 15 },
+            { "kind": "gold", "amount": 5 },
+            { "kind": "notification", "message": "The old man thanks you and gives you a coin." }
+          ]
+        },
+        {
+          "label": "Keep walking",
+          "effects": [
+            { "kind": "sanity", "amount": -3 },
+            { "kind": "notification", "message": "Maybe next time..." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lost_dog",
+      "ageRange": { "min": 6, "max": 14 },
+      "category": "encounter",
+      "icon": "🐕",
+      "title": "A Lost Dog",
+      "description": "You find a puppy wandering alone, looking sad.",
+      "weight": 0.8,
+      "cooldownTicks": 18,
+      "outcomes": [
+        {
+          "label": "Find the owner",
+          "effects": [
+            { "kind": "sanity", "amount": 15 },
+            { "kind": "gold", "amount": 10 },
+            { "kind": "notification", "message": "The happy puppy's family thanks you!" }
+          ]
+        },
+        {
+          "label": "Give it some food",
+          "effects": [
+            { "kind": "sanity", "amount": 8 },
+            { "kind": "notification", "message": "The puppy wags its tail gratefully." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "first_job_internship",
+      "ageRange": { "min": 13, "max": 16 },
+      "category": "work",
+      "icon": "🏪",
+      "title": "Helping at the Shop",
+      "description": "The shopkeeper lets you help out for a few hours. It's your first real work experience.",
+      "weight": 0.8,
+      "cooldownTicks": 20,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 8 },
+          { "kind": "gold", "amount": 15 },
+          { "kind": "experience", "amount": 10 },
+          { "kind": "notification", "message": "You earn your first real wages!" }
+        ]
+      }
+    },
+    {
+      "id": "dungeon_adventure",
+      "ageRange": { "min": 13, "max": 17 },
+      "category": "adventure",
+      "icon": "⚔️",
+      "title": "The Old Dungeon",
+      "description": "The older kids challenge you to peek into the old dungeon entrance.",
+      "weight": 0.7,
+      "cooldownTicks": 22,
+      "outcomes": [
+        {
+          "label": "Enter the dungeon",
+          "effects": [
+            { "kind": "sanity", "amount": 15 },
+            { "kind": "experience", "amount": 15 },
+            { "kind": "notification", "message": "You explore the dark passages and find treasure!" }
+          ]
+        },
+        {
+          "label": "Stay outside and watch",
+          "effects": [
+            { "kind": "sanity", "amount": 3 },
+            { "kind": "notification", "message": "A little too scary for now." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reading_library",
+      "ageRange": { "min": 12, "max": 17 },
+      "category": "learning",
+      "icon": "📚",
+      "title": "Reading at the Library",
+      "description": "You spend an afternoon reading books at the town library.",
+      "weight": 0.9,
+      "cooldownTicks": 14,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 10 },
+          { "kind": "experience", "amount": 15 },
+          { "kind": "notification", "message": "The world expands through the power of reading." }
+        ]
+      }
+    },
+    {
+      "id": "first_crush",
+      "ageRange": { "min": 13, "max": 17 },
+      "category": "romance",
+      "icon": "💕",
+      "title": "A Butterflies in Your Stomach",
+      "description": "You see someone at school and suddenly your heart starts racing.",
+      "weight": 1.0,
+      "cooldownTicks": 24,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 12 },
+          { "kind": "notification", "message": "Oh no... Is this what people mean by 'crushes'?" }
+        ]
+      }
+    },
+    {
+      "id": "harvest_festival",
+      "ageRange": { "min": 8, "max": 17 },
+      "category": "community",
+      "icon": "🎪",
+      "title": "The Autumn Harvest",
+      "description": "The whole town celebrates the harvest festival with games and food.",
+      "weight": 1.2,
+      "seasons": ["autumn"],
+      "cooldownTicks": 52,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 25 },
+          { "kind": "health", "amount": 10 },
+          { "kind": "notification", "message": "Pumpkin pie, hayrides, and apple cider! The best festival!" }
+        ]
+      }
+    },
+    {
+      "id": "midsummer_fire",
+      "ageRange": { "min": 12, "max": 17 },
+      "category": "community",
+      "icon": "🔥",
+      "title": "The Midsummer Bonfire",
+      "description": "All the teens gather around the bonfire, telling stories and roasting marshmallows.",
+      "weight": 1.0,
+      "seasons": ["summer"],
+      "cooldownTicks": 52,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 20 },
+          { "kind": "health", "amount": 5 },
+          { "kind": "notification", "message": "Stories of monsters and adventure by the crackling fire." }
+        ]
+      }
+    },
+    {
+      "id": "first_dance",
+      "ageRange": { "min": 14, "max": 17 },
+      "category": "social",
+      "icon": "💃",
+      "title": "The First Dance",
+      "description": "You're invited to the teen dance at the community hall.",
+      "weight": 0.9,
+      "cooldownTicks": 40,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 20 },
+          { "kind": "notification", "message": "Twirling and laughter under the fairy lights!" }
+        ]
+      }
+    },
+    {
+      "id": "winter_solstice",
+      "ageRange": { "min": 6, "max": 17 },
+      "category": "community",
+      "icon": "🕯️",
+      "title": "Winter Solstice",
+      "description": "The family gathers to celebrate the shortest day with warm food and stories.",
+      "weight": 1.0,
+      "seasons": ["winter"],
+      "cooldownTicks": 52,
+      "autoOutcome": {
+        "effects": [
+          { "kind": "sanity", "amount": 20 },
+          { "kind": "health", "amount": 5 },
+          { "kind": "notification", "message": "Candles, warmth, and the promise of spring to come." }
+        ]
+      }
+    }
+  ],
+  "coming_of_age_event": {
+    "id": "coming_of_age",
+    "age": 18,
+    "icon": "🎉",
+    "title": "Coming of Age!",
+    "description": "You are now a full adult with access to everything the world offers — jobs, dungeons, PVP, leadership roles, and more!",
+    "permanent_effects": {
+      "sanity": 30,
+      "health": 15,
+      "gold": 100,
+      "experience": 25,
+      "skillPoint": 2,
+      "notification": "You step into adulthood with promise and adventure ahead!"
+    },
+    "unlocks": [
+      "Full Adult Status",
+      "All Jobs",
+      "All Activities",
+      "PVP Arena",
+      "Leadership Roles"
+    ]
+  }
+}

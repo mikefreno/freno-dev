@@ -1,0 +1,1081 @@
+[
+  {
+    "id": "wandering_merchant",
+    "category": "opportunity",
+    "icon": "🛒",
+    "title": "A Wandering Merchant",
+    "description": "A peddler's cart appears on the road, hung with trinkets and oddities from distant lands. 'A fair price for fair folk,' she calls.",
+    "weight": 1.0,
+    "trigger": { "minAge": 8 },
+    "cooldownTicks": 26,
+    "choices": [
+      {
+        "label": "Buy a trinket (-50 gold)",
+        "description": "A small jade amulet catches your eye.",
+        "costs": [{ "kind": "gold", "amount": 50 }],
+        "effects": [
+          { "kind": "sanity", "amount": 8 },
+          { "kind": "notification", "message": "You feel oddly comforted by the amulet." }
+        ]
+      },
+      {
+        "label": "Haggle rudely",
+        "description": "You insult the merchant's wares to drive the price down.",
+        "effects": [
+          { "kind": "gold", "amount": 25 },
+          { "kind": "sanity", "amount": -4 },
+          { "kind": "notification", "message": "She throws coins at you to be rid of you." }
+        ]
+      },
+      {
+        "label": "Walk on by",
+        "effects": [
+          { "kind": "notification", "message": "You nod politely and continue on your way." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "lost_traveler",
+    "category": "encounter",
+    "icon": "🧭",
+    "title": "A Lost Traveler",
+    "description": "A dust-covered traveler waves you down. 'Please — which road leads to the next town?'",
+    "weight": 1.0,
+    "trigger": { "minAge": 10 },
+    "cooldownTicks": 20,
+    "choices": [
+      {
+        "label": "Point the way",
+        "effects": [
+          { "kind": "gold", "amount": 15 },
+          { "kind": "sanity", "amount": 4 },
+          { "kind": "notification", "message": "Grateful, the traveler presses a few coins into your hand." }
+        ]
+      },
+      {
+        "label": "Misdirect them",
+        "effects": [
+          { "kind": "sanity", "amount": -6 },
+          { "kind": "notification", "message": "You snicker as they head off the wrong way. Your conscience pricks at you later." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "overgrown_shrine",
+    "category": "discovery",
+    "icon": "⛩️",
+    "title": "An Overgrown Shrine",
+    "description": "Vines choke a weathered stone shrine half-buried in the undergrowth. Faded offerings lie scattered at its base.",
+    "weight": 0.8,
+    "trigger": { "minAge": 12 },
+    "cooldownTicks": 30,
+    "choices": [
+      {
+        "label": "Leave an offering",
+        "costs": [{ "kind": "gold", "amount": 10 }],
+        "effects": [
+          { "kind": "sanity", "amount": 15 },
+          { "kind": "notification", "message": "A warm breeze stirs. You feel watched — but not unkindly." }
+        ]
+      },
+      {
+        "label": "Pocket the offerings",
+        "effects": [
+          { "kind": "gold", "amount": 30 },
+          { "kind": "sanity", "amount": -10 },
+          { "kind": "notification", "message": "The coins jingle in your pouch. The air turns cold." }
+        ]
+      },
+      {
+        "label": "Restore the shrine",
+        "description": "Hours of clearing vines and righting the stone.",
+        "effects": [
+          { "kind": "sanity", "amount": 20 },
+          { "kind": "skillPoint", "amount": 1 },
+          { "kind": "notification", "message": "By dusk the shrine stands whole again. Wisdom settles over you." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stray_dog",
+    "category": "encounter",
+    "icon": "🐕",
+    "title": "A Stray Dog",
+    "description": "A matted dog trails behind you, tail wagging hopefully. It looks half-starved.",
+    "weight": 1.0,
+    "trigger": { "minAge": 5 },
+    "cooldownTicks": 24,
+    "choices": [
+      {
+        "label": "Share your food (-20 gold)",
+        "costs": [{ "kind": "gold", "amount": 20 }],
+        "effects": [
+          { "kind": "sanity", "amount": 12 },
+          { "kind": "notification", "message": "The dog devours the scraps and trots loyally at your side for a while." }
+        ]
+      },
+      {
+        "label": "Shoo it away",
+        "effects": [
+          { "kind": "sanity", "amount": -3 },
+          { "kind": "notification", "message": "It whimpers and slinks off into the alleys." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bandit_ambush",
+    "category": "encounter",
+    "icon": "🗡️",
+    "title": "Bandit Ambush!",
+    "description": "Figures step from the treeline. 'Your gold or your blood, traveler.'",
+    "weight": 1.2,
+    "trigger": { "minAge": 14 },
+    "cooldownTicks": 22,
+    "choices": [
+      {
+        "label": "Hand over your coin (-60 gold)",
+        "costs": [{ "kind": "gold", "amount": 60 }],
+        "effects": [
+          { "kind": "sanity", "amount": -8 },
+          { "kind": "notification", "message": "The bandits vanish into the woods with your purse. You live." }
+        ]
+      },
+      {
+        "label": "Fight them off",
+        "effects": [
+          { "kind": "health", "amount": -25 },
+          { "kind": "gold", "amount": 40 },
+          { "kind": "notification", "message": "Battered but standing, you take what the fallen left behind." }
+        ]
+      },
+      {
+        "label": "Try to flee",
+        "description": "Risky — they are fast.",
+        "effects": [
+          { "kind": "health", "amount": -40 },
+          { "kind": "sanity", "amount": -10 },
+          { "kind": "notification", "message": "You break free at a cost, lungs burning, purse lighter than you thought." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "buried_cache",
+    "category": "discovery",
+    "icon": "🗺️",
+    "title": "A Buried Cache",
+    "description": "Your boot strikes something hard beneath the soil. Aged linen wraps a small bundle.",
+    "weight": 0.8,
+    "trigger": { "minAge": 10 },
+    "cooldownTicks": 28,
+    "autoOutcome": {
+      "effects": [
+        { "kind": "gold", "amount": 80 },
+        { "kind": "notification", "message": "You shake loose a handful of old coins. The past had generous hands." }
+      ]
+    }
+  },
+  {
+    "id": "market_festival",
+    "category": "world_state",
+    "icon": "🎐",
+    "title": "A Traveling Festival",
+    "description": "Bright pennants snap in the wind as a wandering market-festival rolls through. Music and laughter fill the air.",
+    "weight": 1.0,
+    "trigger": { "minAge": 6, "seasons": ["spring", "summer", "autumn"] },
+    "cooldownTicks": 40,
+    "choices": [
+      {
+        "label": "Join the revelry (-30 gold)",
+        "costs": [{ "kind": "gold", "amount": 30 }],
+        "effects": [
+          { "kind": "sanity", "amount": 25 },
+          { "kind": "health", "amount": 10 },
+          { "kind": "notification", "message": "You dance and feast until your sides ache. The world feels lighter." }
+        ]
+      },
+      {
+        "label": "Pickpocket the crowd",
+        "effects": [
+          { "kind": "gold", "amount": 50 },
+          { "kind": "sanity", "amount": -5 },
+          { "kind": "notification", "message": "Quick fingers, quicker feet. No one notices — except your reflection." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "distant_smoke",
+    "category": "world_state",
+    "icon": "🌫️",
+    "title": "Smoke on the Horizon",
+    "description": "A column of dark smoke rises from a distant hamlet. Something is burning.",
+    "weight": 0.9,
+    "trigger": { "minAge": 14 },
+    "cooldownTicks": 35,
+    "choices": [
+      {
+        "label": "Rush to help",
+        "effects": [
+          { "kind": "health", "amount": -20 },
+          { "kind": "sanity", "amount": 8 },
+          { "kind": "gold", "amount": 30 },
+          { "kind": "notification", "message": "You help pull survivors from the embers. A grateful family presses reward into your hands." }
+        ]
+      },
+      {
+        "label": "Stay clear",
+        "effects": [
+          { "kind": "sanity", "amount": -6 },
+          { "kind": "notification", "message": "You turn away. The smoke lingers in your dreams." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hermits_wisdom",
+    "category": "discovery",
+    "icon": "🧙",
+    "title": "The Hermit's Wisdom",
+    "description": "A reclusive hermit beckons from a cave mouth. 'Sit, child of years. The world has much to teach the patient.'",
+    "weight": 0.7,
+    "trigger": { "minAge": 16, "lifeStages": ["youngAdult", "adult", "elder"] },
+    "cooldownTicks": 50,
+    "autoOutcome": {
+      "effects": [
+        { "kind": "skillPoint", "amount": 1 },
+        { "kind": "sanity", "amount": 10 },
+        { "kind": "notification", "message": "Hours pass like water. When you rise, your mind feels sharpened." }
+      ]
+    }
+  },
+  {
+    "id": "fallen_log_bridge",
+    "category": "discovery",
+    "icon": "🌲",
+    "title": "A Fallen Log Bridge",
+    "description": "A great tree has fallen across a ravine, forming a precarious crossing. A glint of something gleams on the far side.",
+    "weight": 0.9,
+    "trigger": { "minAge": 10 },
+    "cooldownTicks": 26,
+    "choices": [
+      {
+        "label": "Cross carefully",
+        "effects": [
+          { "kind": "gold", "amount": 45 },
+          { "kind": "sanity", "amount": 3 },
+          { "kind": "notification", "message": "Heart pounding, you make it across and claim the prize — a pouch of coins." }
+        ]
+      },
+      {
+        "label": "Don't risk it",
+        "effects": [
+          { "kind": "notification", "message": "You find a longer way around. The prize stays where it lies." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "child_runaways",
+    "category": "encounter",
+    "icon": "👣",
+    "title": "Runaway Children",
+    "description": "Two wide-eyed children approach, claiming to have run away from home. They ask for food and directions.",
+    "weight": 0.9,
+    "trigger": { "minAge": 12 },
+    "cooldownTicks": 30,
+    "choices": [
+      {
+        "label": "Feed and send them home (-15 gold)",
+        "costs": [{ "kind": "gold", "amount": 15 }],
+        "effects": [
+          { "kind": "sanity", "amount": 12 },
+          { "kind": "notification", "message": "You buy them bread and point them back to worried parents. You sleep well." }
+        ]
+      },
+      {
+        "label": "Turn a blind eye",
+        "effects": [
+          { "kind": "sanity", "amount": -4 },
+          { "kind": "notification", "message": "You shrug and walk on. Out here, everyone fends for themselves." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "roadside_grave",
+    "category": "discovery",
+    "icon": "🪦",
+    "title": "A Roadside Grave",
+    "description": "A simple marker stands by the path, fresh wildflowers laid upon it. The name is weathered beyond reading.",
+    "weight": 0.7,
+    "trigger": { "minAge": 8 },
+    "cooldownTicks": 32,
+    "choices": [
+      {
+        "label": "Pause and pay respects",
+        "effects": [
+          { "kind": "sanity", "amount": 8 },
+          { "kind": "notification", "message": "You stand a moment in silence. The road feels gentler after." }
+        ]
+      },
+      {
+        "label": "Take the flowers",
+        "effects": [
+          { "kind": "gold", "amount": 5 },
+          { "kind": "sanity", "amount": -8 },
+          { "kind": "notification", "message": "You pocket the bouquet to sell in town. Your hands feel heavy." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "caravan_breakdown",
+    "category": "opportunity",
+    "icon": "🐂",
+    "title": "A Broken Caravan",
+    "description": "A trade caravan is stalled, a wheel shattered. The driver waves for help.",
+    "weight": 1.0,
+    "trigger": { "minAge": 14 },
+    "cooldownTicks": 28,
+    "choices": [
+      {
+        "label": "Help repair it",
+        "effects": [
+          { "kind": "sanity", "amount": 6 },
+          { "kind": "gold", "amount": 35 },
+          { "kind": "notification", "message": "Grease and sweat — but the driver rewards your labor." }
+        ]
+      },
+      {
+        "label": "Offer to guard it overnight",
+        "effects": [
+          { "kind": "health", "amount": -10 },
+          { "kind": "gold", "amount": 50 },
+          { "kind": "notification", "message": "A long, cold watch — but the morning finds the caravan safe and your purse heavier." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wandering_minstrel",
+    "category": "opportunity",
+    "icon": "🎵",
+    "title": "A Wandering Minstrel",
+    "description": "A bard with a battered lute strums a tune and beckons you to listen.",
+    "weight": 1.0,
+    "trigger": { "minAge": 8 },
+    "cooldownTicks": 24,
+    "choices": [
+      {
+        "label": "Toss a coin and listen (-10 gold)",
+        "costs": [{ "kind": "gold", "amount": 10 }],
+        "effects": [
+          { "kind": "sanity", "amount": 15 },
+          { "kind": "notification", "message": "The song carries you somewhere far away. You rise refreshed." }
+        ]
+      },
+      {
+        "label": "Request a grim ballad",
+        "effects": [
+          { "kind": "sanity", "amount": -2 },
+          { "kind": "health", "amount": 5 },
+          { "kind": "notification", "message": "The melancholy tune steadies your resolve rather than your mood." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spring_thaw_flood",
+    "category": "world_state",
+    "icon": "🌊",
+    "title": "Spring Thaw Flood",
+    "description": "The rivers swell with meltwater. A low bridge is submerged and travelers are stranded.",
+    "weight": 1.0,
+    "trigger": { "minAge": 12, "seasons": ["spring"] },
+    "cooldownTicks": 52,
+    "choices": [
+      {
+        "label": "Help ferry stranded folk",
+        "effects": [
+          { "kind": "health", "amount": -15 },
+          { "kind": "gold", "amount": 40 },
+          { "kind": "sanity", "amount": 6 },
+          { "kind": "notification", "message": "Cold water to the waist, but grateful hands press coin upon you." }
+        ]
+      },
+      {
+        "label": "Wait it out",
+        "effects": [
+          { "kind": "sanity", "amount": -3 },
+          { "kind": "notification", "message": "You wait on the high bank until the waters recede. Boredom gnaws." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "winter_wolf_howl",
+    "category": "world_state",
+    "icon": "🐺",
+    "title": "Wolves on the Prowl",
+    "description": "Howls echo across the snowfields. A lean wolf watches you from the treeline, gaunt and hungry.",
+    "weight": 1.0,
+    "trigger": { "minAge": 12, "seasons": ["winter"] },
+    "cooldownTicks": 40,
+    "choices": [
+      {
+        "label": "Toss it food (-15 gold)",
+        "costs": [{ "kind": "gold", "amount": 15 }],
+        "effects": [
+          { "kind": "sanity", "amount": 5 },
+          { "kind": "notification", "message": "The wolf snatches the meat and slips away. You've made the road safer for now." }
+        ]
+      },
+      {
+        "label": "Stand your ground",
+        "effects": [
+          { "kind": "health", "amount": -20 },
+          { "kind": "notification", "message": "A tense standoff ends with the wolf retreating. Your nerves are frayed." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "autumn_harvent_share",
+    "category": "opportunity",
+    "icon": "🍎",
+    "title": "Harvest Surplus",
+    "description": "A farmer waves you over. 'Too much to carry before it spoils — take a share, and a few coins for honest work.'",
+    "weight": 1.0,
+    "trigger": { "minAge": 10, "seasons": ["autumn"] },
+    "cooldownTicks": 45,
+    "autoOutcome": {
+      "effects": [
+        { "kind": "gold", "amount": 25 },
+        { "kind": "health", "amount": 15 },
+        { "kind": "sanity", "amount": 8 },
+        { "kind": "notification", "message": "Apples, root vegetables, and a friendly handshake. You leave well-fed." }
+      ]
+    }
+  },
+  {
+    "id": "summer_heatstroke",
+    "category": "world_state",
+    "icon": "🥵",
+    "title": "Sweltering Heat",
+    "description": "The summer sun beats down mercilessly. Your vision swims; the road shimmers ahead.",
+    "weight": 1.0,
+    "trigger": { "minAge": 12, "seasons": ["summer"] },
+    "cooldownTicks": 30,
+    "choices": [
+      {
+        "label": "Rest in the shade",
+        "description": "Lose time, regain strength.",
+        "effects": [
+          { "kind": "sanity", "amount": 4 },
+          { "kind": "health", "amount": -5 },
+          { "kind": "notification", "message": "You wait out the worst of the heat beneath an oak. Slow, but wise." }
+        ]
+      },
+      {
+        "label": "Push on through",
+        "effects": [
+          { "kind": "health", "amount": -20 },
+          { "kind": "sanity", "amount": -8 },
+          { "kind": "notification", "message": "Stupid stubbornness. You make your destination and collapse into a bed." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "curious_omen",
+    "category": "world_state",
+    "icon": "🔮",
+    "title": "An Ill Omen",
+    "description": "A flock of crows circles overhead as you pass a crossroads. One drops a single black feather at your feet.",
+    "weight": 0.6,
+    "trigger": { "minAge": 14 },
+    "cooldownTicks": 60,
+    "choices": [
+      {
+        "label": "Take it as a sign to turn back",
+        "effects": [
+          { "kind": "sanity", "amount": -4 },
+          { "kind": "health", "amount": 10 },
+          { "kind": "notification", "message": "You retrace your steps. Caution spares you a fall later that day." }
+        ]
+      },
+      {
+        "label": "Press on regardless",
+        "effects": [
+          { "kind": "health", "amount": -10 },
+          { "kind": "sanity", "amount": 3 },
+          { "kind": "notification", "message": "You refuse to be ruled by superstition — though the crows seem to follow." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropped_purse",
+    "category": "opportunity",
+    "icon": "👛",
+    "title": "A Dropped Purse",
+    "description": "A heavy purse lies in the dust of the road. No one seems to be looking for it.",
+    "weight": 1.0,
+    "trigger": { "minAge": 8 },
+    "cooldownTicks": 24,
+    "choices": [
+      {
+        "label": "Keep it",
+        "effects": [
+          { "kind": "gold", "amount": 60 },
+          { "kind": "sanity", "amount": -4 },
+          { "kind": "notification", "message": "You pocket the coin. Someone, somewhere, is poorer for it." }
+        ]
+      },
+      {
+        "label": "Return it to town",
+        "description": "Ask after the owner in the next settlement.",
+        "effects": [
+          { "kind": "gold", "amount": 10 },
+          { "kind": "sanity", "amount": 12 },
+          { "kind": "notification", "message": "The owner, found, rewards your honesty with a small token." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "elder_needs_escort",
+    "category": "encounter",
+    "icon": "👵",
+    "title": "An Elder Needs an Escort",
+    "description": "A frail elder leans on a staff by the road. 'Could you see me to the next village, friend?'",
+    "weight": 0.9,
+    "trigger": { "minAge": 12 },
+    "cooldownTicks": 30,
+    "choices": [
+      {
+        "label": "Escort them",
+        "effects": [
+          { "kind": "sanity", "amount": 10 },
+          { "kind": "gold", "amount": 20 },
+          { "kind": "notification", "message": "A slow walk, but a good one. The elder blesses you at parting." }
+        ]
+      },
+      {
+        "label": "Decline politely",
+        "effects": [
+          { "kind": "sanity", "amount": -2 },
+          { "kind": "notification", "message": "You apologize and hurry on. The road feels colder behind you." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mushroom_grove",
+    "category": "discovery",
+    "icon": "🍄",
+    "title": "A Ring of Mushrooms",
+    "description": "Strange, vividly colored mushrooms grow in a perfect ring in a sun-dappled grove.",
+    "weight": 0.8,
+    "trigger": { "minAge": 8, "seasons": ["spring", "summer", "autumn"] },
+    "cooldownTicks": 35,
+    "choices": [
+      {
+        "label": "Harvest them carefully",
+        "effects": [
+          { "kind": "gold", "amount": 30 },
+          { "kind": "sanity", "amount": 4 },
+          { "kind": "notification", "message": "An apothecary in town will pay well for these. You pocket a satchel's worth." }
+        ]
+      },
+      {
+        "label": "Eat one on a whim",
+        "effects": [
+          { "kind": "health", "amount": -15 },
+          { "kind": "sanity", "amount": 15 },
+          { "kind": "notification", "message": "Vivid dreams follow. Whether they were worth the stomachache is debatable." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "childhood_daydream",
+    "category": "world_state",
+    "icon": "🪁",
+    "title": "A Carefree Afternoon",
+    "description": "The world feels wide and bright. You spend an afternoon chasing dragonflies and watching clouds.",
+    "weight": 1.0,
+    "trigger": { "minAge": 5, "maxAge": 17 },
+    "cooldownTicks": 18,
+    "autoOutcome": {
+      "effects": [
+        { "kind": "sanity", "amount": 18 },
+        { "kind": "health", "amount": 5 },
+        { "kind": "notification", "message": "For a while, the worries of the world feel very far away." }
+      ]
+    }
+  },
+  {
+    "id": "roadside_philosopher",
+    "category": "discovery",
+    "icon": "📜",
+    "title": "A Roadside Philosopher",
+    "description": "An old man sits on a stone, declaiming to no one in particular. He waves you over and demands you refute him.",
+    "weight": 0.7,
+    "trigger": { "minAge": 14 },
+    "cooldownTicks": 40,
+    "choices": [
+      {
+        "label": "Engage earnestly",
+        "effects": [
+          { "kind": "skillPoint", "amount": 1 },
+          { "kind": "sanity", "amount": 6 },
+          { "kind": "notification", "message": "Sharp words sharpen a sharp mind. You part wiser, exchange grins." }
+        ]
+      },
+      {
+        "label": "Humor him and nod",
+        "effects": [
+          { "kind": "sanity", "amount": 2 },
+          { "kind": "notification", "message": "You plaster on a smile until he's satisfied. One less problem in the world." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "winter_blizzard",
+    "category": "world_state",
+    "icon": "🌨️",
+    "title": "Blinding Blizzard",
+    "description": "A howling blizzard descends without warning, turning the world white. You can barely see your own hands.",
+    "weight": 1.0,
+    "trigger": { "minAge": 10, "seasons": ["winter"] },
+    "cooldownTicks": 45,
+    "choices": [
+      {
+        "label": "Shelter in a snowbank",
+        "description": "Dig in and wait it out.",
+        "effects": [
+          { "kind": "health", "amount": -10 },
+          { "kind": "sanity", "amount": -5 },
+          { "kind": "notification", "message": "You burrow into the snow, shivering until the storm passes." }
+        ]
+      },
+      {
+        "label": "Keep moving, find cover",
+        "description": "Risk injury to find better shelter.",
+        "effects": [
+          { "kind": "health", "amount": -25 },
+          { "kind": "gold", "amount": 30 },
+          { "kind": "notification", "message": "You stumble into an abandoned hunter's shack and find a few coins left behind." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "frozen_lake_discovery",
+    "category": "discovery",
+    "icon": "🧊",
+    "title": "Frozen Lake",
+    "description": "A crystalline lake lies frozen solid, its surface etched with strange patterns. Something glimmers beneath the ice.",
+    "weight": 0.8,
+    "trigger": { "minAge": 12, "seasons": ["winter"] },
+    "cooldownTicks": 50,
+    "choices": [
+      {
+        "label": "Chip at the ice carefully",
+        "description": "Hours of painstaking work.",
+        "effects": [
+          { "kind": "gold", "amount": 60 },
+          { "kind": "health", "amount": -8 },
+          { "kind": "notification", "message": "Ancient fishing tackle and a pouch of coins emerge from the icy depths." }
+        ]
+      },
+      {
+        "label": "Skate across the surface",
+        "description": "Dangerous, but exhilarating.",
+        "effects": [
+          { "kind": "health", "amount": -15 },
+          { "kind": "sanity", "amount": 20 },
+          { "kind": "notification", "message": "You glide across the mirror-like ice. The cold wind in your hair reminds you that you're alive." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "winter_wolf_pack",
+    "category": "encounter",
+    "icon": "🐺",
+    "title": "Hungry Wolf Pack",
+    "description": "A pack of gaunt wolves circles you, eyes gleaming in the snow-reflected moonlight. They are desperate with hunger.",
+    "weight": 1.2,
+    "trigger": { "minAge": 14, "seasons": ["winter"] },
+    "cooldownTicks": 55,
+    "choices": [
+      {
+        "label": "Stand your ground with a torch",
+        "description": "Fire keeps predators at bay.",
+        "costs": [{ "kind": "gold", "amount": 5 }],
+        "effects": [
+          { "kind": "health", "amount": -10 },
+          { "kind": "sanity", "amount": 4 },
+          { "kind": "notification", "message": "Your makeshift torch holds them at a distance. They melt back into the dark." }
+        ]
+      },
+      {
+        "label": "Climb a tree",
+        "effects": [
+          { "kind": "health", "amount": -5 },
+          { "kind": "sanity", "amount": -8 },
+          { "kind": "notification", "message": "You scramble up a pine and wait long, cold hours until the pack loses interest." }
+        ]
+      },
+      {
+        "label": "Fight them off",
+        "description": "Desperate measures for desperate times.",
+        "effects": [
+          { "kind": "health", "amount": -35 },
+          { "kind": "gold", "amount": 25 },
+          { "kind": "notification", "message": "Bruised and bloodied, you drive them off. A torn pouch spills some coin at your feet." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "winter_solstice_ritual",
+    "category": "opportunity",
+    "icon": "🕯️",
+    "title": "Solstice Ritual",
+    "description": "Villagers gather around a great bonfire, singing old songs to call back the sun. They welcome travelers to join.",
+    "weight": 0.8,
+    "trigger": { "minAge": 8, "seasons": ["winter"] },
+    "cooldownTicks": 60,
+    "choices": [
+      {
+        "label": "Join the ritual",
+        "costs": [{ "kind": "gold", "amount": 10 }],
+        "effects": [
+          { "kind": "sanity", "amount": 25 },
+          { "kind": "health", "amount": 10 },
+          { "kind": "notification", "message": "The warmth of the fire and the community's hope fill you. You feel the darkness recede, if only for a night." }
+        ]
+      },
+      {
+        "label": "Sell trinkets to the crowd",
+        "effects": [
+          { "kind": "gold", "amount": 40 },
+          { "kind": "sanity", "amount": -3 },
+          { "kind": "notification", "message": "Festival-goers buy your odds and ends at inflated prices. Business is business." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spring_flooded_road",
+    "category": "world_state",
+    "icon": "💧",
+    "title": "Flooded Lowlands",
+    "description": "Spring melt has turned the low road into a muddy swamp. Travelers are picking their way along the high ridges.",
+    "weight": 1.0,
+    "trigger": { "minAge": 10, "seasons": ["spring"] },
+    "cooldownTicks": 40,
+    "choices": [
+      {
+        "label": "Wade through the mud",
+        "description": "Unpleasant but direct.",
+        "effects": [
+          { "kind": "health", "amount": -8 },
+          { "kind": "sanity", "amount": -5 },
+          { "kind": "notification", "message": "Cold, filthy water soaks you to the bone, but you come out the other side." }
+        ]
+      },
+      {
+        "label": "Help build a crossing",
+        "effects": [
+          { "kind": "health", "amount": -15 },
+          { "kind": "gold", "amount": 30 },
+          { "kind": "sanity", "amount": 8 },
+          { "kind": "notification", "message": "Together with other travelers you haul logs and stones. The grateful merchant at the front pays in coin." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blooming_garden",
+    "category": "discovery",
+    "icon": "🌷",
+    "title": "Blooming Garden",
+    "description": "Behind a crumbling stone wall lies a hidden garden, bursting with flowers in every color. Bees hum lazily in the morning light.",
+    "weight": 0.8,
+    "trigger": { "minAge": 8, "seasons": ["spring"] },
+    "cooldownTicks": 45,
+    "choices": [
+      {
+        "label": "Rest in the garden",
+        "effects": [
+          { "kind": "sanity", "amount": 25 },
+          { "kind": "health", "amount": 10 },
+          { "kind": "notification", "message": "You lie in the soft grass and watch petals drift overhead. The world's troubles feel miles away." }
+        ]
+      },
+      {
+        "label": "Harvest rare flowers",
+        "description": "An apothecary would pay well for these.",
+        "effects": [
+          { "kind": "gold", "amount": 35 },
+          { "kind": "notification", "message": "You carefully pick the rarest blossoms. In town they trade for a tidy sum." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spring_fair",
+    "category": "opportunity",
+    "icon": "🎠",
+    "title": "Spring Fair",
+    "description": "A seasonal fair has sprung up in a clearing: games, food stalls, and a fortune teller's tent with faded velvet drapes.",
+    "weight": 1.0,
+    "trigger": { "minAge": 8, "seasons": ["spring"] },
+    "cooldownTicks": 48,
+    "choices": [
+      {
+        "label": "Play the ring-toss game",
+        "costs": [{ "kind": "gold", "amount": 15 }],
+        "effects": [
+          { "kind": "sanity", "amount": 12 },
+          { "kind": "gold", "amount": 20 },
+          { "kind": "notification", "message": "Beginner's luck! You win a small prize and a few coins from a losing bettor." }
+        ]
+      },
+      {
+        "label": "Visit the fortune teller",
+        "costs": [{ "kind": "gold", "amount": 25 }],
+        "effects": [
+          { "kind": "skillPoint", "amount": 1 },
+          { "kind": "sanity", "amount": 10 },
+          { "kind": "notification", "message": "'Your path crosses with a shadow from your past,' she intones. Cryptic — but her words linger." }
+        ]
+      },
+      {
+        "label": "Sneak into the prize booth",
+        "effects": [
+          { "kind": "gold", "amount": 45 },
+          { "kind": "sanity", "amount": -10 },
+          { "kind": "notification", "message": "Quick fingers find the till. You slip away before anyone notices." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "summer_oasis",
+    "category": "discovery",
+    "icon": "🌴",
+    "title": "Desert Oasis",
+    "description": "A cluster of palm trees and a shimmering spring break the monotonous heat. The water is cool and clear.",
+    "weight": 0.9,
+    "trigger": { "minAge": 10, "seasons": ["summer"] },
+    "cooldownTicks": 45,
+    "choices": [
+      {
+        "label": "Drink and rest",
+        "effects": [
+          { "kind": "health", "amount": 20 },
+          { "kind": "sanity", "amount": 15 },
+          { "kind": "notification", "message": "The water is life itself. You drink deeply and feel renewed." }
+        ]
+      },
+      {
+        "label": "Search for hidden treasure",
+        "description": "Old tales say something lies beneath.",
+        "effects": [
+          { "kind": "gold", "amount": 50 },
+          { "kind": "health", "amount": -10 },
+          { "kind": "notification", "message": "You fish around in the murk and find an ancient coin and a silver bracelet tangled in roots." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "summer_drought",
+    "category": "world_state",
+    "icon": "🏜️",
+    "title": "Severe Drought",
+    "description": "The sun has not relented for weeks. The ground is cracked, the wells are low, and tempers are short.",
+    "weight": 1.0,
+    "trigger": { "minAge": 12, "seasons": ["summer"] },
+    "cooldownTicks": 50,
+    "choices": [
+      {
+        "label": "Help dig a new well",
+        "effects": [
+          { "kind": "health", "amount": -20 },
+          { "kind": "gold", "amount": 40 },
+          { "kind": "sanity", "amount": 6 },
+          { "kind": "notification", "message": "Backbreaking work under the noon sun, but the villagers share their precious water and pay your wage." }
+        ]
+      },
+      {
+        "label": "Move on quickly",
+        "description": "Less water used, less trouble.",
+        "effects": [
+          { "kind": "health", "amount": -10 },
+          { "kind": "sanity", "amount": -4 },
+          { "kind": "notification", "message": "You press on under the merciless sun, saving your canteen for the road ahead." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "summer_swarms",
+    "category": "encounter",
+    "icon": "🦗",
+    "title": "Swarming Insects",
+    "description": "A dark cloud of insects descends upon you — biting flies, mosquitoes, and things that crawl where they bite.",
+    "weight": 0.9,
+    "trigger": { "minAge": 8, "seasons": ["summer"] },
+    "cooldownTicks": 35,
+    "choices": [
+      {
+        "label": "Endure it",
+        "description": "Cover your face and push through.",
+        "effects": [
+          { "kind": "health", "amount": -10 },
+          { "kind": "sanity", "amount": -8 },
+          { "kind": "notification", "message": "Bites cover your arms and neck, but the swarm passes. You emerge battered and itchy." }
+        ]
+      },
+      {
+        "label": "Build a smoky fire",
+        "description": "Drive them off with smoke.",
+        "effects": [
+          { "kind": "health", "amount": -3 },
+          { "kind": "sanity", "amount": 3 },
+          { "kind": "notification", "message": "The smoke drives them away. You waste some time but escape mostly un-bitten." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "autumn_harvest_festival",
+    "category": "opportunity",
+    "icon": "🎃",
+    "title": "Harvest Festival Feast",
+    "description": "Lanterns glow warm in the autumn dusk as the village throws its annual harvest feast. Laughter and music spill from every door.",
+    "weight": 1.0,
+    "trigger": { "minAge": 8, "seasons": ["autumn"] },
+    "cooldownTicks": 50,
+    "choices": [
+      {
+        "label": "Join the feast",
+        "costs": [{ "kind": "gold", "amount": 20 }],
+        "effects": [
+          { "kind": "health", "amount": 20 },
+          { "kind": "sanity", "amount": 25 },
+          { "kind": "gold", "amount": -20 },
+          { "kind": "notification", "message": "You eat, drink, and dance until the bonfire embers die. The village adopts you for the night." }
+        ]
+      },
+      {
+        "label": "Help with the preparations",
+        "description": "Earn your keep and some coin.",
+        "effects": [
+          { "kind": "health", "amount": -5 },
+          { "kind": "gold", "amount": 35 },
+          { "kind": "sanity", "amount": 10 },
+          { "kind": "notification", "message": "You haul tables, light lanterns, and peel vegetables. The village elder slips you a handful of coins." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "migrating_herd",
+    "category": "encounter",
+    "icon": "🦌",
+    "title": "Migrating Herd",
+    "description": "The ground trembles as a massive herd of deer and wild goats moves through the valley, heading to their winter grounds.",
+    "weight": 0.9,
+    "trigger": { "minAge": 10, "seasons": ["autumn"] },
+    "cooldownTicks": 48,
+    "choices": [
+      {
+        "label": "Watch in awe",
+        "effects": [
+          { "kind": "sanity", "amount": 18 },
+          { "kind": "notification", "message": "The herd moves like a flowing river of fur and antlers. Nature's raw power humbles you." }
+        ]
+      },
+      {
+        "label": "Hunt a straggler",
+        "description": "Fresh meat for the road.",
+        "effects": [
+          { "kind": "gold", "amount": 30 },
+          { "kind": "health", "amount": 15 },
+          { "kind": "sanity", "amount": -5 },
+          { "kind": "notification", "message": "You bring down a young buck. The meat will feed you for weeks and the hide sells well." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "falling_leaf_shrine",
+    "category": "discovery",
+    "icon": "🍁",
+    "title": "Falling-Leaf Shrine",
+    "description": "Amid a grove of golden-leafed trees sits a small stone shrine, half-buried in a carpet of autumn leaves. The air hums with peace.",
+    "weight": 0.8,
+    "trigger": { "minAge": 10, "seasons": ["autumn"] },
+    "cooldownTicks": 50,
+    "choices": [
+      {
+        "label": "Clear the leaves and pray",
+        "description": "Show respect and receive a blessing.",
+        "effects": [
+          { "kind": "sanity", "amount": 20 },
+          { "kind": "skillPoint", "amount": 1 },
+          { "kind": "notification", "message": "You uncover a small offering bowl. The wisdom of the changing season settles in your heart." }
+        ]
+      },
+      {
+        "label": "Search for hidden offerings",
+        "effects": [
+          { "kind": "gold", "amount": 40 },
+          { "kind": "sanity", "amount": -6 },
+          { "kind": "notification", "message": "You find old coins among the leaves. The shrine's guardian spirit seems to frown." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "autumn_wind_storm",
+    "category": "world_state",
+    "icon": "💨",
+    "title": "Gale Winds",
+    "description": "A fierce autumn wind whips through the countryside, tearing leaves from trees and shaking shutters. Travel slows to a crawl.",
+    "weight": 0.9,
+    "trigger": { "minAge": 8, "seasons": ["autumn"] },
+    "cooldownTicks": 35,
+    "choices": [
+      {
+        "label": "Find shelter and wait",
+        "effects": [
+          { "kind": "health", "amount": -5 },
+          { "kind": "sanity", "amount": -2 },
+          { "kind": "notification", "message": "You huddle behind a boulder until the worst passes. Leaves and debris rain around you." }
+        ]
+      },
+      {
+        "label": "Push through to town",
+        "effects": [
+          { "kind": "health", "amount": -15 },
+          { "kind": "sanity", "amount": 5 },
+          { "kind": "notification", "message": "Stubbornness pays — you stagger into the town inn just as the storm peaks. The innkeeper gives you a dry cloth and a nod." }
+        ]
+      }
+    ]
+  }
+]

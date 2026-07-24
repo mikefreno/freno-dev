@@ -1,0 +1,2447 @@
+[
+  {
+    "id": "missing_merchant",
+    "title": "The Missing Merchant",
+    "description": "A local merchant vanished while traveling. Find them before the trail goes cold.",
+    "category": "location",
+    "weight": 6,
+    "cooldownTicks": 14,
+    "context": {
+      "minAge": 16,
+      "requiredRelationshipState": "known"
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "find_merchant",
+        "type": "find_character",
+        "label": "Find the missing merchant",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 250,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "speed_run_nearby_cave",
+    "title": "Speed Run Challenge",
+    "description": "Complete a dungeon with ruthless efficiency before time runs out.",
+    "category": "time_limited",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "minAge": 14
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "complete_dungeon",
+        "type": "complete_dungeon",
+        "label": "Complete any dungeon",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 300,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "ancient_artifact",
+    "title": "The Ancient Artifact",
+    "description": "Recover an ancient relic from a dangerous delve.",
+    "category": "location",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "minAge": 18
+    },
+    "expiresAfterTicks": 28,
+    "objectives": [
+      {
+        "id": "dungeon_clear",
+        "type": "complete_dungeon",
+        "label": "Complete a dungeon run",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 420,
+      "reputation": 8
+    }
+  },
+  {
+    "id": "family_matters",
+    "title": "Family Matters",
+    "description": "Spend meaningful time guiding your child through training.",
+    "category": "relationship",
+    "weight": 6,
+    "cooldownTicks": 20,
+    "context": {
+      "minAge": 22,
+      "requiredRelationshipState": "has_children"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "visit_home",
+        "type": "reach_location",
+        "label": "Visit home activities",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 180,
+      "reputation": 10
+    }
+  },
+  {
+    "id": "escort_healer",
+    "title": "Escort the Healer",
+    "description": "Protect a healer as they gather herbs in hostile territory.",
+    "category": "combat",
+    "weight": 5,
+    "cooldownTicks": 22,
+    "context": {
+      "minAge": 18
+    },
+    "expiresAfterTicks": 26,
+    "objectives": [
+      {
+        "id": "clear_encounters",
+        "type": "kill_enemies",
+        "label": "Defeat enemies",
+        "target": 6
+      }
+    ],
+    "rewards": {
+      "gold": 320,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "arena_proving",
+    "title": "Arena Proving",
+    "description": "Win a duel to prove your battle instincts.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 12,
+    "context": {
+      "minAge": 16
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "arena_wins",
+        "type": "arena_wins",
+        "label": "Win arena matches",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 260,
+      "reputation": 6
+    }
+  },
+  {
+    "id": "winter_supply_run",
+    "title": "Winter Supply Run",
+    "description": "Bring emergency supplies to a remote outpost before the cold worsens.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 24,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "deliver_goods",
+        "type": "deliver_item",
+        "label": "Deliver supplies",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 340,
+      "reputation": 7
+    }
+  },
+  {
+    "id": "spring_cleanup",
+    "title": "Spring Cleanup",
+    "description": "Clear dangerous creatures from fields before planting season.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "spring"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "clear_field_pests",
+        "type": "kill_enemies",
+        "label": "Defeat pests",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 210,
+      "reputation": 4
+    }
+  },
+  {
+    "id": "summer_hunt",
+    "title": "High Sun Hunt",
+    "description": "Track and defeat a dangerous beast during summer migration.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "summer"
+    },
+    "expiresAfterTicks": 22,
+    "objectives": [
+      {
+        "id": "beast_kills",
+        "type": "kill_enemies",
+        "label": "Defeat enemies",
+        "target": 7
+      }
+    ],
+    "rewards": {
+      "gold": 360,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "autumn_patrol",
+    "title": "Autumn Border Patrol",
+    "description": "Secure roads before harvest caravans depart.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "autumn"
+    },
+    "expiresAfterTicks": 22,
+    "objectives": [
+      {
+        "id": "patrol_route",
+        "type": "reach_location",
+        "label": "Visit dungeon routes",
+        "target": 1,
+        "metadata": {
+          "pathname": "/dungeon"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 240,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "ranger_trail",
+    "title": "Ranger Trail Request",
+    "description": "Your tracking skills are needed for a dangerous trail.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 14,
+    "context": {
+      "requiredClass": "ranger"
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "ranger_kills",
+        "type": "kill_enemies",
+        "label": "Defeat enemies",
+        "target": 6
+      }
+    ],
+    "rewards": {
+      "gold": 330,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "paladin_vigil",
+    "title": "Paladin Vigil",
+    "description": "Stand watch and purge corruption from a sacred route.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 14,
+    "context": {
+      "requiredClass": "paladin"
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "paladin_boss",
+        "type": "complete_dungeon",
+        "label": "Complete one dungeon",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 300,
+      "reputation": 9
+    }
+  },
+  {
+    "id": "mage_research",
+    "title": "Mage Field Research",
+    "description": "Gather arcane readings in volatile territory.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 14,
+    "context": {
+      "requiredClass": "mage"
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "mage_route",
+        "type": "reach_location",
+        "label": "Visit spell study",
+        "target": 1,
+        "metadata": {
+          "pathname": "/study"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 220,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "necro_harvest",
+    "title": "Necromancer Grave Harvest",
+    "description": "Collect unstable essences before they disperse.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 14,
+    "context": {
+      "requiredClass": "necromancer"
+    },
+    "expiresAfterTicks": 22,
+    "objectives": [
+      {
+        "id": "necro_kills",
+        "type": "kill_enemies",
+        "label": "Defeat enemies",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 320,
+      "reputation": 6
+    }
+  },
+  {
+    "id": "mentor_request",
+    "title": "Mentor's Request",
+    "description": "A former mentor asks you to clear a dangerous route.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "requiredRelationshipState": "known"
+    },
+    "expiresAfterTicks": 26,
+    "objectives": [
+      {
+        "id": "mentor_task",
+        "type": "complete_dungeon",
+        "label": "Complete one dungeon",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 280,
+      "reputation": 8
+    }
+  },
+  {
+    "id": "elder_errand",
+    "title": "Elder's Last Errand",
+    "description": "An elder seeks closure through one final task.",
+    "category": "age",
+    "weight": 3,
+    "cooldownTicks": 26,
+    "context": {
+      "minAge": 55
+    },
+    "expiresAfterTicks": 28,
+    "objectives": [
+      {
+        "id": "elder_dungeon",
+        "type": "complete_dungeon",
+        "label": "Complete one dungeon",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 500,
+      "reputation": 12,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "youthful_glory",
+    "title": "Youthful Glory",
+    "description": "Prove your talent before your peers.",
+    "category": "age",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "maxAge": 24
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "quick_clear",
+        "type": "kill_enemies",
+        "label": "Defeat enemies",
+        "target": 4
+      }
+    ],
+    "rewards": {
+      "gold": 190,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "perfect_slayer",
+    "title": "Perfect Slayer",
+    "description": "Defeat a boss without suffering a single wound.",
+    "category": "challenge",
+    "weight": 2,
+    "cooldownTicks": 30,
+    "context": {
+      "minAge": 18
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "flawless_boss",
+        "type": "defeat_boss_no_damage",
+        "label": "Defeat one boss flawlessly",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 700,
+      "skillPoints": 2,
+      "reputation": 12
+    }
+  },
+  {
+    "id": "guild_delivery",
+    "title": "Guild Courier",
+    "description": "Deliver sealed materials between key locations.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 18,
+    "context": {
+      "minAge": 16
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "deliver",
+        "type": "deliver_item",
+        "label": "Deliver guild package",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 270,
+      "reputation": 6
+    }
+  },
+  {
+    "id": "escort_scholar",
+    "title": "Escort the Scholar",
+    "description": "A scholar needs safe passage through hostile territory. Clear a dungeon without fleeing to deliver them safely.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "minAge": 16
+    },
+    "expiresAfterTicks": 26,
+    "objectives": [
+      {
+        "id": "protect_scholar",
+        "type": "protect_npc",
+        "label": "Clear a dungeon while protecting the scholar",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 320,
+      "reputation": 8,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "training_contract",
+    "title": "Training Contract",
+    "description": "Clear sanctioned enemies for combat practice.",
+    "category": "combat",
+    "weight": 6,
+    "cooldownTicks": 10,
+    "context": {
+      "minAge": 14
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "training_kills",
+        "type": "kill_enemies",
+        "label": "Defeat enemies",
+        "target": 3
+      }
+    ],
+    "rewards": {
+      "gold": 140,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "mend_the_rift",
+    "title": "Mend the Rift",
+    "description": "Your relationship with {partner} is strained. Patch things up before it's too late.",
+    "category": "relationship",
+    "weight": 6,
+    "cooldownTicks": 12,
+    "context": {
+      "minAge": 16,
+      "requiredRelationshipState": "has_partner"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "reconcile_affection",
+        "type": "reach_location",
+        "label": "Visit your partner to make amends",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 150,
+      "reputation": 10,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "romantic_outing",
+    "title": "A Romantic Outing",
+    "description": "{partner} is feeling especially close. Plan a romantic evening to celebrate your bond.",
+    "category": "relationship",
+    "weight": 5,
+    "cooldownTicks": 16,
+    "context": {
+      "minAge": 18,
+      "requiredRelationshipState": "has_partner"
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "romantic_outing_visit",
+        "type": "reach_location",
+        "label": "Go on a romantic outing",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 200,
+      "reputation": 8
+    }
+  },
+  {
+    "id": "anniversary_celebration",
+    "title": "Anniversary Celebration",
+    "description": "You and {partner} have reached another anniversary. Celebrate together!",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 52,
+    "context": {
+      "minAge": 18,
+      "requiredRelationshipState": "has_united"
+    },
+    "expiresAfterTicks": 12,
+    "objectives": [
+      {
+        "id": "anniversary_date",
+        "type": "reach_location",
+        "label": "Celebrate your anniversary",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 350,
+      "reputation": 12,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "child_first_dungeon",
+    "title": "First Adventure",
+    "description": "Your child {child} is ready for their first dungeon run. Guide them through a safe route.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 24,
+    "context": {
+      "minAge": 24,
+      "requiredRelationshipState": "has_children"
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "child_dungeon_clear",
+        "type": "complete_dungeon",
+        "label": "Complete a dungeon with your child in mind",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 300,
+      "reputation": 15
+    }
+  },
+  {
+    "id": "child_first_job",
+    "title": "First Job",
+    "description": "Your child {child} is ready to enter the workforce. Help them find a suitable position.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "minAge": 28,
+      "requiredRelationshipState": "has_children"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "child_job_visit",
+        "type": "reach_location",
+        "label": "Visit the labor board with your child",
+        "target": 1,
+        "metadata": {
+          "pathname": "/labor"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 250,
+      "reputation": 10
+    }
+  },
+  {
+    "id": "friend_request",
+    "title": "Friend in Need",
+    "description": "Your friend {friend} has called upon you for aid. They wouldn't ask unless it was important.",
+    "category": "relationship",
+    "weight": 5,
+    "cooldownTicks": 16,
+    "context": {
+      "minAge": 16,
+      "requiredRelationshipState": "known"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "friend_dungeon_run",
+        "type": "complete_dungeon",
+        "label": "Clear a dungeon to help your friend",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 280,
+      "reputation": 8
+    }
+  },
+  {
+    "id": "avenge_fallen_partner",
+    "title": "Vengeance",
+    "description": "Your beloved {fallen} has passed. Seek retribution against the dangers that took them.",
+    "category": "relationship",
+    "weight": 3,
+    "cooldownTicks": 0,
+    "context": {
+      "minAge": 18,
+      "requiredRelationshipState": "has_partner"
+    },
+    "expiresAfterTicks": 30,
+    "objectives": [
+      {
+        "id": "vengeance_kills",
+        "type": "kill_enemies",
+        "label": "Defeat enemies in memory of the fallen",
+        "target": 10
+      }
+    ],
+    "rewards": {
+      "gold": 500,
+      "skillPoints": 2,
+      "reputation": 15
+    }
+  },
+  {
+    "id": "avenge_fallen_relative",
+    "title": "Honor the Departed",
+    "description": "Your {relation}, {fallen}, has passed. Honor their memory by proving your strength.",
+    "category": "relationship",
+    "weight": 3,
+    "cooldownTicks": 0,
+    "context": {
+      "minAge": 16,
+      "requiredRelationshipState": "has_children"
+    },
+    "expiresAfterTicks": 30,
+    "objectives": [
+      {
+        "id": "honor_complete_dungeon",
+        "type": "complete_dungeon",
+        "label": "Complete a dungeon in their honor",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 400,
+      "reputation": 12,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "move_forward",
+    "title": "Moving Forward",
+    "description": "After your recent separation, it's time to focus on yourself. Clear your mind with action.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "minAge": 16
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "forward_kills",
+        "type": "kill_enemies",
+        "label": "Defeat enemies",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 200,
+      "reputation": 6,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "family_gathering",
+    "title": "Family Reunion",
+    "description": "It has been too long since the family was all together. Organize a gathering.",
+    "category": "relationship",
+    "weight": 3,
+    "cooldownTicks": 26,
+    "context": {
+      "minAge": 22,
+      "requiredRelationshipState": "has_children"
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "family_visit",
+        "type": "reach_location",
+        "label": "Visit home for a family gathering",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 180,
+      "reputation": 10
+    }
+  },
+  {
+    "id": "goblin_raiders",
+    "title": "Goblin Raiders",
+    "description": "A goblin warband has been raiding the outskirts. Thin their numbers and clear their hideout.",
+    "category": "combat",
+    "weight": 5,
+    "cooldownTicks": 16,
+    "context": {
+      "minAge": 16,
+      "requiredKeyItem": "head of goblin shaman"
+    },
+    "expiresAfterTicks": 26,
+    "objectives": [
+      {
+        "id": "raider_kills",
+        "type": "kill_enemies",
+        "label": "Defeat goblin raiders",
+        "target": 5
+      },
+      {
+        "id": "raider_hideout",
+        "type": "complete_dungeon",
+        "label": "Clear the goblin hideout",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 400,
+      "skillPoints": 1,
+      "reputation": 8
+    }
+  },
+  {
+    "id": "lost_heirloom",
+    "title": "The Lost Heirloom",
+    "description": "A family heirloom was stolen. Track down the thief and return the treasure.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 22,
+    "context": {
+      "minAge": 16
+    },
+    "expiresAfterTicks": 28,
+    "objectives": [
+      {
+        "id": "find_thief",
+        "type": "find_character",
+        "label": "Find the thief",
+        "target": 1
+      },
+      {
+        "id": "return_heirloom",
+        "type": "deliver_item",
+        "label": "Return the heirloom",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 320,
+      "reputation": 10
+    }
+  },
+  {
+    "id": "teen_training",
+    "title": "Apprentice Combat Drills",
+    "description": "As a young apprentice, you must prove your mettle in controlled sparring sessions.",
+    "category": "age",
+    "weight": 4,
+    "cooldownTicks": 14,
+    "context": {
+      "requiredLifeStage": "teen"
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "teen_training_kills",
+        "type": "kill_enemies",
+        "label": "Defeat enemies in training",
+        "target": 3
+      }
+    ],
+    "rewards": {
+      "gold": 120,
+      "skillPoints": 1,
+      "reputation": 3
+    }
+  },
+  {
+    "id": "elder_wisdom",
+    "title": "The Elder's Wisdom",
+    "description": "The village elder requests your presence. They have a vision that only a seasoned adventurer can fulfill.",
+    "category": "age",
+    "weight": 3,
+    "cooldownTicks": 28,
+    "context": {
+      "requiredLifeStage": "elder",
+      "requiredReputationTier": "notable"
+    },
+    "expiresAfterTicks": 28,
+    "objectives": [
+      {
+        "id": "elder_visit",
+        "type": "reach_location",
+        "label": "Visit the elder's dwelling",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 600,
+      "reputation": 15,
+      "skillPoints": 2
+    }
+  },
+  {
+    "id": "diplomatic_mission",
+    "title": "Diplomatic Dispatch",
+    "description": "Your reputation precedes you. Deliver a sealed treaty to the neighbouring settlement and ensure the route is secure.",
+    "category": "delivery",
+    "weight": 3,
+    "cooldownTicks": 24,
+    "context": {
+      "requiredReputationTier": "notable",
+      "minAge": 18
+    },
+    "expiresAfterTicks": 28,
+    "objectives": [
+      {
+        "id": "dispatch_delivery",
+        "type": "deliver_item",
+        "label": "Deliver the treaty",
+        "target": 1
+      },
+      {
+        "id": "dispatch_escort",
+        "type": "complete_dungeon",
+        "label": "Secure the route through the pass",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 500,
+      "reputation": 12,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "bloom_date",
+    "title": "A Blooming Romance",
+    "description": "Your partner wants to spend a quiet day together while the {season} flowers are in bloom. Make time for them.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredRelationshipStage": "dating"
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "bloom_date_visit",
+        "type": "reach_location",
+        "label": "Go on a seasonal date",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 160,
+      "reputation": 6,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "recommitment",
+    "title": "The Recommitment",
+    "description": "After years together, you and {partner} feel called to reaffirm your vows. Plan a ceremony.",
+    "category": "relationship",
+    "weight": 3,
+    "cooldownTicks": 30,
+    "context": {
+      "requiredRelationshipStage": "united"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "recommit_visit",
+        "type": "reach_location",
+        "label": "Hold a recommitment ceremony",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 300,
+      "reputation": 14,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "parental_guidance",
+    "title": "Parental Guidance",
+    "description": "Strange creatures have been spotted near your family's home. Clear the area to keep your children safe.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 22,
+    "context": {
+      "requiredLifeStage": "adult",
+      "requiredRelationshipState": "has_children"
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "parental_guidance_kills",
+        "type": "kill_enemies",
+        "label": "Defeat threats near home",
+        "target": 6
+      },
+      {
+        "id": "parental_guidance_dungeon",
+        "type": "complete_dungeon",
+        "label": "Secure the local dungeon",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 350,
+      "reputation": 12
+    }
+  },
+  {
+    "id": "frontier_scouting",
+    "title": "Frontier Scouting Mission",
+    "description": "Uncharted lands lie beyond the known routes. Scout the perimeter, clear resistance, and map a safe passage.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 24,
+    "context": {
+      "minAge": 18
+    },
+    "expiresAfterTicks": 30,
+    "objectives": [
+      {
+        "id": "scout_outpost",
+        "type": "reach_location",
+        "label": "Reach the forward outpost",
+        "target": 1,
+        "metadata": {
+          "pathname": "/dungeon"
+        }
+      },
+      {
+        "id": "scout_kills",
+        "type": "kill_enemies",
+        "label": "Clear resistance along the path",
+        "target": 4
+      },
+      {
+        "id": "scout_dungeon",
+        "type": "complete_dungeon",
+        "label": "Map the final passage",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 480,
+      "reputation": 10,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "legendary_contract",
+    "title": "The Legendary Contract",
+    "description": "A world-ending threat stirs in the depths. Only a hero of legendary standing can hope to vanquish it.",
+    "category": "challenge",
+    "weight": 2,
+    "cooldownTicks": 36,
+    "context": {
+      "requiredReputationTier": "famous",
+      "minAge": 18,
+      "requiredKeyItem": "the black ledger"
+    },
+    "expiresAfterTicks": 32,
+    "objectives": [
+      {
+        "id": "legendary_kills",
+        "type": "kill_enemies",
+        "label": "Defeat the dark horde",
+        "target": 10
+      },
+      {
+        "id": "legendary_dungeon",
+        "type": "complete_dungeon",
+        "label": "Conquer the final lair",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 1000,
+      "skillPoints": 3,
+      "reputation": 25
+    }
+  },
+  {
+    "id": "winter_frost_beast_bounty",
+    "title": "Frost Beast Bounty",
+    "description": "Frost-touched beasts have been terrorizing the northern villages. Hunt them down and claim the bounty.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 22,
+    "objectives": [
+      {
+        "id": "frost_beast_kills",
+        "type": "kill_enemies",
+        "label": "Defeat frost beasts",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 350,
+      "skillPoints": 1,
+      "reputation": 6
+    },
+    "metadata": {
+      "seasonExclusive": true
+    }
+  },
+  {
+    "id": "winter_festival_prep",
+    "title": "Winter Festival Preparations",
+    "description": "The annual winter solstice festival needs volunteers. Help decorate and prepare the venue.",
+    "category": "relationship",
+    "weight": 5,
+    "cooldownTicks": 24,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "festival_prep_visit",
+        "type": "reach_location",
+        "label": "Visit the festival grounds",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 200,
+      "reputation": 8
+    }
+  },
+  {
+    "id": "winter_frozen_dungeon",
+    "title": "The Frozen Depths",
+    "description": "An ancient dungeon has been exposed by winter ice melt. Explore its frozen corridors.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 22,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 18
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "frozen_dungeon_clear",
+        "type": "complete_dungeon",
+        "label": "Clear the frozen dungeon",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 400,
+      "skillPoints": 1,
+      "reputation": 7
+    }
+  },
+  {
+    "id": "winter_mage_frost_study",
+    "title": "Frost Magic Research",
+    "description": "Winter's chill amplifies frost magic. Study ice enchantments at the northern glacier.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "winter",
+      "requiredClass": "mage"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "frost_study_visit",
+        "type": "reach_location",
+        "label": "Visit the glacier study site",
+        "target": 1,
+        "metadata": {
+          "pathname": "/study"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 260,
+      "skillPoints": 2
+    }
+  },
+  {
+    "id": "winter_ranger_snow_track",
+    "title": "Snow Trail Survey",
+    "description": "Track winter wildlife across the snow-covered highlands and report any threats.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "winter",
+      "requiredClass": "ranger"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "snow_track_kills",
+        "type": "kill_enemies",
+        "label": "Eliminate threats on the trail",
+        "target": 4
+      }
+    ],
+    "rewards": {
+      "gold": 290,
+      "skillPoints": 1,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "winter_paladin_holy_vigil",
+    "title": "Winter Holy Vigil",
+    "description": "Stand guard at the frozen shrine during the solstice to keep dark forces at bay.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "winter",
+      "requiredClass": "paladin"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "holy_vigil_clear",
+        "type": "complete_dungeon",
+        "label": "Defend the frozen shrine",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 310,
+      "reputation": 10
+    }
+  },
+  {
+    "id": "winter_necro_frost_essence",
+    "title": "Frost Essence Collection",
+    "description": "Collect frost-bound spirits from the frozen graveyard before they dissipate.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "winter",
+      "requiredClass": "necromancer"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "frost_essence_kills",
+        "type": "kill_enemies",
+        "label": "Defeat frost spirits",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 330,
+      "skillPoints": 1,
+      "reputation": 6
+    }
+  },
+  {
+    "id": "winter_firewood_delivery",
+    "title": "Firewood Delivery",
+    "description": "The orphanage needs firewood before the deep freeze. Deliver a supply from the timber yard.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 14,
+    "objectives": [
+      {
+        "id": "firewood_deliver",
+        "type": "deliver_item",
+        "label": "Deliver firewood",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 220,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "winter_sleigh_romance",
+    "title": "A Winter Sleigh Ride",
+    "description": "{partner} has been asking about a sleigh ride under the winter stars. Make it happen.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 18,
+      "requiredRelationshipState": "has_partner"
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "sleigh_ride_visit",
+        "type": "reach_location",
+        "label": "Go on a sleigh ride",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 180,
+      "reputation": 7,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "winter_border_patrol",
+    "title": "Winter Border Patrol",
+    "description": "Reinforcements are needed at the northern border fort during the harsh winter siege.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 22,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 18
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "border_kills",
+        "type": "kill_enemies",
+        "label": "Defeat border raiders",
+        "target": 6
+      },
+      {
+        "id": "border_dungeon",
+        "type": "complete_dungeon",
+        "label": "Secure the border outpost",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 420,
+      "reputation": 9,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "winter_speed_challenge",
+    "title": "Winter Speed Challenge",
+    "description": "Clear three dungeons before the winter solstice ends. Prove your speed in the cold.",
+    "category": "challenge",
+    "weight": 3,
+    "cooldownTicks": 28,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 18
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "winter_speed_dungeons",
+        "type": "complete_dungeon",
+        "label": "Complete dungeons before winter ends",
+        "target": 3
+      }
+    ],
+    "rewards": {
+      "gold": 500,
+      "skillPoints": 2,
+      "reputation": 10
+    }
+  },
+  {
+    "id": "winter_ice_fishing",
+    "title": "Ice Fishing Expedition",
+    "description": "The lake has frozen over. Find the rare ice trout for the village chef's winter stew.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 12
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "ice_fish_find",
+        "type": "find_character",
+        "label": "Find the ice fishing spot",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 150,
+      "reputation": 3
+    }
+  },
+  {
+    "id": "spring_seed_delivery",
+    "title": "Seed Delivery Run",
+    "description": "Farmers need their spring seeds delivered before the first planting. Get them there on time.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 14,
+    "objectives": [
+      {
+        "id": "seed_deliver",
+        "type": "deliver_item",
+        "label": "Deliver seeds to farmers",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 200,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "spring_festival_gathering",
+    "title": "Spring Festival Gathering",
+    "description": "The spring equinox festival brings everyone together. Help organize the celebrations.",
+    "category": "relationship",
+    "weight": 5,
+    "cooldownTicks": 24,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "spring_festival_visit",
+        "type": "reach_location",
+        "label": "Visit the spring festival",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 180,
+      "reputation": 7
+    }
+  },
+  {
+    "id": "spring_blooming_dungeon",
+    "title": "The Blooming Caverns",
+    "description": "Spring rains have opened a new cavern system filled with rare herbs and lurking dangers.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 22,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "blooming_dungeon_clear",
+        "type": "complete_dungeon",
+        "label": "Clear the blooming caverns",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 370,
+      "skillPoints": 1,
+      "reputation": 6
+    }
+  },
+  {
+    "id": "spring_mage_bloom_study",
+    "title": "Spring Bloom Research",
+    "description": "Study the magical properties of spring flora at the enchanted garden.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "spring",
+      "requiredClass": "mage"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "bloom_study_visit",
+        "type": "reach_location",
+        "label": "Visit the enchanted garden",
+        "target": 1,
+        "metadata": {
+          "pathname": "/study"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 240,
+      "skillPoints": 2
+    }
+  },
+  {
+    "id": "spring_ranger_spring_track",
+    "title": "Spring Trail Survey",
+    "description": "Survey the newly thawed trails for wildlife migration patterns and threats.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "spring",
+      "requiredClass": "ranger"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "spring_track_kills",
+        "type": "kill_enemies",
+        "label": "Eliminate threats on the trail",
+        "target": 4
+      }
+    ],
+    "rewards": {
+      "gold": 270,
+      "skillPoints": 1,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "spring_paladin_renewal",
+    "title": "Spring Renewal Rite",
+    "description": "Perform the spring renewal rite at the sacred grove to bless the coming harvest.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "spring",
+      "requiredClass": "paladin"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "renewal_clear",
+        "type": "complete_dungeon",
+        "label": "Purify the sacred grove",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 290,
+      "reputation": 9
+    }
+  },
+  {
+    "id": "spring_necro_earth_essence",
+    "title": "Earth Essence Gathering",
+    "description": "Spring's renewal stirs ancient spirits in the soil. Collect their essences before they settle.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "spring",
+      "requiredClass": "necromancer"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "earth_essence_kills",
+        "type": "kill_enemies",
+        "label": "Defeat earth spirits",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 310,
+      "skillPoints": 1,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "spring_pest_extermination",
+    "title": "Pest Extermination",
+    "description": "Giant spring insects have overrun the eastern fields. Clear them out for the farmers.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "pest_kills",
+        "type": "kill_enemies",
+        "label": "Defeat giant insects",
+        "target": 6
+      }
+    ],
+    "rewards": {
+      "gold": 230,
+      "reputation": 4
+    }
+  },
+  {
+    "id": "spring_romantic_walk",
+    "title": "A Spring Walk",
+    "description": "{partner} wants to take a walk through the spring blossoms. Spend a quiet day together.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 16,
+      "requiredRelationshipState": "has_partner"
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "spring_walk_visit",
+        "type": "reach_location",
+        "label": "Take a walk in the blossoms",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 160,
+      "reputation": 6,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "spring_water_delivery",
+    "title": "Spring Water Delivery",
+    "description": "The monastery needs pure spring water delivered from the mountain source.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "water_deliver",
+        "type": "deliver_item",
+        "label": "Deliver spring water",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 210,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "spring_speed_challenge",
+    "title": "Spring Growth Challenge",
+    "description": "Clear two dungeons and deliver supplies before spring ends. Show what you can do.",
+    "category": "challenge",
+    "weight": 3,
+    "cooldownTicks": 28,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "spring_speed_dungeons",
+        "type": "complete_dungeon",
+        "label": "Complete dungeons before spring ends",
+        "target": 2
+      },
+      {
+        "id": "spring_speed_deliver",
+        "type": "deliver_item",
+        "label": "Deliver spring supplies",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 450,
+      "skillPoints": 2,
+      "reputation": 8
+    }
+  },
+  {
+    "id": "spring_river_fishing",
+    "title": "Spring Fishing Trip",
+    "description": "The rivers are running high. Find the best fishing spot and catch dinner for the inn.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 12
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "spring_fish_find",
+        "type": "find_character",
+        "label": "Find the fishing spot",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 140,
+      "reputation": 3
+    }
+  },
+  {
+    "id": "summer_supply_run",
+    "title": "Summer Supply Run",
+    "description": "The coastal outpost needs provisions delivered before the heat wave peaks.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "summer",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 14,
+    "objectives": [
+      {
+        "id": "summer_supply_deliver",
+        "type": "deliver_item",
+        "label": "Deliver provisions",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 260,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "summer_festival",
+    "title": "Summer Sun Festival",
+    "description": "The midsummer sun festival is the highlight of the season. Help set up the celebrations.",
+    "category": "relationship",
+    "weight": 5,
+    "cooldownTicks": 24,
+    "context": {
+      "requiredSeason": "summer",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "summer_festival_visit",
+        "type": "reach_location",
+        "label": "Visit the sun festival",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 190,
+      "reputation": 7
+    }
+  },
+  {
+    "id": "summer_desert_dungeon",
+    "title": "Desert Ruins Expedition",
+    "description": "Ancient ruins have been uncovered by summer heat. Explore the desert tomb.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 22,
+    "context": {
+      "requiredSeason": "summer",
+      "minAge": 18
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "desert_dungeon_clear",
+        "type": "complete_dungeon",
+        "label": "Clear the desert ruins",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 410,
+      "skillPoints": 1,
+      "reputation": 7
+    }
+  },
+  {
+    "id": "summer_mage_heat_study",
+    "title": "Solar Magic Research",
+    "description": "Summer's peak amplifies solar magic. Study fire enchantments at the sun temple.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "summer",
+      "requiredClass": "mage"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "heat_study_visit",
+        "type": "reach_location",
+        "label": "Visit the sun temple",
+        "target": 1,
+        "metadata": {
+          "pathname": "/study"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 270,
+      "skillPoints": 2
+    }
+  },
+  {
+    "id": "summer_ranger_desert_track",
+    "title": "Desert Trail Survey",
+    "description": "Track desert creatures and scout safe passages through the scorching wastes.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "summer",
+      "requiredClass": "ranger"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "desert_track_kills",
+        "type": "kill_enemies",
+        "label": "Eliminate desert threats",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 300,
+      "skillPoints": 1,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "summer_paladin_sun_vigil",
+    "title": "Midsummer Sun Vigil",
+    "description": "Stand guard at the sun altar during midsummer to prevent shadow incursions.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "summer",
+      "requiredClass": "paladin"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "sun_vigil_clear",
+        "type": "complete_dungeon",
+        "label": "Defend the sun altar",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 320,
+      "reputation": 10
+    }
+  },
+  {
+    "id": "summer_necro_soul_essence",
+    "title": "Soul Essence Harvest",
+    "description": "Summer's energy stirs restless souls. Collect their essences from the sun-baked graveyard.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "summer",
+      "requiredClass": "necromancer"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "soul_essence_kills",
+        "type": "kill_enemies",
+        "label": "Defeat restless souls",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 340,
+      "skillPoints": 1,
+      "reputation": 6
+    }
+  },
+  {
+    "id": "summer_bandit_patrol",
+    "title": "Summer Bandit Patrol",
+    "description": "Bandits are bolder in summer heat. Patrol the trade roads and thin their numbers.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "summer",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "bandit_kills",
+        "type": "kill_enemies",
+        "label": "Defeat bandits",
+        "target": 5
+      },
+      {
+        "id": "bandit_dungeon",
+        "type": "complete_dungeon",
+        "label": "Clear the bandit camp",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 380,
+      "reputation": 7,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "summer_romantic_beach",
+    "title": "A Beach Evening",
+    "description": "{partner} wants to spend a summer evening by the shore. Pack a picnic and go.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "requiredSeason": "summer",
+      "minAge": 16,
+      "requiredRelationshipState": "has_partner"
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "beach_visit",
+        "type": "reach_location",
+        "label": "Visit the beach",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 170,
+      "reputation": 6,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "summer_water_delivery",
+    "title": "Cool Water Delivery",
+    "description": "The heat wave has dried up wells. Deliver cool water to the southern villages.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "summer",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 14,
+    "objectives": [
+      {
+        "id": "cool_water_deliver",
+        "type": "deliver_item",
+        "label": "Deliver water",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 230,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "summer_speed_challenge",
+    "title": "Summer Scorch Challenge",
+    "description": "Clear three dungeons under the blazing sun. Only the fastest survive.",
+    "category": "challenge",
+    "weight": 3,
+    "cooldownTicks": 28,
+    "context": {
+      "requiredSeason": "summer",
+      "minAge": 18
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "summer_speed_dungeons",
+        "type": "complete_dungeon",
+        "label": "Complete dungeons before summer ends",
+        "target": 3
+      }
+    ],
+    "rewards": {
+      "gold": 520,
+      "skillPoints": 2,
+      "reputation": 10
+    }
+  },
+  {
+    "id": "summer_lake_fishing",
+    "title": "Lake Fishing Trip",
+    "description": "The summer lake is full of game. Find the perfect spot and catch the biggest fish.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "summer",
+      "minAge": 12
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "lake_fish_find",
+        "type": "find_character",
+        "label": "Find the fishing spot",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 130,
+      "reputation": 3
+    }
+  },
+  {
+    "id": "autumn_harvest_delivery",
+    "title": "Harvest Delivery",
+    "description": "Transport the autumn harvest to the granary before the first frost arrives.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "autumn",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 14,
+    "objectives": [
+      {
+        "id": "harvest_deliver",
+        "type": "deliver_item",
+        "label": "Deliver harvest goods",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 240,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "autumn_festival",
+    "title": "Harvest Festival",
+    "description": "The autumn harvest festival celebrates the season's bounty. Help organize the festivities.",
+    "category": "relationship",
+    "weight": 5,
+    "cooldownTicks": 24,
+    "context": {
+      "requiredSeason": "autumn",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "autumn_festival_visit",
+        "type": "reach_location",
+        "label": "Visit the harvest festival",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 190,
+      "reputation": 7
+    }
+  },
+  {
+    "id": "autumn_forgotten_dungeon",
+    "title": "The Forgotten Crypt",
+    "description": "Fallen leaves have revealed the entrance to an old crypt. Explore what lies within.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 22,
+    "context": {
+      "requiredSeason": "autumn",
+      "minAge": 18
+    },
+    "expiresAfterTicks": 24,
+    "objectives": [
+      {
+        "id": "forgotten_dungeon_clear",
+        "type": "complete_dungeon",
+        "label": "Clear the forgotten crypt",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 390,
+      "skillPoints": 1,
+      "reputation": 7
+    }
+  },
+  {
+    "id": "autumn_mage_leaf_study",
+    "title": "Autumn Enchantment Study",
+    "description": "Study the transmutation properties of autumn leaves at the old oak grove.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "autumn",
+      "requiredClass": "mage"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "leaf_study_visit",
+        "type": "reach_location",
+        "label": "Visit the oak grove",
+        "target": 1,
+        "metadata": {
+          "pathname": "/study"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 250,
+      "skillPoints": 2
+    }
+  },
+  {
+    "id": "autumn_ranger_harvest_track",
+    "title": "Harvest Trail Watch",
+    "description": "Watch the forest trails for predators drawn by the autumn harvest.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "autumn",
+      "requiredClass": "ranger"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "harvest_track_kills",
+        "type": "kill_enemies",
+        "label": "Eliminate forest predators",
+        "target": 4
+      }
+    ],
+    "rewards": {
+      "gold": 280,
+      "skillPoints": 1,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "autumn_paladin_autumn_vigil",
+    "title": "Autumn Equinox Vigil",
+    "description": "Guard the equinox shrine as the balance between light and dark shifts.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "autumn",
+      "requiredClass": "paladin"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "autumn_vigil_clear",
+        "type": "complete_dungeon",
+        "label": "Defend the equinox shrine",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 300,
+      "reputation": 9
+    }
+  },
+  {
+    "id": "autumn_necro_harvest_essence",
+    "title": "Harvest Essence Collection",
+    "description": "Autumn's end draws spirits to the surface. Collect their essences from the blighted fields.",
+    "category": "class",
+    "weight": 5,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "autumn",
+      "requiredClass": "necromancer"
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "harvest_essence_kills",
+        "type": "kill_enemies",
+        "label": "Defeat autumn spirits",
+        "target": 5
+      }
+    ],
+    "rewards": {
+      "gold": 320,
+      "skillPoints": 1,
+      "reputation": 6
+    }
+  },
+  {
+    "id": "autumn_wolf_hunt",
+    "title": "Autumn Wolf Hunt",
+    "description": "A wolf pack has been raiding livestock. Track and eliminate the alpha.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "autumn",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "wolf_kills",
+        "type": "kill_enemies",
+        "label": "Defeat wolves",
+        "target": 5
+      },
+      {
+        "id": "wolf_dungeon",
+        "type": "complete_dungeon",
+        "label": "Clear the wolf den",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 370,
+      "reputation": 7,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "autumn_romantic_leaves",
+    "title": "A Walk Among Leaves",
+    "description": "{partner} wants to enjoy the autumn foliage together. Take a walk through the golden woods.",
+    "category": "relationship",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "requiredSeason": "autumn",
+      "minAge": 16,
+      "requiredRelationshipState": "has_partner"
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "leaves_visit",
+        "type": "reach_location",
+        "label": "Walk through the autumn woods",
+        "target": 1,
+        "metadata": {
+          "pathname": "/activities"
+        }
+      }
+    ],
+    "rewards": {
+      "gold": 170,
+      "reputation": 6,
+      "skillPoints": 1
+    }
+  },
+  {
+    "id": "autumn_grain_transport",
+    "title": "Grain Transport",
+    "description": "The last grain haul needs to reach the city before the roads close for winter.",
+    "category": "delivery",
+    "weight": 4,
+    "cooldownTicks": 18,
+    "context": {
+      "requiredSeason": "autumn",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 16,
+    "objectives": [
+      {
+        "id": "grain_deliver",
+        "type": "deliver_item",
+        "label": "Deliver grain to the city",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 250,
+      "reputation": 5
+    }
+  },
+  {
+    "id": "autumn_speed_challenge",
+    "title": "Autumn Rush Challenge",
+    "description": "Complete two dungeons and a delivery before autumn ends. The clock is ticking.",
+    "category": "challenge",
+    "weight": 3,
+    "cooldownTicks": 28,
+    "context": {
+      "requiredSeason": "autumn",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 20,
+    "objectives": [
+      {
+        "id": "autumn_speed_dungeons",
+        "type": "complete_dungeon",
+        "label": "Complete dungeons before autumn ends",
+        "target": 2
+      },
+      {
+        "id": "autumn_speed_deliver",
+        "type": "deliver_item",
+        "label": "Deliver autumn supplies",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 460,
+      "skillPoints": 2,
+      "reputation": 8
+    }
+  },
+  {
+    "id": "autumn_forest_exploration",
+    "title": "Autumn Forest Exploration",
+    "description": "The autumn forest holds secrets beneath its canopy. Find the hidden grove the elders speak of.",
+    "category": "location",
+    "weight": 3,
+    "cooldownTicks": 16,
+    "context": {
+      "requiredSeason": "autumn",
+      "minAge": 14
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "forest_find",
+        "type": "find_character",
+        "label": "Find the hidden grove",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 160,
+      "reputation": 4
+    }
+  },
+  {
+    "id": "winter_arena_challenge",
+    "title": "Winter Arena Challenge",
+    "description": "Prove your combat prowess in the frozen arena during the winter tournament.",
+    "category": "challenge",
+    "weight": 3,
+    "cooldownTicks": 20,
+    "context": {
+      "requiredSeason": "winter",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 18,
+    "objectives": [
+      {
+        "id": "winter_arena_wins",
+        "type": "arena_wins",
+        "label": "Win arena matches",
+        "target": 2
+      }
+    ],
+    "rewards": {
+      "gold": 300,
+      "skillPoints": 1,
+      "reputation": 6
+    }
+  },
+  {
+    "id": "spring_escort_spring_villager",
+    "title": "Spring Escort Mission",
+    "description": "A villager needs safe passage through the newly thawed marshes. Protect them on their journey.",
+    "category": "combat",
+    "weight": 4,
+    "cooldownTicks": 20,
+    "context": {
+      "requiredSeason": "spring",
+      "minAge": 16
+    },
+    "expiresAfterTicks": 22,
+    "objectives": [
+      {
+        "id": "spring_protect_npc",
+        "type": "protect_npc",
+        "label": "Protect the villager through the marshes",
+        "target": 1
+      }
+    ],
+    "rewards": {
+      "gold": 340,
+      "reputation": 7,
+      "skillPoints": 1
+    }
+  }
+]
