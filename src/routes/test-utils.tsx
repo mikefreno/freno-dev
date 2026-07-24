@@ -51,7 +51,7 @@ export default function TestUtilsPage() {
       <main class="min-h-screen bg-gray-100 p-8">
         <div class="mx-auto max-w-2xl">
           <div class="mb-6 rounded-lg bg-white p-6 shadow-lg">
-            <h1 class="mb-2 text-3xl font-bold">Task 01 - Utility Testing</h1>
+            <h1 class="mb-2 text-3xl font-bold">Utility Testing</h1>
             <p class="mb-4 text-gray-600">
               Testing shared utilities, types, and UI components
             </p>
@@ -169,7 +169,7 @@ export default function TestUtilsPage() {
           </div>
 
           <div class="mt-6 rounded border border-blue-200 bg-blue-50 p-4">
-            <h3 class="mb-2 font-bold text-blue-800">✅ Task 01 Complete</h3>
+            <h3 class="mb-2 font-bold text-blue-800">✅ Complete</h3>
             <ul class="space-y-1 text-sm text-blue-700">
               <li>✓ User types created</li>
               <li>✓ Cookie utilities created</li>

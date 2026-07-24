@@ -1,4 +1,4 @@
-# Task 12b: Sparkle Appcast Dual-Host Support - Completion Summary
+# Sparkle Appcast Dual-Host Support - Completion Summary
 
 ## Objective
 
@@ -131,7 +131,7 @@ https://inputhalo.freno.me/api/InputHalo/appcast.xml
 
 ## Next Steps
 
-1. **Complete task 12 (DNS/Vercel configuration):** Add subdomains to Vercel and configure CNAMEs
+1. **Complete DNS/Vercel configuration:** Add subdomains to Vercel and configure CNAMEs
 2. **Run verification script:** `./scripts/verify-sparkle-dual-host.sh` after subdomains are configured
 3. **Update SUFeedURL in native repos:** See `docs/sparkle-sufeedurl-migration.md`
 4. **Test in dev builds:** Verify Sparkle detects + downloads updates with subdomain URLs

@@ -20,7 +20,7 @@
  *    This matches the canonical-URL rule and the nav-config rule
  *    from the spec: vercel.json maps `lineage.freno.me/downloads` →
  *    `/lineage/downloads` server-side while the browser sees `/downloads`.
- *    Task 11 will create the matching `src/routes/lineage/downloads.tsx`.
+ *    The matching `src/routes/lineage/downloads.tsx` will be created.
  *  - `PAGE_META` is consumed verbatim by `<PageHead>`; the per-site title
  *    suffix (` | Life and Lineage`) is appended automatically by
  *    `resolvePageHeadMeta`, so the `title` here is the BASE title
