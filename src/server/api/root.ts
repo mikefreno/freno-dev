@@ -3,6 +3,11 @@ import { auditRouter } from "./routers/audit";
 import { analyticsRouter } from "./routers/analytics";
 import { databaseRouter } from "./routers/database";
 import { lineageRouter } from "./routers/lineage";
+// Re-exported so the REST shim (src/routes/api/lineage/[...path].ts) can mount
+// ONLY the lineage sub-router as the trpc-openapi REST surface — not the
+// whole appRouter. Keeps nessa/community/auth/audit routers unreachable via
+// `/api/lineage/*`.
+export { lineageRouter };
 import { miscRouter } from "./routers/misc";
 import { userRouter } from "./routers/user";
 import { blogRouter } from "./routers/blog";

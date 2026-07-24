@@ -1,4 +1,8 @@
-import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "../../utils";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  csrfProtectedProcedure
+} from "../../utils";
 import { z } from "zod";
 import { LineageConnectionFactory } from "~/server/utils";
 import { TRPCError } from "@trpc/server";
@@ -17,7 +21,7 @@ const characterSchema = z.object({
   resistanceTable: z.string(),
   damageTable: z.string(),
   attackStrings: z.string(),
-  knownSpells: z.string(),
+  knownSpells: z.string()
 });
 
 export const lineagePvpRouter = createTRPCRouter({
@@ -27,7 +31,7 @@ export const lineagePvpRouter = createTRPCRouter({
         character: characterSchema,
         linkID: z.string(),
         pushToken: z.string().optional(),
-        pushCurrentlyEnabled: z.boolean().optional(),
+        pushCurrentlyEnabled: z.boolean().optional()
       })
     )
     .mutation(async ({ input }) => {
@@ -37,7 +41,7 @@ export const lineagePvpRouter = createTRPCRouter({
         const conn = LineageConnectionFactory();
         const res = await conn.execute({
           sql: `SELECT * FROM PvP_Characters WHERE linkID = ?`,
-          args: [linkID],
+          args: [linkID]
         });
 
         if (res.rows.length === 0) {
@@ -78,8 +82,8 @@ export const lineagePvpRouter = createTRPCRouter({
               character.attackStrings,
               character.knownSpells,
               pushToken,
-              pushCurrentlyEnabled,
-            ],
+              pushCurrentlyEnabled
+            ]
           });
 
           return {
@@ -87,7 +91,7 @@ export const lineagePvpRouter = createTRPCRouter({
             winCount: 0,
             lossCount: 0,
             tokenRedemptionCount: 0,
-            status: 201,
+            status: 201
           };
         } else {
           await conn.execute({
@@ -126,8 +130,8 @@ export const lineagePvpRouter = createTRPCRouter({
               character.knownSpells,
               pushToken,
               pushCurrentlyEnabled,
-              linkID,
-            ],
+              linkID
+            ]
           });
 
           return {
@@ -135,24 +139,25 @@ export const lineagePvpRouter = createTRPCRouter({
             winCount: res.rows[0].winCount as number,
             lossCount: res.rows[0].lossCount as number,
             tokenRedemptionCount: res.rows[0].tokenRedemptionCount as number,
-            status: 200,
+            status: 200
           };
         }
       } catch (e) {
         console.error(e);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to register character",
+          message: "Failed to register character"
         });
       }
     }),
 
-  getOpponents: publicProcedure.query(async () => {
-    const conn = LineageConnectionFactory();
+  getOpponents: publicProcedure
+    .query(async () => {
+      const conn = LineageConnectionFactory();
 
-    try {
-      const res = await conn.execute(
-        `
+      try {
+        const res = await conn.execute(
+          `
           SELECT playerClass,
                  blessing,
                  name, 
@@ -174,27 +179,27 @@ export const lineagePvpRouter = createTRPCRouter({
           ORDER BY RANDOM()
           LIMIT 3
         `
-      );
+        );
 
-      return {
-        ok: true,
-        characters: res.rows,
-        status: 200,
-      };
-    } catch (e) {
-      console.error(e);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to get opponents",
-      });
-    }
-  }),
+        return {
+          ok: true,
+          characters: res.rows,
+          status: 200
+        };
+      } catch (e) {
+        console.error(e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to get opponents"
+        });
+      }
+    }),
 
   battleResult: csrfProtectedProcedure
     .input(
       z.object({
         winnerLinkID: z.string(),
-        loserLinkID: z.string(),
+        loserLinkID: z.string()
       })
     )
     .mutation(async ({ input }) => {
@@ -211,19 +216,19 @@ export const lineagePvpRouter = createTRPCRouter({
               lossCount = lossCount + CASE WHEN linkID = ? THEN 1 ELSE 0 END
             WHERE linkID IN (?, ?)
           `,
-          args: [winnerLinkID, loserLinkID, winnerLinkID, loserLinkID],
+          args: [winnerLinkID, loserLinkID, winnerLinkID, loserLinkID]
         });
 
         return {
           ok: true,
-          status: 200,
+          status: 200
         };
       } catch (e) {
         console.error(e);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to record battle result",
+          message: "Failed to record battle result"
         });
       }
-    }),
+    })
 });

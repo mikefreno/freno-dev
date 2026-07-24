@@ -33,6 +33,8 @@ export interface Site {
   titleSuffix: string;
   /** Hex brand color used for theming accents / OG image backgrounds. */
   brandColor: string;
+  /** Dark mode variant of the brand color (used when dark mode is active). */
+  brandColorDark?: string;
   /** Default OpenGraph image path (resolved against the site root). */
   ogDefaultImage: string;
   /** Favicon path for this site. */
@@ -83,7 +85,8 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     baseRoutePrefix: "/nessa",
     displayName: "Nessa",
     titleSuffix: " | Nessa",
-    brandColor: "#cba6f7",
+    brandColor: "#527640",
+    brandColorDark: "#6CA86C",
     ogDefaultImage: "/nessa/og-default.png",
     faviconPath: "/nessa/favicon.ico"
   },

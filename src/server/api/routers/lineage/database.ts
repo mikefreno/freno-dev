@@ -6,7 +6,11 @@ import {
 } from "~/server/utils";
 import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure, csrfProtectedProcedure } from "~/server/api/utils";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  csrfProtectedProcedure
+} from "~/server/api/utils";
 import {
   fetchWithTimeout,
   checkResponse,
@@ -16,8 +20,78 @@ import {
 } from "~/server/fetch-utils";
 
 export const lineageDatabaseRouter = createTRPCRouter({
-  // credentials endpoint removed (p8-008): was exposing persistent DB tokens to clients.
-  // Database access should be proxied through tRPC server-side procedures.
+  // Per-user DB credentials endpoint.
+  //
+  // Returns the caller's OWN remote Turso DB name + token so the client can
+  // open a direct libsql connection (game data syncs across devices). This is
+  // safe to expose to the authenticated user: the token grants full access only
+  // to that user's own DB, equivalent to an on-device SQLite that travels
+  // between devices. The generic p8-008 "exposing persistent DB tokens"
+  // concern does not apply — there is no cross-user escalation possible.
+  //
+  // REST surface: POST /api/lineage/database/creds (auth via Bearer header).
+  databaseCreds: csrfProtectedProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        provider: z.enum(["email", "apple", "google"])
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { email, provider } = input;
+
+      // Bearer auth token comes from the Authorization header, exactly as the
+      // legacy REST endpoint read it. For `email` it's a Lineage JWT; for
+      // `apple` the apple_user_string; for `google` a Google id token.
+      const authHeader =
+        (ctx.event.nativeEvent.node?.req?.headers?.authorization as
+          | string
+          | undefined) ??
+        (ctx.event.request?.headers?.get("authorization") as
+          | string
+          | undefined);
+      const authToken = authHeader?.replace(/^Bearer\s+/i, "").trim();
+      if (!authToken) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Missing Authorization header"
+        });
+      }
+
+      const conn = LineageConnectionFactory();
+      const res = await conn.execute({
+        sql: `SELECT * FROM User WHERE email = ? AND provider = ? LIMIT 1`,
+        args: [email, provider]
+      });
+
+      if (res.rows.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found"
+        });
+      }
+
+      const userRow = res.rows[0];
+
+      const valid = await validateLineageRequest({
+        auth_token: authToken,
+        userRow
+      });
+
+      if (!valid) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid Verification"
+        });
+      }
+
+      // The legacy endpoint returned `{ db_name, db_token }`; the User row
+      // stores these as `database_name` / `database_token`.
+      return {
+        db_name: userRow.database_name,
+        db_token: userRow.database_token
+      };
+    }),
 
   deletionInit: csrfProtectedProcedure
     .input(

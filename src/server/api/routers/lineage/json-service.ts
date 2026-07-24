@@ -52,84 +52,90 @@ import sanityOptions from "~/lineage-json/misc-route/sanityOptions.json";
 import pvpRewards from "~/lineage-json/misc-route/pvpRewards.json";
 
 export const lineageJsonServiceRouter = createTRPCRouter({
-  attacks: publicProcedure.query(() => {
-    return {
-      ok: true,
-      playerAttacks,
-      mageBooks,
-      mageSpells,
-      necroBooks,
-      necroSpells,
-      rangerBooks,
-      rangerSpells,
-      paladinBooks,
-      paladinSpells,
-      summons
-    };
-  }),
+  attacks: publicProcedure
+    .query(() => {
+      return {
+        ok: true,
+        playerAttacks,
+        mageBooks,
+        mageSpells,
+        necroBooks,
+        necroSpells,
+        rangerBooks,
+        rangerSpells,
+        paladinBooks,
+        paladinSpells,
+        summons
+      };
+    }),
 
-  conditions: publicProcedure.query(() => {
-    return {
-      ok: true,
-      conditions,
-      debilitations,
-      sanityDebuffs
-    };
-  }),
+  conditions: publicProcedure
+    .query(() => {
+      return {
+        ok: true,
+        conditions,
+        debilitations,
+        sanityDebuffs
+      };
+    }),
 
-  dungeons: publicProcedure.query(() => {
-    return {
-      ok: true,
-      dungeons,
-      specialEncounters
-    };
-  }),
+  dungeons: publicProcedure
+    .query(() => {
+      return {
+        ok: true,
+        dungeons,
+        specialEncounters
+      };
+    }),
 
-  enemies: publicProcedure.query(() => {
-    return {
-      ok: true,
-      bosses,
-      enemies,
-      enemyAttacks
-    };
-  }),
+  enemies: publicProcedure
+    .query(() => {
+      return {
+        ok: true,
+        bosses,
+        enemies,
+        enemyAttacks
+      };
+    }),
 
-  items: publicProcedure.query(() => {
-    return {
-      ok: true,
-      arrows,
-      bows,
-      foci,
-      hats,
-      junk,
-      melee,
-      robes,
-      wands,
-      ingredients,
-      storyItems,
-      artifacts,
-      shields,
-      bodyArmor,
-      helmets,
-      suffix,
-      prefix,
-      potions,
-      poison,
-      staves
-    };
-  }),
+  items: publicProcedure
+    .query(() => {
+      return {
+        ok: true,
+        arrows,
+        bows,
+        foci,
+        hats,
+        junk,
+        melee,
+        robes,
+        wands,
+        ingredients,
+        storyItems,
+        artifacts,
+        shields,
+        bodyArmor,
+        helmets,
+        suffix,
+        prefix,
+        potions,
+        poison,
+        staves
+      };
+    }),
 
-  misc: publicProcedure.query(() => {
-    return {
-      ok: true,
-      activities,
-      investments,
-      jobs,
-      manaOptions,
-      otherOptions,
-      healthOptions,
-      sanityOptions,
-      pvpRewards
-    };
-  })
+  misc: publicProcedure
+    .query(() => {
+      return {
+        ok: true,
+        activities,
+        investments,
+        jobs,
+        manaOptions,
+        otherOptions,
+        healthOptions,
+        sanityOptions,
+        pvpRewards
+      };
+    })
 });

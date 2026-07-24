@@ -181,4 +181,3 @@ const csrfProtection = t.middleware(async ({ ctx, next }) => {
 // CSRF-protected procedure
 export const csrfProtectedProcedure = t.procedure.use(csrfProtection);
 export { csrfProtection };
-

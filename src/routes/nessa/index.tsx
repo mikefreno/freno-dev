@@ -54,7 +54,8 @@ export default function NessaLanding() {
   const { isDark } = useDarkMode();
 
   const iconSrc = () => (isDark() ? ICON_DARK : ICON_DEFAULT);
-  const brandColor = () => site().brandColor;
+  const brandColor = () =>
+    isDark() ? (site().brandColorDark ?? site().brandColor) : site().brandColor;
 
   return (
     <>

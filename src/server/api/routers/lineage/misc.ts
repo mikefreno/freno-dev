@@ -1,4 +1,9 @@
-import { createTRPCRouter, publicProcedure, adminProcedure, csrfProtectedProcedure } from "../../utils";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  adminProcedure,
+  csrfProtectedProcedure
+} from "../../utils";
 import { z } from "zod";
 import { LineageConnectionFactory } from "~/server/utils";
 import { env } from "~/env/server";
@@ -15,7 +20,7 @@ export const lineageMiscRouter = createTRPCRouter({
         proficiencies: z.record(z.unknown()),
         jobs: z.record(z.unknown()),
         resistanceTable: z.record(z.unknown()),
-        damageTable: z.record(z.unknown()),
+        damageTable: z.record(z.unknown())
       })
     )
     .mutation(async ({ input }) => {
@@ -27,7 +32,7 @@ export const lineageMiscRouter = createTRPCRouter({
         proficiencies,
         jobs,
         resistanceTable,
-        damageTable,
+        damageTable
       } = input;
 
       const conn = LineageConnectionFactory();
@@ -47,8 +52,8 @@ export const lineageMiscRouter = createTRPCRouter({
             JSON.stringify(proficiencies),
             JSON.stringify(jobs),
             JSON.stringify(resistanceTable),
-            JSON.stringify(damageTable),
-          ],
+            JSON.stringify(damageTable)
+          ]
         });
 
         return { success: true, status: 200 };
@@ -56,7 +61,7 @@ export const lineageMiscRouter = createTRPCRouter({
         console.error("Analytics error:", e);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to store analytics",
+          message: "Failed to store analytics"
         });
       }
     }),
@@ -69,7 +74,7 @@ export const lineageMiscRouter = createTRPCRouter({
       if (!token) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Missing token in body",
+          message: "Missing token in body"
         });
       }
 
@@ -80,11 +85,17 @@ export const lineageMiscRouter = createTRPCRouter({
       if (res.rows.length > 0) {
         const queryUpdate =
           "UPDATE Token SET last_updated_at = datetime('now') WHERE token = ?";
-        const resUpdate = await conn.execute({ sql: queryUpdate, args: [token] });
+        const resUpdate = await conn.execute({
+          sql: queryUpdate,
+          args: [token]
+        });
         return { success: true, action: "updated", result: resUpdate };
       } else {
         const queryInsert = "INSERT INTO Token (token) VALUES (?)";
-        const resInsert = await conn.execute({ sql: queryInsert, args: [token] });
+        const resInsert = await conn.execute({
+          sql: queryInsert,
+          args: [token]
+        });
         return { success: true, action: "inserted", result: resInsert };
       }
     }),
@@ -99,7 +110,7 @@ export const lineageMiscRouter = createTRPCRouter({
     try {
       const res = await conn.execute({
         sql: `SELECT * FROM Analytics`,
-        args: [],
+        args: []
       });
 
       const rows = res.rows.map((row: any) => ({
@@ -110,7 +121,7 @@ export const lineageMiscRouter = createTRPCRouter({
         proficiencies: safeJsonParse(row.proficiencies),
         jobs: safeJsonParse(row.jobs),
         resistanceTable: safeJsonParse(row.resistanceTable),
-        damageTable: safeJsonParse(row.damageTable),
+        damageTable: safeJsonParse(row.damageTable)
       }));
 
       return { success: true, players: rows };
@@ -118,7 +129,7 @@ export const lineageMiscRouter = createTRPCRouter({
       console.error("Failed to fetch lineage analytics:", e);
       return { success: false, players: [] };
     }
-  }),
+  })
 });
 
 function safeJsonParse(val: unknown): unknown {
