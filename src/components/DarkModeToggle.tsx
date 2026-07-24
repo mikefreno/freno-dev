@@ -4,7 +4,10 @@ import SunIcon from "./icons/SunIcon";
 import { Typewriter } from "./Typewriter";
 import { useDarkMode } from "~/context/darkMode";
 
-export function DarkModeToggle() {
+export function DarkModeToggle(
+  props: { shouldScale: boolean },
+  { shouldScale = true }
+) {
   const { isDark, toggleDarkMode } = useDarkMode();
   const [mounted, setMounted] = createSignal(false);
 
@@ -15,7 +18,7 @@ export function DarkModeToggle() {
   return (
     <button
       onClick={toggleDarkMode}
-      class="hover:bg-surface0 flex w-full items-center gap-3 rounded-lg p-3 transition-all duration-200 ease-in-out hover:scale-105"
+      class={`hover:bg-surface0 flex w-full items-center gap-3 rounded-lg p-3 transition-all duration-200 ease-in-out ${props.shouldScale ? "hover:scale-105" : ""}`}
       aria-label="Toggle dark mode"
     >
       <Show

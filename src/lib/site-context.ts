@@ -35,6 +35,8 @@ export interface Site {
   brandColor: string;
   /** Dark mode variant of the brand color (used when dark mode is active). */
   brandColorDark?: string;
+  /** Whether the subdomain header should use a solid background (default: false for transparent). */
+  headerOpaque?: boolean;
   /** Default OpenGraph image path (resolved against the site root). */
   ogDefaultImage: string;
   /** Favicon path for this site. */
@@ -87,6 +89,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     titleSuffix: " | Nessa",
     brandColor: "#527640",
     brandColorDark: "#6CA86C",
+    headerOpaque: true,
     ogDefaultImage: "/nessa/og-default.png",
     faviconPath: "/nessa/favicon.ico"
   },
