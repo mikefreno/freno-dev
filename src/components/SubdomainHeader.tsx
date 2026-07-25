@@ -78,7 +78,7 @@ export default function SubdomainHeader() {
               </Show>
             )}
           </For>
-          <DarkModeToggle />
+          <DarkModeToggle shouldScale={false} />
         </nav>
       </div>
     </header>
