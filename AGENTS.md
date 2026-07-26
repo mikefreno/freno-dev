@@ -86,7 +86,7 @@
 
 This project serves four product subdomains (`nessa.freno.me`, `lineage.freno.me`, `gaze.freno.me`, `inputhalo.freno.me`) plus the personal site on `freno.me`. See `docs/subdomain-setup.md` for DNS/Vercel configuration.
 
-- **Route placement:** Subdomain pages live under `src/routes/<prefix>/*` (e.g. `src/routes/nessa/...`). The `vercel.json` host-based rewrites map each subdomain to its prefix.
+- **Route placement:** Subdomain pages live under `src/routes/<prefix>/*` (e.g. `src/routes/nessa/...`). An in-app middleware (`src/middleware.ts`, registered via `app.config.ts` → `middleware`) rewrites the request path based on the `Host` header so `lineage.freno.me/privacy` resolves to the `/lineage/privacy` file route. (The `vercel.json` host `rewrites` are declared but **not applied** by Vercel — the Nitro `vercel` preset emits a Build Output API `config.json` whose `routes` array fully replaces `vercel.json` rewrites/redirects/headers, so the in-app middleware is what actually does the work.)
 - **Site context:** Use `useSite()` (SolidJS) or `getSiteFromEvent`/`getSiteFromRequest` (server) from `src/lib/site-context.ts` to detect the current site. Never host-snoop in route files — SolidStart's router can't match on host.
 - **API routes:** `/api/*` is a shared pool — subdomain API requests pass through to existing routes via vercel.json pass-through rewrites (ordering matters).
 - **Auth:** Host-scoped only — no cookie domain broadening.

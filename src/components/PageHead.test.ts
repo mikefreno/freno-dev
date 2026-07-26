@@ -60,6 +60,42 @@ describe("resolvePageHeadMeta — canonical URL derivation", () => {
     expect(meta.canonical).toBe("https://nessa.freno.me/contact");
   });
 
+  // The in-app subdomain middleware (src/middleware.ts) rewrites the internal
+  // request path to the prefix form (/nessa/contact) before the SolidStart
+  // router matches it. useLocation() therefore reports the prefixed path, and
+  // resolvePageHeadMeta must strip the prefix so the canonical stays public.
+  it("nessa prefixed /nessa/contact → https://nessa.freno.me/contact", () => {
+    const meta = resolvePageHeadMeta(
+      BASE_PROPS,
+      SITE_CONFIG.nessa,
+      "/nessa/contact"
+    );
+    expect(meta.canonical).toBe("https://nessa.freno.me/contact");
+  });
+
+  it("lineage prefixed /lineage/privacy → https://lineage.freno.me/privacy", () => {
+    const meta = resolvePageHeadMeta(
+      BASE_PROPS,
+      SITE_CONFIG.lineage,
+      "/lineage/privacy"
+    );
+    expect(meta.canonical).toBe("https://lineage.freno.me/privacy");
+  });
+
+  it("nessa prefixed root /nessa/ → https://nessa.freno.me/", () => {
+    const meta = resolvePageHeadMeta(BASE_PROPS, SITE_CONFIG.nessa, "/nessa/");
+    expect(meta.canonical).toBe("https://nessa.freno.me/");
+  });
+
+  it("main path that happens to start with /nessa is NOT stripped (main site has no prefix)", () => {
+    const meta = resolvePageHeadMeta(
+      BASE_PROPS,
+      SITE_CONFIG.main,
+      "/nessa/contact"
+    );
+    expect(meta.canonical).toBe("https://freno.me/nessa/contact");
+  });
+
   it("lineage → canonical starts with https://lineage.freno.me", () => {
     const meta = resolvePageHeadMeta(BASE_PROPS, SITE_CONFIG.lineage, "/");
     expect(meta.canonical.startsWith("https://lineage.freno.me")).toBe(true);

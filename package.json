@@ -5,7 +5,6 @@
     "dev": "vinxi dev",
     "dev-flush": "vinxi dev --env-file=.env",
     "build": "vinxi build",
-    "vercel-build": "rm -rf .vinxi .output node_modules/.vite && vinxi build",
     "start": "NODE_OPTIONS='--import ./public/instrument.server.mjs' vinxi start",
     "test": "bun test",
     "test:security": "bun test src/server/security/",
