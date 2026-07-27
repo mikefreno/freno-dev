@@ -74,6 +74,11 @@
   --color-base: #fbf1c7;
   --color-mantle: #f3eac1;
   --color-crust: #e7deb7;
+
+  /* Button text colors: white on dark bg variants (primary/danger),
+     theme text on light bg variants (secondary). */
+  --color-button-text: #ffffff;
+  --color-button-text-alt: var(--color-text);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -104,6 +109,11 @@
     --color-base: #1e1e2e;
     --color-mantle: #141620;
     --color-crust: #0e0f16;
+
+    /* Dark mode: dark text on lighter bg variants (primary/danger),
+       white text on dark bg variants (secondary). */
+    --color-button-text: var(--color-crust);
+    --color-button-text-alt: #ffffff;
   }
   @theme {
     --color-rosewater: #efc9c2;

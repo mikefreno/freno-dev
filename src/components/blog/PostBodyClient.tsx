@@ -18,8 +18,11 @@ function sanitizeHtml(html: string): string {
     )
     .forEach((el) => el.remove());
 
-  // Remove event handler attributes and dangerous URLs from all elements
-  doc.querySelectorAll("[on*], [href], [style], [action]").forEach((el) => {
+  // Remove event handler attributes and dangerous URLs from all elements.
+  // NOTE: attribute-name wildcards (e.g. [on*]) are not valid CSS selectors and
+  // throw a SyntaxError on querySelectorAll, so we match all elements here and
+  // the per-attribute checks below handle on*/href/style/action filtering.
+  doc.querySelectorAll("*").forEach((el) => {
     const attrs = Array.from(el.attributes);
     attrs.forEach((attr) => {
       const name = attr.name;

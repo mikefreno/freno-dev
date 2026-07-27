@@ -88,7 +88,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     brandColor: "#527640",
     brandColorDark: "#6CA86C",
     ogDefaultImage: "/nessa/og-default.png",
-    faviconPath: "/nessa/favicon.ico"
+    faviconPath: "/nessa/favicon/favicon.ico"
   },
   lineage: {
     id: "lineage",
@@ -99,7 +99,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     titleSuffix: " | Life and Lineage",
     brandColor: "#a13536",
     ogDefaultImage: "/lineage/og-default.png",
-    faviconPath: "/lineage/favicon.ico"
+    faviconPath: "/lineage/favicon/favicon.ico"
   },
   gaze: {
     id: "gaze",
@@ -110,7 +110,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     titleSuffix: " | Gaze",
     brandColor: "#f9e2af",
     ogDefaultImage: "/gaze/og-default.png",
-    faviconPath: "/gaze/favicon.ico"
+    faviconPath: "/gaze/favicon/favicon.ico"
   },
   inputhalo: {
     id: "inputhalo",
@@ -121,7 +121,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     titleSuffix: " | InputHalo",
     brandColor: "#f38ba8",
     ogDefaultImage: "/inputhalo/og-default.png",
-    faviconPath: "/inputhalo/favicon.ico"
+    faviconPath: "/inputhalo/favicon/favicon.ico"
   }
 };
 

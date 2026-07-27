@@ -107,7 +107,7 @@ export default function NessaLanding() {
             </A>
             <A
               href="/contact"
-              class="border-surface2 hover:bg-surface0/40 rounded-full border-2 px-8 py-3 text-base font-semibold transition-colors"
+              class="border-surface2 hover:bg-surface0/40 text-accent rounded-full border-2 px-8 py-3 font-semibold transition-colors"
             >
               Request beta access
             </A>

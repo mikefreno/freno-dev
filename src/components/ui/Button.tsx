@@ -7,6 +7,97 @@ import {
 } from "solid-js";
 import { Spinner } from "~/components/Spinner";
 
+/** Parse a hex color string like `#f9e2af` into `[r, g, b]` in 0..255. */
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace(/^#/, "");
+  return [
+    parseInt(h.substring(0, 2), 16),
+    parseInt(h.substring(2, 4), 16),
+    parseInt(h.substring(4, 6), 16)
+  ];
+}
+
+/** Convert `[r, g, b]` 0..255 to `[h, s, l]` — h in 0..360, s and l in 0..1. */
+function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  let h = 0;
+  let s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case rn:
+        h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
+        break;
+      case gn:
+        h = ((bn - rn) / d + 2) / 6;
+        break;
+      case bn:
+        h = ((rn - gn) / d + 4) / 6;
+        break;
+    }
+  }
+  return [h * 360, s, l];
+}
+
+/** Convert `[h, s, l]` (h in 0..360, s and l in 0..1) to `[r, g, b]` 0..255. */
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return Math.round(255 * (l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)));
+  };
+  return [f(0), f(8), f(4)];
+}
+
+/**
+ * Compute the relative luminance (WCAG) of an sRGB color, given linear
+ * channel values in 0..1.
+ */
+function luminance(r: number, g: number, b: number): number {
+  return (
+    0.2126 * (r > 0.04045 ? ((r + 0.055) / 1.055) ** 2.4 : r / 12.92) +
+    0.7152 * (g > 0.04045 ? ((g + 0.055) / 1.055) ** 2.4 : g / 12.92) +
+    0.0722 * (b > 0.04045 ? ((b + 0.055) / 1.055) ** 2.4 : b / 12.92)
+  );
+}
+
+/**
+ * Given a background color, return a pair of `{ bg, text }` CSS color
+ * strings that guarantee WCAG AA contrast.
+ *
+ * Light backgrounds (luminance > 0.4) are darkened in HSL space so the
+ * result is dark enough for white text.  Dark backgrounds are kept as-is
+ * with white text.  This is used by the download variant whose background
+ * is a product brand color that can be arbitrarily light.
+ */
+function adjustForContrast(color: string): { bg: string; text: string } {
+  const [r, g, b] = hexToRgb(color);
+  const [h, s, l] = rgbToHsl(r, g, b);
+  const lum = luminance(r / 255, g / 255, b / 255);
+
+  if (lum > 0.4) {
+    // Darken: keep hue and saturation, clamp lightness so the result is
+    // dark enough for white text (l ~ 0.35 → luminance ~ 0.17, contrast
+    // with white ≈ 6:1).
+    const dl = Math.min(l, 0.35);
+    const [dr, dg, db] = hslToRgb(h, s, dl);
+    return {
+      bg: `rgb(${dr}, ${dg}, ${db})`,
+      text: "#ffffff"
+    };
+  }
+  return {
+    bg: `rgb(${r}, ${g}, ${b})`,
+    text: "#ffffff"
+  };
+}
+
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost" | "download";
   size?: "sm" | "md" | "lg";
@@ -65,8 +156,8 @@ export default function Button(props: ButtonProps) {
           : "bg-surface0 hover:brightness-125 active:scale-90";
       case "download":
         return isDisabledOrLoading
-          ? "text-base cursor-not-allowed brightness-75"
-          : "text-base hover:brightness-125 active:scale-90";
+          ? "cursor-not-allowed brightness-75"
+          : "hover:brightness-125 active:scale-90";
       case "danger":
         return isDisabledOrLoading
           ? "bg-red cursor-not-allowed brightness-75"
@@ -78,6 +169,15 @@ export default function Button(props: ButtonProps) {
       default:
         return "";
     }
+  };
+
+  /** Compute background + text color for the download variant. */
+  const downloadColors = () => {
+    const isDisabledOrLoading = local.disabled || local.loading;
+    if (isDisabledOrLoading) {
+      return { bg: "var(--color-base)", text: "#ffffff" };
+    }
+    return adjustForContrast(local.color || "var(--color-blue)");
   };
 
   const sizeClasses = () => {
@@ -96,10 +196,16 @@ export default function Button(props: ButtonProps) {
   const widthClass = () => (local.fullWidth ? "w-full" : "");
 
   const buttonStyle = (): JSX.CSSProperties => {
-    if (local.color) {
-      return { background: local.color };
+    if (variant() === "download") {
+      const { bg, text } = downloadColors();
+      return { background: bg, color: text };
     }
-    return {};
+    // Theme-aware text: white on dark bg variants (primary/danger),
+    // theme text on light bg variants (secondary).  The CSS variables
+    // flip between light/dark modes so the contrast stays good in both.
+    if (variant() === "secondary")
+      return { color: "var(--color-button-text-alt)" };
+    return { color: "var(--color-button-text)" };
   };
 
   return (
