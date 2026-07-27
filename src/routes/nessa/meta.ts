@@ -23,7 +23,7 @@ import type { PageHeadProps } from "~/components/page-head-meta";
  * no-suffix fallback) — this matches the marketing-copy intent of the card.
  */
 export const NESSA_LANDING_META: PageHeadProps = {
-  title: "Nessa",
+  title: "Home",
   description:
     "Nessa is the fitness app that puts you first. Track running, cycling, swimming and more; compete on free segment leaderboards; and connect with friends through clubs, community challenges, and a social feed — all while keeping your data on your device.",
   ogTitle: "Nessa — The fitness app that puts you first",

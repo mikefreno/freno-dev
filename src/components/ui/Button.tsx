@@ -1,4 +1,10 @@
-import { JSX, splitProps, Show, createSignal, createEffect } from "solid-js";
+import {
+  type JSX,
+  splitProps,
+  Show,
+  createSignal,
+  createEffect
+} from "solid-js";
 import { Spinner } from "~/components/Spinner";
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -6,6 +12,11 @@ export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement>
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   fullWidth?: boolean;
+  /**
+   * Override the variant's background color with an explicit CSS color.
+   * Used by download pages to theme the button with the product brand color.
+   */
+  color?: string;
 }
 
 export default function Button(props: ButtonProps) {
@@ -16,7 +27,8 @@ export default function Button(props: ButtonProps) {
     "fullWidth",
     "class",
     "children",
-    "disabled"
+    "disabled",
+    "color"
   ]);
 
   let contentRef: HTMLSpanElement | undefined;
@@ -53,8 +65,8 @@ export default function Button(props: ButtonProps) {
           : "bg-surface0 hover:brightness-125 active:scale-90";
       case "download":
         return isDisabledOrLoading
-          ? "bg-green text-base cursor-not-allowed brightness-75"
-          : "bg-green text-base hover:brightness-125 active:scale-90";
+          ? "text-base cursor-not-allowed brightness-75"
+          : "text-base hover:brightness-125 active:scale-90";
       case "danger":
         return isDisabledOrLoading
           ? "bg-red cursor-not-allowed brightness-75"
@@ -83,11 +95,19 @@ export default function Button(props: ButtonProps) {
 
   const widthClass = () => (local.fullWidth ? "w-full" : "");
 
+  const buttonStyle = (): JSX.CSSProperties => {
+    if (local.color) {
+      return { background: local.color };
+    }
+    return {};
+  };
+
   return (
     <button
       {...others}
       disabled={local.disabled || local.loading}
       class={`${baseClasses} ${variantClasses()} ${sizeClasses()} ${widthClass()} ${local.class || ""}`}
+      style={buttonStyle()}
     >
       <Show
         when={local.loading}

@@ -3,7 +3,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { sentryVitePlugin as sentryPlugin } from "@sentry/vite-plugin";
 
 export default defineConfig({
-  middleware: "./src/middleware.ts",
   vite: {
     plugins: [
       tailwindcss(),

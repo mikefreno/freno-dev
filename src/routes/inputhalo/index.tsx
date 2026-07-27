@@ -100,7 +100,7 @@ export default function InputHaloLanding() {
   return (
     <>
       <PageHead
-        title="InputHalo"
+        title="Home"
         description="A polished macOS menu bar app that visualizes keyboard presses, mouse clicks, cursor halos, and scroll events on screen — for streamers, presenters, and developers."
       />
 
@@ -152,6 +152,7 @@ export default function InputHaloLanding() {
             <Button
               variant="download"
               size="lg"
+              color={brandColor()}
               loading={loading()}
               onClick={download}
             >
@@ -250,6 +251,7 @@ export default function InputHaloLanding() {
               <Button
                 variant="download"
                 size="lg"
+                color={brandColor()}
                 loading={loading()}
                 onClick={download}
               >

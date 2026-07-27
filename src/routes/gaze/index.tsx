@@ -4,6 +4,7 @@ import SubdomainHeader from "~/components/SubdomainHeader";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
 import Button from "~/components/ui/Button";
 import { useDarkMode } from "~/context/darkMode";
+import { useSite } from "~/context/SiteContext";
 import { downloadAsset } from "~/lib/download-asset";
 
 const GAZE_APP_STORE_URL = "https://apps.apple.com/us/app/gaze/id6757759498";
@@ -33,8 +34,12 @@ const FEATURES = [
 ] as const;
 
 export default function GazeLanding() {
+  const site = useSite();
   const { isDark } = useDarkMode();
   const [loading, setLoading] = createSignal(false);
+
+  const brandColor = () =>
+    isDark() ? (site().brandColorDark ?? site().brandColor) : site().brandColor;
 
   const handleDownload = () => {
     if (loading()) return;
@@ -56,7 +61,7 @@ export default function GazeLanding() {
   return (
     <>
       <PageHead
-        title="Eye & posture health reminder for macOS"
+        title="Home"
         description="Gaze is a macOS menu bar app for eye and posture health — blink reminders, 20-20-20 breaks, posture check-ins, and customizable reminder intervals."
         ogImage="/look-away.png"
         ogTitle="Gaze — Eye and posture health reminder for macOS"
@@ -100,6 +105,7 @@ export default function GazeLanding() {
             <Button
               variant="download"
               size="lg"
+              color={brandColor()}
               loading={loading()}
               onClick={handleDownload}
             >
@@ -157,6 +163,7 @@ export default function GazeLanding() {
             <Button
               variant="download"
               size="lg"
+              color={brandColor()}
               loading={loading()}
               onClick={handleDownload}
             >

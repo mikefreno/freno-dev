@@ -54,7 +54,7 @@ export const SCREENSHOT_ASSETS = {
 
 /** Base page title (site suffix appended by PageHead). */
 export const PAGE_META = {
-  title: "Life and Lineage",
+  title: "Home",
   description:
     "A dark fantasy adventure mobile game. Download Life and Lineage on the App Store and Google Play."
 } as const;

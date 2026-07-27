@@ -13,13 +13,13 @@ import { SITE_CONFIG } from "~/lib/site-context";
 import { NESSA_LANDING_META } from "./meta";
 
 describe("Nessa landing page — PageHead metadata", () => {
-  it("title composes to 'Nessa | Nessa' (base title + nessa titleSuffix)", () => {
+  it("title composes to 'Home | Nessa' (base title + nessa titleSuffix)", () => {
     const meta = resolvePageHeadMeta(
       NESSA_LANDING_META,
       SITE_CONFIG.nessa,
       "/"
     );
-    expect(meta.title).toBe("Nessa | Nessa");
+    expect(meta.title).toBe("Home | Nessa");
   });
 
   it("title contains the substring 'Nessa'", () => {

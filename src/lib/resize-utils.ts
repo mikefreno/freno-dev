@@ -1,4 +1,4 @@
-import { createSignal, onMount, onCleanup, Accessor } from "solid-js";
+import { createSignal, onMount, onCleanup, type Accessor } from "solid-js";
 
 export const MOBILE_BREAKPOINT = 768;
 
@@ -8,8 +8,9 @@ export const MOBILE_BREAKPOINT = 768;
  * @returns Accessor for current window width
  */
 export function createWindowWidth(debounceMs?: number): Accessor<number> {
-  const initialWidth = typeof window !== "undefined" ? window.innerWidth : 1024;
-  const [width, setWidth] = createSignal(initialWidth);
+  // Use a static default so SSR and initial client render agree; the
+  // real value is set in onMount (after hydration) to avoid mismatches.
+  const [width, setWidth] = createSignal(1024);
 
   onMount(() => {
     setWidth(window.innerWidth);

@@ -1,9 +1,14 @@
-import { Show, type JSX } from "solid-js";
+import { Show, Switch, Match, type JSX } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
 import { A } from "@solidjs/router";
 import RevealDropDown from "~/components/RevealDropDown";
 import { ContactForm } from "~/components/ContactForm";
 import { buildSubdomainUrl } from "~/lib/site-context";
+import { useSite } from "~/context/SiteContext";
+import NessaContactPage from "./nessa/contact";
+import LineageContactPage from "./lineage/contact";
+import GazeContactPage from "./gaze/contact";
+import InputHaloContactPage from "./inputhalo/contact";
 
 /**
  * Main-site contact page (`freno.me/contact`).
@@ -115,7 +120,7 @@ export function LineageContactQuestions(): JSX.Element {
   );
 }
 
-export default function ContactPage() {
+function MainContactPage() {
   const [searchParams] = useSearchParams();
   const viewer = () => searchParams.viewer ?? "default";
 
@@ -129,5 +134,40 @@ export default function ContactPage() {
     >
       <LineageContactQuestions />
     </ContactForm>
+  );
+}
+
+/**
+ * Host-aware contact route handler.
+ *
+ * SolidStart's file router cannot match on host, and the previous in-app
+ * middleware rewrite (`/contact` → `/<prefix>/contact`, server-only) diverged
+ * the SSR path from the browser URL — SolidStart's client `Router` derives its
+ * route purely from `window.location.pathname`, so the client matched the root
+ * route while the server rendered the subdomain route → hydration mismatch.
+ *
+ * The fix mirrors `src/routes/index.tsx`: resolve the public path (`/contact`)
+ * on BOTH server and client, then dispatch to the right subdomain contact
+ * component via `useSite()`. Server and client render the same component for
+ * the same path → hydration matches; nav links (public paths) and the
+ * canonical URL (public path) keep working unchanged.
+ */
+export default function ContactPage(): JSX.Element {
+  const site = useSite();
+  return (
+    <Switch fallback={<MainContactPage />}>
+      <Match when={site().id === "nessa"}>
+        <NessaContactPage />
+      </Match>
+      <Match when={site().id === "lineage"}>
+        <LineageContactPage />
+      </Match>
+      <Match when={site().id === "gaze"}>
+        <GazeContactPage />
+      </Match>
+      <Match when={site().id === "inputhalo"}>
+        <InputHaloContactPage />
+      </Match>
+    </Switch>
   );
 }

@@ -12,13 +12,13 @@ import { For, Show } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import { useSite } from "~/context/SiteContext";
 import { useDarkMode } from "~/context/darkMode";
-import { NAV_CONFIG, BACK_TO_FRENO } from "~/lib/nav-config";
+import { NAV_CONFIG } from "~/lib/nav-config";
 import { DarkModeToggle } from "~/components/DarkModeToggle";
 
 export default function SubdomainHeader() {
   const site = useSite();
   const location = useLocation();
-  const { isDark, toggleDarkMode } = useDarkMode();
+  const { isDark } = useDarkMode();
 
   const brandName = () => site().displayName;
   const brandColor = () =>
@@ -32,10 +32,7 @@ export default function SubdomainHeader() {
   };
 
   return (
-    <header
-      class="sticky top-0 z-50 w-full border-b backdrop-blur-md"
-      classList={{ "bg-base/80 border-surface0": site().headerOpaque }}
-    >
+    <header class="bg-base/80 border-surface0 sticky top-0 z-50 w-full border-b backdrop-blur-md">
       <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         <A
           href="/"

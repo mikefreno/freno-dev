@@ -1,12 +1,16 @@
 import { PageHead } from "~/components/PageHead";
 import { A } from "@solidjs/router";
-import { createSignal, onMount, onCleanup } from "solid-js";
+import { createSignal, onMount, onCleanup, Switch, Match } from "solid-js";
 import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
 import { glitchText } from "~/lib/client-utils";
 import { buildSubdomainUrl } from "~/lib/subdomain-url";
 import Button from "~/components/ui/Button";
+import { useSite } from "~/context/SiteContext";
+import LineageDownloadsPage from "./lineage/downloads";
+import GazeDownloadsPage from "./gaze/downloads";
+import InputHaloDownloadsPage from "./inputhalo/downloads";
 
-export default function DownloadsPage() {
+function MainDownloadsPage() {
   const [LaLText, setLaLText] = createSignal("Life and Lineage");
   const [SwAText, setSwAText] = createSignal("Shapes with Abigail!");
   const [corkText, setCorkText] = createSignal("Cork");
@@ -298,5 +302,32 @@ export default function DownloadsPage() {
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * Host-aware downloads route handler.
+ *
+ * Dispatches to the per-subdomain download surface based on the resolved
+ * site (see `src/routes/index.tsx` for the pattern). Nessa has no dedicated
+ * downloads page, so it falls back to the unified downloads listing —
+ * matching the pre-middleware behavior. Resolving the public path on both
+ * server and client avoids the hydration mismatch the path-rewriting
+ * middleware caused.
+ */
+export default function DownloadsPage() {
+  const site = useSite();
+  return (
+    <Switch fallback={<MainDownloadsPage />}>
+      <Match when={site().id === "lineage"}>
+        <LineageDownloadsPage />
+      </Match>
+      <Match when={site().id === "gaze"}>
+        <GazeDownloadsPage />
+      </Match>
+      <Match when={site().id === "inputhalo"}>
+        <InputHaloDownloadsPage />
+      </Match>
+    </Switch>
   );
 }

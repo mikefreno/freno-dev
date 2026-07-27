@@ -73,7 +73,7 @@ describe("Lineage landing — asset paths", () => {
 
 describe("Lineage landing — PageHead inputs", () => {
   it("passes the base title (suffix is appended by PageHead)", () => {
-    expect(PAGE_META.title).toBe("Life and Lineage");
+    expect(PAGE_META.title).toBe("Home");
   });
 
   it("does not pre-bake the site suffix into the title", () => {

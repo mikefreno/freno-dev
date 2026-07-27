@@ -14,6 +14,7 @@ import { PageHead } from "~/components/PageHead";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
 import Button from "~/components/ui/Button";
+import { useDarkMode } from "~/context/darkMode";
 import { useSite } from "~/context/SiteContext";
 import { downloadAsset } from "~/lib/download-asset";
 
@@ -22,7 +23,11 @@ const GAZE_MIN_MACOS = "14.6";
 
 export default function GazeDownloadsPage() {
   const site = useSite();
+  const { isDark } = useDarkMode();
   const [loading, setLoading] = createSignal(false);
+
+  const brandColor = () =>
+    isDark() ? (site().brandColorDark ?? site().brandColor) : site().brandColor;
 
   const handleDownload = () => {
     if (loading()) return;
@@ -85,6 +90,7 @@ export default function GazeDownloadsPage() {
               <Button
                 variant="download"
                 size="lg"
+                color={brandColor()}
                 loading={loading()}
                 onClick={handleDownload}
               >

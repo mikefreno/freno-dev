@@ -1,5 +1,6 @@
 import { ContactForm } from "~/components/ContactForm";
 import SubdomainHeader from "~/components/SubdomainHeader";
+import { LineageContactQuestions } from "../contact";
 
 /**
  * Life and Lineage contact page (`lineage.freno.me/contact`).
@@ -24,7 +25,9 @@ export default function LineageContactPage() {
   return (
     <>
       <SubdomainHeader />
-      <ContactForm />
+      <ContactForm>
+        <LineageContactQuestions />
+      </ContactForm>
     </>
   );
 }

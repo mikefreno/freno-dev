@@ -60,10 +60,10 @@ describe("resolvePageHeadMeta — canonical URL derivation", () => {
     expect(meta.canonical).toBe("https://nessa.freno.me/contact");
   });
 
-  // The in-app subdomain middleware (src/middleware.ts) rewrites the internal
-  // request path to the prefix form (/nessa/contact) before the SolidStart
-  // router matches it. useLocation() therefore reports the prefixed path, and
-  // resolvePageHeadMeta must strip the prefix so the canonical stays public.
+  // Subdomain routing is host-aware (root routes dispatch by useSite()), so
+  // useLocation() normally reports the public path. resolvePageHeadMeta also
+  // defensively strips a subdomain prefix from a prefixed pathname, so the
+  // canonical stays public even if the prefixed form ever appears.
   it("nessa prefixed /nessa/contact → https://nessa.freno.me/contact", () => {
     const meta = resolvePageHeadMeta(
       BASE_PROPS,

@@ -33,6 +33,8 @@ export default function InputHaloDownloadsPage() {
   const iconSrc = () =>
     isDark() ? INPUTHALO_ICON_DARK : INPUTHALO_ICON_DEFAULT;
 
+  const brandColor = () => site().brandColor;
+
   const download = () => {
     if (loading()) return;
     setLoading(true);
@@ -89,6 +91,7 @@ export default function InputHaloDownloadsPage() {
               <Button
                 variant="download"
                 size="lg"
+                color={brandColor()}
                 loading={loading()}
                 onClick={download}
               >
