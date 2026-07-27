@@ -343,19 +343,6 @@ export default function NessaLanding() {
             </div>
           </div>
         </section>
-
-        {/* ─── Footer ───────────────────────────────────────────────── */}
-        <footer class="border-surface0 relative z-10 border-t px-4 py-10">
-          <div class="text-text/60 mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm sm:flex-row">
-            <span>{site().displayName}</span>
-            <A
-              href={buildMainSiteUrl()}
-              class="hover:text-text underline-offset-4 hover:underline"
-            >
-              freno.me
-            </A>
-          </div>
-        </footer>
       </main>
     </>
   );

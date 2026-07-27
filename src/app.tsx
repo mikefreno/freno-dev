@@ -11,6 +11,7 @@ import {
 import "./app.css";
 import { LeftBar, RightBar } from "./components/Bars";
 import { TerminalSplash } from "./components/TerminalSplash";
+import SubdomainFooter from "./components/SubdomainFooter";
 import { MetaProvider } from "@solidjs/meta";
 import ErrorBoundaryFallback from "./components/ErrorBoundaryFallback";
 import { BarsProvider, useBars } from "./context/bars";
@@ -214,6 +215,7 @@ function AppLayout(props: { children: any }) {
               {props.children}
             </Suspense>
           </ErrorBoundary>
+          <SubdomainFooter />
         </div>
       </Show>
     </>

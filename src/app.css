@@ -173,6 +173,8 @@
   --color-base: #fbf1c7;
   --color-mantle: #f3eac1;
   --color-crust: #e7deb7;
+  --color-button-text: #ffffff;
+  --color-button-text-alt: var(--color-text);
 }
 
 :root.dark {
@@ -202,6 +204,8 @@
   --color-base: #1e1e2e;
   --color-mantle: #141620;
   --color-crust: #0e0f16;
+  --color-button-text: var(--color-crust);
+  --color-button-text-alt: #ffffff;
 }
 
 :root {

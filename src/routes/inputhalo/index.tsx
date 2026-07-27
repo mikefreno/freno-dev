@@ -14,7 +14,6 @@ import { For, createSignal } from "solid-js";
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
 import SubdomainHeader from "~/components/SubdomainHeader";
-import { buildMainSiteUrl } from "~/lib/site-context";
 import Button from "~/components/ui/Button";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
 import { useDarkMode } from "~/context/darkMode";
@@ -271,19 +270,6 @@ export default function InputHaloLanding() {
             </p>
           </div>
         </section>
-
-        {/* ─── Footer ─────────────────────────────────────────────── */}
-        <footer class="border-surface0 relative z-10 border-t px-4 py-10">
-          <div class="text-text/60 mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm sm:flex-row">
-            <span>{site().displayName}</span>
-            <A
-              href={buildMainSiteUrl()}
-              class="hover:text-text underline-offset-4 hover:underline"
-            >
-              freno.me
-            </A>
-          </div>
-        </footer>
       </main>
     </>
   );

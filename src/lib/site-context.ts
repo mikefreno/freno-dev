@@ -108,7 +108,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     baseRoutePrefix: "/gaze",
     displayName: "Gaze",
     titleSuffix: " | Gaze",
-    brandColor: "#f9e2af",
+    brandColor: "#002cff",
     ogDefaultImage: "/gaze/og-default.png",
     faviconPath: "/gaze/favicon/favicon.ico"
   },
@@ -119,7 +119,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     baseRoutePrefix: "/inputhalo",
     displayName: "InputHalo",
     titleSuffix: " | InputHalo",
-    brandColor: "#f38ba8",
+    brandColor: "#41a5ff",
     ogDefaultImage: "/inputhalo/og-default.png",
     faviconPath: "/inputhalo/favicon/favicon.ico"
   }
