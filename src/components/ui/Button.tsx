@@ -177,7 +177,12 @@ export default function Button(props: ButtonProps) {
     if (isDisabledOrLoading) {
       return { bg: "var(--color-base)", text: "#ffffff" };
     }
-    return adjustForContrast(local.color || "var(--color-blue)");
+    // When no explicit color is given, fall back to the theme blue
+    // (a dark color whose contrast with white is already fine).  Only
+    // pass a hex string to adjustForContrast — CSS variable values can't
+    // be parsed numerically.
+    if (!local.color) return { bg: "var(--color-blue)", text: "#ffffff" };
+    return adjustForContrast(local.color);
   };
 
   const sizeClasses = () => {

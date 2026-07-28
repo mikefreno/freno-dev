@@ -107,7 +107,7 @@ function MainDownloadsPage() {
                 </A>
               </h2>
 
-              <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
+              <div class="flex flex-col gap-8 lg:flex-row lg:flex-wrap lg:justify-around">
                 <div class="flex flex-col items-center gap-3">
                   <span class="text-subtext0 font-mono text-sm">
                     platform: macOS (14.6+)
@@ -159,7 +159,7 @@ function MainDownloadsPage() {
                 </A>
               </h2>
 
-              <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
+              <div class="flex flex-col gap-8 lg:flex-row lg:flex-wrap lg:justify-around">
                 <div class="flex flex-col items-center gap-3">
                   <span class="text-subtext0 font-mono text-sm">
                     platform: macOS (14.6+)
@@ -209,7 +209,7 @@ function MainDownloadsPage() {
                 </A>
               </h2>
 
-              <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
+              <div class="flex flex-col gap-8 lg:flex-row lg:flex-wrap lg:justify-around">
                 <div class="flex flex-col items-center gap-3">
                   <span class="text-subtext0 font-mono text-sm">
                     platform: android
@@ -270,7 +270,7 @@ function MainDownloadsPage() {
                 <span class="text-yellow">{">"}</span> {SwAText()}
               </h2>
 
-              <div class="flex flex-col gap-8 lg:flex-row lg:justify-around">
+              <div class="flex flex-col gap-8 lg:flex-row lg:flex-wrap lg:justify-around">
                 <div class="flex flex-col items-center gap-3">
                   <span class="text-subtext0 font-mono text-sm">
                     platform: android

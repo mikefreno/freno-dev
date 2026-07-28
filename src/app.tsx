@@ -200,21 +200,23 @@ function AppLayout(props: { children: any }) {
       </Show>
 
       <Show when={!isMainSite()}>
-        <div class="bg-base min-h-screen w-full overflow-x-hidden">
+        <div class="bg-base flex min-h-screen w-full flex-col overflow-x-hidden">
           <noscript>
             <div class="bg-yellow text-crust border-text fixed top-0 z-150 w-full border-b-2 p-4 text-center font-semibold">
               JavaScript is disabled. Features will be limited.
             </div>
           </noscript>
-          <ErrorBoundary
-            fallback={(error, reset) => (
-              <ErrorBoundaryFallback error={error} reset={reset} />
-            )}
-          >
-            <Suspense fallback={<TerminalSplash inverse />}>
-              {props.children}
-            </Suspense>
-          </ErrorBoundary>
+          <div class="flex-1">
+            <ErrorBoundary
+              fallback={(error, reset) => (
+                <ErrorBoundaryFallback error={error} reset={reset} />
+              )}
+            >
+              <Suspense fallback={<TerminalSplash inverse />}>
+                {props.children}
+              </Suspense>
+            </ErrorBoundary>
+          </div>
           <SubdomainFooter />
         </div>
       </Show>
