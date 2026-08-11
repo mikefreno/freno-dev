@@ -100,7 +100,7 @@ export default function PostSorting(props: PostSortingProps) {
       case "newest":
         break; // Posts already come newest first from DB (DESC order)
       case "oldest":
-        sorted.reverse(); // Reverse to get oldest first
+        sorted.reverse();
         break;
       case "most_liked":
         sorted.sort((a, b) => (b.total_likes || 0) - (a.total_likes || 0));

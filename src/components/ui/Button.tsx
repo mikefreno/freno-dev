@@ -128,7 +128,6 @@ export default function Button(props: ButtonProps) {
     height: number;
   } | null>(null);
 
-  // Measure content dimensions when not loading
   createEffect(() => {
     if (!local.loading && contentRef) {
       const rect = contentRef.getBoundingClientRect();

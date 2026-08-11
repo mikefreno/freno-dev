@@ -12,14 +12,12 @@ const VERSION_STORAGE_KEY = "app-version-hash";
  */
 function getCurrentVersionHash(): string {
   try {
-    // Use a combination of script tags to detect version
     const scripts = Array.from(document.querySelectorAll("script[src]"))
       .map((s) => (s as HTMLScriptElement).src)
       .filter((src) => src.includes("/_build/"))
       .sort()
       .join(",");
 
-    // Simple hash function
     let hash = 0;
     for (let i = 0; i < scripts.length; i++) {
       const char = scripts.charCodeAt(i);
@@ -39,7 +37,6 @@ function getCurrentVersionHash(): string {
  */
 async function checkForNewVersion(): Promise<boolean> {
   try {
-    // Fetch current page HTML
     const response = await fetch(window.location.pathname, {
       method: "HEAD",
       cache: "no-cache"
@@ -64,7 +61,6 @@ async function checkForNewVersion(): Promise<boolean> {
       return true;
     }
 
-    // Store current ETag for future checks
     if (newEtag) {
       sessionStorage.setItem("app-etag", newEtag);
     }
@@ -80,7 +76,6 @@ async function checkForNewVersion(): Promise<boolean> {
  * Show update notification to user
  */
 function showUpdateNotification(): void {
-  // Only show once per session
   if (sessionStorage.getItem("update-notification-shown")) {
     return;
   }
@@ -147,7 +142,6 @@ function showUpdateNotification(): void {
 
   document.body.appendChild(notification);
 
-  // Auto-remove after 30 seconds
   setTimeout(() => {
     if (notification.parentElement) {
       notification.style.animation = "slideIn 0.3s ease-out reverse";
@@ -162,11 +156,9 @@ function showUpdateNotification(): void {
 export function startDeploymentMonitoring(): void {
   if (typeof window === "undefined") return;
 
-  // Store initial version
   const initialVersion = getCurrentVersionHash();
   sessionStorage.setItem(VERSION_STORAGE_KEY, initialVersion);
 
-  // Periodic version check
   const intervalId = setInterval(async () => {
     const hasNewVersion = await checkForNewVersion();
     if (hasNewVersion) {
@@ -174,7 +166,6 @@ export function startDeploymentMonitoring(): void {
     }
   }, VERSION_CHECK_INTERVAL);
 
-  // Check on visibility change (user returns to tab)
   const handleVisibilityChange = async () => {
     if (document.visibilityState === "visible") {
       const hasNewVersion = await checkForNewVersion();
@@ -186,7 +177,6 @@ export function startDeploymentMonitoring(): void {
 
   document.addEventListener("visibilitychange", handleVisibilityChange);
 
-  // Cleanup function
   if (typeof window !== "undefined") {
     (window as any).__cleanupDeploymentMonitoring = () => {
       clearInterval(intervalId);

@@ -45,15 +45,12 @@ export function useCountdown(options: UseCountdownOptions = {}) {
   };
 
   const startCountdown = (expiresAt: string | Date) => {
-    // Clear any existing interval
     if (intervalId !== null) {
       clearInterval(intervalId);
     }
 
-    // Calculate immediately
     calculateRemaining(expiresAt);
 
-    // Then update every second
     intervalId = setInterval(() => calculateRemaining(expiresAt), 1000);
   };
 
@@ -64,7 +61,6 @@ export function useCountdown(options: UseCountdownOptions = {}) {
     }
   };
 
-  // Cleanup on unmount
   onCleanup(() => {
     stopCountdown();
   });

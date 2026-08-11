@@ -96,7 +96,6 @@ function compareResults(baseline: TestOutput, optimized: TestOutput) {
     "───────────────────────────────────────────────────────────────────\n"
   );
 
-  // Compare each page
   for (const baseResult of baseline.results) {
     const optResult = optimized.results.find((r) => r.page === baseResult.page);
     if (!optResult) continue;
@@ -107,7 +106,6 @@ function compareResults(baseline: TestOutput, optimized: TestOutput) {
     console.log(`\n📄 ${baseResult.page}`);
     console.log("─".repeat(70));
 
-    // Core Web Vitals
     console.log("\n  Core Web Vitals:");
 
     const fcpDiff = opt.fcp - base.fcp;
@@ -121,7 +119,6 @@ function compareResults(baseline: TestOutput, optimized: TestOutput) {
       `    CLS:  ${base.cls.toFixed(3)} → ${opt.cls.toFixed(3)} (${formatDiff(clsDiff * 1000, "ms")})`
     );
 
-    // Loading Metrics
     console.log("\n  Loading Metrics:");
 
     const ttfbDiff = opt.ttfb - base.ttfb;
@@ -148,7 +145,6 @@ function compareResults(baseline: TestOutput, optimized: TestOutput) {
       `    Load: ${formatTime(base.loadComplete)} → ${formatTime(opt.loadComplete)} (${formatDiff(loadDiff, "ms")}, ${loadPercent.toFixed(1)}%)${getImpact(loadPercent)}`
     );
 
-    // Resource Loading
     console.log("\n  Resources:");
 
     const reqDiff = opt.totalRequests - base.totalRequests;
@@ -185,7 +181,6 @@ function compareResults(baseline: TestOutput, optimized: TestOutput) {
     );
   }
 
-  // Overall Summary
   console.log(
     "\n\n═══════════════════════════════════════════════════════════════════"
   );
@@ -338,7 +333,6 @@ function compareResults(baseline: TestOutput, optimized: TestOutput) {
     );
   }
 
-  // Specific findings
   const reqPercent = calculatePercentChange(baseAvg.requests, optAvg.requests);
   if (reqPercent < -5) {
     console.log(

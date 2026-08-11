@@ -23,7 +23,6 @@ export const AUTH_CONFIG = {
   ACCESS_TOKEN_EXPIRY_DEV: "2m" as const, // 2 minutes for faster testing
   ACCESS_TOKEN_EXPIRY_LONG: "30d" as const, // rememberMe cookie lifetime
 
-  // Other Auth Settings
   CSRF_TOKEN_MAX_AGE: 60 * 60 * 24 * 14,
   EMAIL_LOGIN_LINK_EXPIRY: "15m" as const,
   EMAIL_VERIFICATION_LINK_EXPIRY: "15m" as const,
@@ -73,9 +72,6 @@ export const RATE_LIMITS = {
   REGISTRATION_IP: { maxAttempts: 3, windowMs: 60 * 60 * 1000 },
   EMAIL_VERIFICATION_IP: { maxAttempts: 5, windowMs: 15 * 60 * 1000 }
 } as const;
-
-/** Rate limit store cleanup interval (5 minutes) */
-export const RATE_LIMIT_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 
 // ============================================================
 // ACCOUNT SECURITY
@@ -137,22 +133,6 @@ export const NETWORK_CONFIG = {
 } as const;
 
 // ============================================================
-// UI/UX - TYPEWRITER COMPONENT
-// ============================================================
-
-export const TYPEWRITER_CONFIG = {
-  DEFAULT_SPEED: 30,
-  FAST_SPEED: 80,
-  SLOW_SPEED: 10,
-  VERY_SLOW_SPEED: 100,
-  EXTRA_SLOW_SPEED: 120,
-  DEFAULT_KEEP_ALIVE_MS: 2000,
-  LONG_KEEP_ALIVE_MS: 10000,
-  DEFAULT_DELAY_MS: 500,
-  CURSOR_FADE_DELAY_MS: 1000
-} as const;
-
-// ============================================================
 // UI/UX - COUNTDOWN TIMER COMPONENT
 // ============================================================
 
@@ -175,41 +155,6 @@ export const BREAKPOINTS = {
   MOBILE_MAX_WIDTH: 768,
   TABLET_MAX_WIDTH: 1024,
   DESKTOP_MIN_WIDTH: 1025
-} as const;
-
-// ============================================================
-// UI/UX - ANIMATIONS & TRANSITIONS
-// ============================================================
-
-export const ANIMATION_CONFIG = {
-  TRANSITION_DURATION_MS: 300,
-  FAST_TRANSITION_MS: 200,
-  SLOW_TRANSITION_MS: 500,
-  EXTRA_SLOW_TRANSITION_MS: 600,
-  SIDEBAR_DURATION_MS: 500,
-  MENU_TYPING_DELAY_MS: 140,
-  MENU_INITIAL_DELAY_MS: 500,
-  SUCCESS_MESSAGE_DURATION_MS: 3000,
-  ERROR_MESSAGE_DURATION_MS: 5000,
-  REDIRECT_DELAY_MS: 500
-} as const;
-
-// ============================================================
-// UI/UX - PDF VIEWER
-// ============================================================
-
-export const PDF_CONFIG = {
-  RENDER_SCALE: 1.5
-} as const;
-
-// ============================================================
-// UI/UX - 401 ERROR PAGE
-// ============================================================
-
-export const ERROR_PAGE_CONFIG = {
-  GLITCH_INTERVAL_MS: 300,
-  GLITCH_DURATION_MS: 100,
-  PARTICLE_COUNT: 45
 } as const;
 
 // ============================================================
@@ -284,22 +229,4 @@ export const LINEAGE_CONFIG = {
   JWT_AUDIENCE: "lineage-app" as const
 } as const;
 
-// ============================================================
-// AUDIT & LOGGING
-// ============================================================
 
-export const AUDIT_CONFIG = {
-  DEFAULT_QUERY_LIMIT: 100,
-  MAX_RETENTION_DAYS: 90
-} as const;
-
-// ============================================================
-// SESSION CLEANUP
-// ============================================================
-
-export const SESSION_CLEANUP_CONFIG = {
-  ENABLED: true,
-  INTERVAL_HOURS: 24,
-  RETENTION_DAYS: 90,
-  RUN_ON_STARTUP: true
-} as const;

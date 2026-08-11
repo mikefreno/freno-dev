@@ -31,3 +31,5 @@ perf-results-*.json
 # System Files
 .DS_Store
 Thumbs.db
+# pygienium run-state and check artifacts
+.pygienium/

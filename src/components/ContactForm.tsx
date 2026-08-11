@@ -144,7 +144,6 @@ const sendContactEmail = action(async (formData: FormData) => {
 
   const { env } = await import("~/env/server");
 
-  // Verify Cloudflare Turnstile token
   const turnstileValid = await verifyTurnstileToken(
     turnstileToken,
     env.TURNSTILE_SECRET_KEY,
@@ -252,7 +251,6 @@ export function ContactForm(props: ContactFormProps) {
 
   const [searchParams] = useSearchParams();
 
-  // Load server data using createAsync
   const contactData = createAsync(() => getContactData(), {
     deferStream: true
   });
@@ -350,7 +348,6 @@ export function ContactForm(props: ContactFormProps) {
     const message = formData.get("message") as string;
 
     if (name && email && message) {
-      // Get fresh Turnstile token
       let currentToken = turnstileToken();
       if (
         !currentToken &&
@@ -388,7 +385,6 @@ export function ContactForm(props: ContactFormProps) {
           setError("");
           form.reset();
 
-          // Reset Turnstile widget
           if (typeof window !== "undefined" && (window as any).turnstile) {
             const widgetEl = document.getElementById("turnstile-widget-1");
             if (widgetEl) {

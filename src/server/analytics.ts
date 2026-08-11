@@ -117,14 +117,11 @@ function scheduleAnalyticsFlush(): void {
  */
 export async function logVisit(entry: AnalyticsEntry): Promise<void> {
   try {
-    // Add to buffer
     analyticsBuffer.entries.push(entry);
 
-    // Flush if batch size reached
     if (analyticsBuffer.entries.length >= CACHE_CONFIG.ANALYTICS_BATCH_SIZE) {
       await flushAnalyticsBuffer();
     } else {
-      // Schedule periodic flush
       scheduleAnalyticsFlush();
     }
   } catch (error) {
@@ -422,7 +419,6 @@ export async function getPerformanceStats(days: number = 30): Promise<{
 }> {
   const conn = ConnectionFactory();
 
-  // Get average metrics
   const avgResult = await conn.execute({
     sql: `SELECT 
       AVG(lcp) as avgLcp,
@@ -472,7 +468,6 @@ export async function getPerformanceStats(days: number = 30): Promise<{
     args: []
   });
 
-  // Get performance by path (only for non-API paths)
   const byPathResult = await conn.execute({
     sql: `SELECT 
       path,

@@ -460,7 +460,7 @@ function MainRightBarContent() {
   );
 }
 
-export function RightBarContent() {
+function RightBarContent() {
   const site = useSite();
   return (
     <Show when={site().id === "main"} fallback={<SubdomainRightBarContent />}>

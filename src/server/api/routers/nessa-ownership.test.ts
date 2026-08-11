@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect, mock, beforeEach } from "bun:test";
+import { TRPCError } from "@trpc/server";
 import type { Client } from "@libsql/client/web";
 
 // Prevent the env/server.ts client-side guard from throwing during tests
@@ -288,7 +289,6 @@ describe("static audit: every targeted mutation handler uses ctx", () => {
     const source = await Bun.file(import.meta.dir + "/nessa.ts").text();
 
     for (const name of MUTATIONS) {
-      // Match: name: nessaProcedure ... .mutation(async ({ input }) — but NOT ({ input, ctx
       const re = new RegExp(
         `${name}:\\s*nessaProcedure[^}]*\\.mutation\\(async \\({\\s*input\\s*}\\)`,
         "s"
@@ -305,7 +305,6 @@ describe("static audit: every targeted mutation handler uses ctx", () => {
     const source = await Bun.file(import.meta.dir + "/nessa.ts").text();
 
     for (const name of MUTATIONS) {
-      // Find the block for this mutation and check it references ctx
       const re = new RegExp(
         `${name}:\\s*nessaProcedure[\\s\\S]*?\\.mutation\\([\\s\\S]*?\\n    \\}\\),`,
         "s"
@@ -318,12 +317,55 @@ describe("static audit: every targeted mutation handler uses ctx", () => {
     }
   });
 
-  it("bulkUpsert filters exerciseLibrary by userId", async () => {
-    const source = await Bun.file(import.meta.dir + "/nessa.ts").text();
-    const bulkSection = source.match(
-      /if \(input\.exerciseLibrary\?\.length\) \{[\s\S]*?\n {8}\}/
-    );
-    expect(bulkSection).toBeTruthy();
-    expect(bulkSection![0]).toContain("userId !== ctx.nessaUserId");
+  it("upsertExerciseLibrary rejects an exercise owned by another user", async () => {
+    const mod = await import("./nessa");
+    const conn = makeMockConn([]);
+    const exercise = {
+      id: EXERCISE_ID,
+      userId: USER_B,
+      name: "Squat",
+      category: "Strength"
+    };
+    let caught: unknown;
+    try {
+      await mod.upsertExerciseLibrary(conn, USER_A, [exercise]);
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(TRPCError);
+    expect((caught as TRPCError).code).toBe("FORBIDDEN");
+    expect((caught as TRPCError).message).toBe("User mismatch");
+  });
+
+  it("upsertExerciseLibrary upserts an exercise owned by the caller", async () => {
+    const mod = await import("./nessa");
+    const conn = makeMockConn([{ userId: USER_A }]);
+    const exercise = {
+      id: EXERCISE_ID,
+      userId: USER_A,
+      name: "Squat",
+      category: "Strength"
+    };
+    await expect(
+      mod.upsertExerciseLibrary(conn, USER_A, [exercise])
+    ).resolves.toBeUndefined();
+    expect(conn.execute).toHaveBeenCalledWith({
+      sql: expect.stringContaining(
+        "INSERT INTO exerciseLibrary (id, userId, name, category"
+      ),
+      args: [
+        EXERCISE_ID,
+        USER_A,
+        "Squat",
+        "Strength",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    });
   });
 });

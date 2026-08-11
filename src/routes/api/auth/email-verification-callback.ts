@@ -62,17 +62,14 @@ export async function GET(event: APIEvent) {
   }
 
   try {
-    // Create tRPC caller to invoke the emailVerification procedure
     const caller = await createServerCaller(event);
 
-    // Call the email verification handler
     const result = await caller.auth.emailVerification({
       email,
       token
     });
 
     if (result.success) {
-      // Show success page
       return new Response(
         `
         <!DOCTYPE html>
@@ -136,7 +133,6 @@ export async function GET(event: APIEvent) {
   } catch (error) {
     console.error("Email verification callback error:", error);
 
-    // Check if it's a token expiration error
     const errorMessage =
       error instanceof Error ? error.message : "server_error";
     const isTokenError =

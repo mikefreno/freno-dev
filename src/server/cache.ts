@@ -100,7 +100,6 @@ export async function withCacheAndStale<T>(
   const now = Date.now();
   const entry = store.get(key) as CacheEntry<T> | undefined;
 
-  // Fresh hit
   if (entry && entry.expiresAt > now) return entry.data;
 
   try {
@@ -116,7 +115,6 @@ export async function withCacheAndStale<T>(
       console.error(`Error fetching data for cache key "${key}":`, error);
     }
 
-    // Stale fallback
     if (entry && entry.staleExpiresAt > now) {
       if (logErrors) console.log(`Serving stale data for cache key "${key}"`);
       return entry.data;

@@ -24,7 +24,6 @@ export async function GET(event: APIEvent) {
     });
   }
 
-  // Validate filename format (only allow Gaze or InputHalo files)
   const validPrefixes = ["Gaze", "InputHalo"];
   const isValidPrefix = validPrefixes.some((prefix) => filename.startsWith(prefix));
   if (
@@ -70,12 +69,10 @@ export async function GET(event: APIEvent) {
       });
     }
 
-    // Get content type based on file extension
     const contentType = filename.endsWith(".dmg")
       ? "application/x-apple-diskimage"
       : "application/octet-stream";
 
-    // Stream the file content from S3
     const body = await response.Body.transformToByteArray();
 
     console.log(`✓ Serving ${filename} (${body.length} bytes)`);
@@ -93,7 +90,6 @@ export async function GET(event: APIEvent) {
   } catch (error) {
     console.error(`Failed to fetch ${filename} from S3:`, error);
 
-    // Check if it's a not found error
     if (error instanceof Error && error.name === "NoSuchKey") {
       return new Response("File not found in storage", {
         status: 404,

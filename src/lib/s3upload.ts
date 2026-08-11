@@ -61,7 +61,6 @@ export default async function AddImageToS3(
       throw new Error("Failed to upload file to S3");
     }
 
-    // Create thumbnails for images (blog posts only)
     if (type === "blog" && isImage) {
       try {
         const thumbnail = await resizeImage(file, 200, 200, 0.8);

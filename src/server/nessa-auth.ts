@@ -33,8 +33,6 @@ export async function verifyNessaToken(
 ): Promise<NessaAuthPayload> {
   const payload = await verifyToken(token, {
     secretKey: env.NESSA_CLERK_SECRET,
-    // Optional: restrict to specific issuers / apps
-    // audience: env.NESSA_CLERK_JWT_ISSUER,
   });
 
   if (!payload.sub) {

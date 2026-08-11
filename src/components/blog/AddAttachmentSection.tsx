@@ -63,7 +63,6 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
             };
             reader.readAsDataURL(file);
 
-            // Refresh the S3 file list
             await loadAttachments();
           }
         } catch (err) {
@@ -81,7 +80,6 @@ export default function AddAttachmentSection(props: AddAttachmentSectionProps) {
         body: JSON.stringify({ key })
       });
 
-      // Refresh the S3 file list
       await loadAttachments();
     } catch (err) {
       console.error("Failed to delete file:", err);

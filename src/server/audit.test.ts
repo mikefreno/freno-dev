@@ -89,7 +89,6 @@ describe("Audit Logging System", () => {
     });
 
     it("should not throw errors on logging failures", async () => {
-      // This should not throw even if there's an invalid event type
       await expect(
         logAuditEvent({
           eventType: "invalid.test.event",
@@ -101,7 +100,6 @@ describe("Audit Logging System", () => {
 
   describe("queryAuditLogs", () => {
     beforeEach(async () => {
-      // Create test logs
       await logAuditEvent({
         eventType: "auth.login.success",
         eventData: { test: "test-query-1", testUser: "user-1" },
@@ -199,7 +197,6 @@ describe("Audit Logging System", () => {
 
   describe("getFailedLoginAttempts", () => {
     beforeEach(async () => {
-      // Create failed login attempts
       for (let i = 0; i < 5; i++) {
         await logAuditEvent({
           eventType: "auth.login.failed",
@@ -212,7 +209,6 @@ describe("Audit Logging System", () => {
         });
       }
 
-      // Create successful logins (should be excluded)
       await logAuditEvent({
         eventType: "auth.login.success",
         eventData: { test: "test-success-1" },
@@ -241,7 +237,6 @@ describe("Audit Logging System", () => {
       const attemptsIn1h = await getFailedLoginAttempts(1, 100);
 
       expect(attemptsIn24h.length).toBeGreaterThanOrEqual(5);
-      // Recent attempts should be within 1 hour
       expect(attemptsIn1h.length).toBeGreaterThanOrEqual(5);
     });
   });
@@ -302,7 +297,6 @@ describe("Audit Logging System", () => {
 
   describe("detectSuspiciousActivity", () => {
     beforeEach(async () => {
-      // Create suspicious pattern: many failed logins from same IP
       for (let i = 0; i < 10; i++) {
         await logAuditEvent({
           eventType: "auth.login.failed",
@@ -315,7 +309,6 @@ describe("Audit Logging System", () => {
         });
       }
 
-      // Create normal activity
       await logAuditEvent({
         eventType: "auth.login.success",
         eventData: { test: "test-normal-1" },
@@ -344,7 +337,6 @@ describe("Audit Logging System", () => {
     it("should return empty array when no suspicious activity", async () => {
       await cleanupTestLogs();
 
-      // Create only successful logins
       await logAuditEvent({
         eventType: "auth.login.success",
         eventData: { test: "test-clean-1" },
@@ -378,7 +370,6 @@ describe("Audit Logging System", () => {
         ]
       });
 
-      // Clean up logs older than 90 days
       const deleted = await cleanupOldLogs(90);
 
       expect(deleted).toBeGreaterThanOrEqual(1);
@@ -399,7 +390,6 @@ describe("Audit Logging System", () => {
 
       const logsAfter = await queryAuditLogs({ limit: 100 });
 
-      // Should still have recent logs
       expect(logsAfter.length).toBeGreaterThan(0);
     });
   });

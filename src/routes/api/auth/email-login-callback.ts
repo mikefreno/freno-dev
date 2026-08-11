@@ -20,7 +20,6 @@ export async function GET(event: APIEvent) {
     "emailLogin",
     (caller, params) => caller.auth.emailLogin(params),
     (error) => {
-      // Check for token expiration
       const message = error instanceof Error ? error.message : "";
       const isTokenError =
         message.includes("expired") || message.includes("invalid");

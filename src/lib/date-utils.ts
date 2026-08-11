@@ -81,7 +81,6 @@ export function formatRelativeTime(
       return `${diffDay}d ago`;
     }
   } else {
-    // style === "long"
     if (includeSeconds && diffSec < 60) {
       return `${diffSec} second${diffSec === 1 ? "" : "s"} ago`;
     }

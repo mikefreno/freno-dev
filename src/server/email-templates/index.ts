@@ -5,7 +5,6 @@ import loginLinkTemplate from "./login-link.html?raw";
 import passwordResetTemplate from "./password-reset.html?raw";
 import emailVerificationTemplate from "./email-verification.html?raw";
 import providerLinkedTemplate from "./provider-linked.html?raw";
-import newDeviceLoginTemplate from "./new-device-login.html?raw";
 import passwordSetTemplate from "./password-set.html?raw";
 
 /**
@@ -116,29 +115,6 @@ export function generateProviderLinkedEmail(
     PROVIDER_EMAIL: params.providerEmail || "N/A",
     LINK_TIME: params.linkTime,
     DEVICE_INFO: params.deviceInfo
-  });
-}
-
-export interface NewDeviceLoginEmailParams {
-  deviceInfo: string;
-  loginTime: string;
-  ipAddress: string;
-  loginMethod: string;
-  accountUrl: string;
-}
-
-/**
- * Generate new device login notification email HTML
- */
-export function generateNewDeviceLoginEmail(
-  params: NewDeviceLoginEmailParams
-): string {
-  return processTemplate(newDeviceLoginTemplate, {
-    DEVICE_INFO: params.deviceInfo,
-    LOGIN_TIME: params.loginTime,
-    IP_ADDRESS: params.ipAddress,
-    LOGIN_METHOD: params.loginMethod,
-    ACCOUNT_URL: params.accountUrl
   });
 }
 

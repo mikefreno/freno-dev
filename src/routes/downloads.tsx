@@ -17,7 +17,6 @@ function MainDownloadsPage() {
   const [gazeText, setGazeText] = createSignal("Gaze");
   const [inputHaloText, setInputHaloText] = createSignal("InputHalo");
 
-  // Track loading states for each download button
   const [loadingState, setLoadingState] = createSignal<Record<string, boolean>>(
     {
       lineage: false,
@@ -32,10 +31,8 @@ function MainDownloadsPage() {
     // Prevent multiple rapid clicks
     if (loadingState()[assetName]) return;
 
-    // Set loading state
     setLoadingState((prev) => ({ ...prev, [assetName]: true }));
 
-    // Call the tRPC endpoint directly
     import("~/lib/api").then(({ api }) => {
       api.downloads.getDownloadUrl
         .query({ asset_name: assetName })
@@ -45,11 +42,9 @@ function MainDownloadsPage() {
         })
         .catch((error) => {
           console.error("Download error:", error);
-          // Optionally show user a message
           alert("Failed to initiate download. Please try again.");
         })
         .finally(() => {
-          // Reset loading state regardless of success/failure
           setLoadingState((prev) => ({ ...prev, [assetName]: false }));
         });
     });

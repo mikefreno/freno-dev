@@ -4,7 +4,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import diff from "fast-diff";
 
-export function createDiffPatch(
+function createDiffPatch(
   oldContent: string,
   newContent: string
 ): string {
@@ -12,7 +12,7 @@ export function createDiffPatch(
   return JSON.stringify(changes);
 }
 
-export function applyDiffPatch(baseContent: string, patchJson: string): string {
+function applyDiffPatch(baseContent: string, patchJson: string): string {
   const changes = JSON.parse(patchJson);
   let result = "";
   let position = 0;
@@ -96,7 +96,6 @@ export const postHistoryRouter = createTRPCRouter({
 
       const conn = ConnectionFactory();
 
-      // Verify post exists and user is author
       const postCheck = await conn.execute({
         sql: "SELECT author_id FROM Post WHERE id = ?",
         args: [input.postId]

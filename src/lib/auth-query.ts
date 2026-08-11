@@ -80,7 +80,6 @@ export const getUserState = query(async (): Promise<UserState> => {
  * Call this after login, logout, token refresh, email verification
  */
 export function revalidateAuth() {
-  // Revalidate the cache
   revalidateKey("user-auth-state");
 
   // Dispatch event to trigger UI updates (client-side only)

@@ -34,7 +34,6 @@ export async function linkProvider(
 ): Promise<UserProvider> {
   const conn = ConnectionFactory();
 
-  // Check if provider already linked to this user
   const existing = await conn.execute({
     sql: "SELECT * FROM UserProvider WHERE user_id = ? AND provider = ?",
     args: [userId, provider]
@@ -44,7 +43,6 @@ export async function linkProvider(
     throw new Error(`Provider ${provider} already linked to this account`);
   }
 
-  // Check if provider identity is already used by another user
   if (providerData.providerUserId) {
     const conflictCheck = await conn.execute({
       sql: "SELECT user_id FROM UserProvider WHERE provider = ? AND provider_user_id = ?",
@@ -61,7 +59,6 @@ export async function linkProvider(
     }
   }
 
-  // Create new provider link
   const id = uuidV4();
   await conn.execute({
     sql: `INSERT INTO UserProvider (id, user_id, provider, provider_user_id, email, display_name, image)
@@ -77,7 +74,6 @@ export async function linkProvider(
     ]
   });
 
-  // Fetch created record
   const result = await conn.execute({
     sql: "SELECT * FROM UserProvider WHERE id = ?",
     args: [id]
@@ -85,7 +81,6 @@ export async function linkProvider(
 
   const userProvider = result.rows[0] as unknown as UserProvider;
 
-  // Log audit event
   await logAuditEvent({
     userId,
     eventType: "auth.provider.linked",
@@ -99,7 +94,6 @@ export async function linkProvider(
   // Send notification email if requested and user has email
   if (options?.sendEmail !== false) {
     try {
-      // Get user email
       const userResult = await conn.execute({
         sql: "SELECT email FROM User WHERE id = ?",
         args: [userId]
@@ -150,7 +144,6 @@ export async function unlinkProvider(
 ): Promise<void> {
   const conn = ConnectionFactory();
 
-  // Check how many providers this user has
   const providersResult = await conn.execute({
     sql: "SELECT COUNT(*) as count FROM UserProvider WHERE user_id = ?",
     args: [userId]
@@ -164,7 +157,6 @@ export async function unlinkProvider(
     );
   }
 
-  // Delete provider
   const result = await conn.execute({
     sql: "DELETE FROM UserProvider WHERE user_id = ? AND provider = ?",
     args: [userId, provider]
@@ -174,7 +166,6 @@ export async function unlinkProvider(
     throw new Error(`Provider ${provider} not found for this user`);
   }
 
-  // Log audit event
   await logAuditEvent({
     userId,
     eventType: "auth.provider.unlinked",
@@ -261,7 +252,6 @@ export async function findUserByProviderEmail(
 export async function findUserByEmail(email: string): Promise<string | null> {
   const conn = ConnectionFactory();
 
-  // First check User table
   const userResult = await conn.execute({
     sql: "SELECT id FROM User WHERE email = ?",
     args: [email]
@@ -271,7 +261,6 @@ export async function findUserByEmail(email: string): Promise<string | null> {
     return (userResult.rows[0] as any).id;
   }
 
-  // Then check UserProvider table
   const providerResult = await conn.execute({
     sql: "SELECT user_id FROM UserProvider WHERE email = ? LIMIT 1",
     args: [email]

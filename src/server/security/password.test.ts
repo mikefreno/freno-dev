@@ -20,7 +20,6 @@ describe("Password Security", () => {
 
       expect(hash).toBeDefined();
       expect(typeof hash).toBe("string");
-      // Bcrypt hashes start with $2b$ or $2a$
       expect(hash).toMatch(/^\$2[ab]\$/);
     });
 
@@ -36,7 +35,6 @@ describe("Password Security", () => {
       const password = "TestPassword123!";
       const hash = await hashPassword(password);
 
-      // Bcrypt hashes are 60 characters long
       expect(hash.length).toBe(60);
     });
 
@@ -132,32 +130,26 @@ describe("Password Security", () => {
       const password = "TestPassword123!";
       const hash = await hashPassword(password);
 
-      // Measure time for correct password
       const { duration: correctDuration } = await measureTime(() =>
         checkPasswordSafe(password, hash)
       );
 
-      // Measure time for incorrect password
       const { duration: incorrectDuration } = await measureTime(() =>
         checkPasswordSafe("WrongPassword123!", hash)
       );
 
-      // Bcrypt comparison should take similar time regardless
       const timingDifference = Math.abs(correctDuration - incorrectDuration);
 
-      // Allow reasonable variance (bcrypt is inherently slow)
       expect(timingDifference).toBeLessThan(50);
     });
 
     it("should handle null hash without timing leak", async () => {
       const password = "TestPassword123!";
 
-      // Measure time for null hash
       const { result: result1, duration: duration1 } = await measureTime(() =>
         checkPasswordSafe(password, null)
       );
 
-      // Measure time for undefined hash
       const { result: result2, duration: duration2 } = await measureTime(() =>
         checkPasswordSafe(password, undefined)
       );
@@ -165,7 +157,6 @@ describe("Password Security", () => {
       expect(result1).toBe(false);
       expect(result2).toBe(false);
 
-      // Should take similar time
       const timingDifference = Math.abs(duration1 - duration2);
       expect(timingDifference).toBeLessThan(50);
     });
@@ -178,7 +169,6 @@ describe("Password Security", () => {
         checkPasswordSafe(password, null)
       );
 
-      // Should take at least a few milliseconds (bcrypt is slow)
       expect(duration).toBeGreaterThan(1);
     });
 
@@ -186,12 +176,10 @@ describe("Password Security", () => {
       const password = "TestPassword123!";
       const hash = await hashPassword(password);
 
-      // User exists
       const { duration: existsDuration } = await measureTime(() =>
         checkPasswordSafe("WrongPassword", hash)
       );
 
-      // User doesn't exist (null hash)
       const { duration: notExistsDuration } = await measureTime(() =>
         checkPasswordSafe("WrongPassword", null)
       );
@@ -280,9 +268,9 @@ describe("Password Security", () => {
     });
 
     it("should calculate password strength correctly", () => {
-      const fairPassword = "MyP@ssw0rd12"; // 12 chars
-      const goodPassword = "MyStr0ng!P@ssw0rd"; // 17 chars
-      const strongPassword = "MyV3ry!Str0ng@P@ssw0rd123"; // 25 chars
+      const fairPassword = "MyP@ssw0rd12";
+      const goodPassword = "MyStr0ng!P@ssw0rd";
+      const strongPassword = "MyV3ry!Str0ng@P@ssw0rd123";
 
       expect(validatePassword(fairPassword).strength).toBe("fair");
       expect(validatePassword(goodPassword).strength).toBe("good");
@@ -337,7 +325,6 @@ describe("Password Security", () => {
       const password = "TestPassword123!";
       const hash = await hashPassword(password);
 
-      // Measure time for multiple checks (simulating brute force)
       const start = performance.now();
       const attempts = 10;
 
@@ -348,7 +335,6 @@ describe("Password Security", () => {
       const duration = performance.now() - start;
       const avgPerAttempt = duration / attempts;
 
-      // Each attempt should take significant time (bcrypt is slow)
       // This makes brute force impractical
       expect(avgPerAttempt).toBeGreaterThan(5); // At least 5ms per attempt
     });
@@ -356,18 +342,15 @@ describe("Password Security", () => {
     it("should prevent rainbow table attacks with unique salts", async () => {
       const password = "CommonPassword123!";
 
-      // Generate multiple hashes for same password
       const hashes = await Promise.all(
         Array.from({ length: 10 }, () => hashPassword(password))
       );
 
-      // All hashes should be unique (different salts)
       const uniqueHashes = new Set(hashes);
       expect(uniqueHashes.size).toBe(10);
     });
 
     it("should prevent password spraying with validation", () => {
-      // Common passwords that should be rejected
       const commonPasswords = [
         "Password123!",
         "Welcome123!",
@@ -382,7 +365,6 @@ describe("Password Security", () => {
     });
 
     it("should resist dictionary attacks", () => {
-      // Dictionary words that should be caught
       const dictionaryBased = ["Sunshine123!", "Princess456!", "Dragon789!@"];
 
       for (const password of dictionaryBased) {
@@ -394,7 +376,7 @@ describe("Password Security", () => {
 
   describe("Edge Cases", () => {
     it("should handle very long passwords", async () => {
-      const longPassword = "A1!a" + "x".repeat(1000); // Very long but valid
+      const longPassword = "A1!a" + "x".repeat(1000);
       const hash = await hashPassword(longPassword);
       const match = await checkPassword(longPassword, hash);
 
@@ -413,7 +395,6 @@ describe("Password Security", () => {
       const hash = await hashPassword(nullBytePassword);
       const match = await checkPassword(nullBytePassword, hash);
 
-      // Behavior may vary - just ensure no crash
       expect(typeof match).toBe("boolean");
     });
 
@@ -450,7 +431,6 @@ describe("Password Security", () => {
       const duration = performance.now() - start;
 
       // Bcrypt should be slow enough to deter brute force
-      // With 10 rounds, should take at least a few milliseconds
       expect(duration).toBeGreaterThan(5);
       // But not too slow for normal operation
       expect(duration).toBeLessThan(500);
@@ -467,11 +447,9 @@ describe("Password Security", () => {
         durations.push(performance.now() - start);
       }
 
-      // Timing should be relatively consistent
       const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
       const maxDeviation = Math.max(...durations.map((d) => Math.abs(d - avg)));
 
-      // Allow reasonable variance
       expect(maxDeviation).toBeLessThan(avg * 0.5);
     });
 
@@ -484,7 +462,6 @@ describe("Password Security", () => {
       }
       const duration = performance.now() - start;
 
-      // Validation is CPU-bound but should be fast
       expect(duration).toBeLessThan(100);
     });
   });
@@ -494,12 +471,9 @@ describe("Password Security", () => {
       const password = "TestPassword123!";
       const hash = await hashPassword(password);
 
-      // Check that hash uses correct salt rounds
-      // Bcrypt format: $2b$rounds$salthash
       const parts = hash.split("$");
       const rounds = parseInt(parts[2]);
 
-      // Should use 10 rounds (from password.ts)
       expect(rounds).toBe(10);
     });
 
@@ -509,17 +483,14 @@ describe("Password Security", () => {
         Array.from({ length: 100 }, () => hashPassword(password))
       );
 
-      // Extract salts from hashes
       const salts = hashes.map((hash) => {
         const parts = hash.split("$");
         return parts[3].substring(0, 22); // Salt is 22 characters
       });
 
-      // All salts should be unique
       const uniqueSalts = new Set(salts);
       expect(uniqueSalts.size).toBe(100);
 
-      // Check for patterns in salts (should be random)
       for (let i = 1; i < salts.length; i++) {
         // Salts should not be sequential or predictable
         expect(salts[i]).not.toBe(salts[i - 1]);

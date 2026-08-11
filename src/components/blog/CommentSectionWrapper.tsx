@@ -259,7 +259,6 @@ export default function CommentSectionWrapper(
   const newComment = async (commentBody: string, parentCommentID?: number) => {
     setCommentSubmitLoading(true);
 
-    // Clear any existing timeout
     if (commentSubmitTimeoutId) {
       clearTimeout(commentSubmitTimeoutId);
     }
@@ -428,7 +427,6 @@ export default function CommentSectionWrapper(
   const editComment = async (body: string, comment_id: number) => {
     setCommentEditLoading(true);
 
-    // Clear any existing timeout
     if (editCommentTimeoutId) {
       clearTimeout(editCommentTimeoutId);
     }
@@ -527,7 +525,6 @@ export default function CommentSectionWrapper(
 
     setCommentDeletionLoading(true);
 
-    // Clear any existing timeout
     if (deleteCommentTimeoutId) {
       clearTimeout(deleteCommentTimeoutId);
     }
@@ -623,7 +620,6 @@ export default function CommentSectionWrapper(
     setOperationError("");
 
     if (data.commentBody) {
-      // Soft delete (replace body with deletion message)
       setAllComments((prev) =>
         prev.map((comment) => {
           if (comment.id === data.commentID) {
@@ -652,7 +648,6 @@ export default function CommentSectionWrapper(
         })
       );
     } else {
-      // Hard delete (remove from list)
       setAllComments((prev) =>
         prev.filter((comment) => comment.id !== data.commentID)
       );
@@ -667,7 +662,6 @@ export default function CommentSectionWrapper(
     }, 300);
   };
 
-  // Deletion/edit prompt toggle
   const toggleModification = (
     commentID: number,
     commenterID: string,
@@ -708,7 +702,6 @@ export default function CommentSectionWrapper(
     setCommentBodyForModification("");
   };
 
-  // Reaction handling
   const commentReaction = (reactionType: ReactionType, commentID: number) => {
     if (!props.currentUserID) {
       console.warn("Cannot react to comment: user not authenticated");
@@ -800,7 +793,6 @@ export default function CommentSectionWrapper(
     }
   };
 
-  // Click outside handlers (SolidJS version)
   createEffect(() => {
     const handleClickOutsideDelete = (e: MouseEvent) => {
       if (

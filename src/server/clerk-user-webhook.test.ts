@@ -254,7 +254,6 @@ describe("Clerk user.created webhook", () => {
 
 describe("Clerk user.updated webhook", () => {
   it("updates mutable fields and leaves clerkUserId unchanged", async () => {
-    // seed via created
     await call(sign(userCreatedPayload()));
 
     const before = getUserByClerkId("user_abc123");

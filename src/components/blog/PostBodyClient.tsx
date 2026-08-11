@@ -11,7 +11,6 @@ function sanitizeHtml(html: string): string {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
 
-  // Remove dangerous elements
   doc
     .querySelectorAll(
       "script, iframe, object, embed, form, link, meta, base, svg script"
@@ -131,7 +130,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
   const processVideos = () => {
     if (!contentRef) return;
 
-    // Handle direct video elements
     const videoElements = contentRef.querySelectorAll("video");
 
     videoElements.forEach((video) => {
@@ -139,18 +137,14 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       video.setAttribute("playsinline", "");
       video.setAttribute("controls", "");
 
-      // Remove download attribute if present
       video.removeAttribute("download");
 
-      // Ensure proper MIME types on source elements
       const sources = video.querySelectorAll("source");
       sources.forEach((source) => {
         const src = source.getAttribute("src");
         if (src) {
-          // Remove download attribute from sources
           source.removeAttribute("download");
 
-          // Set correct type attribute if missing
           if (!source.hasAttribute("type")) {
             if (src.endsWith(".mp4")) {
               source.setAttribute("type", "video/mp4");
@@ -163,7 +157,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         }
       });
 
-      // If video has direct src attribute, ensure type is set
       const videoSrc = video.getAttribute("src");
       if (videoSrc && !video.hasAttribute("type")) {
         if (videoSrc.endsWith(".mp4")) {
@@ -176,7 +169,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       }
     });
 
-    // Handle iframes with video sources - replace with proper video tags
     const iframes = contentRef.querySelectorAll("iframe");
     iframes.forEach((iframe) => {
       const src = iframe.getAttribute("src");
@@ -187,7 +179,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
           src.endsWith(".webm") ||
           src.endsWith(".ogg"))
       ) {
-        // Create a proper video element
         const video = document.createElement("video");
         video.setAttribute("controls", "");
         video.setAttribute("playsinline", "");
@@ -195,7 +186,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         video.style.maxWidth = "100%";
         video.style.height = "auto";
 
-        // Set appropriate type based on file extension
         let videoType = "video/mp4";
         if (src.endsWith(".mov")) {
           videoType = "video/mp4"; // MOV files are typically H.264 which plays as mp4
@@ -208,7 +198,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
         video.setAttribute("type", videoType);
         video.src = src;
 
-        // Replace the iframe with the video element
         const parent = iframe.parentElement;
         if (parent) {
           parent.replaceChild(video, iframe);
@@ -216,7 +205,6 @@ export default function PostBodyClient(props: PostBodyClientProps) {
       }
     });
 
-    // Also check for any anchor tags wrapping videos that might have download attribute
     const videoLinks = contentRef.querySelectorAll("a");
     videoLinks.forEach((link) => {
       const hasVideo = link.querySelector("video");

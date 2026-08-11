@@ -58,7 +58,6 @@ export default function PostForm(props: PostFormProps) {
     props.postId
   );
 
-  // Mark initial load as complete after data is loaded (for edit mode)
   // Use setTimeout to ensure this runs after all signals are initialized
   createEffect(() => {
     if (props.mode === "edit" && props.initialData) {
@@ -73,12 +72,10 @@ export default function PostForm(props: PostFormProps) {
     }, 5000);
   };
 
-  // Helper to ensure post exists (create if needed)
   const ensurePostExists = async (): Promise<number> => {
     const existingId = createdPostId() || props.postId;
     if (existingId) return existingId;
 
-    // Create minimal post if it doesn't exist yet
     const result = await api.database.createPost.mutate({
       category: "blog",
       title: title().replaceAll(" ", "_") || "Untitled",
@@ -95,7 +92,6 @@ export default function PostForm(props: PostFormProps) {
     return newId;
   };
 
-  // Individual autosave functions for each field
   const autoSaveTitle = async () => {
     const currentTitle = title();
     if (!currentTitle || currentTitle === props.initialData?.title) return;
@@ -248,7 +244,6 @@ export default function PostForm(props: PostFormProps) {
     }
   };
 
-  // Debounced versions
   const debouncedAutoSaveTitle = debounce(autoSaveTitle, 2500);
   const debouncedAutoSaveSubtitle = debounce(autoSaveSubtitle, 2500);
   const debouncedAutoSaveBody = debounce(autoSaveBody, 2500);
@@ -256,7 +251,6 @@ export default function PostForm(props: PostFormProps) {
   const debouncedAutoSavePublished = debounce(autoSavePublished, 1000);
   const debouncedAutoSaveBanner = debounce(autoSaveBanner, 2500);
 
-  // Individual effects for each field
   createEffect(() => {
     const titleVal = title();
     if (isInitialLoad()) return;
@@ -405,7 +399,6 @@ export default function PostForm(props: PostFormProps) {
           author_id: props.userID
         });
       } else {
-        // Create new post
         const result = await api.database.createPost.mutate({
           category: "blog",
           title: title().replaceAll(" ", "_"),

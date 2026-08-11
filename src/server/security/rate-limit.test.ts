@@ -60,12 +60,10 @@ describe("Rate Limiting", () => {
       const maxAttempts = 3;
       const windowMs = 60000;
 
-      // Use up all attempts
       for (let i = 0; i < maxAttempts; i++) {
         await checkRateLimit(identifier, maxAttempts, windowMs);
       }
 
-      // Next attempt should throw
       try {
         await checkRateLimit(identifier, maxAttempts, windowMs);
         expect.unreachable("Should have thrown");
@@ -79,7 +77,6 @@ describe("Rate Limiting", () => {
       const maxAttempts = 2;
       const windowMs = 60000;
 
-      // Use up all attempts
       await checkRateLimit(identifier, maxAttempts, windowMs);
       await checkRateLimit(identifier, maxAttempts, windowMs);
 
@@ -99,12 +96,10 @@ describe("Rate Limiting", () => {
       const maxAttempts = 3;
       const windowMs = 500; // 500ms window for testing
 
-      // Use up all attempts
       for (let i = 0; i < maxAttempts; i++) {
         await checkRateLimit(identifier, maxAttempts, windowMs);
       }
 
-      // Should be blocked immediately after
       try {
         await checkRateLimit(identifier, maxAttempts, windowMs);
         expect.unreachable("Should have thrown");
@@ -112,10 +107,8 @@ describe("Rate Limiting", () => {
         expect(error).toBeInstanceOf(TRPCError);
       }
 
-      // Wait for window to expire
       await new Promise((resolve) => setTimeout(resolve, 600));
 
-      // Should be allowed again
       const remaining = await checkRateLimit(identifier, maxAttempts, windowMs);
       expect(remaining).toBe(maxAttempts - 1);
     });
@@ -125,13 +118,11 @@ describe("Rate Limiting", () => {
       const maxAttempts = 10;
       const windowMs = 60000;
 
-      // Simulate concurrent requests
       const results: number[] = [];
       for (let i = 0; i < maxAttempts; i++) {
         results.push(await checkRateLimit(identifier, maxAttempts, windowMs));
       }
 
-      // All should succeed with decreasing remaining counts
       expect(results).toEqual([9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
     });
 
@@ -142,12 +133,10 @@ describe("Rate Limiting", () => {
       const id1 = uniqueId("test1");
       const id2 = uniqueId("test2");
 
-      // Use up attempts for id1
       for (let i = 0; i < maxAttempts; i++) {
         await checkRateLimit(id1, maxAttempts, windowMs);
       }
 
-      // id1 should be blocked
       try {
         await checkRateLimit(id1, maxAttempts, windowMs);
         expect.unreachable("Should have thrown");
@@ -155,7 +144,6 @@ describe("Rate Limiting", () => {
         expect(error).toBeInstanceOf(TRPCError);
       }
 
-      // id2 should still work
       const remaining = await checkRateLimit(id2, maxAttempts, windowMs);
       expect(remaining).toBe(maxAttempts - 1);
     });
@@ -225,12 +213,10 @@ describe("Rate Limiting", () => {
       const email = `test-${Date.now()}@example.com`;
 
       // IP rate limiting is skipped in test/dev, so only email limit applies
-      // Use up email rate limit with same email
       for (let i = 0; i < RATE_LIMITS.LOGIN_EMAIL.maxAttempts; i++) {
         await rateLimitLogin(email, ip);
       }
 
-      // Next attempt should fail due to email limit
       try {
         await rateLimitLogin(email, ip);
         expect.unreachable("Should have thrown");
@@ -242,12 +228,10 @@ describe("Rate Limiting", () => {
     it("should limit by email independently of IP", async () => {
       const email = `test-${Date.now()}@example.com`;
 
-      // Use different IPs but same email
       for (let i = 0; i < RATE_LIMITS.LOGIN_EMAIL.maxAttempts; i++) {
         await rateLimitLogin(email, randomIP());
       }
 
-      // Next attempt with different IP should still fail due to email limit
       try {
         await rateLimitLogin(email, randomIP());
         expect.unreachable("Should have thrown");
@@ -260,13 +244,11 @@ describe("Rate Limiting", () => {
       const ip = randomIP();
 
       // In test/dev, IP rate limiting is skipped
-      // Should allow many different emails from same IP
       for (let i = 0; i < 10; i++) {
         const email = `test${i}-${Date.now()}@example.com`;
         await rateLimitLogin(email, ip);
       }
 
-      // Should not throw since IP limits are disabled in test/dev
       expect(true).toBe(true);
     });
   });
@@ -276,12 +258,10 @@ describe("Rate Limiting", () => {
       const ip = randomIP();
 
       // IP rate limiting is skipped in test/dev
-      // Should allow many attempts
       for (let i = 0; i < 10; i++) {
         await rateLimitPasswordReset(ip);
       }
 
-      // Should not throw in test/dev
       expect(true).toBe(true);
     });
 
@@ -304,12 +284,10 @@ describe("Rate Limiting", () => {
       const ip = randomIP();
 
       // IP rate limiting is skipped in test/dev
-      // Should allow many attempts
       for (let i = 0; i < 10; i++) {
         await rateLimitRegistration(ip);
       }
 
-      // Should not throw in test/dev
       expect(true).toBe(true);
     });
   });
@@ -319,12 +297,10 @@ describe("Rate Limiting", () => {
       const ip = randomIP();
 
       // IP rate limiting is skipped in test/dev
-      // Should allow many attempts
       for (let i = 0; i < 10; i++) {
         await rateLimitEmailVerification(ip);
       }
 
-      // Should not throw in test/dev
       expect(true).toBe(true);
     });
   });
@@ -334,7 +310,6 @@ describe("Rate Limiting", () => {
       const email = "victim@example.com";
       const attackerIP = "1.2.3.4";
 
-      // Simulate brute force attack
       let blockedAtAttempt = 0;
       for (let i = 0; i < 10; i++) {
         try {
@@ -347,7 +322,6 @@ describe("Rate Limiting", () => {
         }
       }
 
-      // Should be blocked before 10 attempts
       expect(blockedAtAttempt).toBeLessThan(10);
       expect(blockedAtAttempt).toBeGreaterThan(0);
     });
@@ -355,7 +329,6 @@ describe("Rate Limiting", () => {
     it("should prevent distributed brute force from multiple IPs", async () => {
       const email = "victim@example.com";
 
-      // Simulate distributed attack from different IPs
       let blockedAtAttempt = 0;
       for (let i = 0; i < 10; i++) {
         try {
@@ -368,7 +341,6 @@ describe("Rate Limiting", () => {
         }
       }
 
-      // Should be blocked at email limit (3 attempts)
       expect(blockedAtAttempt).toBeLessThanOrEqual(
         RATE_LIMITS.LOGIN_EMAIL.maxAttempts
       );
@@ -383,7 +355,6 @@ describe("Rate Limiting", () => {
         await rateLimitRegistration(attackerIP);
       }
 
-      // Should not block in test/dev (IP limits disabled)
       expect(true).toBe(true);
     });
 
@@ -396,7 +367,6 @@ describe("Rate Limiting", () => {
         await rateLimitPasswordReset(attackerIP);
       }
 
-      // Should not block in test/dev (IP limits disabled)
       expect(true).toBe(true);
     });
   });
@@ -408,14 +378,12 @@ describe("Rate Limiting", () => {
       const unknownIP = "unknown";
       const email = `test-${Date.now()}@example.com`;
 
-      // Should allow many login attempts in development with unknown IP
       // (only email rate limit applies)
       for (let i = 0; i < RATE_LIMITS.LOGIN_EMAIL.maxAttempts; i++) {
         const testEmail = `test-${Date.now()}-${i}@example.com`;
         await rateLimitLogin(testEmail, unknownIP);
       }
 
-      // Should be able to continue with different emails (no IP limit in dev)
       await rateLimitLogin(`final-${Date.now()}@example.com`, unknownIP);
     });
 
@@ -423,12 +391,10 @@ describe("Rate Limiting", () => {
       const unknownIP = "unknown";
       const email = `test-${Date.now()}@example.com`;
 
-      // Use up email rate limit
       for (let i = 0; i < RATE_LIMITS.LOGIN_EMAIL.maxAttempts; i++) {
         await rateLimitLogin(email, unknownIP);
       }
 
-      // Next attempt should fail due to email limit
       try {
         await rateLimitLogin(email, unknownIP);
         expect.unreachable("Should have thrown");
@@ -440,55 +406,46 @@ describe("Rate Limiting", () => {
     it("should handle unknown IP in password reset", async () => {
       const unknownIP = "unknown";
 
-      // In development, should allow many attempts (no IP limit)
       for (let i = 0; i < 10; i++) {
         await rateLimitPasswordReset(unknownIP);
       }
 
-      // Should not throw in development
       expect(true).toBe(true);
     });
 
     it("should handle unknown IP in registration", async () => {
       const unknownIP = "unknown";
 
-      // In development, should allow many attempts (no IP limit)
       for (let i = 0; i < 10; i++) {
         await rateLimitRegistration(unknownIP);
       }
 
-      // Should not throw in development
       expect(true).toBe(true);
     });
 
     it("should handle unknown IP in email verification", async () => {
       const unknownIP = "unknown";
 
-      // In development, should allow many attempts (no IP limit)
       for (let i = 0; i < 10; i++) {
         await rateLimitEmailVerification(unknownIP);
       }
 
-      // Should not throw in development
       expect(true).toBe(true);
     });
   });
 
   describe("Rate Limit Configuration", () => {
     it("should have reasonable limits configured", () => {
-      // Login should be more permissive than registration
       expect(RATE_LIMITS.LOGIN_IP.maxAttempts).toBeGreaterThan(
         RATE_LIMITS.REGISTRATION_IP.maxAttempts
       );
 
-      // All limits should be positive
       expect(RATE_LIMITS.LOGIN_IP.maxAttempts).toBeGreaterThan(0);
       expect(RATE_LIMITS.LOGIN_EMAIL.maxAttempts).toBeGreaterThan(0);
       expect(RATE_LIMITS.PASSWORD_RESET_IP.maxAttempts).toBeGreaterThan(0);
       expect(RATE_LIMITS.REGISTRATION_IP.maxAttempts).toBeGreaterThan(0);
       expect(RATE_LIMITS.EMAIL_VERIFICATION_IP.maxAttempts).toBeGreaterThan(0);
 
-      // All windows should be at least 1 minute
       expect(RATE_LIMITS.LOGIN_IP.windowMs).toBeGreaterThanOrEqual(60000);
       expect(RATE_LIMITS.LOGIN_EMAIL.windowMs).toBeGreaterThanOrEqual(60000);
       expect(RATE_LIMITS.PASSWORD_RESET_IP.windowMs).toBeGreaterThanOrEqual(
@@ -552,7 +509,6 @@ describe("Rate Limiting", () => {
       const maxAttempts = 3;
       const windowMs = 60000;
 
-      // Exhaust the limit: 3 allowed, 4th blocked.
       for (let i = 0; i < maxAttempts; i++) {
         await checkRateLimit(id, maxAttempts, windowMs);
       }
@@ -574,7 +530,6 @@ describe("Rate Limiting", () => {
       const maxAttempts = 5;
       const windowMs = 60000;
 
-      // Instance A: 3 attempts.
       clearRateLimitLocalCache();
       for (let i = 0; i < 3; i++) {
         await checkRateLimit(id, maxAttempts, windowMs);
@@ -582,9 +537,9 @@ describe("Rate Limiting", () => {
 
       // Instance B (fresh local cache) makes 2 more -> combined count = 5.
       clearRateLimitLocalCache();
-      await checkRateLimit(id, maxAttempts, windowMs); // count 4
-      const remaining = await checkRateLimit(id, maxAttempts, windowMs); // count 5
-      expect(remaining).toBe(0); // 5th allowed, no remaining
+      await checkRateLimit(id, maxAttempts, windowMs);
+      const remaining = await checkRateLimit(id, maxAttempts, windowMs);
+      expect(remaining).toBe(0);
 
       // A 6th attempt from a fresh instance must be blocked — the shared store
       // aggregated the count across the two "instances".

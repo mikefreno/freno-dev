@@ -22,7 +22,7 @@ function xmlEscape(s: string): string {
 /**
  * Generate a single `<url>` element for a given entry on a site.
  */
-export function urlElement(site: Site, entry: SitemapEntry): string {
+function urlElement(site: Site, entry: SitemapEntry): string {
   const loc = `https://${site.domain}${entry.path}`;
   return `  <url>
     <loc>${xmlEscape(loc)}</loc>

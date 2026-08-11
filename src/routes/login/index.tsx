@@ -57,7 +57,6 @@ export const route = {
   load: () => checkAuth()
 };
 
-// Helper to convert expiry string to human-readable format
 function expiryToHuman(expiry: string): string {
   const value = parseInt(expiry);
   if (expiry.endsWith("m")) {
@@ -77,7 +76,6 @@ export default function LoginPage() {
   const register = () => searchParams.mode === "register";
   const usePassword = () => searchParams.auth === "password";
 
-  // Load server data using createAsync
   const loginData = createAsync(() => getLoginData(), {
     deferStream: true
   });
@@ -149,6 +147,180 @@ export default function LoginPage() {
     }
   });
 
+  const isRateLimited = (errorCode: string | undefined, message: string) =>
+    errorCode === "TOO_MANY_REQUESTS" || message.includes("Too many attempts");
+
+  const submitRegister = async () => {
+    if (!emailRef || !passwordRef || !passwordConfRef) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    const email = emailRef.value;
+    const password = passwordRef.value;
+    const passwordConf = passwordConfRef.value;
+
+    if (!isValidEmail(email)) {
+      setError("Invalid email address");
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errors[0] || "Invalid password");
+      return;
+    }
+
+    if (password !== passwordConf) {
+      setError("passwordMismatch");
+      return;
+    }
+
+    const response = await fetch("/api/trpc/auth.emailRegistration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        passwordConfirmation: passwordConf
+      })
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.result?.data) {
+      navigate("/account", { replace: true });
+      return;
+    }
+
+    const errorMsg =
+      result.error?.message ||
+      result.result?.data?.message ||
+      "Registration failed";
+    const errorCode = result.error?.data?.code;
+
+    if (isRateLimited(errorCode, errorMsg)) {
+      setError(errorMsg);
+    } else if (
+      errorMsg.includes("duplicate") ||
+      errorMsg.includes("already exists")
+    ) {
+      if (errorMsg.includes("sign in and add a password")) {
+        setError("provider_exists");
+      } else {
+        setError("duplicate");
+      }
+    } else {
+      setError(errorMsg);
+    }
+  };
+
+  const submitPasswordLogin = async () => {
+    if (!emailRef || !passwordRef || !rememberMeRef) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    const email = emailRef.value;
+    const password = passwordRef.value;
+    const rememberMe = rememberMeRef.checked;
+
+    const response = await fetch("/api/trpc/auth.emailPasswordLogin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, rememberMe })
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.result?.data?.success) {
+      setShowPasswordSuccess(true);
+      revalidateAuth(); // Refresh auth state globally
+      setTimeout(() => {
+        navigate("/account", { replace: true });
+      }, 500);
+      return;
+    }
+
+    const errorMessage = result.error?.message || "";
+    const errorCode = result.error?.data?.code;
+
+    if (isRateLimited(errorCode, errorMessage)) {
+      setError(errorMessage);
+    } else if (
+      errorCode === "FORBIDDEN" ||
+      errorMessage.includes("Account locked") ||
+      errorMessage.includes("Account is locked")
+    ) {
+      setError(errorMessage);
+    } else {
+      setShowPasswordError(true);
+    }
+  };
+
+  const submitEmailLink = async () => {
+    if (!emailRef || !rememberMeRef) {
+      setError("Please enter your email");
+      return;
+    }
+
+    const email = emailRef.value;
+    const rememberMe = rememberMeRef.checked;
+
+    if (!isValidEmail(email)) {
+      setError("Invalid email address");
+      return;
+    }
+
+    const response = await fetch("/api/trpc/auth.requestEmailLinkLogin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, rememberMe })
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.result?.data?.success) {
+      setEmailSent(true);
+
+      // Set countdown directly - cookie might not be readable immediately
+      const expirationTime = new Date(
+        Date.now() + COOLDOWN_TIMERS.EMAIL_LOGIN_LINK_MS
+      );
+      startCountdown(expirationTime);
+      return;
+    }
+
+    const errorMsg =
+      result.error?.message ||
+      result.result?.data?.message ||
+      "Failed to send email";
+    const errorCode = result.error?.data?.code;
+
+    if (
+      isRateLimited(errorCode, errorMsg) ||
+      errorMsg.includes("countdown not expired")
+    ) {
+      setError(
+        errorMsg.includes("countdown")
+          ? "Please wait before requesting another email link"
+          : errorMsg
+      );
+
+      // Start the countdown timer when rate limited
+      const timer = getClientCookie("emailLoginLinkRequested");
+      if (timer) {
+        try {
+          startCountdown(timer);
+        } catch (e) {
+          console.error("Failed to start countdown from cookie:", e);
+        }
+      }
+    } else {
+      setError(errorMsg);
+    }
+  };
+
   const formHandler = async (e: Event) => {
     e.preventDefault();
     setLoading(true);
@@ -158,181 +330,11 @@ export default function LoginPage() {
 
     try {
       if (register()) {
-        if (!emailRef || !passwordRef || !passwordConfRef) {
-          setError("Please fill in all fields");
-          setLoading(false);
-          return;
-        }
-
-        const email = emailRef.value;
-        const password = passwordRef.value;
-        const passwordConf = passwordConfRef.value;
-
-        if (!isValidEmail(email)) {
-          setError("Invalid email address");
-          setLoading(false);
-          return;
-        }
-
-        const passwordValidation = validatePassword(password);
-        if (!passwordValidation.isValid) {
-          setError(passwordValidation.errors[0] || "Invalid password");
-          setLoading(false);
-          return;
-        }
-
-        if (password !== passwordConf) {
-          setError("passwordMismatch");
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch("/api/trpc/auth.emailRegistration", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            password,
-            passwordConfirmation: passwordConf
-          })
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.result?.data) {
-          navigate("/account", { replace: true });
-        } else {
-          const errorMsg =
-            result.error?.message ||
-            result.result?.data?.message ||
-            "Registration failed";
-          const errorCode = result.error?.data?.code;
-
-          if (
-            errorCode === "TOO_MANY_REQUESTS" ||
-            errorMsg.includes("Too many attempts")
-          ) {
-            setError(errorMsg);
-          } else if (
-            errorMsg.includes("duplicate") ||
-            errorMsg.includes("already exists")
-          ) {
-            if (errorMsg.includes("sign in and add a password")) {
-              setError("provider_exists");
-            } else {
-              setError("duplicate");
-            }
-          } else {
-            setError(errorMsg);
-          }
-        }
+        await submitRegister();
       } else if (usePassword()) {
-        if (!emailRef || !passwordRef || !rememberMeRef) {
-          setError("Please fill in all fields");
-          setLoading(false);
-          return;
-        }
-
-        const email = emailRef.value;
-        const password = passwordRef.value;
-        const rememberMe = rememberMeRef.checked;
-
-        const response = await fetch("/api/trpc/auth.emailPasswordLogin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, rememberMe })
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.result?.data?.success) {
-          setShowPasswordSuccess(true);
-          revalidateAuth(); // Refresh auth state globally
-          setTimeout(() => {
-            navigate("/account", { replace: true });
-          }, 500);
-        } else {
-          const errorMessage = result.error?.message || "";
-          const errorCode = result.error?.data?.code;
-
-          if (
-            errorCode === "TOO_MANY_REQUESTS" ||
-            errorMessage.includes("Too many attempts")
-          ) {
-            setError(errorMessage);
-          } else if (
-            errorCode === "FORBIDDEN" ||
-            errorMessage.includes("Account locked") ||
-            errorMessage.includes("Account is locked")
-          ) {
-            setError(errorMessage);
-          } else {
-            setShowPasswordError(true);
-          }
-        }
+        await submitPasswordLogin();
       } else {
-        if (!emailRef || !rememberMeRef) {
-          setError("Please enter your email");
-          setLoading(false);
-          return;
-        }
-
-        const email = emailRef.value;
-        const rememberMe = rememberMeRef.checked;
-
-        if (!isValidEmail(email)) {
-          setError("Invalid email address");
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch("/api/trpc/auth.requestEmailLinkLogin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, rememberMe })
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.result?.data?.success) {
-          setEmailSent(true);
-
-          // Set countdown directly - cookie might not be readable immediately
-          const expirationTime = new Date(
-            Date.now() + COOLDOWN_TIMERS.EMAIL_LOGIN_LINK_MS
-          );
-          startCountdown(expirationTime);
-        } else {
-          const errorMsg =
-            result.error?.message ||
-            result.result?.data?.message ||
-            "Failed to send email";
-          const errorCode = result.error?.data?.code;
-
-          if (
-            errorCode === "TOO_MANY_REQUESTS" ||
-            errorMsg.includes("countdown not expired") ||
-            errorMsg.includes("Too many attempts")
-          ) {
-            setError(
-              errorMsg.includes("countdown")
-                ? "Please wait before requesting another email link"
-                : errorMsg
-            );
-
-            // Start the countdown timer when rate limited
-            const timer = getClientCookie("emailLoginLinkRequested");
-            if (timer) {
-              try {
-                startCountdown(timer);
-              } catch (e) {
-                console.error("Failed to start countdown from cookie:", e);
-              }
-            }
-          } else {
-            setError(errorMsg);
-          }
-        }
+        await submitEmailLink();
       }
     } catch (err: any) {
       console.error("Login error:", err);

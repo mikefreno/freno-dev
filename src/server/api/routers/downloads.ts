@@ -36,7 +36,6 @@ async function getLatestDMG(
       throw new Error(`No DMG files found in S3 with prefix ${prefix}`);
     }
 
-    // Filter for .dmg files only and sort by LastModified (newest first)
     const dmgFiles = response.Contents.filter((obj) =>
       obj.Key?.endsWith(".dmg")
     ).sort((a, b) => {
@@ -103,7 +102,6 @@ export const downloadsRouter = createTRPCRouter({
         } else if (input.asset_name === "inputhalo") {
           fileKey = await getLatestInputHaloDMG(client, bucket);
         } else {
-          // Use static mapping for other assets
           fileKey = assets[input.asset_name];
 
           if (!fileKey) {

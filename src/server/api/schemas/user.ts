@@ -65,11 +65,6 @@ export const loginUserSchema = z.object({
   rememberMe: z.boolean().optional().default(false)
 });
 
-/**
- * OAuth provider schema
- */
-export const oauthProviderSchema = z.enum(["google", "github"]);
-
 // ============================================================================
 // Profile Management Schemas
 // ============================================================================
@@ -168,20 +163,12 @@ export const deleteAccountSchema = z.object({
   password: z.string().min(1, "Password is required to delete account")
 });
 
-/**
- * Email verification schema
- */
-export const verifyEmailSchema = z.object({
-  token: z.string().min(1)
-});
-
 // ============================================================================
 // Type Exports
 // ============================================================================
 
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type LoginUserInput = z.infer<typeof loginUserSchema>;
-export type OAuthProvider = z.infer<typeof oauthProviderSchema>;
 export type UpdateEmailInput = z.infer<typeof updateEmailSchema>;
 export type UpdateDisplayNameInput = z.infer<typeof updateDisplayNameSchema>;
 export type UpdateProfileImageInput = z.infer<typeof updateProfileImageSchema>;
@@ -192,4 +179,3 @@ export type RequestPasswordResetInput = z.infer<
 >;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
-export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;

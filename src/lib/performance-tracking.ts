@@ -26,7 +26,6 @@ export function initPerformanceTracking() {
 
   const supported = new Set(PerformanceObserver.supportedEntryTypes ?? []);
 
-  // Observe LCP
   if (supported.has("largest-contentful-paint")) {
     try {
       const lcpObserver = new PerformanceObserver((entryList) => {
@@ -40,7 +39,6 @@ export function initPerformanceTracking() {
     }
   }
 
-  // Observe CLS
   if (supported.has("layout-shift")) {
     try {
       const clsObserver = new PerformanceObserver((entryList) => {
@@ -59,7 +57,6 @@ export function initPerformanceTracking() {
     }
   }
 
-  // Observe FID
   if (supported.has("first-input")) {
     try {
       const fidObserver = new PerformanceObserver((entryList) => {
@@ -74,7 +71,6 @@ export function initPerformanceTracking() {
     }
   }
 
-  // Observe INP (event timing)
   if (supported.has("event")) {
     try {
       const interactions: number[] = [];
@@ -96,7 +92,6 @@ export function initPerformanceTracking() {
     }
   }
 
-  // Get navigation timing metrics
   window.addEventListener("load", () => {
     setTimeout(() => {
       const navTiming = performance.getEntriesByType(
@@ -110,7 +105,6 @@ export function initPerformanceTracking() {
         metrics.loadComplete = navTiming.loadEventEnd - navTiming.fetchStart;
       }
 
-      // Get FCP
       const paintEntries = performance.getEntriesByType("paint");
       const fcpEntry = paintEntries.find(
         (entry) => entry.name === "first-contentful-paint"
@@ -135,7 +129,6 @@ export function initPerformanceTracking() {
 }
 
 function sendMetrics() {
-  // Only send if we have at least one metric
   if (Object.keys(metrics).length === 0) {
     return;
   }
@@ -157,7 +150,6 @@ function sendMetrics() {
     const blob = new Blob([payload], { type: "application/json" });
     navigator.sendBeacon(apiUrl, blob);
   } else {
-    // Fallback to fetch with keepalive
     fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -168,6 +160,5 @@ function sendMetrics() {
     );
   }
 
-  // Clear metrics after sending
   metrics = {};
 }

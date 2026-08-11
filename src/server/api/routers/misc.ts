@@ -72,13 +72,7 @@ export function assertS3KeyOwnership(key: string, userId: string | null): void {
 // Account-deletion request email — product-aware
 // ============================================================
 //
-// Pure helpers live in `./deletion-email.ts` (env-free) so they can be unit-
-// tested in `bun:test` without a populated `.env`. Re-exported here for the
-// tRPC mutation below + for callers that already import from `misc`.
-// Import into local scope FIRST — `sendDeletionRequestEmail` below uses
-// these names directly. A bare `export { ... } from` re-export does NOT make
-// the bindings available locally, which caused a ReferenceError that crashed
-// the entire tRPC router (503 on every /api/trpc call).
+// Bare "export … from" doesn't bind names locally — import first or the router throws ReferenceError (503s every /api/trpc call)
 import {
   DELETION_PRODUCT_SCHEMA,
   deletionCookieName,
@@ -256,7 +250,6 @@ export const miscRouter = createTRPCRouter({
             lastModified: item.LastModified?.toISOString() || ""
           })) || [];
 
-        // Filter out thumbnail files (ending with -small.ext)
         const mainFiles = files.filter(
           (file) => !file.key.match(/-small\.(jpg|jpeg|png|gif)$/i)
         );
@@ -376,7 +369,6 @@ export const miscRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
-      // Verify Cloudflare Turnstile token
       const turnstileValid = await verifyTurnstileToken(
         input.turnstileToken,
         env.TURNSTILE_SECRET_KEY,

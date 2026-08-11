@@ -58,7 +58,7 @@ declare global {
 }
 
 /** Resolve the client-side active site, preferring the SSR-injected id. */
-export function resolveClientSite(): Site {
+function resolveClientSite(): Site {
   if (typeof window === "undefined") return MAIN_SITE;
   const injected = window.__SITE__;
   if (injected && SITE_CONFIG[injected]) return SITE_CONFIG[injected];

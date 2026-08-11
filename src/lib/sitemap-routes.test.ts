@@ -28,13 +28,11 @@ describe("generateSitemap", () => {
   it("generates valid XML for main site with all expected routes", () => {
     const xml = generateSitemap(SITE_CONFIG.main, SITEMAP_ROUTES.main);
 
-    // Basic structure
     expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
     expect(xml).toContain(
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     );
 
-    // All main site paths present with freno.me domain
     const locs = extractLocs(xml);
     expect(locs).toContain("https://freno.me/");
     expect(locs).toContain("https://freno.me/blog");
@@ -43,10 +41,8 @@ describe("generateSitemap", () => {
     expect(locs).toContain("https://freno.me/resume");
     expect(locs).toContain("https://freno.me/downloads");
 
-    // Exactly 6 entries
     expect(locs.length).toBe(6);
 
-    // Verify well-formedness by checking balanced tags
     expect(xml).toContain("</urlset>");
     const urlOpens = (xml.match(/<url>/g) || []).length;
     const urlCloses = (xml.match(/<\/url>/g) || []).length;
@@ -56,7 +52,6 @@ describe("generateSitemap", () => {
 
   it("generates valid parseable XML for lineage site", () => {
     const xml = generateSitemap(SITE_CONFIG.lineage, SITEMAP_ROUTES.lineage);
-    // Verify balanced tags
     expect(xml).toContain("</urlset>");
     const urlOpens = (xml.match(/<url>/g) || []).length;
     const urlCloses = (xml.match(/<\/url>/g) || []).length;
@@ -73,7 +68,6 @@ describe("generateSitemap", () => {
     expect(locs).toContain("https://nessa.freno.me/privacy");
     expect(locs.length).toBe(3);
 
-    // No leakage from main site
     for (const loc of locs) {
       expect(loc).not.toContain("://freno.me/");
       expect(loc).not.toContain("://freno.me/blog");

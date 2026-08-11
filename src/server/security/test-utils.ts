@@ -4,8 +4,6 @@
  */
 
 import type { H3Event } from "vinxi/http";
-import { SignJWT } from "jose";
-import { env } from "~/env/server";
 
 /**
  * Create a mock H3Event for testing
@@ -63,55 +61,6 @@ export function createMockEvent(options: {
 }
 
 /**
- * Generate a valid JWT token for testing
- */
-export async function createTestJWT(
-  userId: string,
-  expiresIn: string = "1h"
-): Promise<string> {
-  const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-  return await new SignJWT({ id: userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(expiresIn)
-    .sign(secret);
-}
-
-/**
- * Generate an expired JWT token for testing
- */
-export async function createExpiredJWT(userId: string): Promise<string> {
-  const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
-  return await new SignJWT({ id: userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("-1h") // Expired 1 hour ago
-    .sign(secret);
-}
-
-/**
- * Generate a JWT with invalid signature
- */
-export async function createInvalidSignatureJWT(
-  userId: string
-): Promise<string> {
-  const wrongSecret = new TextEncoder().encode("wrong-secret-key");
-  return await new SignJWT({ id: userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("1h")
-    .sign(wrongSecret);
-}
-
-/**
- * Generate test credentials
- */
-export function createTestCredentials() {
-  return {
-    email: `test-${Date.now()}@example.com`,
-    password: "TestPass123!@#",
-    passwordConfirmation: "TestPass123!@#"
-  };
-}
-
-/**
  * Common SQL injection payloads
  */
 export const SQL_INJECTION_PAYLOADS = [
@@ -139,26 +88,6 @@ export const XSS_PAYLOADS = [
 ];
 
 /**
- * Wait for async operations with timeout
- */
-export async function waitFor(
-  condition: () => boolean | Promise<boolean>,
-  timeout: number = 5000,
-  interval: number = 100
-): Promise<void> {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < timeout) {
-    if (await condition()) {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, interval));
-  }
-
-  throw new Error(`Timeout waiting for condition after ${timeout}ms`);
-}
-
-/**
  * Measure execution time
  */
 export async function measureTime<T>(
@@ -168,18 +97,6 @@ export async function measureTime<T>(
   const result = await fn();
   const duration = Date.now() - start;
   return { result, duration };
-}
-
-/**
- * Generate random string for testing
- */
-export function randomString(length: number = 10): string {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  return Array.from(
-    { length },
-    () => chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
 }
 
 /**

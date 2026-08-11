@@ -863,7 +863,6 @@ export default function TestPage() {
     setErrors({ ...errors(), [key]: "" });
 
     try {
-      // Get input - either from edited JSON or sample
       let input = endpoint.sampleInput;
       const editedInput = inputEdits()[key];
       if (editedInput) {

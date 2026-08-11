@@ -53,9 +53,7 @@ export const AuthProvider: ParentComponent = (props) => {
   // Get server state using createAsync which works with cache()
   const serverAuth = createAsync(() => getUserState(), { deferStream: true });
 
-  // Refresh callback that forces re-fetch
   const refreshAuth = () => {
-    // Manually trigger a re-fetch by calling the revalidate function
     revalidate(["user-auth-state"]);
   };
 
@@ -70,7 +68,6 @@ export const AuthProvider: ParentComponent = (props) => {
   // Server handles all token refresh logic
   // Client just displays the current auth state from server
 
-  // Listen for auth refresh events from external sources (token refresh, etc.)
   onMount(() => {
     if (typeof window === "undefined") return;
 

@@ -69,7 +69,6 @@ export const Mermaid = Node.create({
         getAttrs: (element) => {
           if (typeof element === "string") return false;
 
-          // Skip if already has data-type or data-mermaid-diagram attribute
           if (
             element.hasAttribute("data-type") ||
             element.hasAttribute("data-mermaid-diagram")
@@ -83,7 +82,6 @@ export const Mermaid = Node.create({
           const content = code.textContent || "";
           const trimmedContent = content.trim();
 
-          // Check if this looks like a mermaid diagram
           const mermaidKeywords = [
             "graph ",
             "sequenceDiagram",
@@ -174,12 +172,10 @@ export const Mermaid = Node.create({
       code.textContent = node.attrs.content || "";
       pre.appendChild(code);
 
-      // Validation status indicator
       const statusIndicator = document.createElement("div");
       statusIndicator.className =
         "absolute top-2 left-2 w-3 h-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200";
 
-      // Validate syntax asynchronously
       const validateSyntax = async () => {
         const content = node.attrs.content || "";
         if (!content.trim()) {
@@ -250,7 +246,6 @@ export const Mermaid = Node.create({
         (p: any) => p.spec?.key === "mermaidSelection"
       );
 
-      // Use intersection observer to trigger update when visible
       let updateInterval: ReturnType<typeof setInterval> | null = null;
       const observer = new IntersectionObserver(
         (entries) => {

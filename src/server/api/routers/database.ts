@@ -462,58 +462,50 @@ export const databaseRouter = createTRPCRouter({
           }
         }
 
-        let query = "UPDATE Post SET ";
+        let sets: string[] = [];
         let params: any[] = [];
-        let first = true;
 
         if (input.title !== undefined && input.title !== null) {
-          query += first ? "title = ?" : ", title = ?";
+          sets.push("title = ?");
           params.push(input.title);
-          first = false;
         }
 
         if (input.subtitle !== undefined && input.subtitle !== null) {
-          query += first ? "subtitle = ?" : ", subtitle = ?";
+          sets.push("subtitle = ?");
           params.push(input.subtitle);
-          first = false;
         }
 
         if (input.body !== undefined && input.body !== null) {
-          query += first ? "body = ?" : ", body = ?";
+          sets.push("body = ?");
           params.push(input.body);
-          first = false;
         }
 
         if (input.banner_photo !== undefined && input.banner_photo !== null) {
-          query += first ? "banner_photo = ?" : ", banner_photo = ?";
+          sets.push("banner_photo = ?");
           if (input.banner_photo === "_DELETE_IMAGE_") {
             params.push(null);
           } else {
             params.push(env.VITE_AWS_BUCKET_STRING + input.banner_photo);
           }
-          first = false;
         }
 
         if (input.published !== undefined && input.published !== null) {
-          query += first ? "published = ?" : ", published = ?";
+          sets.push("published = ?");
           params.push(input.published);
-          first = false;
         }
 
         if (shouldSetPublishDate) {
-          query += first ? "date = ?" : ", date = ?";
+          sets.push("date = ?");
           params.push(new Date().toISOString());
-          first = false;
         }
 
-        query += first ? "last_edited_date = ?" : ", last_edited_date = ?";
+        sets.push("last_edited_date = ?");
         params.push(new Date().toISOString());
-        first = false;
 
-        query += first ? "author_id = ?" : ", author_id = ?";
+        sets.push("author_id = ?");
         params.push(input.author_id);
 
-        query += " WHERE id = ?";
+        let query = "UPDATE Post SET " + sets.join(", ") + " WHERE id = ?";
         params.push(input.id);
 
         const results = await conn.execute({ sql: query, args: params });

@@ -254,7 +254,6 @@ export const userRouter = createTRPCRouter({
         args: [passwordHash, userId]
       });
 
-      // Send email notification about password being set
       if (user.email) {
         try {
           const h3Event = ctx.event.nativeEvent

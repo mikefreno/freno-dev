@@ -12,7 +12,6 @@ import {
 async function testTimeoutError() {
   console.log("\n=== Testing Timeout Error ===");
   try {
-    // This should timeout after 1ms
     await fetchWithTimeout("https://httpbin.org/delay/10", { timeout: 1 });
     console.log("❌ Should have thrown TimeoutError");
   } catch (error) {
@@ -29,7 +28,6 @@ async function testTimeoutError() {
 async function testNetworkError() {
   console.log("\n=== Testing Network Error ===");
   try {
-    // This should fail to connect
     await fetchWithTimeout(
       "https://invalid-domain-that-does-not-exist-12345.com"
     );
@@ -47,7 +45,6 @@ async function testNetworkError() {
 async function testAPIError() {
   console.log("\n=== Testing API Error ===");
   try {
-    // This should return 404
     const response = await fetchWithTimeout("https://httpbin.org/status/404");
     await checkResponse(response);
     console.log("❌ Should have thrown APIError");

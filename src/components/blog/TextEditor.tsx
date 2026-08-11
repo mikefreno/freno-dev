@@ -1547,7 +1547,6 @@ export default function TextEditor(props: TextEditorProps) {
       },
       handleDOMEvents: {
         touchstart: (view, event) => {
-          // Only handle touch events on mobile in fullscreen with active suggestion
           if (
             !hasSuggestion() ||
             !isFullscreen() ||
@@ -1562,7 +1561,6 @@ export default function TextEditor(props: TextEditorProps) {
           return false;
         },
         touchend: (view, event) => {
-          // Only handle touch events on mobile in fullscreen with active suggestion
           if (
             !hasSuggestion() ||
             !isFullscreen() ||
@@ -1860,7 +1858,6 @@ export default function TextEditor(props: TextEditorProps) {
       const node = allSuperscriptNodes[i];
       const text = node.text;
 
-      // Check if this is a complete reference (with optional whitespace)
       const completeMatch = text.match(/^\s*\[(\d+)\]\s*$/);
       if (completeMatch) {
         const hasOtherMarks = node.marks.some(
@@ -1877,7 +1874,6 @@ export default function TextEditor(props: TextEditorProps) {
         continue;
       }
 
-      // Check if this might be the start of a split reference
       if (text === "[" && i + 2 < allSuperscriptNodes.length) {
         const nextNode = allSuperscriptNodes[i + 1];
         const afterNode = allSuperscriptNodes[i + 2];
@@ -1958,7 +1954,6 @@ export default function TextEditor(props: TextEditorProps) {
 
     allRefs.sort((a, b) => a.pos - b.pos);
 
-    // Check if renumbering is needed (if any ref doesn't match its expected number)
     let needsRenumbering = false;
     for (let i = 0; i < allRefs.length; i++) {
       if (allRefs[i].refNum !== i + 1) {

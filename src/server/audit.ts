@@ -405,7 +405,6 @@ export async function detectSuspiciousActivity(
   const currentIp = currentIpOrMinAttempts as string;
   const reasons: string[] = [];
 
-  // Check for excessive failed logins
   const failedAttempts = (await getFailedLoginAttempts(
     userId,
     "user_id",
@@ -415,7 +414,6 @@ export async function detectSuspiciousActivity(
     reasons.push(`${failedAttempts} failed login attempts in last 15 minutes`);
   }
 
-  // Check for rapid location changes (different IPs in short time)
   const recentIps = await conn.execute({
     sql: `SELECT DISTINCT ip_address FROM AuditLog 
           WHERE user_id = ? 
@@ -431,7 +429,6 @@ export async function detectSuspiciousActivity(
     );
   }
 
-  // Check for new IP if user has login history
   const ipHistory = await conn.execute({
     sql: `SELECT COUNT(*) as count FROM AuditLog 
           WHERE user_id = ? 

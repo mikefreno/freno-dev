@@ -138,9 +138,6 @@ export function Typewriter(props: {
         entries.forEach((entry) => {
           // If component leaves viewport while animating, we could pause
           // For now, we just ensure it starts when visible
-          if (!entry.isIntersecting && cleanupAnimation) {
-            // Component is off-screen - could add pause logic here if needed
-          }
         });
       },
       {

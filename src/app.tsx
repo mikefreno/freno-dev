@@ -35,10 +35,8 @@ function AppLayout(props: { children: any }) {
   let lastScrollY = 0;
 
   onMount(() => {
-    // Initialize performance tracking
     initPerformanceTracking();
 
-    // Start monitoring for new deployments
     startDeploymentMonitoring();
 
     const windowWidth = createWindowWidth();

@@ -8,12 +8,10 @@ function sanitizeMermaidSvg(svgString: string): string {
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, "text/html");
 
-  // Remove dangerous elements
   doc.querySelectorAll("script, iframe, object, embed, form, link, meta, base").forEach((el) => {
     el.remove();
   });
 
-  // Remove event handlers and dangerous attributes from all elements
   doc.querySelectorAll("[on*], [href*='javascript:'], [style*='expression(']").forEach((el) => {
     const attrs = Array.from(el.attributes);
     attrs.forEach((attr) => {

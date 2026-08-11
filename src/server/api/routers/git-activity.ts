@@ -33,7 +33,6 @@ export const gitActivityRouter = createTRPCRouter({
         `github-commits-${input.limit}`,
         CACHE_CONFIG.GIT_ACTIVITY_CACHE_TTL_MS,
         async () => {
-          // Use Events API to get recent push events
           const eventsResponse = await fetchWithTimeout(
             `https://api.github.com/users/MikeFreno/events/public?per_page=100`,
             {
@@ -48,7 +47,6 @@ export const gitActivityRouter = createTRPCRouter({
           await checkResponse(eventsResponse);
           const events = await eventsResponse.json();
 
-          // Collect (repo, sha) pairs from push events up front
           const toFetch: { repoName: string; sha: string }[] = [];
           for (const event of events) {
             if (event.type !== "PushEvent") continue;

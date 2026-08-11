@@ -59,7 +59,6 @@ describe("Input Validation and Injection Prevention", () => {
       for (const email of sqlEmails) {
         // Either reject as invalid, or it's properly escaped in queries
         const isValid = isValidEmail(email);
-        // Test documents the behavior
         expect(typeof isValid).toBe("boolean");
       }
     });
@@ -68,7 +67,6 @@ describe("Input Validation and Injection Prevention", () => {
       const longEmail = "a".repeat(1000) + "@example.com";
       const result = isValidEmail(longEmail);
 
-      // Should handle gracefully
       expect(typeof result).toBe("boolean");
     });
 
@@ -130,7 +128,6 @@ describe("Input Validation and Injection Prevention", () => {
     it("should use parameterized queries for user authentication", async () => {
       const conn = ConnectionFactory();
 
-      // Test that SQL injection attempts don't work
       const maliciousEmail = "admin'--";
 
       try {
@@ -140,7 +137,6 @@ describe("Input Validation and Injection Prevention", () => {
           args: [maliciousEmail]
         });
 
-        // Should return no results (no user with that exact email)
         expect(result.rows.length).toBe(0);
       } catch (error) {
         // If error, ensure it's not a SQL error
@@ -153,7 +149,6 @@ describe("Input Validation and Injection Prevention", () => {
 
       for (const payload of SQL_INJECTION_PAYLOADS) {
         try {
-          // Test various injection points
           await conn.execute({
             sql: "SELECT * FROM User WHERE email = ?",
             args: [payload]
@@ -164,7 +159,6 @@ describe("Input Validation and Injection Prevention", () => {
             args: [payload]
           });
 
-          // Queries should complete without SQL errors
           expect(true).toBe(true);
         } catch (error: any) {
           // If error occurs, should not be SQL injection syntax error
@@ -184,10 +178,8 @@ describe("Input Validation and Injection Prevention", () => {
           args: [unionPayload]
         });
 
-        // Should not return password hashes
         if (result.rows.length > 0) {
           for (const row of result.rows) {
-            // Ensure we don't get password_hash column
             expect(row).not.toHaveProperty("password_hash");
           }
         }
@@ -200,7 +192,6 @@ describe("Input Validation and Injection Prevention", () => {
     it("should prevent blind SQL injection timing attacks", async () => {
       const conn = ConnectionFactory();
 
-      // Timing-based payload
       const timingPayload = "admin' AND SLEEP(5)--";
 
       const start = performance.now();
@@ -210,18 +201,15 @@ describe("Input Validation and Injection Prevention", () => {
           args: [timingPayload]
         });
       } catch (error) {
-        // Ignore errors
       }
       const duration = performance.now() - start;
 
-      // Should not delay for 5 seconds
       expect(duration).toBeLessThan(1000);
     });
 
     it("should prevent second-order SQL injection", async () => {
       const conn = ConnectionFactory();
 
-      // Store malicious data
       const maliciousName = "admin'--";
 
       try {
@@ -236,7 +224,6 @@ describe("Input Validation and Injection Prevention", () => {
           ]
         });
 
-        // Retrieve and use (should still be safe with parameterized queries)
         const result = await conn.execute({
           sql: "SELECT display_name FROM User WHERE email = ?",
           args: ["test-sqli@example.com"]
@@ -244,13 +231,11 @@ describe("Input Validation and Injection Prevention", () => {
 
         expect(result.rows.length).toBeGreaterThanOrEqual(0);
 
-        // Cleanup
         await conn.execute({
           sql: "DELETE FROM User WHERE email = ?",
           args: ["test-sqli@example.com"]
         });
       } catch (error) {
-        // Should not have SQL syntax errors
         expect(error).toBeDefined();
       }
     });
@@ -260,7 +245,6 @@ describe("Input Validation and Injection Prevention", () => {
     it("should identify potentially dangerous XSS patterns", () => {
       // These payloads should be handled by frontend sanitization
       for (const payload of XSS_PAYLOADS) {
-        // Document that these patterns exist
         expect(payload).toBeDefined();
         expect(typeof payload).toBe("string");
 
@@ -272,11 +256,9 @@ describe("Input Validation and Injection Prevention", () => {
     it("should handle script tags in user input", () => {
       const scriptInput = "<script>alert('XSS')</script>";
 
-      // Validation should not crash
       const nameValid = isValidDisplayName(scriptInput);
       expect(typeof nameValid).toBe("boolean");
 
-      // Email validation
       const emailValid = isValidEmail(scriptInput);
       expect(typeof emailValid).toBe("boolean");
     });
@@ -450,7 +432,6 @@ describe("Input Validation and Injection Prevention", () => {
 
       expect(typeof emailValid).toBe("boolean");
       expect(typeof nameValid).toBe("boolean");
-      // Should complete quickly (no ReDoS)
       expect(duration).toBeLessThan(100);
     });
 
@@ -508,14 +489,12 @@ describe("Input Validation and Injection Prevention", () => {
     });
 
     it("should not be vulnerable to ReDoS attacks", () => {
-      // ReDoS payload with many repetitions
       const redosPayload = "a".repeat(1000) + "!";
 
       const start = performance.now();
       validatePassword(redosPayload);
       const duration = performance.now() - start;
 
-      // Should complete quickly
       expect(duration).toBeLessThan(100);
     });
   });

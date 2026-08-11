@@ -34,14 +34,12 @@ function shouldAttemptReload(): boolean {
       10
     );
 
-    // Reset counter if outside the time window
     if (now - lastReloadTime > RELOAD_WINDOW_MS) {
       sessionStorage.setItem(RELOAD_STORAGE_KEY, "0");
       sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, now.toString());
       return true;
     }
 
-    // Check if we've exceeded max reloads
     if (reloadCount >= MAX_RELOADS) {
       console.error(
         `Exceeded ${MAX_RELOADS} reload attempts in ${RELOAD_WINDOW_MS}ms. Stopping to prevent infinite loop.`
@@ -49,12 +47,10 @@ function shouldAttemptReload(): boolean {
       return false;
     }
 
-    // Increment counter and allow reload
     sessionStorage.setItem(RELOAD_STORAGE_KEY, (reloadCount + 1).toString());
     sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, now.toString());
     return true;
   } catch (e) {
-    // If sessionStorage fails, allow reload but log error
     console.warn("Failed to access sessionStorage:", e);
     return true;
   }
@@ -102,7 +98,6 @@ function handleChunkError(source: string): void {
   }
 }
 
-// Handle runtime chunk loading errors
 window.addEventListener("error", (event) => {
   if (
     event.message?.includes("Importing a module script failed") ||
@@ -113,7 +108,6 @@ window.addEventListener("error", (event) => {
   }
 });
 
-// Handle promise-based chunk loading errors
 window.addEventListener("unhandledrejection", (event) => {
   if (
     event.reason?.message?.includes("Importing a module script failed") ||
@@ -126,9 +120,7 @@ window.addEventListener("unhandledrejection", (event) => {
   }
 });
 
-// Clear reload counter on successful page load
 window.addEventListener("load", () => {
-  // Only clear if we successfully loaded (we're past the critical chunk loading phase)
   setTimeout(() => {
     sessionStorage.removeItem(RELOAD_STORAGE_KEY);
     sessionStorage.removeItem(RELOAD_TIMESTAMP_KEY);

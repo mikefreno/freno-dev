@@ -38,16 +38,7 @@ export const validateClientEnv = (
   return envVars as unknown as ClientEnv;
 };
 
-const validateAndExportEnv = (): ClientEnv => {
-  try {
-    const validated = validateClientEnv(import.meta.env);
-    return validated;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const env = validateAndExportEnv();
+export const env = validateClientEnv(import.meta.env);
 
 export const isMissingEnvVar = (varName: string): boolean => {
   return !import.meta.env[varName] || import.meta.env[varName]?.trim() === "";

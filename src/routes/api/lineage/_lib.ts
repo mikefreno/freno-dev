@@ -58,8 +58,3 @@ export function bearerToken(event: APIEvent): string | null {
   const m = auth.match(/^Bearer\s+(.+)$/i);
   return m?.[1]?.trim() ?? null;
 }
-
-/** Parse the JSON request body. */
-export async function jsonBody<T = any>(event: APIEvent): Promise<T> {
-  return await event.request.json();
-}

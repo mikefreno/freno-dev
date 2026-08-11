@@ -57,7 +57,6 @@ describe("verifyNessaToken with Clerk JWT", () => {
     expect(result.exp).toBe(mockPayload.exp);
     expect(result.iat).toBe(mockPayload.iat);
 
-    // Verify verifyToken was called with correct options
     expect(mockVerifyToken).toHaveBeenCalledWith(
       "valid-clerk-session-token",
       expect.objectContaining({

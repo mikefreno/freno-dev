@@ -80,11 +80,9 @@ import {
  * In development: ctx.event might be H3Event directly
  */
 function getH3Event(ctx: Context): H3Event {
-  // Check if nativeEvent exists (production)
   if (ctx.event && "nativeEvent" in ctx.event && ctx.event.nativeEvent) {
     return ctx.event.nativeEvent as H3Event;
   }
-  // Otherwise, assume ctx.event is H3Event (development)
   return ctx.event as unknown as H3Event;
 }
 
@@ -245,7 +243,6 @@ export const authRouter = createTRPCRouter({
             try {
               await conn.execute({ sql: insertQuery, args: insertParams });
 
-              // Also create UserProvider entry for new user
               await linkProvider(userId, "github", {
                 providerUserId: login,
                 email: email,
@@ -300,7 +297,6 @@ export const authRouter = createTRPCRouter({
       } catch (error) {
         console.error("[GitHub Callback] Error during OAuth flow:", error);
 
-        // Log failed OAuth login
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           eventType: "auth.login.failed",
@@ -452,7 +448,6 @@ export const authRouter = createTRPCRouter({
                 args: insertParams
               });
 
-              // Also create UserProvider entry for new user
               await linkProvider(userId, "google", {
                 providerUserId: email,
                 email: email,
@@ -481,7 +476,6 @@ export const authRouter = createTRPCRouter({
           }
         }
 
-        // Issue JWT (OAuth defaults to remember me)
         const event = getH3Event(ctx);
         const clientIP = getClientIP(event);
         const userAgent = getUserAgent(event);
@@ -631,7 +625,6 @@ export const authRouter = createTRPCRouter({
       } catch (error) {
         console.error("[Email Login] Error during login:", error);
 
-        // Log failed email link login
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           eventType: "auth.login.failed",
@@ -685,10 +678,7 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Check if there's a valid JWT token with this code
-        // We need to find the token that was generated for this email
-        // Since we can't store tokens in DB efficiently, we'll verify against the cookie
-        // Get the token from cookie (we'll store it when sending email)
+        // Tokens aren't stored in DB; verify the code against the JWT cookie set when the email was sent
         const storedToken = getCookie(getH3Event(ctx), "emailLoginToken");
         if (!storedToken) {
           throw new TRPCError({
@@ -697,7 +687,6 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Verify the JWT and check the code
         const secret = new TextEncoder().encode(env.JWT_SECRET_KEY);
         let payload;
         try {
@@ -756,7 +745,6 @@ export const authRouter = createTRPCRouter({
       } catch (error) {
         console.error("[Email Code Login] Error during login:", error);
 
-        // Log failed code login
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           eventType: "auth.login.failed",
@@ -808,7 +796,6 @@ export const authRouter = createTRPCRouter({
 
         const conn = ConnectionFactory();
 
-        // Get user ID for audit log
         const userRes = await conn.execute({
           sql: "SELECT id FROM User WHERE email = ?",
           args: [email]
@@ -819,7 +806,6 @@ export const authRouter = createTRPCRouter({
         const params = [true, email];
         await conn.execute({ sql: query, args: params });
 
-        // Log successful email verification
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           userId,
@@ -835,7 +821,6 @@ export const authRouter = createTRPCRouter({
           message: "Email verification success, you may close this window"
         };
       } catch (error) {
-        // Log failed email verification
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           eventType: "auth.email.verify.complete",
@@ -864,7 +849,6 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { email, password, passwordConfirmation, rememberMe } = input;
 
-      // Apply rate limiting
       const clientIP = getClientIP(getH3Event(ctx));
       await rateLimitRegistration(clientIP, getH3Event(ctx));
 
@@ -876,10 +860,8 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Check if email already exists (User table or UserProvider table)
       const existingUserId = await findUserByEmail(email);
       if (existingUserId) {
-        // User exists - check if they have a password
         const conn = ConnectionFactory();
         const userCheck = await conn.execute({
           sql: "SELECT password_hash, provider FROM User WHERE id = ?",
@@ -916,13 +898,11 @@ export const authRouter = createTRPCRouter({
           args: [userId, email, passwordHash, "email"]
         });
 
-        // Create UserProvider entry for email auth
         await linkProvider(userId, "email", {
           providerUserId: email,
           email: email
         });
 
-        // Issue auth token with client info
         const event = getH3Event(ctx);
         const clientIP = getClientIP(event);
         const userAgent = getUserAgent(event);
@@ -930,13 +910,11 @@ export const authRouter = createTRPCRouter({
         await issueAuthToken({
           event,
           userId,
-          rememberMe: rememberMe ?? true
+          rememberMe,
         });
 
-        // Set CSRF token
         setCSRFToken(event);
 
-        // Log successful registration
         await logAuditEvent({
           userId,
           eventType: "auth.register.success",
@@ -948,7 +926,6 @@ export const authRouter = createTRPCRouter({
 
         return { success: true, message: "success" };
       } catch (e) {
-        // Log failed registration
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           eventType: "auth.register.failed",
@@ -976,7 +953,6 @@ export const authRouter = createTRPCRouter({
       try {
         const { email, password, rememberMe } = input;
 
-        // Apply rate limiting
         const clientIP = getClientIP(getH3Event(ctx));
         await rateLimitLogin(email, clientIP, getH3Event(ctx));
 
@@ -992,9 +968,7 @@ export const authRouter = createTRPCRouter({
         const passwordHash = user?.password_hash || null;
         const passwordMatch = await checkPasswordSafe(password, passwordHash);
 
-        // Check all conditions after password verification
         if (!user || !passwordHash || !passwordMatch) {
-          // Record failed login attempt if user exists
           if (user?.id) {
             const lockoutStatus = await recordFailedLogin(user.id);
 
@@ -1032,7 +1006,6 @@ export const authRouter = createTRPCRouter({
             }
           }
 
-          // Log failed login attempt
           try {
             const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
             await logAuditEvent({
@@ -1060,7 +1033,6 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Check if account is locked before allowing login
         const lockoutCheck = await checkAccountLockout(user.id);
         if (lockoutCheck.isLocked) {
           const remainingSec = Math.ceil(
@@ -1083,22 +1055,18 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Reset failed attempts on successful login
         await resetFailedAttempts(user.id);
 
-        // Reset rate limits on successful login
         await resetLoginRateLimits(email, clientIP);
 
-        // Issue JWT for authenticated user
         const event = getH3Event(ctx);
         const userAgent = getUserAgent(event);
         await issueAuthToken({
           event,
           userId: user.id,
-          rememberMe: rememberMe ?? false
+          rememberMe,
         });
 
-        // Set CSRF token for authenticated user
         setCSRFToken(event);
 
         // Log successful login (wrap in try-catch to ensure it never blocks auth flow)
@@ -1106,7 +1074,7 @@ export const authRouter = createTRPCRouter({
           await logAuditEvent({
             userId: user.id,
             eventType: "auth.login.success",
-            eventData: { method: "password", rememberMe: rememberMe ?? false },
+            eventData: { method: "password", rememberMe },
             ipAddress: clientIP,
             userAgent,
             success: true
@@ -1251,7 +1219,6 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
-      // Apply rate limiting
       const clientIP = getClientIP(getH3Event(ctx));
       await rateLimitPasswordReset(clientIP, getH3Event(ctx));
 
@@ -1303,7 +1270,6 @@ export const authRouter = createTRPCRouter({
           }
         );
 
-        // Log password reset request
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           userId: user.id,
@@ -1316,7 +1282,6 @@ export const authRouter = createTRPCRouter({
 
         return { success: true, message: "email sent" };
       } catch (error) {
-        // Log failed password reset request (only if not rate limited)
         if (
           !(error instanceof TRPCError && error.code === "TOO_MANY_REQUESTS")
         ) {
@@ -1371,7 +1336,6 @@ export const authRouter = createTRPCRouter({
       }
 
       try {
-        // Validate and consume the password reset token
         const tokenValidation = await validatePasswordResetToken(token);
 
         if (!tokenValidation) {
@@ -1415,10 +1379,8 @@ export const authRouter = createTRPCRouter({
           });
         }
 
-        // Mark token as used
         await markPasswordResetTokenUsed(tokenId);
 
-        // Log successful password reset
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           userId: userId,
@@ -1431,7 +1393,6 @@ export const authRouter = createTRPCRouter({
 
         return { success: true, message: "success" };
       } catch (error) {
-        // Log failed password reset
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           eventType: "auth.password.reset.complete",
@@ -1459,7 +1420,6 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { email } = input;
 
-      // Apply rate limiting
       const clientIP = getClientIP(getH3Event(ctx));
       await rateLimitEmailVerification(clientIP, getH3Event(ctx));
 
@@ -1520,7 +1480,6 @@ export const authRouter = createTRPCRouter({
           }
         );
 
-        // Log email verification request
         const { ipAddress, userAgent } = getAuditContext(getH3Event(ctx));
         await logAuditEvent({
           userId: user.id,
@@ -1533,7 +1492,6 @@ export const authRouter = createTRPCRouter({
 
         return { success: true, message: "Verification email sent" };
       } catch (error) {
-        // Log failed email verification request (only if not rate limited)
         if (
           !(error instanceof TRPCError && error.code === "TOO_MANY_REQUESTS")
         ) {

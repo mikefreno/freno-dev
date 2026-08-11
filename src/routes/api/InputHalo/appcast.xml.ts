@@ -39,7 +39,6 @@ export async function GET(_event: APIEvent) {
       });
     }
 
-    // Stream the XML content from S3
     const body = await response.Body.transformToString();
 
     return new Response(body, {

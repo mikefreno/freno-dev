@@ -4,21 +4,6 @@
  */
 
 /**
- * Fetch wrapper for auth checks where 401s are expected and should not trigger console errors
- */
-export async function safeFetch(
-  input: RequestInfo | URL,
-  init?: RequestInit
-): Promise<Response> {
-  try {
-    const response = await fetch(input, init);
-    return response;
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
  * Decode JWT payload without verification (client-side only)
  * @param token - JWT token string
  * @returns Decoded payload or null if invalid

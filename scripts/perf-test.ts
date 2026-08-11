@@ -61,7 +61,6 @@ const BASE_URL = process.env.TEST_URL || "http://localhost:3000";
 const RUNS_PER_PAGE = parseInt(process.env.RUNS || "5", 10);
 const WARMUP_RUNS = 1;
 
-// Pages to test
 const TEST_PAGES: PageTestConfig[] = [
   { name: "Home", path: "/" },
   { name: "Blog Index", path: "/blog" },
@@ -78,7 +77,6 @@ const TEST_PAGES: PageTestConfig[] = [
   { name: "404", path: "/404" }
 ];
 
-// Add additional blog post path if provided
 if (process.env.TEST_BLOG_POST) {
   TEST_PAGES.push({
     name: "Custom Blog Post",
@@ -102,7 +100,6 @@ async function setupPerformanceObservers(page: Page) {
       interactions: [] as number[]
     };
 
-    // Observe LCP
     if ("PerformanceObserver" in window) {
       try {
         const lcpObserver = new PerformanceObserver((entryList) => {
@@ -118,10 +115,8 @@ async function setupPerformanceObservers(page: Page) {
           buffered: true
         });
       } catch (e) {
-        // LCP not supported
       }
 
-      // Observe CLS
       try {
         const clsObserver = new PerformanceObserver((entryList) => {
           for (const entry of entryList.getEntries()) {
@@ -138,10 +133,8 @@ async function setupPerformanceObservers(page: Page) {
         });
         clsObserver.observe({ type: "layout-shift", buffered: true });
       } catch (e) {
-        // CLS not supported
       }
 
-      // Observe FID (first input)
       try {
         const fidObserver = new PerformanceObserver((entryList) => {
           const firstInput = entryList.getEntries()[0] as any;
@@ -154,10 +147,8 @@ async function setupPerformanceObservers(page: Page) {
         });
         fidObserver.observe({ type: "first-input", buffered: true });
       } catch (e) {
-        // FID not supported
       }
 
-      // Observe long tasks
       try {
         const longTaskObserver = new PerformanceObserver((entryList) => {
           for (const entry of entryList.getEntries()) {
@@ -166,10 +157,8 @@ async function setupPerformanceObservers(page: Page) {
         });
         longTaskObserver.observe({ type: "longtask", buffered: true });
       } catch (e) {
-        // Long tasks not supported
       }
 
-      // Observe INP (event timing for interactions)
       try {
         const inpObserver = new PerformanceObserver((entryList) => {
           for (const entry of entryList.getEntries()) {
@@ -194,7 +183,6 @@ async function setupPerformanceObservers(page: Page) {
         });
         inpObserver.observe({ type: "event", buffered: true });
       } catch (e) {
-        // Event timing not supported
       }
     }
   });
@@ -203,18 +191,14 @@ async function setupPerformanceObservers(page: Page) {
 async function collectPerformanceMetrics(
   page: Page
 ): Promise<PerformanceMetrics> {
-  // Wait for page to be loaded
   await page.waitForLoadState("load");
 
-  // Wait a bit longer for LCP to settle (it can change as content loads)
   await page.waitForTimeout(1000);
 
-  // Additional wait for any remaining network activity
   await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {
     // Ignore timeout - networkidle may never happen for some pages
   });
 
-  // Collect comprehensive performance metrics
   const metrics = await page.evaluate(() => {
     const perf = performance.getEntriesByType(
       "navigation"
@@ -222,7 +206,6 @@ async function collectPerformanceMetrics(
     const paint = performance.getEntriesByType("paint");
     const fcp = paint.find((entry) => entry.name === "first-contentful-paint");
 
-    // Get metrics from our observers
     const observedMetrics = (window as any).__perfMetrics || {
       lcp: 0,
       cls: 0,
@@ -232,7 +215,6 @@ async function collectPerformanceMetrics(
       interactions: []
     };
 
-    // Fallback to direct API if observers didn't capture anything
     let lcp = observedMetrics.lcp;
     let cls = observedMetrics.cls;
     let fid = observedMetrics.fid;
@@ -258,7 +240,6 @@ async function collectPerformanceMetrics(
         .reduce((sum: number, entry: any) => sum + entry.value, 0);
     }
 
-    // Calculate INP from event timing entries if not already captured
     if (inp === 0) {
       const eventEntries = performance.getEntriesByType("event") as any[];
       const interactionLatencies = eventEntries
@@ -275,7 +256,6 @@ async function collectPerformanceMetrics(
       }
     }
 
-    // Get resource timing
     const resources = performance.getEntriesByType(
       "resource"
     ) as PerformanceResourceTiming[];
@@ -318,7 +298,6 @@ async function collectPerformanceMetrics(
       }
     });
 
-    // Calculate long task duration
     let taskDuration = 0;
     if (observedMetrics.longTasks && observedMetrics.longTasks.length > 0) {
       taskDuration = observedMetrics.longTasks.reduce(
@@ -327,7 +306,6 @@ async function collectPerformanceMetrics(
       );
     }
 
-    // Get more granular performance entries
     let jsExecutionTime = 0;
     let layoutDuration = 0;
     let paintDuration = 0;
@@ -339,7 +317,6 @@ async function collectPerformanceMetrics(
       }
     });
 
-    // Check for script evaluation entries
     const entries = performance.getEntries();
     entries.forEach((entry: any) => {
       if (entry.entryType === "measure") {
@@ -399,7 +376,6 @@ async function testPagePerformance(
     `   Running ${WARMUP_RUNS} warmup + ${RUNS_PER_PAGE} measured runs...\n`
   );
 
-  // Warmup runs (not counted)
   for (let i = 0; i < WARMUP_RUNS; i++) {
     const context = await browser.newContext();
     const page = await context.newPage();
@@ -410,20 +386,16 @@ async function testPagePerformance(
     console.log(`   ✓ Warmup run ${i + 1}/${WARMUP_RUNS}`);
   }
 
-  // Measured runs
   for (let i = 0; i < RUNS_PER_PAGE; i++) {
     console.log(`   → Run ${i + 1}/${RUNS_PER_PAGE}...`);
 
-    // Create new context for each run to ensure clean state
     const context = await browser.newContext({
       viewport: { width: 1920, height: 1080 }
     });
     const page = await context.newPage();
 
-    // Setup performance observers before navigation
     await setupPerformanceObservers(page);
 
-    // Navigate and collect metrics
     await page.goto(url, { waitUntil: "load" });
     const metrics = await collectPerformanceMetrics(page);
 
@@ -436,7 +408,6 @@ async function testPagePerformance(
     );
   }
 
-  // Calculate statistics
   const average = calculateAverage(runs);
   const median = calculateMedian(runs);
   const p95 = calculatePercentile(runs, 95);
@@ -648,7 +619,6 @@ function printResults(results: TestResult[]) {
     "═══════════════════════════════════════════════════════════════════\n"
   );
 
-  // Overall averages
   const overallAverage = {
     lcp: results.reduce((sum, r) => sum + r.median.lcp, 0) / results.length,
     fcp: results.reduce((sum, r) => sum + r.median.fcp, 0) / results.length,
@@ -696,7 +666,6 @@ function printResults(results: TestResult[]) {
 
   console.log("\n  Optimization Opportunities:");
 
-  // Find pages with highest JS bytes
   const highestJS = [...results].sort(
     (a, b) => b.median.jsBytes - a.median.jsBytes
   )[0];
@@ -707,7 +676,6 @@ function printResults(results: TestResult[]) {
     );
   }
 
-  // Find pages with slow LCP
   const slowLCP = results.filter((r) => r.median.lcp > 2500);
   if (slowLCP.length > 0) {
     console.log(
@@ -715,7 +683,6 @@ function printResults(results: TestResult[]) {
     );
   }
 
-  // Find pages with high CLS
   const highCLS = results.filter((r) => r.median.cls > 0.1);
   if (highCLS.length > 0) {
     console.log(
@@ -723,7 +690,6 @@ function printResults(results: TestResult[]) {
     );
   }
 
-  // Find pages with high INP
   const highINP = results.filter((r) => r.median.inp > 200);
   if (highINP.length > 0) {
     console.log(
@@ -740,7 +706,6 @@ async function main() {
   console.log(`Pages to test: ${TEST_PAGES.length}`);
   console.log(`Runs per page: ${RUNS_PER_PAGE} (+ ${WARMUP_RUNS} warmup)\n`);
 
-  // Check if server is running
   try {
     const response = await fetch(BASE_URL);
     if (!response.ok) {
@@ -770,10 +735,8 @@ async function main() {
 
   await browser.close();
 
-  // Print results
   printResults(results);
 
-  // Save results to JSON file
   const timestamp = new Date()
     .toISOString()
     .replace(/[:.]/g, "-")

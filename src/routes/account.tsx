@@ -512,507 +512,730 @@ export default function AccountPage() {
                   Account Settings
                 </div>
 
-                {/* Account Type Section */}
-                <div class="mx-auto mb-8 max-w-md">
-                  <div class="bg-surface0 border-surface1 rounded-lg border px-6 py-4 shadow-sm">
-                    <div class="text-subtext0 mb-2 text-center text-sm font-semibold tracking-wide uppercase">
-                      Account Type
-                    </div>
-                    <div class="flex items-center justify-center gap-3">
-                      <span class={getProviderColor(userProfile().provider)}>
-                        <Show when={userProfile().provider === "google"}>
-                          <GoogleLogo height={24} width={24} />
-                        </Show>
-                        <Show when={userProfile().provider === "github"}>
-                          <GitHub height={24} width={24} fill="currentColor" />
-                        </Show>
-                        <Show
-                          when={
-                            userProfile().provider === "email" ||
-                            !userProfile().provider
-                          }
-                        >
-                          <EmailIcon height={24} width={24} />
-                        </Show>
-                      </span>
-                      <span class="text-lg font-semibold">
-                        {getProviderName(userProfile().provider)} Account
-                      </span>
-                    </div>
-                    <Show
-                      when={
-                        userProfile().provider !== "email" &&
-                        !userProfile().email
-                      }
-                    >
-                      <div class="bg-yellow mt-3 rounded px-3 py-2 text-center text-base text-sm">
-                        ⚠️ Add an email address for account recovery
-                      </div>
-                    </Show>
-                    <Show
-                      when={
-                        userProfile().provider !== "email" &&
-                        !userProfile().hasPassword
-                      }
-                    >
-                      <div class="bg-blue mt-3 rounded px-3 py-2 text-center text-base text-sm">
-                        {!userProfile().email
-                          ? "💡 Add and verify an email to enable email/password login"
-                          : !userProfile().emailVerified
-                            ? "💡 Verify your email to enable password setup"
-                            : "💡 Add a password to enable email/password login"}
-                      </div>
-                    </Show>
-                  </div>
-                </div>
+                <AccountTypeSection
+                  profile={userProfile}
+                  getProviderColor={getProviderColor}
+                  getProviderName={getProviderName}
+                />
 
                 <hr class="mx-auto mb-8 max-w-4xl" />
 
-                {/* Profile Image Section */}
-                <div class="mx-auto mb-8 flex max-w-md justify-center">
-                  <div class="flex flex-col py-4">
-                    <div class="mb-2 text-center text-lg font-semibold">
-                      Profile Image
-                    </div>
-                    <noscript>
-                      <div class="text-subtext0 mb-4 text-center text-sm">
-                        JavaScript is required to update profile images
-                      </div>
-                    </noscript>
-                    <div class="flex items-start justify-center">
-                      <Dropzone
-                        onDrop={handleImageDrop}
-                        acceptedFiles="image/jpg, image/jpeg, image/png"
-                        fileHolder={profileImageHolder()}
-                        preSet={preSetHolder() || userProfile().image || null}
-                      />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        class="z-20 -ml-6 h-fit rounded-full transition-all hover:brightness-125"
-                      >
-                        <XCircle
-                          height={36}
-                          width={36}
-                          stroke="currentColor"
-                          strokeWidth={1}
-                        />
-                      </button>
-                    </div>
-                    <form onSubmit={setUserImage}>
-                      <button
-                        type="submit"
-                        disabled={
-                          profileImageSetLoading() || !profileImageStateChange()
-                        }
-                        class={`${
-                          profileImageSetLoading() || !profileImageStateChange()
-                            ? "bg-blue cursor-not-allowed brightness-75"
-                            : "bg-blue hover:brightness-125 active:scale-90"
-                        } mt-2 flex w-full justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
-                      >
-                        {profileImageSetLoading()
-                          ? "Uploading..."
-                          : "Set Image"}
-                      </button>
-                    </form>
-                    <FormFeedback
-                      type="success"
-                      message="Profile image updated!"
-                      show={showImageSuccess()}
-                      class="mt-2"
-                    />
-                  </div>
-                </div>
+                <ProfileImageSection
+                  profile={userProfile}
+                  handleImageDrop={handleImageDrop}
+                  profileImageHolder={profileImageHolder}
+                  preSetHolder={preSetHolder}
+                  removeImage={removeImage}
+                  setUserImage={setUserImage}
+                  profileImageSetLoading={profileImageSetLoading}
+                  profileImageStateChange={profileImageStateChange}
+                  showImageSuccess={showImageSuccess}
+                />
 
                 <hr class="mx-auto mb-8 max-w-4xl" />
 
                 {/* Email Section */}
                 <div class="mx-auto flex max-w-4xl flex-col gap-6 md:grid md:grid-cols-2">
-                  <div class="flex items-center justify-center text-lg md:justify-normal">
-                    <div class="flex flex-col lg:flex-row">
-                      <div class="pr-1 font-semibold whitespace-nowrap">
-                        {userProfile().provider === "email"
-                          ? "Email:"
-                          : "Linked Email:"}
-                      </div>
-                      {userProfile().email ? (
-                        <span>{userProfile().email}</span>
-                      ) : (
-                        <span class="font-light italic underline underline-offset-4">
-                          {userProfile().provider === "email"
-                            ? "None Set"
-                            : "Not Linked"}
-                        </span>
-                      )}
-                    </div>
-                    <Show
-                      when={userProfile().email && !userProfile().emailVerified}
-                    >
-                      <button
-                        onClick={sendEmailVerification}
-                        class="text-red ml-2 text-sm underline transition-all hover:brightness-125"
-                      >
-                        Verify Email
-                      </button>
-                    </Show>
-                  </div>
-
-                  <form onSubmit={setEmailTrigger} class="mx-auto">
-                    <noscript>
-                      <div class="text-subtext0 mb-2 px-4 text-center text-xs">
-                        JavaScript required to update email
-                      </div>
-                    </noscript>
-                    <Input
-                      ref={emailRef}
-                      type="email"
-                      required
-                      disabled={emailButtonLoading()}
-                      title="Please enter a valid email address"
-                      label={userProfile().email ? "Update Email" : "Add Email"}
-                    />
-                    <Show
-                      when={
-                        userProfile().provider !== "email" &&
-                        !userProfile().email
-                      }
-                    >
-                      <div class="text-subtext0 mt-1 px-4 text-xs">
-                        Add an email for account recovery and notifications
-                      </div>
-                    </Show>
-                    <div class="flex justify-end">
-                      <Button
-                        type="submit"
-                        disabled={
-                          userProfile().email !== null &&
-                          !userProfile().emailVerified
-                        }
-                        loading={emailButtonLoading()}
-                        class="mt-2"
-                      >
-                        Submit
-                      </Button>
-                    </div>
-                    <FormFeedback
-                      type="success"
-                      message="Email updated!"
-                      show={showEmailSuccess()}
-                      class="mt-2"
-                    />
-                  </form>
+                  <EmailSection
+                    profile={userProfile}
+                    emailRef={(el) => (emailRef = el)}
+                    emailButtonLoading={emailButtonLoading}
+                    setEmailTrigger={setEmailTrigger}
+                    showEmailSuccess={showEmailSuccess}
+                    sendEmailVerification={sendEmailVerification}
+                  />
 
                   {/* Display Name Section */}
-                  <div class="flex items-center justify-center text-lg md:justify-normal">
-                    <div class="flex flex-col lg:flex-row">
-                      <div class="pr-1 font-semibold whitespace-nowrap">
-                        Display Name:
-                      </div>
-                      {userProfile().displayName ? (
-                        <span>{userProfile().displayName}</span>
-                      ) : (
-                        <span class="font-light italic underline underline-offset-4">
-                          None Set
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <form onSubmit={setDisplayNameTrigger} class="mx-auto">
-                    <noscript>
-                      <div class="text-subtext0 mb-2 px-4 text-center text-xs">
-                        JavaScript required to update display name
-                      </div>
-                    </noscript>
-                    <Input
-                      ref={displayNameRef}
-                      type="text"
-                      required
-                      disabled={displayNameButtonLoading()}
-                      title="Please enter your display name"
-                      label={`Set ${userProfile().displayName ? "New " : ""}Display Name`}
-                      containerClass="input-group mx-4"
-                    />
-                    <div class="flex justify-end">
-                      <Button
-                        type="submit"
-                        loading={displayNameButtonLoading()}
-                        class="mt-2"
-                      >
-                        Submit
-                      </Button>
-                    </div>
-                    <FormFeedback
-                      type="success"
-                      message="Display name updated!"
-                      show={showDisplayNameSuccess()}
-                      class="mt-2"
-                    />
-                  </form>
+                  <DisplayNameSection
+                    profile={userProfile}
+                    displayNameRef={(el) => (displayNameRef = el)}
+                    displayNameButtonLoading={displayNameButtonLoading}
+                    setDisplayNameTrigger={setDisplayNameTrigger}
+                    showDisplayNameSuccess={showDisplayNameSuccess}
+                  />
                 </div>
 
-                {/* Password Change/Set Section */}
-                <form
-                  onSubmit={handlePasswordSubmit}
-                  class="mt-8 flex w-full justify-center"
-                >
-                  <div class="flex w-full max-w-md flex-col justify-center">
-                    <div class="mb-2 text-center text-xl font-semibold">
-                      {userProfile().hasPassword
-                        ? "Change Password"
-                        : "Add Password"}
-                    </div>
-                    <noscript>
-                      <div class="text-subtext0 mb-4 text-center text-sm">
-                        JavaScript required to{" "}
-                        {userProfile().hasPassword ? "change" : "add"} password
-                      </div>
-                    </noscript>
-                    <Show when={!userProfile().hasPassword}>
-                      <Show
-                        when={
-                          userProfile().provider !== "email" &&
-                          (!userProfile().email || !userProfile().emailVerified)
-                        }
-                      >
-                        <div class="bg-yellow mb-4 rounded px-4 py-3 text-center text-base text-sm">
-                          <div class="mb-1 font-semibold">
-                            ⚠️ Email Verification Required
-                          </div>
-                          <div>
-                            {!userProfile().email
-                              ? "Please add and verify an email address before setting a password."
-                              : "Please verify your email address before setting a password."}
-                          </div>
-                          <Show
-                            when={
-                              userProfile().email &&
-                              !userProfile().emailVerified
-                            }
-                          >
-                            <button
-                              onClick={sendEmailVerification}
-                              class="mt-2 font-semibold text-blue-700 underline transition-all hover:brightness-125"
-                            >
-                              Resend Verification Email
-                            </button>
-                          </Show>
-                        </div>
-                      </Show>
-                      <Show
-                        when={
-                          userProfile().provider === "email" ||
-                          (userProfile().email && userProfile().emailVerified)
-                        }
-                      >
-                        <div class="text-subtext0 mb-4 text-center text-sm">
-                          {userProfile().provider === "email"
-                            ? "Set a password to enable password login"
-                            : "Add a password to enable email/password login alongside your " +
-                              getProviderName(userProfile().provider) +
-                              " login"}
-                        </div>
-                      </Show>
-                    </Show>
-
-                    <Show when={userProfile().hasPassword}>
-                      <PasswordInput
-                        ref={oldPasswordRef}
-                        required
-                        minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
-                        disabled={passwordChangeLoading()}
-                        title="Password must be at least 8 characters"
-                        label="Old Password"
-                      />
-                    </Show>
-
-                    <PasswordInput
-                      ref={newPasswordRef}
-                      required
-                      minlength="8"
-                      onInput={handleNewPasswordChange}
-                      onBlur={handlePasswordBlur}
-                      disabled={
-                        passwordChangeLoading() ||
-                        (!userProfile().hasPassword &&
-                          userProfile().provider !== "email" &&
-                          (!userProfile().email ||
-                            !userProfile().emailVerified))
-                      }
-                      title="Password must be at least 8 characters"
-                      label="New Password"
-                      showStrength
-                      passwordValue={newPassword()}
-                    />
-                    <PasswordInput
-                      ref={newPasswordConfRef}
-                      required
-                      minlength="8"
-                      onInput={handlePasswordConfChange}
-                      disabled={
-                        passwordChangeLoading() ||
-                        (!userProfile().hasPassword &&
-                          userProfile().provider !== "email" &&
-                          (!userProfile().email ||
-                            !userProfile().emailVerified))
-                      }
-                      title="Password must be at least 8 characters"
-                      label="New Password Conf."
-                    />
-
-                    <Show
-                      when={
-                        !passwordsMatch() &&
-                        passwordLengthSufficient() &&
-                        newPasswordConfRef &&
-                        newPasswordConfRef.value.length >= 6
-                      }
-                    >
-                      <FormFeedback
-                        type="error"
-                        message="Passwords do not match!"
-                        class="mb-4"
-                      />
-                    </Show>
-
-                    <Button
-                      type="submit"
-                      disabled={
-                        !passwordsMatch() ||
-                        (!userProfile().hasPassword &&
-                          userProfile().provider !== "email" &&
-                          (!userProfile().email ||
-                            !userProfile().emailVerified))
-                      }
-                      loading={passwordChangeLoading()}
-                      class="my-6"
-                    >
-                      Set
-                    </Button>
-
-                    <FormFeedback
-                      type="error"
-                      message={
-                        userProfile().hasPassword
-                          ? "Password did not match record"
-                          : "Must have email & password provider linked or set password first"
-                      }
-                      show={passwordError()}
-                    />
-
-                    <FormFeedback
-                      type="success"
-                      message={`Password ${userProfile().hasPassword ? "changed" : "set"} successfully!`}
-                      show={showPasswordSuccess()}
-                    />
-                  </div>
-                </form>
+                <PasswordSection
+                  profile={userProfile}
+                  handlePasswordSubmit={handlePasswordSubmit}
+                  oldPasswordRef={(el) => (oldPasswordRef = el)}
+                  newPasswordRef={(el) => (newPasswordRef = el)}
+                  newPasswordConfRef={(el) =>
+                    el !== undefined
+                      ? (newPasswordConfRef = el)
+                      : newPasswordConfRef
+                  }
+                  handleNewPasswordChange={handleNewPasswordChange}
+                  handlePasswordConfChange={handlePasswordConfChange}
+                  handlePasswordBlur={handlePasswordBlur}
+                  sendEmailVerification={sendEmailVerification}
+                  getProviderName={getProviderName}
+                  passwordChangeLoading={passwordChangeLoading}
+                  newPassword={newPassword}
+                  passwordsMatch={passwordsMatch}
+                  passwordLengthSufficient={passwordLengthSufficient}
+                  passwordError={passwordError}
+                  showPasswordSuccess={showPasswordSuccess}
+                />
 
                 <hr class="mt-8 mb-8" />
 
-                {/* Linked Providers Section */}
-                <div class="mx-auto max-w-2xl py-8">
-                  <div class="mb-6 text-center text-2xl font-semibold">
-                    Linked Authentication Methods
-                  </div>
-                  <div class="bg-surface0 border-surface1 rounded-lg border px-6 py-4 shadow-sm">
-                    <LinkedProviders userId={userProfile().id} />
-                  </div>
-                </div>
+                <LinkedProvidersSection profile={userProfile} />
 
                 <hr class="mt-8 mb-8" />
 
-                {/* Sign Out Section */}
-                <div class="mx-auto max-w-md py-4">
-                  <Button
-                    type="button"
-                    onClick={handleSignOut}
-                    loading={signOutLoading()}
-                    variant="secondary"
-                    class="w-full"
-                  >
-                    Sign Out
-                  </Button>
-                </div>
+                <SignOutSection
+                  handleSignOut={handleSignOut}
+                  signOutLoading={signOutLoading}
+                />
 
                 <hr class="mt-8 mb-8" />
 
-                {/* Delete Account Section */}
-                <div class="mx-auto max-w-2xl py-8">
-                  <div class="bg-red w-full rounded-md px-6 pt-8 pb-4 shadow-md brightness-75">
-                    <div class="pb-4 text-center text-xl font-semibold">
-                      Delete Account
-                    </div>
-                    <div class="text-crust mb-4 text-center text-sm">
-                      Warning: This will delete all account information and is
-                      irreversible
-                    </div>
-
-                    <noscript>
-                      <div class="text-crust mb-4 text-center text-sm font-semibold">
-                        JavaScript is required to delete your account
-                      </div>
-                    </noscript>
-
-                    <Show
-                      when={userProfile().hasPassword}
-                      fallback={
-                        <div class="flex flex-col items-center">
-                          <div class="text-crust mb-4 text-center text-sm">
-                            Your {getProviderName(userProfile().provider)}{" "}
-                            account doesn't have a password. To delete your
-                            account, please set a password first, then return
-                            here to proceed with deletion.
-                          </div>
-                          <button
-                            onClick={() => {
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }}
-                            class="bg-surface0 hover:bg-surface1 rounded px-4 py-2 transition-all"
-                          >
-                            Go to Add Password Section
-                          </button>
-                        </div>
-                      }
-                    >
-                      <form onSubmit={deleteAccountTrigger}>
-                        <div class="delete flex w-full justify-center">
-                          <PasswordInput
-                            ref={deleteAccountPasswordRef}
-                            required
-                            minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
-                            disabled={deleteAccountButtonLoading()}
-                            title="Enter your password to confirm account deletion"
-                            label="Enter Password"
-                          />
-                        </div>
-
-                        <Button
-                          type="submit"
-                          loading={deleteAccountButtonLoading()}
-                          variant="danger"
-                          class="border-text mx-auto mt-4 border"
-                        >
-                          Delete Account
-                        </Button>
-
-                        <FormFeedback
-                          type="error"
-                          message="Password did not match record"
-                          show={passwordDeletionError()}
-                          class="mt-2"
-                        />
-                      </form>
-                    </Show>
-                  </div>
-                </div>
+                <DeleteAccountSection
+                  profile={userProfile}
+                  getProviderName={getProviderName}
+                  deleteAccountPasswordRef={(el) =>
+                    (deleteAccountPasswordRef = el)
+                  }
+                  deleteAccountButtonLoading={deleteAccountButtonLoading}
+                  deleteAccountTrigger={deleteAccountTrigger}
+                  passwordDeletionError={passwordDeletionError}
+                />
               </>
             )}
           </Show>
         </div>
       </div>
     </>
+  );
+}
+
+function AccountTypeSection(props: {
+  profile: () => UserProfile;
+  getProviderColor: (provider: UserProfile["provider"]) => string;
+  getProviderName: (provider: UserProfile["provider"]) => string;
+}) {
+  const { profile, getProviderColor, getProviderName } = props;
+
+  return (
+    <div class="mx-auto mb-8 max-w-md">
+      <div class="bg-surface0 border-surface1 rounded-lg border px-6 py-4 shadow-sm">
+        <div class="text-subtext0 mb-2 text-center text-sm font-semibold tracking-wide uppercase">
+          Account Type
+        </div>
+        <div class="flex items-center justify-center gap-3">
+          <span class={getProviderColor(profile().provider)}>
+            <Show when={profile().provider === "google"}>
+              <GoogleLogo height={24} width={24} />
+            </Show>
+            <Show when={profile().provider === "github"}>
+              <GitHub height={24} width={24} fill="currentColor" />
+            </Show>
+            <Show
+              when={
+                profile().provider === "email" ||
+                !profile().provider
+              }
+            >
+              <EmailIcon height={24} width={24} />
+            </Show>
+          </span>
+          <span class="text-lg font-semibold">
+            {getProviderName(profile().provider)} Account
+          </span>
+        </div>
+        <Show
+          when={
+            profile().provider !== "email" &&
+            !profile().email
+          }
+        >
+          <div class="bg-yellow mt-3 rounded px-3 py-2 text-center text-base text-sm">
+            ⚠️ Add an email address for account recovery
+          </div>
+        </Show>
+        <Show
+          when={
+            profile().provider !== "email" &&
+            !profile().hasPassword
+          }
+        >
+          <div class="bg-blue mt-3 rounded px-3 py-2 text-center text-base text-sm">
+            {!profile().email
+              ? "💡 Add and verify an email to enable email/password login"
+              : !profile().emailVerified
+                ? "💡 Verify your email to enable password setup"
+                : "💡 Add a password to enable email/password login"}
+          </div>
+        </Show>
+      </div>
+    </div>
+  );
+}
+
+function ProfileImageSection(props: {
+  profile: () => UserProfile;
+  handleImageDrop: (acceptedFiles: File[]) => void;
+  profileImageHolder: () => string | null;
+  preSetHolder: () => string | null;
+  removeImage: () => void;
+  setUserImage: (e: Event) => void;
+  profileImageSetLoading: () => boolean;
+  profileImageStateChange: () => boolean;
+  showImageSuccess: () => boolean;
+}) {
+  const {
+    profile,
+    handleImageDrop,
+    profileImageHolder,
+    preSetHolder,
+    removeImage,
+    setUserImage,
+    profileImageSetLoading,
+    profileImageStateChange,
+    showImageSuccess
+  } = props;
+
+  return (
+    <div class="mx-auto mb-8 flex max-w-md justify-center">
+      <div class="flex flex-col py-4">
+        <div class="mb-2 text-center text-lg font-semibold">
+          Profile Image
+        </div>
+        <noscript>
+          <div class="text-subtext0 mb-4 text-center text-sm">
+            JavaScript is required to update profile images
+          </div>
+        </noscript>
+        <div class="flex items-start justify-center">
+          <Dropzone
+            onDrop={handleImageDrop}
+            acceptedFiles="image/jpg, image/jpeg, image/png"
+            fileHolder={profileImageHolder()}
+            preSet={preSetHolder() || profile().image || null}
+          />
+          <button
+            type="button"
+            onClick={removeImage}
+            class="z-20 -ml-6 h-fit rounded-full transition-all hover:brightness-125"
+          >
+            <XCircle
+              height={36}
+              width={36}
+              stroke="currentColor"
+              strokeWidth={1}
+            />
+          </button>
+        </div>
+        <form onSubmit={setUserImage}>
+          <button
+            type="submit"
+            disabled={
+              profileImageSetLoading() || !profileImageStateChange()
+            }
+            class={`${
+              profileImageSetLoading() || !profileImageStateChange()
+                ? "bg-blue cursor-not-allowed brightness-75"
+                : "bg-blue hover:brightness-125 active:scale-90"
+            } mt-2 flex w-full justify-center rounded px-4 py-2 text-base transition-all duration-300 ease-out`}
+          >
+            {profileImageSetLoading()
+              ? "Uploading..."
+              : "Set Image"}
+          </button>
+        </form>
+        <FormFeedback
+          type="success"
+          message="Profile image updated!"
+          show={showImageSuccess()}
+          class="mt-2"
+        />
+      </div>
+    </div>
+  );
+}
+
+function EmailSection(props: {
+  profile: () => UserProfile;
+  emailRef: (el: HTMLInputElement) => void;
+  emailButtonLoading: () => boolean;
+  setEmailTrigger: (e: Event) => void;
+  showEmailSuccess: () => boolean;
+  sendEmailVerification: () => void;
+}) {
+  const {
+    profile,
+    emailRef,
+    emailButtonLoading,
+    setEmailTrigger,
+    showEmailSuccess,
+    sendEmailVerification
+  } = props;
+
+  return (
+    <>
+      <div class="flex items-center justify-center text-lg md:justify-normal">
+        <div class="flex flex-col lg:flex-row">
+          <div class="pr-1 font-semibold whitespace-nowrap">
+            {profile().provider === "email"
+              ? "Email:"
+              : "Linked Email:"}
+          </div>
+          {profile().email ? (
+            <span>{profile().email}</span>
+          ) : (
+            <span class="font-light italic underline underline-offset-4">
+              {profile().provider === "email"
+                ? "None Set"
+                : "Not Linked"}
+            </span>
+          )}
+        </div>
+        <Show when={profile().email && !profile().emailVerified}>
+          <button
+            onClick={sendEmailVerification}
+            class="text-red ml-2 text-sm underline transition-all hover:brightness-125"
+          >
+            Verify Email
+          </button>
+        </Show>
+      </div>
+
+      <form onSubmit={setEmailTrigger} class="mx-auto">
+        <noscript>
+          <div class="text-subtext0 mb-2 px-4 text-center text-xs">
+            JavaScript required to update email
+          </div>
+        </noscript>
+        <Input
+          ref={emailRef}
+          type="email"
+          required
+          disabled={emailButtonLoading()}
+          title="Please enter a valid email address"
+          label={profile().email ? "Update Email" : "Add Email"}
+        />
+        <Show
+          when={
+            profile().provider !== "email" &&
+            !profile().email
+          }
+        >
+          <div class="text-subtext0 mt-1 px-4 text-xs">
+            Add an email for account recovery and notifications
+          </div>
+        </Show>
+        <div class="flex justify-end">
+          <Button
+            type="submit"
+            disabled={
+              profile().email !== null &&
+              !profile().emailVerified
+            }
+            loading={emailButtonLoading()}
+            class="mt-2"
+          >
+            Submit
+          </Button>
+        </div>
+        <FormFeedback
+          type="success"
+          message="Email updated!"
+          show={showEmailSuccess()}
+          class="mt-2"
+        />
+      </form>
+    </>
+  );
+}
+
+function DisplayNameSection(props: {
+  profile: () => UserProfile;
+  displayNameRef: (el: HTMLInputElement) => void;
+  displayNameButtonLoading: () => boolean;
+  setDisplayNameTrigger: (e: Event) => void;
+  showDisplayNameSuccess: () => boolean;
+}) {
+  const {
+    profile,
+    displayNameRef,
+    displayNameButtonLoading,
+    setDisplayNameTrigger,
+    showDisplayNameSuccess
+  } = props;
+
+  return (
+    <>
+      <div class="flex items-center justify-center text-lg md:justify-normal">
+        <div class="flex flex-col lg:flex-row">
+          <div class="pr-1 font-semibold whitespace-nowrap">
+            Display Name:
+          </div>
+          {profile().displayName ? (
+            <span>{profile().displayName}</span>
+          ) : (
+            <span class="font-light italic underline underline-offset-4">
+              None Set
+            </span>
+          )}
+        </div>
+      </div>
+
+      <form onSubmit={setDisplayNameTrigger} class="mx-auto">
+        <noscript>
+          <div class="text-subtext0 mb-2 px-4 text-center text-xs">
+            JavaScript required to update display name
+          </div>
+        </noscript>
+        <Input
+          ref={displayNameRef}
+          type="text"
+          required
+          disabled={displayNameButtonLoading()}
+          title="Please enter your display name"
+          label={`Set ${profile().displayName ? "New " : ""}Display Name`}
+          containerClass="input-group mx-4"
+        />
+        <div class="flex justify-end">
+          <Button
+            type="submit"
+            loading={displayNameButtonLoading()}
+            class="mt-2"
+          >
+            Submit
+          </Button>
+        </div>
+        <FormFeedback
+          type="success"
+          message="Display name updated!"
+          show={showDisplayNameSuccess()}
+          class="mt-2"
+        />
+      </form>
+    </>
+  );
+}
+
+function PasswordSection(props: {
+  profile: () => UserProfile;
+  handlePasswordSubmit: (e: Event) => void;
+  oldPasswordRef: (el: HTMLInputElement) => void;
+  newPasswordRef: (el: HTMLInputElement) => void;
+  newPasswordConfRef: (
+    el?: HTMLInputElement
+  ) => HTMLInputElement | undefined;
+  handleNewPasswordChange: (e: Event) => void;
+  handlePasswordConfChange: (e: Event) => void;
+  handlePasswordBlur: () => void;
+  sendEmailVerification: () => void;
+  getProviderName: (provider: UserProfile["provider"]) => string;
+  passwordChangeLoading: () => boolean;
+  newPassword: () => string;
+  passwordsMatch: () => boolean;
+  passwordLengthSufficient: () => boolean;
+  passwordError: () => boolean;
+  showPasswordSuccess: () => boolean;
+}) {
+  const {
+    profile,
+    handlePasswordSubmit,
+    oldPasswordRef,
+    newPasswordRef,
+    newPasswordConfRef,
+    handleNewPasswordChange,
+    handlePasswordConfChange,
+    handlePasswordBlur,
+    sendEmailVerification,
+    getProviderName,
+    passwordChangeLoading,
+    newPassword,
+    passwordsMatch,
+    passwordLengthSufficient,
+    passwordError,
+    showPasswordSuccess
+  } = props;
+
+  return (
+    <form
+      onSubmit={handlePasswordSubmit}
+      class="mt-8 flex w-full justify-center"
+    >
+      <div class="flex w-full max-w-md flex-col justify-center">
+        <div class="mb-2 text-center text-xl font-semibold">
+          {profile().hasPassword
+            ? "Change Password"
+            : "Add Password"}
+        </div>
+        <noscript>
+          <div class="text-subtext0 mb-4 text-center text-sm">
+            JavaScript required to{" "}
+            {profile().hasPassword ? "change" : "add"} password
+          </div>
+        </noscript>
+        <Show when={!profile().hasPassword}>
+          <Show
+            when={
+              profile().provider !== "email" &&
+              (!profile().email || !profile().emailVerified)
+            }
+          >
+            <div class="bg-yellow mb-4 rounded px-4 py-3 text-center text-base text-sm">
+              <div class="mb-1 font-semibold">
+                ⚠️ Email Verification Required
+              </div>
+              <div>
+                {!profile().email
+                  ? "Please add and verify an email address before setting a password."
+                  : "Please verify your email address before setting a password."}
+              </div>
+              <Show
+                when={
+                  profile().email &&
+                  !profile().emailVerified
+                }
+              >
+                <button
+                  onClick={sendEmailVerification}
+                  class="mt-2 font-semibold text-blue-700 underline transition-all hover:brightness-125"
+                >
+                  Resend Verification Email
+                </button>
+              </Show>
+            </div>
+          </Show>
+          <Show
+            when={
+              profile().provider === "email" ||
+              (profile().email && profile().emailVerified)
+            }
+          >
+            <div class="text-subtext0 mb-4 text-center text-sm">
+              {profile().provider === "email"
+                ? "Set a password to enable password login"
+                : "Add a password to enable email/password login alongside your " +
+                  getProviderName(profile().provider) +
+                  " login"}
+            </div>
+          </Show>
+        </Show>
+
+        <Show when={profile().hasPassword}>
+          <PasswordInput
+            ref={oldPasswordRef}
+            required
+            minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
+            disabled={passwordChangeLoading()}
+            title="Password must be at least 8 characters"
+            label="Old Password"
+          />
+        </Show>
+
+        <PasswordInput
+          ref={newPasswordRef}
+          required
+          minlength="8"
+          onInput={handleNewPasswordChange}
+          onBlur={handlePasswordBlur}
+          disabled={
+            passwordChangeLoading() ||
+            (!profile().hasPassword &&
+              profile().provider !== "email" &&
+              (!profile().email ||
+                !profile().emailVerified))
+          }
+          title="Password must be at least 8 characters"
+          label="New Password"
+          showStrength
+          passwordValue={newPassword()}
+        />
+        <PasswordInput
+          ref={newPasswordConfRef}
+          required
+          minlength="8"
+          onInput={handlePasswordConfChange}
+          disabled={
+            passwordChangeLoading() ||
+            (!profile().hasPassword &&
+              profile().provider !== "email" &&
+              (!profile().email ||
+                !profile().emailVerified))
+          }
+          title="Password must be at least 8 characters"
+          label="New Password Conf."
+        />
+
+        <Show
+          when={
+            !passwordsMatch() &&
+            passwordLengthSufficient() &&
+            newPasswordConfRef() &&
+            newPasswordConfRef()!.value.length >= 6
+          }
+        >
+          <FormFeedback
+            type="error"
+            message="Passwords do not match!"
+            class="mb-4"
+          />
+        </Show>
+
+        <Button
+          type="submit"
+          disabled={
+            !passwordsMatch() ||
+            (!profile().hasPassword &&
+              profile().provider !== "email" &&
+              (!profile().email ||
+                !profile().emailVerified))
+          }
+          loading={passwordChangeLoading()}
+          class="my-6"
+        >
+          Set
+        </Button>
+
+        <FormFeedback
+          type="error"
+          message={
+            profile().hasPassword
+              ? "Password did not match record"
+              : "Must have email & password provider linked or set password first"
+          }
+          show={passwordError()}
+        />
+
+        <FormFeedback
+          type="success"
+          message={`Password ${profile().hasPassword ? "changed" : "set"} successfully!`}
+          show={showPasswordSuccess()}
+        />
+      </div>
+    </form>
+  );
+}
+
+function LinkedProvidersSection(props: { profile: () => UserProfile }) {
+  const { profile } = props;
+
+  return (
+    <div class="mx-auto max-w-2xl py-8">
+      <div class="mb-6 text-center text-2xl font-semibold">
+        Linked Authentication Methods
+      </div>
+      <div class="bg-surface0 border-surface1 rounded-lg border px-6 py-4 shadow-sm">
+        <LinkedProviders userId={profile().id} />
+      </div>
+    </div>
+  );
+}
+
+function SignOutSection(props: {
+  handleSignOut: () => void;
+  signOutLoading: () => boolean;
+}) {
+  const { handleSignOut, signOutLoading } = props;
+
+  return (
+    <div class="mx-auto max-w-md py-4">
+      <Button
+        type="button"
+        onClick={handleSignOut}
+        loading={signOutLoading()}
+        variant="secondary"
+        class="w-full"
+      >
+        Sign Out
+      </Button>
+    </div>
+  );
+}
+
+function DeleteAccountSection(props: {
+  profile: () => UserProfile;
+  getProviderName: (provider: UserProfile["provider"]) => string;
+  deleteAccountPasswordRef: (el: HTMLInputElement) => void;
+  deleteAccountButtonLoading: () => boolean;
+  deleteAccountTrigger: (e: Event) => void;
+  passwordDeletionError: () => boolean;
+}) {
+  const {
+    profile,
+    getProviderName,
+    deleteAccountPasswordRef,
+    deleteAccountButtonLoading,
+    deleteAccountTrigger,
+    passwordDeletionError
+  } = props;
+
+  return (
+    <div class="mx-auto max-w-2xl py-8">
+      <div class="bg-red w-full rounded-md px-6 pt-8 pb-4 shadow-md brightness-75">
+        <div class="pb-4 text-center text-xl font-semibold">
+          Delete Account
+        </div>
+        <div class="text-crust mb-4 text-center text-sm">
+          Warning: This will delete all account information and is
+          irreversible
+        </div>
+
+        <noscript>
+          <div class="text-crust mb-4 text-center text-sm font-semibold">
+            JavaScript is required to delete your account
+          </div>
+        </noscript>
+
+        <Show
+          when={profile().hasPassword}
+          fallback={
+            <div class="flex flex-col items-center">
+              <div class="text-crust mb-4 text-center text-sm">
+                Your {getProviderName(profile().provider)}{" "}
+                account doesn't have a password. To delete your
+                account, please set a password first, then return
+                here to proceed with deletion.
+              </div>
+              <button
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                class="bg-surface0 hover:bg-surface1 rounded px-4 py-2 transition-all"
+              >
+                Go to Add Password Section
+              </button>
+            </div>
+          }
+        >
+          <form onSubmit={deleteAccountTrigger}>
+            <div class="delete flex w-full justify-center">
+              <PasswordInput
+                ref={deleteAccountPasswordRef}
+                required
+                minlength={VALIDATION_CONFIG.MIN_PASSWORD_LENGTH}
+                disabled={deleteAccountButtonLoading()}
+                title="Enter your password to confirm account deletion"
+                label="Enter Password"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              loading={deleteAccountButtonLoading()}
+              variant="danger"
+              class="border-text mx-auto mt-4 border"
+            >
+              Delete Account
+            </Button>
+
+            <FormFeedback
+              type="error"
+              message="Password did not match record"
+              show={passwordDeletionError()}
+              class="mt-2"
+            />
+          </form>
+        </Show>
+      </div>
+    </div>
   );
 }
 

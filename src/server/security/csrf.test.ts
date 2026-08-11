@@ -21,7 +21,6 @@ describe("CSRF Protection", () => {
       const token = generateCSRFToken();
       expect(token).toBeDefined();
       expect(typeof token).toBe("string");
-      // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
       expect(token).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
       );
@@ -34,7 +33,6 @@ describe("CSRF Protection", () => {
     });
 
     it("should generate cryptographically secure tokens", () => {
-      // Generate multiple tokens and ensure no collisions
       const tokens = new Set<string>();
       for (let i = 0; i < 1000; i++) {
         tokens.add(generateCSRFToken());
@@ -50,7 +48,6 @@ describe("CSRF Protection", () => {
 
       expect(token).toBeDefined();
       expect(typeof token).toBe("string");
-      // Token should be a UUID
       expect(token).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
       );
@@ -122,7 +119,6 @@ describe("CSRF Protection", () => {
       const invalidToken1 = "b".repeat(36);
       const invalidToken2 = "b".repeat(35) + "a";
 
-      // Test timing for completely different tokens
       const event1 = createMockEvent({
         headers: { "x-csrf-token": invalidToken1 },
         cookies: { "csrf-token": validToken }
@@ -132,7 +128,6 @@ describe("CSRF Protection", () => {
       validateCSRFToken(event1);
       const time1 = performance.now() - start1;
 
-      // Test timing for tokens that differ only at the end
       const event2 = createMockEvent({
         headers: { "x-csrf-token": invalidToken2 },
         cookies: { "csrf-token": validToken }
@@ -142,7 +137,6 @@ describe("CSRF Protection", () => {
       validateCSRFToken(event2);
       const time2 = performance.now() - start2;
 
-      // Timing difference should be minimal (less than 1ms)
       // This tests for constant-time comparison
       const timeDiff = Math.abs(time1 - time2);
       expect(timeDiff).toBeLessThan(1);
@@ -161,7 +155,6 @@ describe("CSRF Protection", () => {
 
   describe("CSRF Attack Scenarios", () => {
     it("should prevent basic CSRF attack", () => {
-      // Attacker doesn't have access to the CSRF token cookie
       const attackEvent = createMockEvent({
         headers: { "x-csrf-token": "attacker-guessed-token" }
       });
@@ -174,7 +167,6 @@ describe("CSRF Protection", () => {
       const token1 = generateCSRFToken();
       const token2 = generateCSRFToken();
 
-      // User has token1, attacker tries to use token2
       const event = createMockEvent({
         headers: { "x-csrf-token": token2 },
         cookies: { "csrf-token": token1 }
@@ -198,7 +190,6 @@ describe("CSRF Protection", () => {
     });
 
     it("should prevent replay attacks with old tokens", () => {
-      // Simulate an old token that was captured
       const oldToken = "old-captured-token-12345";
 
       const event = createMockEvent({
@@ -206,10 +197,8 @@ describe("CSRF Protection", () => {
         cookies: { "csrf-token": oldToken }
       });
 
-      // Even if tokens match, they should be validated by the system
-      // This test validates the structure works correctly
       const isValid = validateCSRFToken(event);
-      expect(isValid).toBe(true); // Matches are valid
+      expect(isValid).toBe(true);
     });
   });
 
@@ -270,9 +259,7 @@ describe("CSRF Protection", () => {
         tokens.push(generateCSRFToken());
       }
 
-      // Check for sequential patterns
       for (let i = 1; i < tokens.length; i++) {
-        // Tokens should not be incrementing
         expect(tokens[i]).not.toBe(
           String(Number(tokens[i - 1].replace(/-/g, "")) + 1)
         );
@@ -281,11 +268,9 @@ describe("CSRF Protection", () => {
 
     it("should generate tokens with sufficient entropy", () => {
       const token = generateCSRFToken();
-      // UUID without dashes should be 32 hex characters
       const hexString = token.replace(/-/g, "");
       expect(hexString).toMatch(/^[0-9a-f]{32}$/i);
 
-      // Check that not all characters are the same
       const uniqueChars = new Set(hexString.split(""));
       expect(uniqueChars.size).toBeGreaterThan(5);
     });
@@ -299,7 +284,6 @@ describe("CSRF Protection", () => {
       }
       const duration = performance.now() - start;
 
-      // Should generate 1000 tokens in less than 100ms
       expect(duration).toBeLessThan(100);
     });
 
@@ -316,7 +300,6 @@ describe("CSRF Protection", () => {
       }
       const duration = performance.now() - start;
 
-      // Should validate 10000 tokens in less than 100ms
       expect(duration).toBeLessThan(100);
     });
   });
@@ -402,7 +385,6 @@ describe("CSRF Protection", () => {
       const sessionAToken = generateCSRFToken();
       const sessionBToken = generateCSRFToken();
 
-      // Session A's cookie with Session B's header token
       const event = createMockEvent({
         headers: { "x-csrf-token": sessionBToken },
         cookies: { "csrf-token": sessionAToken }
@@ -522,12 +504,10 @@ describe("CSRF Protection", () => {
     it("should issue CSRF token on setCSRFToken then validate it", () => {
       const event = createMockEvent({});
 
-      // Step 1: Login issues CSRF token
       const token = setCSRFToken(event);
       expect(token).toBeDefined();
       expect(typeof token).toBe("string");
 
-      // Step 2: Subsequent mutation sends token back
       const mutationEvent = createMockEvent({
         headers: { "x-csrf-token": token },
         cookies: { "csrf-token": token }
@@ -538,7 +518,6 @@ describe("CSRF Protection", () => {
     });
 
     it("should reject cross-origin POST without CSRF token", () => {
-      // Simulated cross-site POST: attacker can read cookies but not set headers
       const attackEvent = createMockEvent({
         // No x-csrf-token header (cross-origin requests can't set custom headers)
         cookies: { "csrf-token": "victim-token" }
