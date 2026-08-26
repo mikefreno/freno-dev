@@ -12,7 +12,7 @@
  * `src/server/site-context-server.ts` builds on `resolveSiteFromHost`.
  */
 
-export type SiteId = "main" | "nessa" | "lineage" | "gaze" | "inputhalo";
+export type SiteId = "main" | "nessa" | "lineage" | "gaze" | "inputhalo" | "nook";
 
 export interface Site {
   /** Canonical id, also serialized into `<html data-site>` and `window.__SITE__`. */
@@ -122,6 +122,18 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     brandColor: "#41a5ff",
     ogDefaultImage: "/inputhalo/og-default.png",
     faviconPath: "/inputhalo/favicon/favicon.ico"
+  },
+  nook: {
+    id: "nook",
+    subdomain: "nook",
+    domain: `nook.${BASE_DOMAIN}`,
+    baseRoutePrefix: "/nook",
+    displayName: "The Nook",
+    titleSuffix: " | The Nook",
+    brandColor: "#8b5cf6",
+    brandColorDark: "#a78bfa",
+    ogDefaultImage: "/nook/og-default.png",
+    faviconPath: "/nook/favicon/favicon.ico"
   }
 };
 
@@ -130,7 +142,8 @@ const SUBDOMAIN_SITES: ReadonlyArray<Site> = [
   SITE_CONFIG.nessa,
   SITE_CONFIG.lineage,
   SITE_CONFIG.gaze,
-  SITE_CONFIG.inputhalo
+  SITE_CONFIG.inputhalo,
+  SITE_CONFIG.nook
 ];
 
 /** Matches `<sub>.localhost` and `<sub>.localhost:<port>` (dev only). */

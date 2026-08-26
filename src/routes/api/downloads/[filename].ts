@@ -24,11 +24,13 @@ export async function GET(event: APIEvent) {
     });
   }
 
-  const validPrefixes = ["Gaze", "InputHalo"];
+  const validPrefixes = ["Gaze", "InputHalo", "TheNook"];
   const isValidPrefix = validPrefixes.some((prefix) => filename.startsWith(prefix));
   if (
     !isValidPrefix ||
-    (!filename.endsWith(".dmg") && !filename.endsWith(".delta"))
+    (!filename.endsWith(".dmg") &&
+      !filename.endsWith(".delta") &&
+      !filename.endsWith(".zip"))
   ) {
     return new Response("Invalid file format", {
       status: 400,
@@ -69,9 +71,11 @@ export async function GET(event: APIEvent) {
       });
     }
 
-    const contentType = filename.endsWith(".dmg")
-      ? "application/x-apple-diskimage"
-      : "application/octet-stream";
+    const contentType = filename.endsWith(".zip")
+      ? "application/zip"
+      : filename.endsWith(".dmg")
+        ? "application/x-apple-diskimage"
+        : "application/octet-stream";
 
     const body = await response.Body.transformToByteArray();
 

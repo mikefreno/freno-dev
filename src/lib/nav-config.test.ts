@@ -16,7 +16,7 @@ import {
 } from "./nav-config";
 import { SITE_CONFIG, type SiteId } from "./site-context";
 
-const ALL_SITES: SiteId[] = ["main", "nessa", "lineage", "gaze", "inputhalo"];
+const ALL_SITES: SiteId[] = ["main", "nessa", "lineage", "gaze", "inputhalo", "nook"];
 
 describe("NAV_CONFIG — per-site link sets", () => {
   it("main → Home, Blog, Downloads, Resume, Contact, GitHub, LinkedIn", () => {
@@ -80,7 +80,7 @@ describe("NAV_CONFIG — href correctness", () => {
   });
 
   it("subdomain nav hrefs are public browser paths, never the internal rewritten prefix", () => {
-    for (const id of ["nessa", "lineage", "gaze", "inputhalo"] as SiteId[]) {
+    for (const id of ["nessa", "lineage", "gaze", "inputhalo", "nook"] as SiteId[]) {
       for (const item of NAV_CONFIG[id]) {
         // No subdomain-prefixed paths leak into the public nav.
         expect(item.href.startsWith(`/${id}/`)).toBe(false);
@@ -111,7 +111,7 @@ describe("NAV_CONFIG — href correctness", () => {
 
 describe("NAV_CONFIG — auth-scoping by construction", () => {
   it("no subdomain nav item sets showLoggedIn / showLoggedOut", () => {
-    for (const id of ["nessa", "lineage", "gaze", "inputhalo"] as SiteId[]) {
+    for (const id of ["nessa", "lineage", "gaze", "inputhalo", "nook"] as SiteId[]) {
       for (const item of NAV_CONFIG[id]) {
         expect(item.showLoggedIn).toBeUndefined();
         expect(item.showLoggedOut).toBeUndefined();

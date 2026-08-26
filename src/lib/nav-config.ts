@@ -116,6 +116,10 @@ export const NAV_CONFIG: Record<SiteId, NavItem[]> = {
     { label: "Contact", href: "/contact", icon: "contact" },
     { label: "Privacy", href: "/privacy", icon: "privacy" },
     { label: "Downloads", href: "/downloads", icon: "downloads" }
+  ],
+  nook: [
+    { label: "Home", href: "/", icon: "home" },
+    { label: "Privacy", href: "/privacy", icon: "privacy" }
   ]
 };
 

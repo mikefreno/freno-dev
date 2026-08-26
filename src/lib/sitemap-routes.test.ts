@@ -146,7 +146,7 @@ describe("SITEMAP_ROUTES validation", () => {
   });
 
   it("each site has at least the home page entry", () => {
-    const siteIds: SiteId[] = ["main", "nessa", "lineage", "gaze", "inputhalo"];
+    const siteIds: SiteId[] = ["main", "nessa", "lineage", "gaze", "inputhalo", "nook"];
     for (const id of siteIds) {
       expect(SITEMAP_ROUTES[id].some((e) => e.path === "/")).toBe(true);
     }

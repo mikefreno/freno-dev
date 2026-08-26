@@ -81,7 +81,7 @@ describe("resolveSiteFromHost", () => {
   });
 
   it("every SITE_CONFIG entry has a non-empty baseRoutePrefix for subdomains", () => {
-    for (const id of ["nessa", "lineage", "gaze", "inputhalo"] as SiteId[]) {
+    for (const id of ["nessa", "lineage", "gaze", "inputhalo", "nook"] as SiteId[]) {
       expect(SITE_CONFIG[id].baseRoutePrefix).toBe(`/${id}`);
       expect(SITE_CONFIG[id].subdomain).toBe(id);
       expect(SITE_CONFIG[id].titleSuffix).toBe(

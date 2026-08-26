@@ -1,9 +1,10 @@
-import { createClient } from "@libsql/client/web";
+import { createClient, type Client } from "@libsql/client/web";
 import { env } from "~/env/server";
 
-let mainDBConnection: ReturnType<typeof createClient> | null = null;
-let lineageDBConnection: ReturnType<typeof createClient> | null = null;
-let nessaDBConnection: ReturnType<typeof createClient> | null = null;
+let mainDBConnection: Client | null = null;
+let lineageDBConnection: Client | null = null;
+let nessaDBConnection: Client | null = null;
+let nookDBConnection: Client | null = null;
 
 export function ConnectionFactory() {
   if (!mainDBConnection) {
@@ -36,4 +37,15 @@ export function NessaConnectionFactory() {
     nessaDBConnection = createClient(config);
   }
   return nessaDBConnection;
+}
+
+export function NookConnectionFactory() {
+  if (!nookDBConnection) {
+    const config = {
+      url: env.NOOK_DB_URL,
+      authToken: env.NOOK_DB_TOKEN
+    };
+    nookDBConnection = createClient(config);
+  }
+  return nookDBConnection;
 }

@@ -67,7 +67,13 @@ const serverEnvSchema = z.object({
   APPLE_CLIENT_ID_NESSA: z.string().min(1).optional(),
   APPLE_CLIENT_ID_LINEAGE: z.string().min(1).optional(),
   VITE_TURNSTILE_SITE_KEY: z.string().min(1),
-  TURNSTILE_SECRET_KEY: z.string().min(1)
+  TURNSTILE_SECRET_KEY: z.string().min(1),
+  NOOK_DB_URL: z.string().min(1),
+  NOOK_DB_TOKEN: z.string().min(1),
+  NOOK_LICENSE_PRIVATE_KEY: z.string().min(1),
+  NOOK_STRIPE_SK: z.string().min(1),
+  NOOK_STRIPE_WEBHOOK_SECRET: z.string().min(1),
+  NOOK_STRIPE_PRICE_ID: z.string().min(1)
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
