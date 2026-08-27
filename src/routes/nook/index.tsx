@@ -8,8 +8,12 @@ const NOOK_DOWNLOAD_URL = "https://freno.me/api/downloads/TheNook-0.2.0.zip";
 
 const FEATURES = [
   {
-    title: "Unified device control",
-    body: "Monitor and control the hardware and services behind your Mac from one fast, native panel."
+    title: "Agent orchestration",
+    body: "Orchestrate your coding agents in one native panel, with sessions that keep working while you do."
+  },
+  {
+    title: "A beautiful native UI",
+    body: "Animated panels and buttery SwiftUI transitions, tuned to feel right at home on your Mac."
   },
   {
     title: "Fan & thermal insight",
@@ -35,10 +39,10 @@ export default function NookLanding() {
     <>
       <PageHead
         title="Home"
-        description="The Nook — a native macOS utility for hardware control, fan and thermal insight, and quiet system services."
+        description="The Nook — a native macOS utility for coding-agent orchestration, fan and thermal control."
         ogImage="/nook/og-default.png"
-        ogTitle="The Nook — native macOS hardware control"
-        ogDescription="A one-time-purchase macOS app for fan control, thermal insight, and quiet system services."
+        ogTitle="The Nook — native macOS agent orchestration"
+        ogDescription="A one-time-purchase macOS app for coding-agent orchestration, fan control, and thermal insight."
       />
 
       <SubdomainHeader />
@@ -49,20 +53,33 @@ export default function NookLanding() {
           class="fixed inset-0 z-0"
           style={{
             background: isDark()
-              ? "radial-gradient(ellipse at top, #241a38 0%, #0b0b10 70%)"
-              : "radial-gradient(ellipse at top, #efe9ff 0%, #f5f5f5 70%)"
+              ? "radial-gradient(ellipse at top, #123945 0%, #0b0b10 70%)"
+              : "radial-gradient(ellipse at top, #d7eef5 0%, #f5f5f5 70%)"
           }}
         />
         <div class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-24 text-center">
-          <div class="text-text/90 mb-6 rounded-2xl px-5 py-3 text-sm font-semibold tracking-wide backdrop-blur-sm"
-            style={{ border: "1px solid var(--color-overlay0)", background: "var(--color-surface0)" }}>
+          <img
+            src="/nook/icon.png"
+            alt="The Nook App Icon"
+            height={128}
+            width={128}
+            class="mb-6 h-32 w-32 rounded-[22%] object-cover object-center shadow-2xl"
+          />
+          <div
+            class="text-text/90 mb-6 rounded-2xl px-5 py-3 text-sm font-semibold tracking-wide backdrop-blur-sm"
+            style={{
+              border: "1px solid var(--color-overlay0)",
+              background: "var(--color-surface0)"
+            }}
+          >
             The Nook
           </div>
           <h1 class="text-text mb-4 text-5xl font-bold tracking-tight">
             Your Mac, under your control
           </h1>
           <p class="text-subtext0 mb-2 max-w-xl text-xl">
-            Fan control, thermal insight, and quiet system services — native macOS, one-time license.
+            Agent orchestration, fan and thermal control — native macOS,
+            one-time license.
           </p>
           <p class="text-subtext1 mb-8 text-sm">
             macOS 14+ · 14-day free trial · 3 devices
@@ -95,7 +112,7 @@ export default function NookLanding() {
       <section class="bg-base relative z-20 px-4 py-20 md:px-8">
         <div class="mx-auto max-w-4xl">
           <h2 class="text-text mb-12 text-center text-3xl font-bold">
-            Quiet power, right where it belongs
+            One panel for your agents and your Mac
           </h2>
           <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-2">
             {FEATURES.map((feature) => (
@@ -117,9 +134,10 @@ export default function NookLanding() {
             Try it free for 14 days
           </h2>
           <p class="text-subtext0 mx-auto mb-10 max-w-2xl leading-relaxed">
-            Watch temperatures, take control of your fans, and keep background
-            services quiet. When the trial ends, unlock everything with a
-            single one-time payment — no subscription, ever.
+            Orchestrate your coding agents, watch temperatures, take control of
+            your fans, and keep background services quiet. When the trial ends,
+            unlock everything with a single one-time payment — no subscription,
+            ever.
           </p>
           <div class="flex flex-col items-center justify-center gap-4 sm:flex-row sm:space-x-4">
             <Button

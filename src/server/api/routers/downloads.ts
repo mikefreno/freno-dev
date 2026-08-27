@@ -16,12 +16,13 @@ const assets: Record<string, string> = {
 };
 
 /**
- * Get the latest DMG from S3 by finding the most recent file with the given prefix
+ * Find the most recent file in S3 matching a prefix and extension.
  */
-async function getLatestDMG(
+async function getLatestFile(
   client: S3Client,
   bucket: string,
-  prefix: string
+  prefix: string,
+  ext: string
 ): Promise<string> {
   try {
     const listCommand = new ListObjectsV2Command({
@@ -33,49 +34,41 @@ async function getLatestDMG(
     const response = await client.send(listCommand);
 
     if (!response.Contents || response.Contents.length === 0) {
-      throw new Error(`No DMG files found in S3 with prefix ${prefix}`);
+      throw new Error(`No files found in S3 with prefix ${prefix}`);
     }
 
-    const dmgFiles = response.Contents.filter((obj) =>
-      obj.Key?.endsWith(".dmg")
+    const files = response.Contents.filter((obj) =>
+      obj.Key?.endsWith(ext)
     ).sort((a, b) => {
       const dateA = a.LastModified?.getTime() || 0;
       const dateB = b.LastModified?.getTime() || 0;
-      return dateB - dateA; // Descending order (newest first)
+      return dateB - dateA;
     });
 
-    if (dmgFiles.length === 0) {
-      throw new Error(`No .dmg files found in ${prefix} prefix`);
+    if (files.length === 0) {
+      throw new Error(`No ${ext} files found in ${prefix} prefix`);
     }
 
-    const latestFile = dmgFiles[0].Key!;
-    console.log(`Latest DMG: ${latestFile}`);
+    const latestFile = files[0].Key!;
+    console.log(`Latest file: ${latestFile}`);
     return latestFile;
   } catch (error) {
-    console.error(`Error finding latest DMG for ${prefix}:`, error);
+    console.error(`Error finding latest file for ${prefix}:`, error);
     throw error;
   }
 }
 
 /**
- * Get the latest Gaze DMG from S3
+ * Per-asset S3 lookup config for macOS apps that auto-resolve latest version.
  */
-async function getLatestGazeDMG(
-  client: S3Client,
-  bucket: string
-): Promise<string> {
-  return getLatestDMG(client, bucket, "downloads/Gaze-");
-}
-
-/**
- * Get the latest InputHalo DMG from S3
- */
-async function getLatestInputHaloDMG(
-  client: S3Client,
-  bucket: string
-): Promise<string> {
-  return getLatestDMG(client, bucket, "downloads/InputHalo-");
-}
+const latestAssets: Record<
+  string,
+  { prefix: string; ext: string }
+> = {
+  gaze: { prefix: "downloads/Gaze-", ext: ".dmg" },
+  inputhalo: { prefix: "downloads/InputHalo-", ext: ".dmg" },
+  thenook: { prefix: "downloads/TheNook-", ext: ".zip" }
+};
 
 export const downloadsRouter = createTRPCRouter({
   getDownloadUrl: publicProcedure
@@ -96,11 +89,9 @@ export const downloadsRouter = createTRPCRouter({
       try {
         let fileKey: string;
 
-        // Special handling for macOS apps - find latest version automatically
-        if (input.asset_name === "gaze") {
-          fileKey = await getLatestGazeDMG(client, bucket);
-        } else if (input.asset_name === "inputhalo") {
-          fileKey = await getLatestInputHaloDMG(client, bucket);
+        const latest = latestAssets[input.asset_name];
+        if (latest) {
+          fileKey = await getLatestFile(client, bucket, latest.prefix, latest.ext);
         } else {
           fileKey = assets[input.asset_name];
 

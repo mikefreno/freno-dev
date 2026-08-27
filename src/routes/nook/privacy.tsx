@@ -14,7 +14,7 @@ export default function NookPrivacyPolicy() {
     <>
       <PageHead
         title="Privacy Policy"
-        description="Privacy policy for The Nook, a native macOS hardware and system control app."
+        description="Privacy policy for The Nook, a coding-agent orchestration and hardware control app."
       />
       <SubdomainHeader />
       <div class="min-h-screen px-[8vw] py-[10vh]">

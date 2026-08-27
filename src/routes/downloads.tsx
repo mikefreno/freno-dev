@@ -15,14 +15,15 @@ function MainDownloadsPage() {
   const [SwAText, setSwAText] = createSignal("Shapes with Abigail!");
   const [corkText, setCorkText] = createSignal("Cork");
   const [gazeText, setGazeText] = createSignal("Gaze");
+  const [nookText, setNookText] = createSignal("The Nook");
   const [inputHaloText, setInputHaloText] = createSignal("InputHalo");
 
   const [loadingState, setLoadingState] = createSignal<Record<string, boolean>>(
     {
       lineage: false,
       cork: false,
-      gaze: false,
       "shapes-with-abigail": false,
+      thenook: false,
       inputhalo: false
     }
   );
@@ -55,6 +56,7 @@ function MainDownloadsPage() {
     const swaInterval = glitchText(SwAText(), setSwAText);
     const corkInterval = glitchText(corkText(), setCorkText);
     const gazeInterval = glitchText(gazeText(), setGazeText);
+    const nookInterval = glitchText(nookText(), setNookText);
     const inputHaloInterval = glitchText(inputHaloText(), setInputHaloText);
 
     onCleanup(() => {
@@ -62,6 +64,7 @@ function MainDownloadsPage() {
       clearInterval(swaInterval);
       clearInterval(corkInterval);
       clearInterval(gazeInterval);
+      clearInterval(nookInterval);
       clearInterval(inputHaloInterval);
     });
   });
@@ -70,7 +73,7 @@ function MainDownloadsPage() {
     <>
       <PageHead
         title="Downloads"
-        description="Download InputHalo, Gaze, Life and Lineage, Shapes with Abigail, and Cork. Available on iOS, Android, and macOS."
+        description="Download The Nook, InputHalo, Gaze, Life and Lineage, Shapes with Abigail, and Cork. Available on macOS, iOS, and Android."
       />
 
       <div class="bg-base relative min-h-screen overflow-hidden px-4 pt-[15vh] pb-12 md:px-8">
@@ -291,6 +294,36 @@ function MainDownloadsPage() {
                     <DownloadOnAppStore size={50} />
                   </A>
                 </div>
+              </div>
+            </div>
+
+            {/* The Nook */}
+            <div class="border-overlay0 rounded-lg border p-6 md:p-8">
+              <h2 class="text-text mb-6 font-mono text-2xl">
+                <span class="text-yellow">{">"}</span>{" "}
+                <A
+                  href={buildSubdomainUrl("nook")}
+                  class="text-text hover:text-yellow transition-colors"
+                >
+                  {nookText()}
+                </A>
+              </h2>
+
+              <div class="flex flex-col items-center gap-3">
+                <span class="text-subtext0 font-mono text-sm">
+                  platform: macOS (14.0+)
+                </span>
+                <Button
+                  variant="download"
+                  size="lg"
+                  loading={loadingState()["thenook"]}
+                  onClick={() => download("thenook")}
+                >
+                  download.zip
+                </Button>
+                <span class="text-subtext1 text-xs">
+                  # unzip → drag to /Applications
+                </span>
               </div>
             </div>
           </div>
