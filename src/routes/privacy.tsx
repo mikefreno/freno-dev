@@ -4,8 +4,7 @@ import NotFound from "./[...404]";
 import NessaPrivacyPolicy from "./nessa/privacy";
 import LineagePrivacyPolicy from "./lineage/privacy";
 import GazePrivacyPolicy from "./gaze/privacy";
-import InputHaloPrivacyPolicy from "./inputhalo/privacy";
-
+import NookPrivacyPolicy from "./nook/privacy";
 /**
  * Host-aware privacy policy route — `/privacy`.
  *
@@ -40,6 +39,9 @@ export default function PrivacyPage() {
       </Match>
       <Match when={site().id === "inputhalo"}>
         <InputHaloPrivacyPolicy />
+      </Match>
+      <Match when={site().id === "nook"}>
+        <NookPrivacyPolicy />
       </Match>
     </Switch>
   );

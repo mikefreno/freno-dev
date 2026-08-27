@@ -7,6 +7,7 @@ import NessaLanding from "./nessa";
 import LineageLanding from "./lineage";
 import GazeLanding from "./gaze";
 import InputHaloLanding from "./inputhalo";
+import NookLanding from "./nook";
 
 /**
  * Root route handler.
@@ -43,6 +44,9 @@ export default function Home(): JSX.Element {
       </Match>
       <Match when={site().id === "inputhalo"}>
         <InputHaloLanding />
+      </Match>
+      <Match when={site().id === "nook"}>
+        <NookLanding />
       </Match>
     </Switch>
   );
