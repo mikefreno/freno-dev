@@ -130,8 +130,8 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     baseRoutePrefix: "/nook",
     displayName: "The Nook",
     titleSuffix: " | The Nook",
-    brandColor: "#8b5cf6",
-    brandColorDark: "#a78bfa",
+    brandColor: "#4C9FBC",
+    brandColorDark: "#4C9FBC",
     ogDefaultImage: "/nook/og-default.png",
     faviconPath: "/nook/favicon/favicon.ico"
   }
