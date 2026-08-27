@@ -37,9 +37,19 @@ export const nookSchemaBootstrap: Promise<unknown> = (async () => {
       email TEXT NOT NULL,
       stripe_session_id TEXT UNIQUE NOT NULL,
       created_at TEXT NOT NULL,
-      revoked INTEGER NOT NULL DEFAULT 0
+      revoked INTEGER NOT NULL DEFAULT 0,
+      max_devices INTEGER NOT NULL DEFAULT 3
     )
   `);
+  const licenseCols = await conn.execute(`PRAGMA table_info(licenses)`);
+  const hasMaxDevices = licenseCols.rows.some(
+    (r) => (r as { name?: string }).name === "max_devices"
+  );
+  if (!hasMaxDevices) {
+    await conn.execute(
+      `ALTER TABLE licenses ADD COLUMN max_devices INTEGER NOT NULL DEFAULT 3`
+    );
+  }
   await conn.execute(`
     CREATE TABLE IF NOT EXISTS activations (
       id TEXT PRIMARY KEY,
@@ -87,15 +97,13 @@ export function verifyLicenseKey(key: string): boolean {
 }
 
 /**
- * Issues a license key for a completed Stripe checkout session.
- *
- * Caller is responsible for the uniqueness/idempotency of `stripeSessionId`
- * (the `licenses.stripe_session_id` column is UNIQUE; the webhook catches the
- * conflict and skips re-emailing).
+ * Signs and stores a license row. Purchase licenses cap at 3 devices; gift
+ * licenses (via `grantLicense`) cap at 1 unless overridden.
  */
-export async function issueLicense(
+async function insertLicense(
   email: string,
-  stripeSessionId: string
+  stripeSessionId: string,
+  maxDevices: number
 ): Promise<IssueLicenseResult> {
   const id = crypto.randomUUID();
   const payload = JSON.stringify({
@@ -106,9 +114,36 @@ export async function issueLicense(
   });
   const key = `${payload}.${signPayload(payload)}`;
   await NookConnectionFactory().execute({
-    sql: `INSERT INTO licenses (id, key, email, stripe_session_id, created_at, revoked)
-          VALUES (?, ?, ?, ?, ?, 0)`,
-    args: [id, key, email, stripeSessionId, new Date().toISOString()]
+    sql: `INSERT INTO licenses (id, key, email, stripe_session_id, created_at, revoked, max_devices)
+          VALUES (?, ?, ?, ?, ?, 0, ?)`,
+    args: [id, key, email, stripeSessionId, new Date().toISOString(), maxDevices]
   });
   return { key, id };
+}
+
+/**
+ * Issues a license key for a completed Stripe checkout session (3 devices).
+ *
+ * Caller is responsible for the uniqueness/idempotency of `stripeSessionId`
+ * (the `licenses.stripe_session_id` column is UNIQUE; the webhook catches the
+ * conflict and skips re-emailing).
+ */
+export async function issueLicense(
+  email: string,
+  stripeSessionId: string
+): Promise<IssueLicenseResult> {
+  return insertLicense(email, stripeSessionId, 3);
+}
+
+/**
+ * Mints a free license outside the Stripe flow (gifting / comps).
+ *
+ * `stripe_session_id` holds a `gift:<uuid>` sentinel so the UNIQUE NOT NULL
+ * constraint is satisfied. Defaults to a 1-device cap.
+ */
+export async function grantLicense(
+  email: string,
+  maxDevices = 1
+): Promise<IssueLicenseResult> {
+  return insertLicense(email, `gift:${crypto.randomUUID()}`, maxDevices);
 }

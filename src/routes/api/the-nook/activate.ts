@@ -39,13 +39,18 @@ export async function POST(event: APIEvent) {
   const conn = NookConnectionFactory();
 
   const licenseRes = await conn.execute({
-    sql: "SELECT id, email, revoked FROM licenses WHERE key = ?",
+    sql: "SELECT id, email, revoked, max_devices FROM licenses WHERE key = ?",
     args: [key]
   });
   if (licenseRes.rows.length === 0) {
     return error("License not found", 404);
   }
-  const license = licenseRes.rows[0] as { id: string; email: string; revoked: number };
+  const license = licenseRes.rows[0] as {
+    id: string;
+    email: string;
+    revoked: number;
+    maxDevices: number;
+  };
   if (license.revoked === 1) {
     return error("License revoked", 403);
   }
@@ -67,8 +72,8 @@ export async function POST(event: APIEvent) {
   }
 
   const count = await activeCount(conn, license.id);
-  if (count >= 3) {
-    return error("Activation limit reached (3 devices)", 409);
+  if (count >= license.maxDevices) {
+    return error(`Activation limit reached (${license.maxDevices} devices)`, 409);
   }
 
   await conn.execute({
