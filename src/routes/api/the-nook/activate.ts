@@ -57,9 +57,10 @@ export async function POST(event: APIEvent) {
     args: [license.id, fingerprint]
   });
   if (existingRes.rows.length > 0) {
+    const existing = existingRes.rows[0] as { id: string }; // row we inserted as an activation
     await conn.execute({
       sql: "UPDATE activations SET activated_at = ? WHERE id = ?",
-      args: [new Date().toISOString(), existingRes.rows[0] as { id: string }]
+      args: [new Date().toISOString(), existing.id]
     });
     const count = await activeCount(conn, license.id);
     return json({ ok: true, email: license.email, activatedCount: count });
