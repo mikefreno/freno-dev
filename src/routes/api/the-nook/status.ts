@@ -29,16 +29,16 @@ export async function POST(event: APIEvent) {
   const conn = NookConnectionFactory();
 
   const licenseRes = await conn.execute({
-    sql: "SELECT id, revoked FROM licenses WHERE key = ?",
+    sql: "SELECT id, revoked, max_devices FROM licenses WHERE key = ?",
     args: [key]
   });
   if (licenseRes.rows.length === 0) {
-    return json({ state: "unknown_key", activatedCount: 0 });
+    return json({ state: "unknown_key", activatedCount: 0, maxDevices: 0 });
   }
-  const license = licenseRes.rows[0] as { id: string; revoked: number };
+  const license = licenseRes.rows[0] as { id: string; revoked: number; maxDevices: number };
 
   if (license.revoked === 1) {
-    return json({ state: "revoked", activatedCount: 0 });
+    return json({ state: "revoked", activatedCount: 0, maxDevices: 0 });
   }
 
   const countRes = await conn.execute({
@@ -47,5 +47,5 @@ export async function POST(event: APIEvent) {
   });
   const activatedCount = Number((countRes.rows[0] as { n: number | bigint }).n);
 
-  return json({ state: "valid", activatedCount });
+  return json({ state: "valid", activatedCount, maxDevices: license.maxDevices });
 }

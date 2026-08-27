@@ -68,7 +68,7 @@ export async function POST(event: APIEvent) {
       args: [new Date().toISOString(), existing.id]
     });
     const count = await activeCount(conn, license.id);
-    return json({ ok: true, email: license.email, activatedCount: count });
+    return json({ ok: true, email: license.email, activatedCount: count, maxDevices: license.maxDevices });
   }
 
   const count = await activeCount(conn, license.id);
@@ -88,7 +88,7 @@ export async function POST(event: APIEvent) {
       new Date().toISOString()
     ]
   });
-  return json({ ok: true, email: license.email, activatedCount: count + 1 });
+  return json({ ok: true, email: license.email, activatedCount: count + 1, maxDevices: license.maxDevices });
 }
 
 async function activeCount(
