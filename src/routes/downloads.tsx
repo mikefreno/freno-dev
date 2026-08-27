@@ -13,7 +13,7 @@ import InputHaloDownloadsPage from "./inputhalo/downloads";
 function MainDownloadsPage() {
   const [LaLText, setLaLText] = createSignal("Life and Lineage");
   const [SwAText, setSwAText] = createSignal("Shapes with Abigail!");
-  const [corkText, setCorkText] = createSignal("Cork");
+  //const [corkText, setCorkText] = createSignal("Cork");
   const [gazeText, setGazeText] = createSignal("Gaze");
   const [nookText, setNookText] = createSignal("The Nook");
   const [inputHaloText, setInputHaloText] = createSignal("InputHalo");
@@ -54,7 +54,7 @@ function MainDownloadsPage() {
   onMount(() => {
     const lalInterval = glitchText(LaLText(), setLaLText);
     const swaInterval = glitchText(SwAText(), setSwAText);
-    const corkInterval = glitchText(corkText(), setCorkText);
+    //const corkInterval = glitchText(corkText(), setCorkText);
     const gazeInterval = glitchText(gazeText(), setGazeText);
     const nookInterval = glitchText(nookText(), setNookText);
     const inputHaloInterval = glitchText(inputHaloText(), setInputHaloText);
@@ -62,7 +62,7 @@ function MainDownloadsPage() {
     onCleanup(() => {
       clearInterval(lalInterval);
       clearInterval(swaInterval);
-      clearInterval(corkInterval);
+      //clearInterval(corkInterval);
       clearInterval(gazeInterval);
       clearInterval(nookInterval);
       clearInterval(inputHaloInterval);
@@ -92,7 +92,34 @@ function MainDownloadsPage() {
           <div class="text-center text-xl italic">
             Ordered by date of initial release
           </div>
+
           <div class="mx-auto max-w-5xl space-y-16">
+            {/* The Nook */}
+            <div class="border-overlay0 rounded-lg border p-6 md:p-8">
+              <h2 class="text-text mb-6 font-mono text-2xl">
+                <span class="text-yellow">{">"}</span>{" "}
+                <A
+                  href={buildSubdomainUrl("nook")}
+                  class="text-text hover:text-yellow transition-colors"
+                >
+                  {nookText()}
+                </A>
+              </h2>
+
+              <div class="flex flex-col items-center gap-3">
+                <span class="text-subtext0 font-mono text-sm">
+                  platform: macOS (14.6+)
+                </span>
+                <Button
+                  variant="download"
+                  size="lg"
+                  loading={loadingState()["thenook"]}
+                  onClick={() => download("thenook")}
+                >
+                  download.dmg
+                </Button>
+              </div>
+            </div>
             {/* InputHalo */}
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
               <h2 class="text-text mb-6 font-mono text-2xl">
@@ -196,6 +223,30 @@ function MainDownloadsPage() {
                 </div>
               </div>
             </div>
+            {/* Cork */}
+            {/* <div class="border-overlay0 rounded-lg border p-6 md:p-8">
+              <h2 class="text-text mb-6 font-mono text-2xl">
+                <span class="text-yellow">{">"}</span> {corkText()}
+              </h2>
+
+              <div class="flex flex-col items-center gap-3">
+                <span class="text-subtext0 font-mono text-sm">
+                  platform: macOS (13.0+)
+                </span>
+                <Button
+                  variant="download"
+                  size="lg"
+                  loading={loadingState()["cork"]}
+                  onClick={() => download("cork")}
+                >
+                  download.zip
+                </Button>
+                <span class="text-subtext1 text-xs">
+                  # unzip → drag to /Applications
+                </span>
+              </div>
+            </div> */}
+            {/* Lineage */}
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
               <h2 class="text-text mb-6 font-mono text-2xl">
                 <span class="text-yellow">{">"}</span>{" "}
@@ -238,29 +289,6 @@ function MainDownloadsPage() {
                 </div>
               </div>
             </div>
-            {/* Cork */}
-            <div class="border-overlay0 rounded-lg border p-6 md:p-8">
-              <h2 class="text-text mb-6 font-mono text-2xl">
-                <span class="text-yellow">{">"}</span> {corkText()}
-              </h2>
-
-              <div class="flex flex-col items-center gap-3">
-                <span class="text-subtext0 font-mono text-sm">
-                  platform: macOS (13.0+)
-                </span>
-                <Button
-                  variant="download"
-                  size="lg"
-                  loading={loadingState()["cork"]}
-                  onClick={() => download("cork")}
-                >
-                  download.zip
-                </Button>
-                <span class="text-subtext1 text-xs">
-                  # unzip → drag to /Applications
-                </span>
-              </div>
-            </div>
 
             {/* Shapes with Abigail */}
             <div class="border-overlay0 rounded-lg border p-6 md:p-8">
@@ -294,36 +322,6 @@ function MainDownloadsPage() {
                     <DownloadOnAppStore size={50} />
                   </A>
                 </div>
-              </div>
-            </div>
-
-            {/* The Nook */}
-            <div class="border-overlay0 rounded-lg border p-6 md:p-8">
-              <h2 class="text-text mb-6 font-mono text-2xl">
-                <span class="text-yellow">{">"}</span>{" "}
-                <A
-                  href={buildSubdomainUrl("nook")}
-                  class="text-text hover:text-yellow transition-colors"
-                >
-                  {nookText()}
-                </A>
-              </h2>
-
-              <div class="flex flex-col items-center gap-3">
-                <span class="text-subtext0 font-mono text-sm">
-                  platform: macOS (14.0+)
-                </span>
-                <Button
-                  variant="download"
-                  size="lg"
-                  loading={loadingState()["thenook"]}
-                  onClick={() => download("thenook")}
-                >
-                  download.zip
-                </Button>
-                <span class="text-subtext1 text-xs">
-                  # unzip → drag to /Applications
-                </span>
               </div>
             </div>
           </div>
