@@ -5,7 +5,7 @@
  * UUID + device name for trial/activation limits, the email used for purchase,
  * and Stripe payment processing.
  */
-import { A } from "@solidjs/router";
+import { buildMainSiteUrl } from "~/lib/subdomain-url";
 import { PageHead } from "~/components/PageHead";
 import SubdomainHeader from "~/components/SubdomainHeader";
 
@@ -94,9 +94,14 @@ export default function NookPrivacyPolicy() {
             </div>
             <div class="pb-2 pl-4">
               If you have any questions about this policy, you can contact us{" "}
-              <A href="/contact" class="text-blue hover-underline-animation">
+              <a
+                href={buildMainSiteUrl("/contact")}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-blue hover-underline-animation"
+              >
                 here
-              </A>
+              </a>
               .
             </div>
           </div>

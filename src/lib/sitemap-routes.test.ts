@@ -40,14 +40,15 @@ describe("generateSitemap", () => {
     expect(locs).toContain("https://freno.me/login");
     expect(locs).toContain("https://freno.me/resume");
     expect(locs).toContain("https://freno.me/downloads");
+    expect(locs).toContain("https://freno.me/privacy-policy");
 
-    expect(locs.length).toBe(6);
+    expect(locs.length).toBe(7);
 
     expect(xml).toContain("</urlset>");
     const urlOpens = (xml.match(/<url>/g) || []).length;
     const urlCloses = (xml.match(/<\/url>/g) || []).length;
     expect(urlOpens).toBe(urlCloses);
-    expect(urlOpens).toBe(6);
+    expect(urlOpens).toBe(7);
   });
 
   it("generates valid parseable XML for lineage site", () => {

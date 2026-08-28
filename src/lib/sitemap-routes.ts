@@ -47,7 +47,8 @@ export const SITEMAP_ROUTES: Record<SiteId, SitemapEntry[]> = {
     { path: "/contact", changefreq: "monthly", priority: 0.7 },
     { path: "/login", changefreq: "monthly", priority: 0.5 },
     { path: "/resume", changefreq: "yearly", priority: 0.6 },
-    { path: "/downloads", changefreq: "weekly", priority: 0.8 }
+    { path: "/downloads", changefreq: "weekly", priority: 0.8 },
+    { path: "/privacy-policy", changefreq: "yearly", priority: 0.4 }
   ],
 
   // ── Subdomain sites ──────────────────────────────────────────────────

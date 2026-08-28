@@ -101,7 +101,8 @@ function handleChunkError(source: string): void {
 window.addEventListener("error", (event) => {
   if (
     event.message?.includes("Importing a module script failed") ||
-    event.message?.includes("Failed to fetch dynamically imported module")
+    event.message?.includes("Failed to fetch dynamically imported module") ||
+    event.message?.includes("error loading dynamically imported module")
   ) {
     event.preventDefault();
     handleChunkError("error event");
@@ -111,9 +112,8 @@ window.addEventListener("error", (event) => {
 window.addEventListener("unhandledrejection", (event) => {
   if (
     event.reason?.message?.includes("Importing a module script failed") ||
-    event.reason?.message?.includes(
-      "Failed to fetch dynamically imported module"
-    )
+    event.reason?.message?.includes("Failed to fetch dynamically imported module") ||
+    event.reason?.message?.includes("error loading dynamically imported module")
   ) {
     event.preventDefault();
     handleChunkError("unhandled rejection");

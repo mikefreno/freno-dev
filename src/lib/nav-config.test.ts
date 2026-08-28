@@ -19,13 +19,14 @@ import { SITE_CONFIG, type SiteId } from "./site-context";
 const ALL_SITES: SiteId[] = ["main", "nessa", "lineage", "gaze", "inputhalo", "nook"];
 
 describe("NAV_CONFIG — per-site link sets", () => {
-  it("main → Home, Blog, Downloads, Resume, Contact, GitHub, LinkedIn", () => {
+  it("main → Home, Blog, Downloads, Resume, Contact, Privacy, GitHub, LinkedIn", () => {
     expect(navLabelsFor("main")).toEqual([
       "Home",
       "Blog",
       "Downloads",
       "Resume",
       "Contact",
+      "Privacy",
       "GitHub",
       "LinkedIn"
     ]);

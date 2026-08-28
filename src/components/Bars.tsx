@@ -366,6 +366,11 @@ function MainRightBarContent() {
               Contact Me
             </a>
           </li>
+          <li class="hover:text-subtext0 w-fit transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 hover:font-bold">
+            <a href="/privacy-policy" onClick={handleLinkClick}>
+              Privacy
+            </a>
+          </li>
           <li>
             <a
               href="https://github.com/MikeFreno/"

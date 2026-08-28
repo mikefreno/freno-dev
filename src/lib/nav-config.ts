@@ -80,6 +80,7 @@ export const NAV_CONFIG: Record<SiteId, NavItem[]> = {
     { label: "Downloads", href: "/downloads", icon: "downloads" },
     { label: "Resume", href: "/resume", icon: "resume" },
     { label: "Contact", href: "/contact", icon: "contact" },
+    { label: "Privacy", href: "/privacy-policy", icon: "privacy" },
     {
       label: "GitHub",
       href: "https://github.com/MikeFreno/",
