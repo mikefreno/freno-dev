@@ -233,9 +233,9 @@ export async function emailLicenseKey(
       body: JSON.stringify({
         sender: { name: "The Nook", email: "support@freno.me" },
         to: [{ email: to }],
-        subject: "Your The Nook license key",
+        subject: "Your license key",
         textContent:
-          `Your The Nook license key is:\n\n${licenseKey}\n\n` +
+          `Your license key is:\n\n${licenseKey}\n\n` +
           `Open The Nook, go to Settings, and enter this key to activate.\n` +
           `You can activate up to 3 devices.`
       })

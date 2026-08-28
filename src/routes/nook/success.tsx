@@ -55,10 +55,7 @@ export default function NookSuccess() {
 
   return (
     <>
-      <PageHead
-        title="Order complete"
-        description="Your The Nook license key."
-      />
+      <PageHead title="Order complete" description="Your license key." />
       <SubdomainHeader />
 
       <div class="bg-base mx-auto max-w-xl px-4 py-16">
@@ -88,16 +85,24 @@ export default function NookSuccess() {
               </Show>
             }
           >
-            <h1 class="text-text mb-2 text-2xl font-bold">Thanks for buying The Nook</h1>
+            <h1 class="text-text mb-2 text-2xl font-bold">
+              Thanks for buying The Nook
+            </h1>
             <p class="text-subtext0 mb-6 text-sm">
-              Here is your license key. Open The Nook, go to Settings, and enter it to activate.
+              Here is your license key. Open The Nook, go to Settings, and enter
+              it to activate.
             </p>
 
             <div class="border-overlay0 bg-base mb-4 flex items-center justify-between gap-3 rounded-lg border p-4">
-              <code class="text-text break-all text-sm">{key()}</code>
+              <code class="text-text text-sm break-all">{key()}</code>
             </div>
 
-            <Button variant="download" size="md" color={brandColor()} onClick={copyKey}>
+            <Button
+              variant="download"
+              size="md"
+              color={brandColor()}
+              onClick={copyKey}
+            >
               {copied() ? "Copied" : "Copy key"}
             </Button>
 
