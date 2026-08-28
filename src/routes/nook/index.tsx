@@ -1,6 +1,8 @@
 import { PageHead } from "~/components/PageHead";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import Button from "~/components/ui/Button";
+import Input from "~/components/ui/Input";
+import { createSignal, Show } from "solid-js";
 import { useDarkMode } from "~/context/darkMode";
 import { useSite } from "~/context/SiteContext";
 
@@ -34,6 +36,32 @@ export default function NookLanding() {
   const { isDark } = useDarkMode();
   const brandColor = () =>
     isDark() ? (site().brandColorDark ?? site().brandColor) : site().brandColor;
+  const [resendEmail, setResendEmail] = createSignal("");
+  const [resendSending, setResendSending] = createSignal(false);
+  const [resendSent, setResendSent] = createSignal(false);
+  const [resendError, setResendError] = createSignal(false);
+
+  const resendLicense = async () => {
+    if (resendSending()) return;
+    const email = resendEmail().trim();
+    if (!email) return;
+    setResendSending(true);
+    setResendSent(false);
+    setResendError(false);
+    try {
+      const res = await fetch("/api/the-nook/resend-license", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      if (!res.ok) throw new Error("resend failed");
+      setResendSent(true);
+    } catch {
+      setResendError(true);
+    } finally {
+      setResendSending(false);
+    }
+  };
 
   return (
     <>
@@ -166,6 +194,54 @@ export default function NookLanding() {
             Beta pricing — full price will be $15. One license covers up to 3 of
             your own Macs.
           </p>
+        </div>
+      </section>
+
+      {/* ── Resend license ─────────────────────────────────────────── */}
+      <section class="bg-base relative z-20 px-4 py-16 md:px-8">
+        <div class="border-overlay0 bg-surface0 mx-auto max-w-md rounded-xl border p-8">
+          <h2 class="text-text mb-2 text-center text-2xl font-bold">
+            Lost your license?
+          </h2>
+          <p class="text-subtext0 mb-6 text-center text-sm">
+            Enter the email you purchased with and we'll resend your key.
+          </p>
+          <form
+            class="flex flex-col gap-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              resendLicense();
+            }}
+          >
+            <Input
+              type="email"
+              required
+              label="Email"
+              placeholder="you@example.com"
+              disabled={resendSending()}
+              value={resendEmail()}
+              onInput={(e) => setResendEmail(e.currentTarget.value)}
+            />
+            <Button
+              type="submit"
+              variant="primary"
+              color={brandColor()}
+              loading={resendSending()}
+            >
+              Resend license
+            </Button>
+          </form>
+          <Show when={resendSent()}>
+            <p class="text-subtext1 mt-4 text-center text-sm">
+              Check your inbox — if a license is registered to that email, your
+              key is on its way.
+            </p>
+          </Show>
+          <Show when={resendError()}>
+            <p class="mt-4 text-center text-sm text-red-500">
+              Something went wrong. Please try again.
+            </p>
+          </Show>
         </div>
       </section>
     </>

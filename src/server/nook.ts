@@ -10,15 +10,11 @@ import { createPrivateKey, createPublicKey, sign, verify } from "node:crypto";
  * is bootstrapped idempotently (CREATE TABLE IF NOT EXISTS) so no migration
  * tool is needed.
  *
- * The license key is a compact printable string:
+ *   key = "NOOK-" + hyphen-grouped base32(payload || ed25519-signature)
  *
- *   key = payloadJson + "." + base64url(ed25519-signature(payloadJson))
- *
- * Canonicalization is load-bearing. The Swift client verifies the EXACT
- * payload bytes (the substring before the last "."), never a re-serialization
- * of the decoded JSON — key order must stay stable. Without a compact,
- * deterministic payload this breaks, so `issueLicense` builds the payload as
- * a hand-ordered literal and `JSON.stringify`s it in place.
+ * Payload layout (v1) is defined below in `buildPayload`. The Swift client
+ * decodes the base32 and verifies the EXACT payload bytes against the
+ * Ed25519 signature, so the layout and signing must stay stable.
  */
 
 interface IssueLicenseResult {
@@ -76,24 +72,86 @@ function privateKeyObject() {
   });
 }
 
-function signPayload(payload: string): string {
-  const signature = sign(null, Buffer.from(payload, "utf8"), privateKeyObject());
-  return Buffer.from(signature).toString("base64url");
+const KEY_PREFIX = "NOOK-";
+const SIGNATURE_LENGTH = 64;
+const B32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+// Binary license payload (v1), signed with Ed25519:
+//   [0]      version  (1 byte)
+//   [1..17)  lid      (16 bytes, UUID decoded)
+//   [17..25) iat      (8 bytes, big-endian uint64)
+//   [25]     emailLen (1 byte)
+//   [26..)   email    (UTF-8)
+// A key is a "NOOK-" prefixed, hyphen-grouped base32 of payload || 64-byte sig.
+
+function uuidToBytes(uuid: string): Buffer | null {
+  const hex = uuid.replace(/-/g, "");
+  return /^[0-9a-fA-F]{32}$/.test(hex) ? Buffer.from(hex, "hex") : null;
+}
+
+function buildPayload(lid: string, email: string, iat: number): Buffer {
+  const lidBytes = uuidToBytes(lid);
+  if (!lidBytes) throw new Error("Invalid license id");
+  const emailBytes = Buffer.from(email, "utf8");
+  const header = Buffer.allocUnsafe(26);
+  header[0] = PAYLOAD_VERSION;
+  lidBytes.copy(header, 1);
+  header.writeBigUInt64BE(BigInt(iat), 17);
+  header[25] = emailBytes.length;
+  return Buffer.concat([header, emailBytes]);
+}
+
+function base32Encode(data: Buffer): string {
+  let bits = 0;
+  let value = 0;
+  let out = "";
+  for (const byte of data) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      out += B32_ALPHABET[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) out += B32_ALPHABET[(value << (5 - bits)) & 31];
+  return out;
+}
+
+function base32Decode(input: string): Buffer | null {
+  const cleaned = input.trim().replace(/^NOOK-/i, "").replace(/[^A-Z2-7]/g, "");
+  if (cleaned.length === 0) return null;
+  let bits = 0;
+  let value = 0;
+  const bytes: number[] = [];
+  for (const char of cleaned) {
+    const idx = B32_ALPHABET.indexOf(char);
+    if (idx < 0) return null;
+    value = (value << 5) | idx;
+    bits += 5;
+    if (bits >= 8) {
+      bytes.push((value >>> (bits - 8)) & 0xff);
+      bits -= 8;
+    }
+  }
+  return Buffer.from(bytes);
+}
+
+function encodeKey(data: Buffer): string {
+  const encoded = base32Encode(data);
+  const groups: string[] = [];
+  for (let i = 0; i < encoded.length; i += 5) groups.push(encoded.slice(i, i + 5));
+  return `${KEY_PREFIX}${groups.join("-")}`;
 }
 
 /** Re-verifies a license key's Ed25519 signature server-side (defense in depth). */
 export function verifyLicenseKey(key: string): boolean {
-  const token = key.match(/^([^]*?)\.([A-Za-z0-9_-]+)$/);
-  if (!token) return false;
-  const [, payload, sigB64] = token;
+  const token = base32Decode(key);
+  if (!token || token.length <= SIGNATURE_LENGTH) return false;
+  const payload = token.subarray(0, token.length - SIGNATURE_LENGTH);
+  if (payload[0] !== PAYLOAD_VERSION || payload.length < 27) return false;
+  const signature = token.subarray(token.length - SIGNATURE_LENGTH);
   const publicKey = createPublicKey(privateKeyObject());
-  let signature: Buffer;
-  try {
-    signature = Buffer.from(sigB64!, "base64url");
-  } catch {
-    return false;
-  }
-  return verify(null, Buffer.from(payload!, "utf8"), publicKey, signature);
+  return verify(null, payload as Buffer, publicKey, signature);
 }
 
 /**
@@ -106,13 +164,10 @@ async function insertLicense(
   maxDevices: number
 ): Promise<IssueLicenseResult> {
   const id = crypto.randomUUID();
-  const payload = JSON.stringify({
-    v: PAYLOAD_VERSION,
-    lid: id,
-    email: email,
-    iat: Math.floor(Date.now() / 1000)
-  });
-  const key = `${payload}.${signPayload(payload)}`;
+  const iat = Math.floor(Date.now() / 1000);
+  const payload = buildPayload(id, email, iat);
+  const signature = sign(null, payload, privateKeyObject());
+  const key = encodeKey(Buffer.concat([payload, signature]));
   await NookConnectionFactory().execute({
     sql: `INSERT INTO licenses (id, key, email, stripe_session_id, created_at, revoked, max_devices)
           VALUES (?, ?, ?, ?, ?, 0, ?)`,
@@ -146,4 +201,32 @@ export async function grantLicense(
   maxDevices = 1
 ): Promise<IssueLicenseResult> {
   return insertLicense(email, `gift:${crypto.randomUUID()}`, maxDevices);
+}
+
+/**
+ * Sends a license key to the buyer. Best-effort — failures are logged, never
+ * thrown, so the caller (checkout webhook / resend) isn't interrupted.
+ */
+export async function emailLicenseKey(to: string, licenseKey: string): Promise<void> {
+  try {
+    await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": env.SENDINBLUE_KEY,
+        "content-type": "application/json",
+        accept: "application/json"
+      },
+      body: JSON.stringify({
+        sender: { name: "The Nook", email: "support@freno.me" },
+        to: [{ email: to }],
+        subject: "Your The Nook license key",
+        textContent:
+          `Your The Nook license key is:\n\n${licenseKey}\n\n` +
+          `Open The Nook, go to Settings, and enter this key to activate.\n` +
+          `You can activate up to 3 devices.\n\n— Michael`
+      })
+    });
+  } catch (error) {
+    console.error("Failed to email The Nook license key:", error);
+  }
 }

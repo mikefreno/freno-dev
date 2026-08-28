@@ -1,7 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { env } from "~/env/server";
 import { NookConnectionFactory } from "~/server/db-connections";
-import { nookSchemaBootstrap, issueLicense } from "~/server/nook";
+import { nookSchemaBootstrap, issueLicense, emailLicenseKey } from "~/server/nook";
 import { json } from "../_lib";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -44,31 +44,6 @@ function verifyStripeSignature(rawBody: string, signatureHeader: string): boolea
   const expectedBuffer = Buffer.from(expected, "hex");
   if (provided.length !== expectedBuffer.length) return false;
   return timingSafeEqual(provided, expectedBuffer);
-}
-
-async function emailLicenseKey(to: string, licenseKey: string): Promise<void> {
-  try {
-    await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "api-key": env.SENDINBLUE_KEY,
-        "content-type": "application/json",
-        accept: "application/json"
-      },
-      body: JSON.stringify({
-        sender: { email: env.EMAIL_FROM },
-        to: [{ email: to }],
-        subject: "Your The Nook license key",
-        textContent:
-          `Your The Nook license key is:\n\n${licenseKey}\n\n` +
-          `Open The Nook, go to Settings, and enter this key to activate.\n` +
-          `You can activate up to 3 devices.\n\n— The Nook`
-      })
-    });
-  } catch (error) {
-    // Purchase must not fail because email delivery did.
-    console.error("Failed to email The Nook license key:", error);
-  }
 }
 
 export async function POST(event: APIEvent) {
