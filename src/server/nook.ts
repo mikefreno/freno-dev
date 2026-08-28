@@ -118,7 +118,10 @@ function base32Encode(data: Buffer): string {
 }
 
 function base32Decode(input: string): Buffer | null {
-  const cleaned = input.trim().replace(/^NOOK-/i, "").replace(/[^A-Z2-7]/g, "");
+  const cleaned = input
+    .trim()
+    .replace(/^NOOK-/i, "")
+    .replace(/[^A-Z2-7]/g, "");
   if (cleaned.length === 0) return null;
   let bits = 0;
   let value = 0;
@@ -139,7 +142,8 @@ function base32Decode(input: string): Buffer | null {
 function encodeKey(data: Buffer): string {
   const encoded = base32Encode(data);
   const groups: string[] = [];
-  for (let i = 0; i < encoded.length; i += 5) groups.push(encoded.slice(i, i + 5));
+  for (let i = 0; i < encoded.length; i += 5)
+    groups.push(encoded.slice(i, i + 5));
   return `${KEY_PREFIX}${groups.join("-")}`;
 }
 
@@ -171,7 +175,14 @@ async function insertLicense(
   await NookConnectionFactory().execute({
     sql: `INSERT INTO licenses (id, key, email, stripe_session_id, created_at, revoked, max_devices)
           VALUES (?, ?, ?, ?, ?, 0, ?)`,
-    args: [id, key, email, stripeSessionId, new Date().toISOString(), maxDevices]
+    args: [
+      id,
+      key,
+      email,
+      stripeSessionId,
+      new Date().toISOString(),
+      maxDevices
+    ]
   });
   return { key, id };
 }
@@ -207,7 +218,10 @@ export async function grantLicense(
  * Sends a license key to the buyer. Best-effort — failures are logged, never
  * thrown, so the caller (checkout webhook / resend) isn't interrupted.
  */
-export async function emailLicenseKey(to: string, licenseKey: string): Promise<void> {
+export async function emailLicenseKey(
+  to: string,
+  licenseKey: string
+): Promise<void> {
   try {
     await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -223,7 +237,7 @@ export async function emailLicenseKey(to: string, licenseKey: string): Promise<v
         textContent:
           `Your The Nook license key is:\n\n${licenseKey}\n\n` +
           `Open The Nook, go to Settings, and enter this key to activate.\n` +
-          `You can activate up to 3 devices.\n\n— Michael`
+          `You can activate up to 3 devices.`
       })
     });
   } catch (error) {
