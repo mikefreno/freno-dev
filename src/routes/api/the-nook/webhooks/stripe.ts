@@ -20,7 +20,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 interface StripeSessionCompleted {
   id: string;
   type: string;
-  customer_details?: { email?: string };
+  data?: { object?: { id?: string; customer_details?: { email?: string } } };
 }
 
 function verifyStripeSignature(rawBody: string, signatureHeader: string): boolean {
@@ -94,8 +94,8 @@ export async function POST(event: APIEvent) {
     return json({ received: true });
   }
 
-  const sessionId = body.id;
-  const email = body.customer_details?.email;
+  const sessionId = body.data?.object?.id;
+  const email = body.data?.object?.customer_details?.email;
   if (!sessionId || !email) {
     console.error("checkout.session.completed missing id or email:", rawBody);
     return json({ received: true });

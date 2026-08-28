@@ -102,9 +102,16 @@ export default function NookLanding() {
               Buy
             </Button>
           </div>
-          <p class="text-subtext1 mt-3 text-xs">
-            $10 one-time · 3 devices · 14-day free trial
-          </p>
+          <div class="mt-3 flex flex-col items-center gap-1.5">
+            <span class="border-overlay0 bg-surface0 text-subtext0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide">
+              Beta pricing · 33% off
+            </span>
+            <p class="text-subtext1 text-xs">
+              <span class="text-subtext0 line-through">$15</span>{" "}
+              <span class="text-text font-bold">$10</span> one-time · 3 devices ·
+              14-day free trial
+            </p>
+          </div>
         </div>
       </div>
 
@@ -152,11 +159,12 @@ export default function NookLanding() {
               class="text-subtext1 my-auto text-sm underline decoration-dotted hover:opacity-80"
               href="/checkout"
             >
-              Buy a license → $10
+              Buy a license → $10 <span class="text-subtext0 line-through">$15</span>
             </a>
           </div>
           <p class="text-subtext1 mt-6 text-xs">
-            One license covers up to 3 of your own Macs.
+            Beta pricing — full price will be $15. One license covers up to 3 of
+            your own Macs.
           </p>
         </div>
       </section>

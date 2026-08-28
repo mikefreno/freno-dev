@@ -66,18 +66,27 @@ export default function NookCheckout() {
     <>
       <PageHead
         title="Checkout"
-        description="Buy a The Nook license — $10 one-time for up to 3 devices."
+        description="Buy a The Nook license — $10 beta price (33% off) for up to 3 devices."
       />
       <SubdomainHeader />
 
       <div class="bg-base mx-auto max-w-lg px-4 py-16">
         <div class="border-overlay0 bg-surface0 rounded-xl border p-8 shadow-2xl">
-          <h1 class="text-text mb-1 text-3xl font-bold">The Nook</h1>
-          <p class="text-subtext0 mb-6">Lifetime License — 3 devices</p>
-
-          <div class="text-text mb-6 text-4xl font-extrabold">
-            $10<span class="text-subtext0 text-base font-normal"> one-time</span>
+          <div class="mb-2 flex items-end gap-3">
+            <div class="text-text text-4xl font-extrabold">
+              $10<span class="text-subtext0 text-base font-normal"> one-time</span>
+            </div>
+            <div class="text-subtext0 mb-1 text-2xl font-medium line-through">
+              $15
+            </div>
           </div>
+          <p class="mb-6 text-sm font-medium">
+            <span
+              class="border-overlay0 bg-surface0 text-subtext0 inline-block rounded-full border px-3 py-1 text-xs font-semibold tracking-wide"
+            >
+              Beta pricing — 33% off
+            </span>
+          </p>
           <ul class="text-subtext0 mb-6 space-y-2 text-sm">
             <li>• Activate on up to 3 of your own Macs</li>
             <li>• No subscription, ever</li>
