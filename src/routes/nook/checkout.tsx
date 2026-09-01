@@ -49,7 +49,10 @@ export default function NookCheckout() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ turnstileToken: turnstileToken() })
       });
-      const data = (await res.json()) as { checkoutUrl?: string; error?: string };
+      const data = (await res.json()) as {
+        checkoutUrl?: string;
+        error?: string;
+      };
       if (!res.ok || !data.checkoutUrl) {
         setError(data.error ?? "Unable to start checkout. Please try again.");
         return;
@@ -74,21 +77,20 @@ export default function NookCheckout() {
         <div class="border-overlay0 bg-surface0 rounded-xl border p-8 shadow-2xl">
           <div class="mb-2 flex items-end gap-3">
             <div class="text-text text-4xl font-extrabold">
-              $10<span class="text-subtext0 text-base font-normal"> one-time</span>
+              $10
+              <span class="text-subtext0 text-base font-normal"> one-time</span>
             </div>
             <div class="text-subtext0 mb-1 text-2xl font-medium line-through">
               $15
             </div>
           </div>
           <p class="mb-6 text-sm font-medium">
-            <span
-              class="border-overlay0 bg-surface0 text-subtext0 inline-block rounded-full border px-3 py-1 text-xs font-semibold tracking-wide"
-            >
+            <span class="border-overlay0 bg-surface0 text-subtext0 inline-block rounded-full border px-3 py-1 text-xs font-semibold tracking-wide">
               Beta pricing — 33% off
             </span>
           </p>
           <ul class="text-subtext0 mb-6 space-y-2 text-sm">
-            <li>• Activate on up to 3 of your own Macs</li>
+            <li>• Activate on up to 3 devices</li>
             <li>• No subscription, ever</li>
             <li>• Key delivered by email + on this page</li>
           </ul>
@@ -106,11 +108,10 @@ export default function NookCheckout() {
             Pay $10
           </Button>
 
-          {error() && (
-            <p class="text-red mt-4 text-sm">{error()}</p>
-          )}
+          {error() && <p class="text-red mt-4 text-sm">{error()}</p>}
           <p class="text-subtext1 mt-4 text-xs">
-            Billed once through Stripe. License delivered immediately after payment.
+            Billed once through Stripe. License delivered immediately after
+            payment.
           </p>
         </div>
       </div>
