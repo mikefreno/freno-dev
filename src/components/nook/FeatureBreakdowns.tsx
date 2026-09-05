@@ -250,14 +250,25 @@ function ApprovalDemo() {
 
 /* ── Demo 3: fans throttle up under load, then back down ──────────── */
 
+/* Spark pool: deterministic pseudo-random, count gated by fan speed. */
+const sparkRand = (i: number, k: number) => {
+  const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
+const SPARKS = Array.from({ length: 20 }, (_, i) => ({
+  sx: `${Math.round(10 + sparkRand(i, 1) * 26)}px`,
+  sy: `${Math.round(18 + sparkRand(i, 2) * 30)}px`,
+  sd: `${(0.4 + sparkRand(i, 3) * 0.25).toFixed(2)}s`,
+  sdel: `${(sparkRand(i, 4) * 1.2).toFixed(2)}s`,
+  size: sparkRand(i, 5) > 0.5 ? 3 : 2
+}));
+
 function FansDemo() {
   const [rpm, setRpm] = createSignal(1270);
   const [maxed, setMaxed] = createSignal(false);
   onMount(() => {
     let frame = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    /* Linear ramp toward `target` — close enough to the app's spring
-       at marketing-frame rates, with zero easing-library surface. */
     const ramp = (target: number, durationMs: number) => {
       cancelAnimationFrame(frame);
       const start = rpm();
@@ -293,8 +304,20 @@ function FansDemo() {
     { rpm: Math.round(rpm() * 0.96), frac: (rpm() * 0.96) / 6000 }
   ];
 
+  const shakeIntensity = () =>
+    Math.max(0, Math.min(1, (rpm() - 2500) / (6000 - 2500)));
+  /* 5 sparks when the shake starts, ~20 at max speed. */
+  const sparkCount = () =>
+    shakeIntensity() > 0 ? 5 + Math.floor(shakeIntensity() * 15) : 0;
   return (
-    <ModuleCard class="mx-auto w-full max-w-[320px]">
+    <div class="relative mx-auto w-full max-w-[320px]">
+      <ModuleCard
+        class="fan-card-shake relative z-10"
+        style={{
+          "--fan-amp": `${(shakeIntensity() * 2.6).toFixed(2)}deg`,
+          "--fan-speed": `${(0.4 - shakeIntensity() * 0.28).toFixed(3)}s`
+        }}
+      >
       <div class="space-y-3 text-left">
         <For each={fans()}>
           {(f, i) => (
@@ -338,7 +361,33 @@ function FansDemo() {
           </span>
         </div>
       </div>
-    </ModuleCard>
+      </ModuleCard>
+      <div
+        class="pointer-events-none absolute z-0"
+        style={{
+          right: "6px",
+          bottom: "-2px",
+          opacity: sparkCount() > 0 ? "1" : "0",
+          transition: "opacity 0.3s"
+        }}
+      >
+        <For each={SPARKS.slice(0, sparkCount())}>
+          {(s) => (
+            <span
+              class="fan-spark"
+              style={{
+                width: `${s.size}px`,
+                height: `${s.size}px`,
+                "--sx": s.sx,
+                "--sy": s.sy,
+                "--sd": s.sd,
+                "--sdel": s.sdel
+              }}
+            />
+          )}
+        </For>
+      </div>
+    </div>
   );
 }
 

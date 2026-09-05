@@ -722,3 +722,30 @@ a.hover-underline-animation:hover::after {
     display: none;
   }
 }
+/* ── Nook landing: fan card shake, builds with fan speed ───────── */
+.fan-card-shake {
+  transform-origin: left center;
+  animation-name: fan-shake;
+  animation-duration: var(--fan-speed, 0.4s);
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes fan-shake {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(calc(var(--fan-amp, 0deg) * -1)); }
+}
+
+/* Sputtering sparks off the fan card at max speed */
+.fan-spark {
+  position: absolute;
+  border-radius: 9999px;
+  background: #ffd23f;
+  box-shadow: 0 0 4px 1px rgba(255, 140, 0, 0.9);
+  animation: fan-spark-fly var(--sd, 0.5s) ease-out var(--sdel, 0s) infinite;
+}
+@keyframes fan-spark-fly {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(var(--sx, 20px), var(--sy, 30px)) scale(0.4); opacity: 0; }
+}

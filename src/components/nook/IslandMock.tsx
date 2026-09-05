@@ -33,13 +33,18 @@ export const CARD_STROKE = "rgba(255,255,255,0.07)";
  * One module-card surface shared by every mock panel — the app's
  * cardChrome(): rounded 12, hairline stroke, white-on-black fill.
  */
-export function ModuleCard(props: { children: JSX.Element; class?: string }) {
+export function ModuleCard(props: {
+  children: JSX.Element;
+  class?: string;
+  style?: Record<string, string>;
+}) {
   return (
     <div
       class={`rounded-xl ${props.class ?? ""}`}
       style={{
         background: CARD_FILL,
-        "box-shadow": `inset 0 0 0 1px ${CARD_STROKE}`
+        "box-shadow": `inset 0 0 0 1px ${CARD_STROKE}`,
+        ...props.style
       }}
     >
       <div class="p-3">{props.children}</div>
