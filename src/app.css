@@ -574,3 +574,151 @@ a.hover-underline-animation:hover::after {
 .shaker:hover {
   animation: shaker 0.5s ease;
 }
+
+/* ── Nook landing: campfire sprite frame cycling ──────────────────── */
+/* Each frame layer is stacked; its animation holds opacity 1 during its
+   slot and 0 otherwise, so the stack reads as stop-motion at the app's
+   sprite cadence (frame time = total duration / frame count). The phase
+   lives inside the keyframes and every layer animates delay-free from the
+   same clock WebKit quantizes animation starts per cycle wrap, so
+   delay-offset layers can drop a wrap frame and show BOTH transparent
+   for a frame (the "blank frame" flicker). Complementary holds mean any
+   moment sums to exactly one opaque layer. Linear timing: steps()
+   holds mis-swap at boundary frames under WebKit. */
+/* 2-frame sprites: layer i uses campfire-slot-2-{a,b}. */
+@keyframes campfire-slot-2-a {
+  0%,
+  49.99% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes campfire-slot-2-b {
+  0%,
+  49.99% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 6-frame sprites (question): six slot phases. */
+@keyframes campfire-slot-6-a {
+  0%,
+  16.66% {
+    opacity: 1;
+  }
+  16.67%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes campfire-slot-6-b {
+  0%,
+  16.66% {
+    opacity: 0;
+  }
+  16.67%,
+  33.32% {
+    opacity: 1;
+  }
+  33.33%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes campfire-slot-6-c {
+  0%,
+  33.32% {
+    opacity: 0;
+  }
+  33.33%,
+  49.99% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes campfire-slot-6-d {
+  0%,
+  49.99% {
+    opacity: 0;
+  }
+  50%,
+  66.66% {
+    opacity: 1;
+  }
+  66.67%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes campfire-slot-6-e {
+  0%,
+  66.66% {
+    opacity: 0;
+  }
+  66.67%,
+  83.32% {
+    opacity: 1;
+  }
+  83.33%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes campfire-slot-6-f {
+  0%,
+  83.32% {
+    opacity: 0;
+  }
+  83.33%,
+  100% {
+    opacity: 1;
+  }
+}
+
+.campfire-frame {
+  animation: var(--slot-kf, campfire-slot-2-a) var(--campfire-duration, 1s)
+    linear infinite;
+  opacity: 0;
+}
+
+/* ── Nook landing: breakdown section reveal ───────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .campfire-frame {
+    animation: none;
+    opacity: 1 !important;
+  }
+
+  .campfire-frame + .campfire-frame {
+    display: none;
+  }
+}

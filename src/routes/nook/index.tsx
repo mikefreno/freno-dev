@@ -1,5 +1,7 @@
 import { PageHead } from "~/components/PageHead";
 import SubdomainHeader from "~/components/SubdomainHeader";
+import FeatureCollage from "~/components/nook/FeatureCollage";
+import FeatureBreakdowns from "~/components/nook/FeatureBreakdowns";
 import Button from "~/components/ui/Button";
 import Input from "~/components/ui/Input";
 import { createSignal, Show } from "solid-js";
@@ -7,29 +9,6 @@ import { useDarkMode } from "~/context/darkMode";
 import { useSite } from "~/context/SiteContext";
 
 const NOOK_DOWNLOAD_URL = "https://freno.me/api/downloads/TheNook-0.2.0.zip";
-
-const FEATURES = [
-  {
-    title: "Agent orchestration",
-    body: "Orchestrate your coding agents in one native panel, with sessions that keep working while you do."
-  },
-  {
-    title: "A beautiful native UI",
-    body: "Animated panels and buttery SwiftUI transitions, tuned to feel right at home on your Mac."
-  },
-  {
-    title: "Fan & thermal insight",
-    body: "Read and control system fans, watch temperatures, and keep performance predictable under load."
-  },
-  {
-    title: "Private by design",
-    body: "Runs fully on your machine with no mandatory accounts. Your hardware data never leaves the device."
-  },
-  {
-    title: "One-time license",
-    body: "Pay once, activate on up to three of your own Macs. No subscriptions, no forced renewals."
-  }
-] as const;
 
 export default function NookLanding() {
   const site = useSite();
@@ -103,14 +82,14 @@ export default function NookLanding() {
             The Nook
           </div>
           <h1 class="text-text mb-4 text-5xl font-bold tracking-tight">
-            Your Mac, under your control
+            Your Mac and Agents, under control
           </h1>
           <p class="text-subtext0 mb-2 max-w-xl text-xl">
-            Agent orchestration, fan and thermal control — native macOS,
-            one-time license.
+            Agent orchestration, fan and thermal control in a beautiful native
+            UI.
           </p>
           <p class="text-subtext1 mb-8 text-sm">
-            macOS 14+ · 14-day free trial · 3 devices
+            macOS 14+ · 14-day free trial · up to 3 devices
           </p>
 
           <div class="flex flex-col items-center gap-4 sm:flex-row sm:space-x-4">
@@ -136,29 +115,25 @@ export default function NookLanding() {
             </span>
             <p class="text-subtext1 text-xs">
               <span class="text-subtext0 line-through">$15</span>{" "}
-              <span class="text-text font-bold">$10</span> one-time · 3 devices ·
-              14-day free trial
+              <span class="text-text font-bold">$10</span> one-time
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Feature highlights ───────────────────────────────────────── */}
-      <section class="bg-base relative z-20 px-4 py-20 md:px-8">
-        <div class="mx-auto max-w-4xl">
-          <h2 class="text-text mb-12 text-center text-3xl font-bold">
-            One panel for your agents and your Mac
+      {/* ── Feature collage ─────────────────────────────────────────── */}
+      <FeatureCollage />
+
+      {/* ── Feature breakdowns: the features in action ─────────────── */}
+      <section class="bg-base relative z-20 px-4 py-16 md:px-8">
+        <div class="mx-auto max-w-5xl">
+          <p class="text-subtext1 mb-2 text-center text-xs font-semibold tracking-[0.18em] uppercase">
+            In action
+          </p>
+          <h2 class="text-text mb-16 text-center text-3xl font-bold">
+            Built for the way you actually run agents
           </h2>
-          <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-2">
-            {FEATURES.map((feature) => (
-              <div class="border-overlay0 bg-surface0 rounded-lg border p-6">
-                <h3 class="text-text mb-2 text-xl font-semibold">
-                  {feature.title}
-                </h3>
-                <p class="text-subtext0 leading-relaxed">{feature.body}</p>
-              </div>
-            ))}
-          </div>
+          <FeatureBreakdowns />
         </div>
       </section>
 
@@ -187,7 +162,8 @@ export default function NookLanding() {
               class="text-subtext1 my-auto text-sm underline decoration-dotted hover:opacity-80"
               href="/checkout"
             >
-              Buy a license → $10 <span class="text-subtext0 line-through">$15</span>
+              Buy a license → $10{" "}
+              <span class="text-subtext0 line-through">$15</span>
             </a>
           </div>
           <p class="text-subtext1 mt-6 text-xs">
