@@ -8,7 +8,20 @@ import { createSignal, Show } from "solid-js";
 import { useDarkMode } from "~/context/darkMode";
 import { useSite } from "~/context/SiteContext";
 
-const NOOK_DOWNLOAD_URL = "https://freno.me/api/downloads/TheNook-0.2.0.zip";
+/* The appcast's first enclosure always names the latest release dmg. */
+async function downloadNook() {
+  try {
+    const res = await fetch("/api/TheNook/appcast.xml");
+    const xml = await res.text();
+    const url =
+      xml.match(/<enclosure url="([^"]+\.dmg)"/)?.[1] ??
+      xml.match(/<enclosure url="([^"]+\.zip)"/)?.[1];
+    if (!url) throw new Error("no enclosure");
+    window.location.href = url;
+  } catch {
+    console.error("Could not resolve latest Nook download");
+  }
+}
 
 export default function NookLanding() {
   const site = useSite();
@@ -97,7 +110,7 @@ export default function NookLanding() {
               variant="download"
               size="lg"
               color={brandColor()}
-              onClick={() => (window.location.href = NOOK_DOWNLOAD_URL)}
+              onClick={downloadNook}
             >
               Download trial
             </Button>
@@ -154,7 +167,7 @@ export default function NookLanding() {
               variant="download"
               size="lg"
               color={brandColor()}
-              onClick={() => (window.location.href = NOOK_DOWNLOAD_URL)}
+              onClick={downloadNook}
             >
               Download trial
             </Button>

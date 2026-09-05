@@ -67,7 +67,7 @@ const latestAssets: Record<
 > = {
   gaze: { prefix: "downloads/Gaze-", ext: ".dmg" },
   inputhalo: { prefix: "downloads/InputHalo-", ext: ".dmg" },
-  thenook: { prefix: "downloads/TheNook-", ext: ".zip" }
+  thenook: { prefix: "downloads/TheNook-", ext: ".dmg" }
 };
 
 export const downloadsRouter = createTRPCRouter({

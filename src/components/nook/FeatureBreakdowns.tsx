@@ -623,7 +623,9 @@ function CalendarDemo() {
     });
   };
   return (
-    <div class="flex flex-col items-center gap-4">
+    /* Fixed height: the day panel expands into reserved space, never
+       shifts the page (matters most on mobile's stacked layout). */
+    <div class="flex h-[316px] flex-col items-center gap-4">
       <IslandPill
         campfire="running"
         right={
