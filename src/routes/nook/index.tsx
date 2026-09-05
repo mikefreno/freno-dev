@@ -68,7 +68,8 @@ export default function NookLanding() {
       <SubdomainHeader />
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <div class="relative flex min-h-screen flex-col overflow-hidden">
+      {/* min-h = viewport − sticky header (h-14), so it ends at the fold */}
+      <div class="relative flex min-h-[calc(100svh-3.5rem)] flex-col overflow-hidden">
         <div
           class="fixed inset-0 z-0"
           style={{
@@ -77,13 +78,13 @@ export default function NookLanding() {
               : "radial-gradient(ellipse at top, #d7eef5 0%, #f5f5f5 70%)"
           }}
         />
-        <div class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-24 text-center">
+        <div class="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-12 text-center sm:py-24">
           <img
             src="/nook/icon.png"
             alt="The Nook App Icon"
             height={128}
             width={128}
-            class="mb-6 h-32 w-32 rounded-[22%] object-cover object-center shadow-2xl"
+            class="mb-4 h-24 w-24 rounded-[22%] object-cover object-center shadow-2xl sm:mb-6 sm:h-32 sm:w-32"
           />
           <div
             class="text-text/90 mb-6 rounded-2xl px-5 py-3 text-sm font-semibold tracking-wide backdrop-blur-sm"
@@ -94,7 +95,7 @@ export default function NookLanding() {
           >
             The Nook
           </div>
-          <h1 class="text-text mb-4 text-5xl font-bold tracking-tight">
+          <h1 class="text-text mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
             Your Mac and Agents, under control
           </h1>
           <p class="text-subtext0 mb-2 max-w-xl text-xl">
