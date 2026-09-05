@@ -184,7 +184,7 @@ function RemoteMock() {
             class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white/75"
             style={{ background: "rgba(255,255,255,0.08)" }}
           >
-            tailscale
+            ssh
           </span>
         </div>
         <p class="mt-0.5 text-[11px] text-white/50">Ready</p>
@@ -330,7 +330,7 @@ export default function FeatureCollage() {
           <CollageCell
             kicker="Remote"
             title="Agents on other machines"
-            body="Run agents on Linux boxes and SSH servers — a one-line install pipes their sessions back to the same island, over Tailscale or a reverse tunnel."
+            body="Run agents on Linux boxes and SSH servers — one click installs the nook-hook, and their sessions join the same island."
           >
             <InkStage class="w-full">
               <div class="w-full max-w-[280px] text-left">

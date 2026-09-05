@@ -34,3 +34,4 @@ Thumbs.db
 # pygienium run-state and check artifacts
 .pygienium/
 scripts/
+.cache
