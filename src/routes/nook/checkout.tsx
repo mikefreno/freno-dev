@@ -110,8 +110,8 @@ export default function NookCheckout() {
 
           {error() && <p class="text-red mt-4 text-sm">{error()}</p>}
           <p class="text-subtext1 mt-4 text-xs">
-            Billed once through Stripe. License delivered immediately after
-            payment.
+            Billed once through Stripe. License delivered immediately and by
+            email after payment.
           </p>
         </div>
       </div>

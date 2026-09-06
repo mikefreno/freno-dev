@@ -10,21 +10,7 @@ export default defineConfig({
         org: "mikefreno",
         project: "freno-dev",
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        telemetry: false,
-        sourcemaps: {
-          assets: [
-            {
-              type: "bundle",
-              path: "dist/client/assets/",
-              urlPrefix: "~/assets/"
-            },
-            {
-              type: "sourcemap",
-              path: "dist/client/assets/",
-              urlPrefix: "~/assets/"
-            }
-          ]
-        }
+        telemetry: false
       })
     ],
     build: {
