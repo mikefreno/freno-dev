@@ -111,7 +111,7 @@ function MainHome(): JSX.Element {
               >
                 The Nook
               </a>
-              <div class="mx-auto w-full max-w-2xl overflow-hidden rounded-lg">
+              <div class="mx-auto w-full max-w-4xl overflow-hidden rounded-lg">
                 <video
                   src="/nook/demo-expansion.mp4"
                   class="h-full w-full object-cover"
@@ -122,9 +122,9 @@ function MainHome(): JSX.Element {
                 />
               </div>
               <div class="pt-2 text-left text-sm">
-                A native macOS island that lives in the notch: orchestration
-                for a fleet of coding agents, fan curve control, thermal
-                gauges, calendar and camera modules. One-time purchase - no
+                A native macOS island that lives in the notch: orchestration for
+                a fleet of coding agents, fan curve control, thermal gauges,
+                calendar and camera modules. One-time purchase - no
                 subscription, ever.
               </div>
             </div>
@@ -240,7 +240,6 @@ function MainHome(): JSX.Element {
                   one.
                 </div>
               </div>
-
             </div>
           </div>
           <div class="flex justify-between pb-8 text-center">
