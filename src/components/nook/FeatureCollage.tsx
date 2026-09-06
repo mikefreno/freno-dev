@@ -46,7 +46,10 @@ function CollageCell(props: {
  */
 function InkStage(props: { children: JSX.Element; class?: string }) {
   return (
-    <div class={`flex justify-center rounded-xl py-5 ${props.class ?? ""}`} style={{ background: "#0d0d0f" }}>
+    <div
+      class={`flex justify-center rounded-xl py-5 ${props.class ?? ""}`}
+      style={{ background: "#0d0d0f" }}
+    >
       {props.children}
     </div>
   );
@@ -153,7 +156,10 @@ function RemoteMock() {
     <div class="space-y-1.5">
       <div
         class="rounded-[10px] p-2.5"
-        style={{ background: "rgba(255,255,255,0.055)", "box-shadow": "inset 0 0 0 1px rgba(255,255,255,0.07)" }}
+        style={{
+          background: "rgba(255,255,255,0.055)",
+          "box-shadow": "inset 0 0 0 1px rgba(255,255,255,0.07)"
+        }}
       >
         <div class="flex items-center gap-2">
           <span
@@ -172,7 +178,10 @@ function RemoteMock() {
       </div>
       <div
         class="rounded-[10px] p-2.5"
-        style={{ background: "rgba(255,255,255,0.055)", "box-shadow": "inset 0 0 0 1px rgba(255,255,255,0.07)" }}
+        style={{
+          background: "rgba(255,255,255,0.055)",
+          "box-shadow": "inset 0 0 0 1px rgba(255,255,255,0.07)"
+        }}
       >
         <div class="flex items-center gap-2">
           <span
@@ -237,7 +246,7 @@ function GaugesMock() {
 export default function FeatureCollage() {
   return (
     <section
-      class="bg-base relative z-20 -mt-28 px-4 pb-16 pt-40 md:px-8"
+      class="bg-base relative z-20 px-4 pt-40 pb-16 md:px-8"
       id="feature-collage"
     >
       <div class="mx-auto max-w-5xl">
@@ -250,9 +259,7 @@ export default function FeatureCollage() {
 
         <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
           {/* Hero: real collapsed pill on the island surface */}
-          <div
-            class="border-overlay1 bg-surface1 relative col-span-1 flex flex-col items-center overflow-hidden rounded-2xl border p-6 md:col-span-2"
-          >
+          <div class="border-overlay1 bg-surface1 relative col-span-1 flex flex-col items-center overflow-hidden rounded-2xl border p-6 md:col-span-2">
             <div class="mb-5 self-start">
               <p class="text-subtext1 mb-3 text-[11px] font-semibold tracking-[0.14em] uppercase">
                 The island
@@ -261,9 +268,9 @@ export default function FeatureCollage() {
                 Every agent, one glance
               </h3>
               <p class="text-subtext0 max-w-sm text-sm leading-relaxed">
-                A pill tucked into your notch — a campfire for your whole
-                fleet on the left, live data on the right. Blue running,
-                green ready, amber needs you.
+                A pill tucked into your notch — a campfire for your whole fleet
+                on the left, live data on the right. Blue running, green ready,
+                amber needs you.
               </p>
             </div>
             <div class="my-10 flex w-full justify-center">
@@ -304,7 +311,7 @@ export default function FeatureCollage() {
           <CollageCell
             kicker="Approvals"
             title="Unblock agents, anywhere"
-            body="Permission prompts surface as cards in the panel — Allow once, always, or deny. Away from the desk, push them to your phone and answer from there."
+            body="Permission prompts surface as cards in the panel — Allow once, always, or deny. Away from the desk, push them to your phone and answer from there (coming soon)."
           >
             <InkStage>
               <div class="w-full max-w-sm px-3">

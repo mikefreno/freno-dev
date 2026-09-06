@@ -3,6 +3,7 @@ import { PageHead } from "~/components/PageHead";
 import { DarkModeToggle } from "~/components/DarkModeToggle";
 import { Typewriter } from "~/components/Typewriter";
 import { useSite } from "~/context/SiteContext";
+import { buildSubdomainUrl } from "~/lib/site-context";
 import NessaLanding from "./nessa";
 import LineageLanding from "./lineage";
 import GazeLanding from "./gaze";
@@ -101,6 +102,32 @@ function MainHome(): JSX.Element {
           </Typewriter>
           <div class="pt-8 text-center">
             <div class="pb-4">Some of my recent projects:</div>
+            {/* The Nook */}
+            <div class="border-surface0 mb-2 flex w-full flex-col gap-2 rounded-md border-2 p-4 text-center">
+              <div>My macOS notch utility:</div>
+              <a
+                href={buildSubdomainUrl("nook")}
+                class="text-blue hover-underline-animation mx-auto w-fit"
+              >
+                The Nook
+              </a>
+              <div class="mx-auto w-full max-w-2xl overflow-hidden rounded-lg">
+                <video
+                  src="/nook/demo-expansion.mp4"
+                  class="h-full w-full object-cover"
+                  autoplay
+                  loop
+                  muted
+                  playsinline
+                />
+              </div>
+              <div class="pt-2 text-left text-sm">
+                A native macOS island that lives in the notch: orchestration
+                for a fleet of coding agents, fan curve control, thermal
+                gauges, calendar and camera modules. One-time purchase - no
+                subscription, ever.
+              </div>
+            </div>
             <div class="flex flex-col items-center gap-2 xl:flex-row xl:items-start xl:justify-center">
               {/* FlexLöve */}
               <div class="border-surface0 flex w-full flex-col rounded-md border-2 p-4 text-center">
@@ -213,6 +240,7 @@ function MainHome(): JSX.Element {
                   one.
                 </div>
               </div>
+
             </div>
           </div>
           <div class="flex justify-between pb-8 text-center">

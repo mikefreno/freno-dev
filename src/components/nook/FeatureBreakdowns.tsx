@@ -764,8 +764,12 @@ function CameraDemo() {
     });
   });
   createEffect(() => {
-    if (phase() === "live") videoRef?.play();
-    else videoRef?.pause();
+    if (phase() === "live" && videoRef) {
+      videoRef.currentTime = 0;
+      videoRef.play();
+    } else {
+      videoRef?.pause();
+    }
   });
   return (
     <ModuleCard class="relative mx-auto w-full max-w-[300px]">
@@ -809,9 +813,9 @@ function CameraDemo() {
             ref={videoRef}
             src="/nook/cam-recording.mp4"
             muted
-            loop
             playsinline
             preload="metadata"
+            onEnded={() => setPhase("idle")}
             class="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
             style={{ opacity: phase() === "live" ? 1 : 0 }}
           />
@@ -1027,7 +1031,7 @@ export default function FeatureBreakdowns() {
         body="Gated tool calls hold right in the panel. Allow, deny, or demand a reason. Walking away? The same request lands on your phone and your tap flies back to the agent."
         bullets={[
           "Permission and question cards pin above the session list",
-          "Push-to-phone over your own network — no cloud middleman",
+          "Push-to-phone over your own network — no cloud middleman (coming soon)",
           "Works across every hooked agent, local or remote"
         ]}
         reversed

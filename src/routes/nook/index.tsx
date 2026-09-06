@@ -68,8 +68,9 @@ export default function NookLanding() {
       <SubdomainHeader />
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      {/* min-h = viewport − sticky header (h-14), so it ends at the fold */}
-      <div class="relative flex min-h-[calc(100svh-3.5rem)] flex-col overflow-hidden">
+      {/* -mt-14 pulls the hero under the sticky header; pt-14 re-clears
+          content, so the gradient fills the full viewport incl. the bar */}
+      <div class="relative -mt-14 flex min-h-svh flex-col overflow-hidden pt-14">
         <div
           class="fixed inset-0 z-0"
           style={{
