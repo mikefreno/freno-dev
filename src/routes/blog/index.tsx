@@ -1,6 +1,7 @@
 import { Show } from "solid-js";
 import { useSearchParams, A, query } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import { createAsync } from "@solidjs/router";
 import PostSortingSelect from "~/components/blog/PostSortingSelect";
 import TagSelector from "~/components/blog/TagSelector";
@@ -90,6 +91,7 @@ export default function BlogIndex() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={60} staleSeconds={3600} />
       <PageHead
         title="Blog"
         description="Technical blog posts about web development, programming, and software engineering."

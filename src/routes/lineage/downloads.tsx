@@ -30,6 +30,7 @@
 import { A } from "@solidjs/router";
 import { createSignal, onMount, onCleanup } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
 import Button from "~/components/ui/Button";
@@ -71,6 +72,7 @@ export default function LineageDownloadsPage() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead title={PAGE_META.title} description={PAGE_META.description} />
 
       <SubdomainHeader />

@@ -7,11 +7,13 @@
  */
 import { buildMainSiteUrl } from "~/lib/subdomain-url";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 
 export default function NookPrivacyPolicy() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Privacy Policy"
         description="Privacy policy for The Nook, a coding-agent orchestration and hardware control app."

@@ -1,9 +1,11 @@
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 
 export default function PrivacyPolicy() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Privacy Policy - Shapes with Abigail"
         description="Privacy policy for Shapes with Abigail app, explaining our commitment to child safety and non-collection of personal data."

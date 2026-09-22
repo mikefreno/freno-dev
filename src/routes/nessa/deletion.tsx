@@ -24,6 +24,7 @@
  * Acceptance: `nessa.localhost:3000/deletion` renders the deletion form.
  */
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import DeletionForm from "~/components/DeletionForm";
 import {
@@ -36,6 +37,7 @@ import {
 export default function NessaDeletionPage() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead title={PAGE_META.title} description={PAGE_META.description} />
       <SubdomainHeader />
       <div class="pt-20">

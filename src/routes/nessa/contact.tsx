@@ -1,4 +1,5 @@
 import { ContactForm } from "~/components/ContactForm";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 
 /**
@@ -20,6 +21,7 @@ import SubdomainHeader from "~/components/SubdomainHeader";
 export default function NessaContactPage() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={60} staleSeconds={3600} />
       <SubdomainHeader />
       <ContactForm />
     </>

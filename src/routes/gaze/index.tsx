@@ -1,5 +1,6 @@
 import { createSignal, For } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
 import Button from "~/components/ui/Button";
@@ -60,6 +61,7 @@ export default function GazeLanding() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Home"
         description="Gaze is a macOS menu bar app for eye and posture health — blink reminders, 20-20-20 breaks, posture check-ins, and customizable reminder intervals."

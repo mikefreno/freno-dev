@@ -1,9 +1,21 @@
 User-agent: *
 Allow: /
 Allow: /blog
-Allow: /projects
-Disallow: /login
-Disallow: /debug/
+
+# Private / dynamic paths — not for indexing.
+# Keeps crawlers off auth, admin, and API pages so they don't burn
+# uncached SSR function invocations.
+Disallow: /account
+Disallow: /analytics
+Disallow: /api/
+Disallow: /blog/create
+Disallow: /blog/edit
+Disallow: /checkout
 Disallow: /databaseMGMT
+Disallow: /debug/
+Disallow: /error-test
+Disallow: /login
+Disallow: /success
+Disallow: /test
 
 Sitemap: https://www.freno.me/sitemap.xml

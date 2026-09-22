@@ -1,5 +1,6 @@
 import { onCleanup, onMount } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 
 export default function Resume() {
   let iframeRef: HTMLIFrameElement | undefined;
@@ -25,6 +26,7 @@ export default function Resume() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Resume"
         description="View Michael Freno's resume - Software Engineer."

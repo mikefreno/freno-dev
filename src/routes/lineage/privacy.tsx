@@ -17,11 +17,13 @@
  */
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 
 export default function LineagePrivacyPolicy() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Privacy Policy"
         description="Privacy policy for Life and Lineage mobile game, outlining data collection, usage, and user rights."

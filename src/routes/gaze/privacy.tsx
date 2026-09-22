@@ -15,11 +15,13 @@
  */
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 
 export default function GazePrivacyPolicy() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Privacy Policy"
         description="Privacy policy for Gaze, a macOS eye health reminder app."

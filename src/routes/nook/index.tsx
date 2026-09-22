@@ -1,4 +1,5 @@
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import FeatureCollage from "~/components/nook/FeatureCollage";
 import FeatureBreakdowns from "~/components/nook/FeatureBreakdowns";
@@ -57,6 +58,7 @@ export default function NookLanding() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Home"
         description="The Nook — a native macOS utility for coding-agent orchestration, fan and thermal control."

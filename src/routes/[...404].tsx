@@ -1,5 +1,5 @@
 import { PageHead } from "~/components/PageHead";
-import { HttpStatusCode } from "@solidjs/start";
+import { HttpHeader, HttpStatusCode } from "@solidjs/start";
 import { useLocation, useNavigate } from "@solidjs/router";
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import { TerminalErrorPage } from "~/components/TerminalErrorPage";
@@ -90,6 +90,14 @@ export default function NotFound() {
         description="404 - Page not found. The page you're looking for doesn't exist."
       />
       <HttpStatusCode code={404} />
+      {/* Cache 404/fallback responses at the edge (Vercel caches 404s) so
+          bots/monitors that probe dead paths don't re-render the full page
+          on every request. Function headers override vercel.json here. */}
+      <HttpHeader name="Cache-Control" value="public, max-age=0" />
+      <HttpHeader
+        name="CDN-Cache-Control"
+        value="public, s-maxage=300, stale-while-revalidate=86400"
+      />
       <TerminalErrorPage
         errorContent={errorContent}
         quickActions={quickActions}

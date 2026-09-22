@@ -11,6 +11,7 @@
 import { A } from "@solidjs/router";
 import { createSignal } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
 import Button from "~/components/ui/Button";
@@ -48,6 +49,7 @@ export default function GazeDownloadsPage() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Download Gaze"
         description="Download Gaze for macOS — menu bar app for eye and posture health."

@@ -23,11 +23,13 @@
  */
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 
 export default function InputHaloPrivacyPolicy() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Privacy Policy"
         description="Privacy policy for InputHalo, a macOS menu bar productivity app."

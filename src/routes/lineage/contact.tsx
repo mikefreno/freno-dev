@@ -1,4 +1,5 @@
 import { ContactForm } from "~/components/ContactForm";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import { LineageContactQuestions } from "../contact";
 
@@ -24,6 +25,7 @@ import { LineageContactQuestions } from "../contact";
 export default function LineageContactPage() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={60} staleSeconds={3600} />
       <SubdomainHeader />
       <ContactForm>
         <LineageContactQuestions />

@@ -1,5 +1,6 @@
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 
 /**
  * Main-site privacy policy — `freno.me/privacy-policy`.
@@ -14,6 +15,7 @@ import { PageHead } from "~/components/PageHead";
 export default function PrivacyPolicy() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Privacy Policy"
         description="Privacy policy for the freno.me blog and personal site, covering accounts, comments, and contact forms."

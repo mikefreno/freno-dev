@@ -12,6 +12,7 @@
  */
 import { For, Show } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import { useDarkMode } from "~/context/darkMode";
 import { useSite } from "~/context/SiteContext";
@@ -59,6 +60,7 @@ export default function NessaLanding() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead {...NESSA_LANDING_META} />
 
       <SubdomainHeader />

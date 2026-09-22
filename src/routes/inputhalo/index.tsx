@@ -13,6 +13,7 @@
 import { For, createSignal } from "solid-js";
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import Button from "~/components/ui/Button";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
@@ -98,6 +99,7 @@ export default function InputHaloLanding() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Home"
         description="A polished macOS menu bar app that visualizes keyboard presses, mouse clicks, cursor halos, and scroll events on screen — for streamers, presenters, and developers."

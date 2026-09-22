@@ -1,4 +1,5 @@
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import { A } from "@solidjs/router";
 import { createSignal, onMount, onCleanup, Switch, Match } from "solid-js";
 import DownloadOnAppStore from "~/components/icons/DownloadOnAppStore";
@@ -71,6 +72,7 @@ function MainDownloadsPage() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Downloads"
         description="Download The Nook, InputHalo, Gaze, Life and Lineage, Shapes with Abigail, and Cork. Available on macOS, iOS, and Android."

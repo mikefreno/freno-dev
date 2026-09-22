@@ -1,5 +1,6 @@
 import { Switch, Match, type JSX } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import { DarkModeToggle } from "~/components/DarkModeToggle";
 import { Typewriter } from "~/components/Typewriter";
 import { useSite } from "~/context/SiteContext";
@@ -57,6 +58,7 @@ export default function Home(): JSX.Element {
 function MainHome(): JSX.Element {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Home"
         description="Michael Freno - Software Engineer based in Brooklyn, NY"

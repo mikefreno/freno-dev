@@ -11,6 +11,7 @@
  */
 import { A } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import SimpleParallax from "~/components/SimpleParallax";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
@@ -25,6 +26,7 @@ import {
 export default function LineageLandingPage() {
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead title={PAGE_META.title} description={PAGE_META.description} />
       <SubdomainHeader />
       <SimpleParallax>

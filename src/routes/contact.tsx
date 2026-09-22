@@ -3,6 +3,7 @@ import { useSearchParams } from "@solidjs/router";
 import { A } from "@solidjs/router";
 import RevealDropDown from "~/components/RevealDropDown";
 import { ContactForm } from "~/components/ContactForm";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import { buildSubdomainUrl } from "~/lib/site-context";
 import { useSite } from "~/context/SiteContext";
 import NessaContactPage from "./nessa/contact";
@@ -125,7 +126,9 @@ function MainContactPage() {
   const viewer = () => searchParams.viewer ?? "default";
 
   return (
-    <ContactForm
+    <>
+      <EdgeCacheHeaders maxAge={60} staleSeconds={3600} />
+      <ContactForm
       subline={
         <Show when={viewer() !== "lineage"}>
           (for this website or any of my apps...)
@@ -134,6 +137,7 @@ function MainContactPage() {
     >
       <LineageContactQuestions />
     </ContactForm>
+    </>
   );
 }
 

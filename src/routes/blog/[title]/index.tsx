@@ -7,6 +7,7 @@ import {
   useSearchParams
 } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import AuthenticatedLike from "~/components/blog/AuthenticatedLike";
@@ -327,6 +328,7 @@ export default function PostPage() {
 
               return (
                 <>
+                  <EdgeCacheHeaders maxAge={60} staleSeconds={3600} />
                   <PageHead
                     title={p().title.replaceAll("_", " ")}
                     description={

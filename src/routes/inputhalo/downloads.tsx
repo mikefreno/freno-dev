@@ -11,6 +11,7 @@
 import { A } from "@solidjs/router";
 import { createSignal } from "solid-js";
 import { PageHead } from "~/components/PageHead";
+import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import DownloadOnAppStoreDark from "~/components/icons/DownloadOnAppStoreDark";
 import Button from "~/components/ui/Button";
@@ -51,6 +52,7 @@ export default function InputHaloDownloadsPage() {
 
   return (
     <>
+      <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Download InputHalo"
         description="Download InputHalo for macOS — menu bar app for keyboard, mouse, and scroll visualization."
