@@ -11,7 +11,8 @@
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
     "perf": "bun run scripts/perf-test.ts",
-    "perf:compare": "bun run scripts/perf-compare.ts"
+    "perf:compare": "bun run scripts/perf-compare.ts",
+    "nook:grant": "NODE_ENV=production bun --env-file=.env scripts/grant-nook-license.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.953.0",
