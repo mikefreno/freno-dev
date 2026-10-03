@@ -40,13 +40,13 @@ describe("Nessa landing page — PageHead metadata", () => {
     expect(meta.canonical).toBe("https://nessa.freno.me/");
   });
 
-  it("ogImage falls back to the nessa site default", () => {
+  it("ogImage falls back to the nessa site default, resolved absolute", () => {
     const meta = resolvePageHeadMeta(
       NESSA_LANDING_META,
       SITE_CONFIG.nessa,
       "/"
     );
-    expect(meta.ogImage).toBe(SITE_CONFIG.nessa.ogDefaultImage);
+    expect(meta.ogImage).toBe("https://nessa.freno.me/nessa/og-default.png");
   });
 
   it("ogTitle uses the explicit marketing copy, not the bare title", () => {

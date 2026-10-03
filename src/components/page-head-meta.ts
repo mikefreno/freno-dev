@@ -16,6 +16,9 @@
  *    prefix-strip below also handles any legacy prefixed form, so the canonical
  *    is always the public URL.
  *  - `ogImage` → explicit `props.ogImage` wins; otherwise `site.ogDefaultImage`.
+ *    Either way it is resolved to an **absolute** URL against the site's
+ *    domain — OG consumers (X, Slack, Discord, iMessage) require an absolute
+ *    URL, and a site-relative path in `ogDefaultImage` would 404 otherwise.
  *  - `ogTitle` / `ogDescription` → explicit override wins; otherwise fall
  *    back to the base title (no suffix) / description (existing behavior).
  */
@@ -49,6 +52,20 @@ export interface ResolvedPageHeadMeta {
   ogImage: string;
 }
 
+/**
+ * Resolve an OpenGraph image reference to an absolute URL.
+ *
+ * OG consumers (X, Slack, Discord, LinkedIn, iMessage) require an absolute
+ * URL; `ogDefaultImage` values are site-relative paths (`/nook/og.png`), so
+ * they are joined to the site origin here. Already-absolute references
+ * (`https:`, `data:`, protocol-relative `//`) pass through untouched.
+ */
+function absolutizeOgImage(image: string, domain: string): string {
+  if (image.startsWith("//")) return `https:${image}`;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(image)) return image;
+  return `https://${domain}${image.startsWith("/") ? "" : "/"}${image}`;
+}
+
 export function resolvePageHeadMeta(
   props: PageHeadProps,
   site: Site,
@@ -71,7 +88,10 @@ export function resolvePageHeadMeta(
   const canonical = props.canonical ?? `https://${site.domain}${publicPath}`;
   const ogTitle = props.ogTitle ?? props.title;
   const ogDescription = props.ogDescription ?? props.description;
-  const ogImage = props.ogImage ?? site.ogDefaultImage;
+  const ogImage = absolutizeOgImage(
+    props.ogImage ?? site.ogDefaultImage,
+    site.domain
+  );
 
   return {
     title,

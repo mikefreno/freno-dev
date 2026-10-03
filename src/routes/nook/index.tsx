@@ -57,7 +57,7 @@ export default function NookLanding() {
       <PageHead
         title="Home"
         description="The Nook — a native macOS utility for coding-agent orchestration, fan and thermal control."
-        ogImage="/nook/og-default.png"
+        ogImage={`https://${site().domain}/nook/og.png`}
         ogTitle="The Nook — native macOS agent orchestration"
         ogDescription="A one-time-purchase macOS app for coding-agent orchestration, fan control, and thermal insight."
       />

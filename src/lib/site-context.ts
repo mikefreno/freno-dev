@@ -132,7 +132,7 @@ export const SITE_CONFIG: Record<SiteId, Site> = {
     titleSuffix: " | The Nook",
     brandColor: "#4C9FBC",
     brandColorDark: "#4C9FBC",
-    ogDefaultImage: "/nook/og-default.png",
+    ogDefaultImage: "/nook/og.png",
     faviconPath: "/nook/favicon/favicon.ico"
   }
 };

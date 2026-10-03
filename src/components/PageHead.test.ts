@@ -132,18 +132,32 @@ describe("resolvePageHeadMeta — canonical URL derivation", () => {
 });
 
 describe("resolvePageHeadMeta — OpenGraph fallbacks", () => {
-  it("ogImage defaults to the site's ogDefaultImage when not provided", () => {
+  it("ogImage defaults to the site's ogDefaultImage, resolved to an absolute URL", () => {
     const meta = resolvePageHeadMeta(BASE_PROPS, SITE_CONFIG.nessa, "/");
-    expect(meta.ogImage).toBe(SITE_CONFIG.nessa.ogDefaultImage);
+    expect(meta.ogImage).toBe("https://nessa.freno.me/nessa/og-default.png");
   });
 
-  it("explicit ogImage overrides the site default", () => {
+  it("the nook default resolves to the absolute og.png URL", () => {
+    const meta = resolvePageHeadMeta(BASE_PROPS, SITE_CONFIG.nook, "/");
+    expect(meta.ogImage).toBe("https://nook.freno.me/nook/og.png");
+  });
+
+  it("explicit absolute ogImage passes through unchanged", () => {
     const meta = resolvePageHeadMeta(
       { ...BASE_PROPS, ogImage: "https://cdn/custom.png" },
       SITE_CONFIG.main,
       "/"
     );
     expect(meta.ogImage).toBe("https://cdn/custom.png");
+  });
+
+  it("explicit site-relative ogImage is resolved against the site domain", () => {
+    const meta = resolvePageHeadMeta(
+      { ...BASE_PROPS, ogImage: "/og/custom.png" },
+      SITE_CONFIG.gaze,
+      "/"
+    );
+    expect(meta.ogImage).toBe("https://gaze.freno.me/og/custom.png");
   });
 
   it("ogTitle falls back to the base title (no suffix)", () => {

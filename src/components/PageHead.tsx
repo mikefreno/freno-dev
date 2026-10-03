@@ -56,6 +56,8 @@ export default function PageHead(props: PageHeadProps) {
         <Meta property="og:description" content={meta().ogDescription} />
       )}
       <Meta property="og:image" content={meta().ogImage} />
+      {/* X/Twitter large-image card; falls back to the og:* tags above. */}
+      <Meta name="twitter:card" content="summary_large_image" />
     </>
   );
 }
