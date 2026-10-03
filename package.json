@@ -1,5 +1,5 @@
 {
-  "name": "example-with-trpc",
+  "name": "freno.(dev/me)",
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
