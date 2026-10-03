@@ -2,6 +2,43 @@ import { ConnectionFactory } from "./database";
 import { v4 as uuid } from "uuid";
 import type { VisitorAnalytics, AnalyticsQuery } from "~/db/types";
 import { CACHE_CONFIG } from "~/config";
+import {
+  VISITOR_ANALYTICS_ADDED_COLUMNS,
+  VISITOR_ANALYTICS_DDL,
+  VISITOR_ANALYTICS_INDEXES,
+  VISITOR_ANALYTICS_INSERT
+} from "./analytics-schema";
+
+/**
+ * Idempotent schema bootstrap, mirroring `nook.ts`. The table had no DDL in
+ * this repo, so a database that never had it would accept no writes at all
+ * (and the buffer swallows its errors, so the failure would be invisible).
+ * Against the live database this is a no-op; it only creates what is absent.
+ */
+export const analyticsSchemaBootstrap: Promise<unknown> = (async () => {
+  const conn = ConnectionFactory();
+
+  await conn.execute(VISITOR_ANALYTICS_DDL);
+  for (const index of VISITOR_ANALYTICS_INDEXES) {
+    await conn.execute(index);
+  }
+
+  // SQLite has no "ADD COLUMN IF NOT EXISTS", so check before altering —
+  // covers a database restored from before these columns existed.
+  const info = await conn.execute(`PRAGMA table_info(VisitorAnalytics)`);
+  const present = new Set(info.rows.map((row) => String((row as any).name)));
+  for (const column of VISITOR_ANALYTICS_ADDED_COLUMNS) {
+    if (!present.has(column.name)) {
+      await conn.execute(column.ddl);
+    }
+  }
+})();
+
+// A bootstrap failure must not become an unhandled rejection on a request
+// path that merely imports this module.
+analyticsSchemaBootstrap.catch((error) =>
+  console.error("VisitorAnalytics schema bootstrap failed:", error)
+);
 
 export interface AnalyticsEntry {
   userId?: string | null;
@@ -14,6 +51,9 @@ export interface AnalyticsEntry {
   deviceType?: string | null;
   browser?: string | null;
   os?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
   durationMs?: number | null;
   fcp?: number | null;
   lcp?: number | null;
@@ -59,11 +99,7 @@ async function flushAnalyticsBuffer(): Promise<void> {
     // Batch insert - more efficient than individual inserts
     for (const entry of entriesToWrite) {
       await conn.execute({
-        sql: `INSERT INTO VisitorAnalytics (
-          id, user_id, path, method, referrer, user_agent, ip_address, 
-          country, device_type, browser, os, duration_ms,
-          fcp, lcp, cls, fid, inp, ttfb, dom_load, load_complete
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: VISITOR_ANALYTICS_INSERT,
         args: [
           uuid(),
           entry.userId || null,
@@ -76,6 +112,9 @@ async function flushAnalyticsBuffer(): Promise<void> {
           entry.deviceType || null,
           entry.browser || null,
           entry.os || null,
+          entry.utmSource || null,
+          entry.utmMedium || null,
+          entry.utmCampaign || null,
           entry.durationMs || null,
           entry.fcp || null,
           entry.lcp || null,
@@ -92,6 +131,23 @@ async function flushAnalyticsBuffer(): Promise<void> {
     console.error("Failed to flush analytics buffer:", error);
     // Don't re-throw - analytics is non-critical
   }
+}
+
+/**
+ * Write buffered entries now instead of waiting for the batch timer.
+ *
+ * The buffer only writes immediately at ANALYTICS_BATCH_SIZE entries; below
+ * that it defers to a 30-second timeout. On a long-lived server that is
+ * fine, but on serverless the work scheduled after a response is not
+ * guaranteed to run before the instance is recycled — so a low-volume but
+ * high-value event (a download click) could sit in memory and never be
+ * recorded. Callers that must not lose a row await this.
+ *
+ * Safe to call concurrently: the buffer is drained synchronously before the
+ * first await, so entries are never written twice.
+ */
+export async function flushAnalytics(): Promise<void> {
+  await flushAnalyticsBuffer();
 }
 
 /**
@@ -197,6 +253,9 @@ export async function queryAnalytics(
     device_type: row.device_type as string | null,
     browser: row.browser as string | null,
     os: row.os as string | null,
+    utm_source: row.utm_source as string | null,
+    utm_medium: row.utm_medium as string | null,
+    utm_campaign: row.utm_campaign as string | null,
     duration_ms: row.duration_ms as number | null,
     created_at: row.created_at as string
   }));
@@ -213,6 +272,12 @@ export async function getAnalyticsSummary(days: number = 30): Promise<{
   topReferrers: Array<{ referrer: string; count: number }>;
   deviceTypes: Array<{ type: string; count: number }>;
   browsers: Array<{ browser: string; count: number }>;
+  topCampaigns: Array<{
+    source: string | null;
+    medium: string | null;
+    campaign: string | null;
+    count: number;
+  }>;
 }> {
   const conn = ConnectionFactory();
 
@@ -324,6 +389,26 @@ export async function getAnalyticsSummary(days: number = 30): Promise<{
     count: row.count as number
   }));
 
+  // Campaign attribution (§8): which channel produced the traffic. Rows with
+  // no tags are excluded — the "untagged" bucket is a separate question and
+  // would otherwise dominate the list.
+  const topCampaignsResult = await conn.execute({
+    sql: `SELECT utm_source, utm_medium, utm_campaign, COUNT(*) as count
+          FROM VisitorAnalytics
+          WHERE created_at >= datetime('now', '-${days} days')
+          AND (utm_source IS NOT NULL OR utm_medium IS NOT NULL OR utm_campaign IS NOT NULL)
+          GROUP BY utm_source, utm_medium, utm_campaign
+          ORDER BY count DESC
+          LIMIT 10`,
+    args: []
+  });
+  const topCampaigns = topCampaignsResult.rows.map((row) => ({
+    source: (row.utm_source as string | null) ?? null,
+    medium: (row.utm_medium as string | null) ?? null,
+    campaign: (row.utm_campaign as string | null) ?? null,
+    count: row.count as number
+  }));
+
   return {
     totalVisits,
     totalPageVisits,
@@ -334,7 +419,8 @@ export async function getAnalyticsSummary(days: number = 30): Promise<{
     topApiCalls,
     topReferrers,
     deviceTypes,
-    browsers
+    browsers,
+    topCampaigns
   };
 }
 

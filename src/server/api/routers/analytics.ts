@@ -11,6 +11,8 @@ import {
 import { ConnectionFactory } from "~/server/database";
 import { v4 as uuid } from "uuid";
 import { getRequestIP } from "vinxi/http";
+import { parseUtm } from "~/server/utm";
+import { VISITOR_ANALYTICS_INSERT } from "~/server/analytics-schema";
 
 /** Safely get a header value from either Fetch API Headers or Node.js IncomingHttpHeaders */
 function getHeader(
@@ -104,6 +106,10 @@ export const analyticsRouter = createTRPCRouter({
             userAgent,
             referrer,
             ipAddress,
+            // The client beacon sends `pathname + search`, so the page URL's
+            // own query string is the campaign source; the referrer fills any
+            // gap (e.g. clicks that arrive on a clean path).
+            ...parseUtm(input.path, referrer),
             fcp: input.metrics.fcp,
             lcp: input.metrics.lcp,
             cls: input.metrics.cls,
@@ -115,11 +121,7 @@ export const analyticsRouter = createTRPCRouter({
           });
 
           await conn.execute({
-            sql: `INSERT INTO VisitorAnalytics (
-              id, user_id, path, method, referrer, user_agent, ip_address, 
-              country, device_type, browser, os, duration_ms,
-              fcp, lcp, cls, fid, inp, ttfb, dom_load, load_complete
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            sql: VISITOR_ANALYTICS_INSERT,
             args: [
               uuid(),
               enriched.userId || null,
@@ -132,6 +134,9 @@ export const analyticsRouter = createTRPCRouter({
               enriched.deviceType || null,
               enriched.browser || null,
               enriched.os || null,
+              enriched.utmSource || null,
+              enriched.utmMedium || null,
+              enriched.utmCampaign || null,
               enriched.durationMs || null,
               enriched.fcp || null,
               enriched.lcp || null,

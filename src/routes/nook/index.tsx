@@ -9,19 +9,14 @@ import { createSignal, Show } from "solid-js";
 import { useDarkMode } from "~/context/darkMode";
 import { useSite } from "~/context/SiteContext";
 
-/* The appcast's first enclosure always names the latest release dmg. */
-async function downloadNook() {
-  try {
-    const res = await fetch("/api/TheNook/appcast.xml");
-    const xml = await res.text();
-    const url =
-      xml.match(/<enclosure url="([^"]+\.dmg)"/)?.[1] ??
-      xml.match(/<enclosure url="([^"]+\.zip)"/)?.[1];
-    if (!url) throw new Error("no enclosure");
-    window.location.href = url;
-  } catch {
-    console.error("Could not resolve latest Nook download");
-  }
+/*
+ * Downloads are logged and resolved server-side. `/api/the-nook/download`
+ * records the click in the analytics buffer, then 302s to the latest
+ * release dmg the appcast names. Pointing the button straight at the
+ * enclosure would skip the funnel's second step entirely.
+ */
+function downloadNook() {
+  window.location.href = "/api/the-nook/download";
 }
 
 export default function NookLanding() {

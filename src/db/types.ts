@@ -148,6 +148,9 @@ export interface VisitorAnalytics {
   device_type?: string | null;
   browser?: string | null;
   os?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
   duration_ms?: number | null;
   fcp?: number | null;
   lcp?: number | null;
