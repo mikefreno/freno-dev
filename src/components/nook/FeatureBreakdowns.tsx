@@ -766,7 +766,10 @@ function CameraDemo() {
   createEffect(() => {
     if (phase() === "live" && videoRef) {
       videoRef.currentTime = 0;
-      videoRef.play();
+      // play() rejects with AbortError when interrupted by pause() (the loop
+      // resetting to "idle") or when the browser pauses background media to
+      // save power. Swallow it — the rejection is expected, not a failure.
+      void videoRef.play().catch(() => {});
     } else {
       videoRef?.pause();
     }
