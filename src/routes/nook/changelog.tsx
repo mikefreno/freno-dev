@@ -5,8 +5,13 @@
  * launch, so this page renders exactly what Sparkle publishes: one source
  * of truth, no second place to write release notes. Doubles as the raw
  * material for the release-announcement job (marketing/README.md).
+ *
+ * Layout: the version list lives in a fixed-height vertical scroller, so
+ * expanding a release never shifts the page — history is browsed inside
+ * the panel. Rows collapse to their header; notes stay in the DOM
+ * (visibility toggled, not unmounted) so crawlers still see every entry.
  */
-import { For, Show } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import { query, createAsync } from "@solidjs/router";
 import { PageHead } from "~/components/PageHead";
 import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
@@ -20,6 +25,11 @@ const getReleases = query(async () => {
 
 export default function NookChangelogPage() {
   const releases = createAsync(() => getReleases());
+  // Newest release starts open; every other row starts collapsed.
+  const [openVersion, setOpenVersion] = createSignal<string | null>(null);
+
+  const isOpen = (version: string, index: number) =>
+    openVersion() === null ? index === 0 : openVersion() === version;
 
   return (
     <>
@@ -47,12 +57,24 @@ export default function NookChangelogPage() {
             </p>
           }
         >
-          <div class="border-overlay0 space-y-10 border-l pl-6">
+          <div class="border-overlay0 bg-surface0/40 max-h-[70vh] overflow-y-auto rounded-2xl border">
             <For each={releases()}>
-              {(release) => (
-                <article>
-                  <div class="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h2 class="text-text text-xl font-semibold">
+              {(release, i) => (
+                <article class="border-overlay0 not-last:border-b">
+                  <button
+                    type="button"
+                    class="hover:bg-base flex w-full items-baseline gap-x-3 gap-y-1 p-5 text-left transition-colors"
+                    aria-expanded={isOpen(release.version, i())}
+                    onClick={() =>
+                      setOpenVersion(
+                        isOpen(release.version, i()) ? null : release.version
+                      )
+                    }
+                  >
+                    <span class="text-subtext1 w-4 shrink-0 font-mono text-sm">
+                      {isOpen(release.version, i()) ? "−" : "+"}
+                    </span>
+                    <h2 class="text-text text-lg font-semibold">
                       Version {release.version}
                     </h2>
                     <Show when={release.build}>
@@ -61,13 +83,17 @@ export default function NookChangelogPage() {
                       </span>
                     </Show>
                     <Show when={release.date}>
-                      <span class="text-subtext1 text-xs">{release.date}</span>
+                      <span class="text-subtext1 ml-auto text-xs">
+                        {release.date}
+                      </span>
                     </Show>
-                  </div>
+                  </button>
                   {/* Notes are the publisher's own HTML, written to the same
-                      S3 appcast the Sparkle updater consumes. */}
+                      S3 appcast the Sparkle updater consumes. Kept mounted
+                      and toggled via `hidden` so the content stays crawlable. */}
                   <div
-                    class="text-subtext0 text-sm [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-text [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-2 [&_ul]:mb-2"
+                    classList={{ hidden: !isOpen(release.version, i()) }}
+                    class="text-subtext0 px-5 pb-5 pl-14 text-sm [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-text [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-2 [&_ul]:mb-2"
                     innerHTML={release.notesHtml}
                   />
                 </article>
