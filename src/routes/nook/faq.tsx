@@ -29,7 +29,7 @@ const FAQ: FaqEntry[] = [
   {
     question: "How much battery does it cost?",
     answer:
-      "The Nook is a small native UI, not a background agent — it watches the agents you're already running; it doesn't run anything itself. The heaviest thing it does is read and write your Mac's fan and charging controllers, which is a lightweight sensor read. If you're running enough coding agents to need it, those agents dwarf the app's own draw — which is rather the point: the fan control exists because the agents are what heat the machine."
+      "The Nook is a small native UI, not a background agent — it watches the agents you're already running; it doesn't run anything itself. The heaviest thing it does is read and write your Mac's fan and charging controllers, which is a lightweight sensor read. If you're running enough coding agents to need it, those agents dwarf the app's own draw."
   },
   {
     question: "What permissions does it need?",
@@ -39,7 +39,7 @@ const FAQ: FaqEntry[] = [
   {
     question: "Why macOS 14 or later?",
     answer:
-      "The interface is built on Apple's current observation framework, which ships with macOS 14 (Sonoma). Supporting older versions would mean rewriting the whole UI layer on a deprecated foundation — time that goes into the app instead. macOS 14 runs on hardware from 2018 onward, which covers the machines that run coding agents comfortably."
+      "The interface is built on Apple's current observation framework, which ships with macOS 14 (Sonoma)."
   },
   {
     question: "Does it work offline?",
@@ -60,7 +60,7 @@ export default function NookFaqPage() {
         ogTitle="The Nook — FAQ"
       />
       <SubdomainHeader />
-      <main class="min-h-screen px-[8vw] py-[8vh]">
+      <main class="flex min-h-screen flex-col items-center px-[8vw] py-[8vh]">
         <h1 class="text-text mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
           Questions people actually ask
         </h1>
@@ -76,7 +76,7 @@ export default function NookFaqPage() {
           .
         </p>
 
-        <div class="max-w-3xl space-y-3">
+        <div class="w-full max-w-3xl space-y-3">
           <For each={FAQ}>
             {(entry, i) => (
               <div class="border-overlay0 bg-surface0/40 rounded-2xl border">

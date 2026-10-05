@@ -29,12 +29,23 @@ const AGENTS: AgentEntry[] = [
     name: "Claude Code",
     wiring: "Hook entries in settings.json pointing at the shared hook binary",
     events: [
-      "UserPromptSubmit", "SessionStart", "SessionEnd", "Stop", "StopFailure",
-      "SubagentStart", "SubagentStop", "Notification", "PreToolUse",
-      "PermissionRequest", "PostToolUse", "PostToolUseFailure",
-      "PermissionDenied", "PreCompact"
+      "UserPromptSubmit",
+      "SessionStart",
+      "SessionEnd",
+      "Stop",
+      "StopFailure",
+      "SubagentStart",
+      "SubagentStop",
+      "Notification",
+      "PreToolUse",
+      "PermissionRequest",
+      "PostToolUse",
+      "PostToolUseFailure",
+      "PermissionDenied",
+      "PreCompact"
     ],
-    gating: "Full — tool calls and permission prompts can be allowed or denied from a card"
+    gating:
+      "Full — tool calls and permission prompts can be allowed or denied from a card"
   },
   {
     name: "Codex",
@@ -44,89 +55,167 @@ const AGENTS: AgentEntry[] = [
   },
   {
     name: "OpenCode",
-    wiring: "In-process plugin (~/.config/opencode/plugins/nook.js) on the server bus",
+    wiring:
+      "In-process plugin (~/.config/opencode/plugins/nook.js) on the server bus",
     events: [
-      "SessionStart", "SessionEnd", "UserPromptSubmit", "PreToolUse",
-      "PostToolUse", "Stop", "MessageUpdate", "PermissionRequest", "QuestionAsked"
+      "SessionStart",
+      "SessionEnd",
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse",
+      "Stop",
+      "MessageUpdate",
+      "PermissionRequest",
+      "QuestionAsked"
     ],
-    gating: "Full — the plugin answers OpenCode's own permission API when you tap Allow or Deny"
+    gating:
+      "Full — the plugin answers OpenCode's own permission API when you tap Allow or Deny"
   },
   {
     name: "Pi",
     wiring: "In-process extension (~/.pi/agent/extensions/nook.ts)",
     events: [
-      "SessionStart", "SessionEnd", "UserPromptSubmit", "PreToolUse",
-      "PostToolUse", "Stop", "MessageUpdate", "QuestionAsked", "QuestionResolved"
+      "SessionStart",
+      "SessionEnd",
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse",
+      "Stop",
+      "MessageUpdate",
+      "QuestionAsked",
+      "QuestionResolved"
     ],
-    gating: "Full when you force verification — Pi alone never asks natively, so the gate engages on the approval tool"
+    gating:
+      "Full when you force verification — Pi alone never asks natively, so the gate engages on the approval tool"
   },
   {
     name: "Oh My Pi",
     wiring: "In-process extension package (~/.omp/agent/extensions/nook/)",
     events: [
-      "SessionStart", "SessionEnd", "UserPromptSubmit", "PreToolUse",
-      "PostToolUse", "Stop", "MessageUpdate", "QuestionAsked", "QuestionResolved"
+      "SessionStart",
+      "SessionEnd",
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse",
+      "Stop",
+      "MessageUpdate",
+      "QuestionAsked",
+      "QuestionResolved"
     ],
-    gating: "Full — honors the agent's own approval tiers, per-tool policies included"
+    gating:
+      "Full — honors the agent's own approval tiers, per-tool policies included"
   },
   {
     name: "Hermes",
-    wiring: "Shell-hook entries in the agent's config, consent-gated by allowlist",
+    wiring:
+      "Shell-hook entries in the agent's config, consent-gated by allowlist",
     events: [
-      "SessionStart", "SessionEnd", "UserPromptSubmit", "Stop", "PreToolUse",
-      "PostToolUse", "SubagentStart", "SubagentStop"
+      "SessionStart",
+      "SessionEnd",
+      "UserPromptSubmit",
+      "Stop",
+      "PreToolUse",
+      "PostToolUse",
+      "SubagentStart",
+      "SubagentStop"
     ],
-    gating: "Observation — every event appears as a card; the agent keeps its own prompting"
+    gating:
+      "Observation — every event appears as a card; the agent keeps its own prompting"
   },
   {
     name: "OpenClaw",
     wiring: "Hook handler package (~/.openclaw/hooks/nook/)",
-    events: ["SessionStart", "UserPromptSubmit", "AgentResponse", "PreCompact", "SessionEnd"],
-    gating: "Observation — strict fire-and-forget; the agent surface has no tool or permission events"
+    events: [
+      "SessionStart",
+      "UserPromptSubmit",
+      "AgentResponse",
+      "PreCompact",
+      "SessionEnd"
+    ],
+    gating:
+      "Observation — strict fire-and-forget; the agent surface has no tool or permission events"
   },
   {
     name: "Z.ai (ZCode)",
     wiring: "Hook entries in ~/.zcode/cli/config.json",
     events: [
-      "SessionStart", "UserPromptSubmit", "PreToolUse", "PermissionRequest",
-      "PostToolUse", "PostToolUseFailure", "Stop"
+      "SessionStart",
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PermissionRequest",
+      "PostToolUse",
+      "PostToolUseFailure",
+      "Stop"
     ],
-    gating: "Full — tool calls and permission prompts can be allowed or denied from a card"
+    gating:
+      "Full — tool calls and permission prompts can be allowed or denied from a card"
   },
   {
     name: "Gemini CLI",
     wiring: "Hook entries in settings.json",
-    events: ["SessionStart", "SessionEnd", "AgentStart", "Stop", "Notification"],
-    gating: "Observation — every event appears as a card; the agent keeps its own prompting"
+    events: [
+      "SessionStart",
+      "SessionEnd",
+      "AgentStart",
+      "Stop",
+      "Notification"
+    ],
+    gating:
+      "Observation — every event appears as a card; the agent keeps its own prompting"
   },
   {
     name: "Cline",
     wiring: "One hook file per event in ~/Documents/Cline/Hooks",
     events: [
-      "SessionStart", "SessionEnd", "UserPromptSubmit", "PreToolUse",
-      "PostToolUse", "Stop", "PreCompact", "Notification"
+      "SessionStart",
+      "SessionEnd",
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse",
+      "Stop",
+      "PreCompact",
+      "Notification"
     ],
-    gating: "Observation — every event appears as a card; the agent keeps its own prompting"
+    gating:
+      "Observation — every event appears as a card; the agent keeps its own prompting"
   },
   {
     name: "Qwen Code",
-    wiring: "Hook entries in settings.json (same surface as the Claude-style schema)",
+    wiring:
+      "Hook entries in settings.json (same surface as the Claude-style schema)",
     events: [
-      "UserPromptSubmit", "SessionStart", "SessionEnd", "Stop", "StopFailure",
-      "SubagentStart", "SubagentStop", "Notification", "PreToolUse",
-      "PermissionRequest", "PostToolUse", "PostToolUseFailure",
-      "PermissionDenied", "PreCompact"
+      "UserPromptSubmit",
+      "SessionStart",
+      "SessionEnd",
+      "Stop",
+      "StopFailure",
+      "SubagentStart",
+      "SubagentStop",
+      "Notification",
+      "PreToolUse",
+      "PermissionRequest",
+      "PostToolUse",
+      "PostToolUseFailure",
+      "PermissionDenied",
+      "PreCompact"
     ],
-    gating: "Full — tool calls and permission prompts can be allowed or denied from a card"
+    gating:
+      "Full — tool calls and permission prompts can be allowed or denied from a card"
   },
   {
     name: "DeepSeek",
     wiring: "Standalone hooks.json at ~/.dsh",
     events: [
-      "SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop",
-      "SubagentStart", "SubagentStop"
+      "SessionStart",
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse",
+      "Stop",
+      "SubagentStart",
+      "SubagentStop"
     ],
-    gating: "Tool calls can be allowed or denied from a card; permission prompts stay with the agent"
+    gating:
+      "Tool calls can be allowed or denied from a card; permission prompts stay with the agent"
   }
 ];
 
@@ -175,9 +264,7 @@ export default function NookAgentsPage() {
         <div class="grid gap-4 lg:grid-cols-2">
           <For each={AGENTS}>
             {(agent) => (
-              <article
-                class="border-overlay0 bg-surface0/40 rounded-2xl border p-5"
-              >
+              <article class="border-overlay0 bg-surface0/40 rounded-2xl border p-5">
                 <div class="mb-3 flex items-center justify-between gap-3">
                   <h2 class="text-text text-lg font-semibold">{agent.name}</h2>
                   <span
@@ -207,8 +294,7 @@ export default function NookAgentsPage() {
 
         <p class="text-subtext1 mt-10 max-w-2xl text-sm">
           Running something else? A custom agent can wire itself in with the
-          same one-line contract the built-in integrations use — see the
-          plugin spec in the app's docs.
+          same one-line contract the built-in integrations use.
         </p>
       </main>
     </>
