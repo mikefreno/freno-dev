@@ -90,12 +90,25 @@ export default function NookChangelogPage() {
                   </button>
                   {/* Notes are the publisher's own HTML, written to the same
                       S3 appcast the Sparkle updater consumes. Kept mounted
-                      and toggled via `hidden` so the content stays crawlable. */}
+                      and toggled via `hidden` so the content stays crawlable.
+                      Releases that shipped before notes were embedded in the
+                      appcast carry no description — say so instead of
+                      rendering a blank expanse. */}
                   <div
                     classList={{ hidden: !isOpen(release.version, i()) }}
                     class="text-subtext0 px-5 pb-5 pl-14 text-sm [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-text [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-2 [&_ul]:mb-2"
-                    innerHTML={release.notesHtml}
-                  />
+                  >
+                    <Show
+                      when={release.notesHtml}
+                      fallback={
+                        <p class="text-subtext1 italic">
+                          No notes recorded for this release.
+                        </p>
+                      }
+                    >
+                      <div innerHTML={release.notesHtml} />
+                    </Show>
+                  </div>
                 </article>
               )}
             </For>
