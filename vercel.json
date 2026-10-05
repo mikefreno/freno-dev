@@ -55,5 +55,8 @@
         }
       ]
     }
+  ],
+  "crons": [
+    { "path": "/api/the-nook/lifecycle", "schedule": "0 13 * * *" }
   ]
 }

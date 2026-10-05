@@ -2,6 +2,7 @@ import type { APIEvent } from "@solidjs/start/server";
 import { env } from "~/env/server";
 import { NookConnectionFactory } from "~/server/db-connections";
 import { nookSchemaBootstrap, issueLicense, emailLicenseKey } from "~/server/nook";
+import { emailThankYou } from "~/server/nook-lifecycle";
 import { json } from "../_lib";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -92,6 +93,9 @@ export async function POST(event: APIEvent) {
   try {
     const { key } = await issueLicense(email, sessionId);
     await emailLicenseKey(email, key);
+    // Purchase thank-you (the D+3 testimonial and D+14 review asks are
+    // scheduled from the daily lifecycle job, not here).
+    await emailThankYou(email);
   } catch (error) {
     // UNIQUE stripe_session_id conflict from a racing duplicate delivery.
     console.error("Failed to issue The Nook license (webhook):", error);

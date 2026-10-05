@@ -73,7 +73,14 @@ const serverEnvSchema = z.object({
   NOOK_LICENSE_PRIVATE_KEY: z.string().min(1),
   NOOK_STRIPE_SK: z.string().min(1),
   NOOK_STRIPE_WEBHOOK_SECRET: z.string().min(1),
-  NOOK_STRIPE_PRICE_ID: z.string().min(1)
+  NOOK_STRIPE_PRICE_ID: z.string().min(1),
+  // Brevo list the trial-start emails land in (the lifecycle mail's
+  // audience). Optional: capture still stores the address when unset.
+  NOOK_TRIAL_LIST_ID: z.coerce.number().int().positive().optional(),
+  // Bearer secret for the daily lifecycle-email cron. Falls back to
+  // Vercel's CRON_SECRET; unset + no CRON_SECRET = the endpoint denies all.
+  NOOK_LIFECYCLE_SECRET: z.string().min(1).optional(),
+  CRON_SECRET: z.string().min(1).optional()
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

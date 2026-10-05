@@ -34,7 +34,9 @@ export const nookSchemaBootstrap: Promise<unknown> = (async () => {
       stripe_session_id TEXT UNIQUE NOT NULL,
       created_at TEXT NOT NULL,
       revoked INTEGER NOT NULL DEFAULT 0,
-      max_devices INTEGER NOT NULL DEFAULT 3
+      max_devices INTEGER NOT NULL DEFAULT 3,
+      testimonial_asked_at TEXT,
+      review_asked_at TEXT
     )
   `);
   const licenseCols = await conn.execute(`PRAGMA table_info(licenses)`);
@@ -45,6 +47,18 @@ export const nookSchemaBootstrap: Promise<unknown> = (async () => {
     await conn.execute(
       `ALTER TABLE licenses ADD COLUMN max_devices INTEGER NOT NULL DEFAULT 3`
     );
+  }
+  const licenseColsAll = await conn.execute(`PRAGMA table_info(licenses)`);
+  const licenseNames = new Set(
+    licenseColsAll.rows.map((r) => (r as { name?: string }).name)
+  );
+  if (!licenseNames.has("testimonial_asked_at")) {
+    await conn.execute(
+      `ALTER TABLE licenses ADD COLUMN testimonial_asked_at TEXT`
+    );
+  }
+  if (!licenseNames.has("review_asked_at")) {
+    await conn.execute(`ALTER TABLE licenses ADD COLUMN review_asked_at TEXT`);
   }
   await conn.execute(`
     CREATE TABLE IF NOT EXISTS activations (
@@ -59,9 +73,27 @@ export const nookSchemaBootstrap: Promise<unknown> = (async () => {
   await conn.execute(`
     CREATE TABLE IF NOT EXISTS trials (
       fingerprint TEXT PRIMARY KEY,
-      started_at TEXT NOT NULL
+      started_at TEXT NOT NULL,
+      email TEXT
     )
   `);
+  // Pre-existing installs created `trials` without the email column.
+  const trialCols = await conn.execute(`PRAGMA table_info(trials)`);
+  const hasEmail = trialCols.rows.some(
+    (r) => (r as { name?: string }).name === "email"
+  );
+  if (!hasEmail) {
+    await conn.execute(`ALTER TABLE trials ADD COLUMN email TEXT`);
+  }
+  const trialColsAll = await conn.execute(`PRAGMA table_info(trials)`);
+  const trialNames = new Set(
+    trialColsAll.rows.map((r) => (r as { name?: string }).name)
+  );
+  if (!trialNames.has("reminder_sent_at")) {
+    await conn.execute(
+      `ALTER TABLE trials ADD COLUMN reminder_sent_at TEXT`
+    );
+  }
 })();
 
 function privateKeyObject() {
@@ -212,6 +244,57 @@ export async function grantLicense(
   maxDevices = 1
 ): Promise<IssueLicenseResult> {
   return insertLicense(email, `gift:${crypto.randomUUID()}`, maxDevices);
+}
+
+/**
+ * Records (or replaces) the email a user gave at trial start, and adds it to
+ * the trial-list in Brevo so the lifecycle mail has an audience. Best-effort
+ * on both counts: a failed Brevo call is logged, never thrown — the address
+ * is already durably in `trials`.
+ *
+ * Returns true when a `trials` row now carries the email.
+ */
+export async function setTrialEmail(
+  fingerprint: string,
+  email: string
+): Promise<boolean> {
+  const conn = NookConnectionFactory();
+  const res = await conn.execute({
+    sql: `
+      INSERT INTO trials (fingerprint, started_at, email)
+      VALUES (?, ?, ?)
+      ON CONFLICT(fingerprint) DO UPDATE SET email = excluded.email
+    `,
+    args: [fingerprint, new Date().toISOString(), email]
+  });
+  await addTrialEmailToList(email);
+  return res.rowsAffected > 0;
+}
+
+/**
+ * Adds an address to the Brevo trial list (the same API family
+ * `emailLicenseKey` speaks). No-op when NOOK_TRIAL_LIST_ID is not configured.
+ */
+async function addTrialEmailToList(email: string): Promise<void> {
+  const listId = env.NOOK_TRIAL_LIST_ID;
+  if (!listId) return;
+  try {
+    await fetch("https://api.brevo.com/v3/contacts", {
+      method: "POST",
+      headers: {
+        "api-key": env.SENDINBLUE_KEY,
+        "content-type": "application/json",
+        accept: "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        updateEnabled: true,
+        listIds: [listId]
+      })
+    });
+  } catch (error) {
+    console.error("Failed to add trial email to Brevo list:", error);
+  }
 }
 
 /**
