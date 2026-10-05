@@ -34,7 +34,7 @@ const getReleases = query(async () => {
 }, "nook-changelog-releases");
 
 export default function NookChangelogPage() {
-  const releases = createAsync(() => getReleases());
+  const releases = createAsync(() => getReleases(), { deferStream: true });
   // Newest release starts open; every other row starts collapsed. `null`
   // means "the user hasn't touched the accordion yet"; after any click the
   // signal holds a version or the NONE sentinel — collapsing the open row
