@@ -1,0 +1,4 @@
+{
+  "$comment": "Scheduled pushes: date, channel, status. Statuses: draft | pending | approved | posted. Move nothing to posted without the artifact living in approved/ first — see positioning.md rule 5.",
+  "pushes": []
+}
