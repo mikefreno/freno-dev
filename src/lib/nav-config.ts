@@ -120,6 +120,9 @@ export const NAV_CONFIG: Record<SiteId, NavItem[]> = {
   ],
   nook: [
     { label: "Home", href: "/", icon: "home" },
+    { label: "Agents", href: "/agents", icon: "home" },
+    { label: "Changelog", href: "/changelog", icon: "home" },
+    { label: "FAQ", href: "/faq", icon: "home" },
     { label: "Privacy", href: "/privacy", icon: "privacy" }
   ]
 };
