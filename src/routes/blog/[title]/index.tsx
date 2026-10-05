@@ -21,6 +21,8 @@ import { api } from "~/lib/api";
 import CustomScrollbar from "~/components/CustomScrollbar";
 import "../post.css";
 import { Post } from "~/db/types";
+import { useSite } from "~/context/SiteContext";
+import NotFound from "../../[...404]";
 
 const getPostByTitle = query(
   async (
@@ -262,6 +264,7 @@ const getPostByTitle = query(
 );
 
 export default function PostPage() {
+  const site = useSite();
   const params = useParams();
   const [searchParams] = useSearchParams();
 
@@ -296,6 +299,12 @@ export default function PostPage() {
   const hasMermaid = (str: string): boolean => {
     return str.includes('data-type="mermaid"');
   };
+
+  // Host-dispatch guard: blog posts live on the apex domain only (see the
+  // guard in blog/index.tsx for the dev-server rationale).
+  if (site().id !== "main") {
+    return <NotFound />;
+  }
 
   return (
     <Show

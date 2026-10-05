@@ -83,6 +83,9 @@ export const SITEMAP_ROUTES: Record<SiteId, SitemapEntry[]> = {
   nook: [
     { path: "/", changefreq: "weekly", priority: 1.0 },
     { path: "/checkout", changefreq: "monthly", priority: 0.5 },
-    { path: "/privacy", changefreq: "yearly", priority: 0.4 }
+    { path: "/privacy", changefreq: "yearly", priority: 0.4 },
+    { path: "/agents", changefreq: "weekly", priority: 0.9 },
+    { path: "/changelog", changefreq: "daily", priority: 0.7 },
+    { path: "/faq", changefreq: "monthly", priority: 0.8 }
   ]
 };

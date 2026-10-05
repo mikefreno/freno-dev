@@ -55,10 +55,10 @@ export default function NookLanding() {
     <>
       <EdgeCacheHeaders maxAge={300} />
       <PageHead
-        title="Home"
+        title="Agent control for your Mac"
+        ogTitle="The Nook — agent control for your Mac"
         description="The Nook — a native macOS utility for coding-agent orchestration, fan and thermal control."
         ogImage={`https://${site().domain}/nook/og.png`}
-        ogTitle="The Nook — native macOS agent orchestration"
         ogDescription="A one-time-purchase macOS app for coding-agent orchestration, fan control, and thermal insight."
       />
 

@@ -9,6 +9,8 @@ import PostSorting from "~/components/blog/PostSorting";
 import PublishStatusToggle from "~/components/blog/PublishStatusToggle";
 import { TerminalSplash } from "~/components/TerminalSplash";
 import { CACHE_CONFIG } from "~/config";
+import { useSite } from "~/context/SiteContext";
+import NotFound from "../[...404]";
 
 const getPosts = query(async () => {
   "use server";
@@ -77,6 +79,7 @@ const getPosts = query(async () => {
 }, "posts");
 
 export default function BlogIndex() {
+  const site = useSite();
   const [searchParams] = useSearchParams();
 
   const sort = () => searchParams.sort || "newest";
@@ -88,6 +91,15 @@ export default function BlogIndex() {
     "status" in searchParams ? searchParams.status : undefined;
 
   const data = createAsync(() => getPosts(), { deferStream: true });
+
+  // Host-dispatch guard: /blog is the personal blog on the apex domain only.
+  // Production rewrites already send `<sub>.freno.me/blog` → `/<sub>/blog`,
+  // which has no route — but in dev the vinxi server ignores vercel.json and
+  // would render the personal blog on a product subdomain, splitting the
+  // brand and crawl equity. Render the shared 404 instead.
+  if (site().id !== "main") {
+    return <NotFound />;
+  }
 
   return (
     <>
