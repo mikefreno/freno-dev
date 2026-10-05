@@ -19,11 +19,15 @@ let trialRows: Record<string, unknown>[] = [];
 let licenseRows: Record<string, unknown>[] = [];
 const updates: { sql: string; args?: unknown[] }[] = [];
 const sent: string[] = [];
+// When true, conditional-claim UPDATEs report rowsAffected 0 (another
+// invocation won the claim first).
+let racingClaim = false;
 
 const fakeConn = {
   execute: async (q: { sql: string; args?: unknown[] } | string) => {
-    const { sql, args } =
+    const { sql: rawSql, args } =
       typeof q === "string" ? { sql: q, args: undefined } : q;
+    const sql = rawSql.trim();
     if (sql.startsWith("SELECT fingerprint")) {
       return { rows: trialRows, rowsAffected: 0 };
     }
@@ -37,7 +41,8 @@ const fakeConn = {
     }
     if (sql.startsWith("UPDATE")) {
       updates.push({ sql, args });
-      return { rows: [], rowsAffected: 1 };
+      const claimed = racingClaim ? 0 : 1;
+      return { rows: [], rowsAffected: claimed };
     }
     return { rows: [], rowsAffected: 0 };
   }
@@ -152,6 +157,21 @@ describe("GET /api/the-nook/lifecycle", () => {
     expect(
       updates.some((u) => u.sql.includes("reminder_sent_at"))
     ).toBe(true);
+  });
+
+  it("claims via conditional update — a lost claim never sends", async () => {
+    // Simulate a racing invocation that already claimed the row: the
+    // conditional UPDATE reports rowsAffected 0, and no email goes out.
+    trialRows = [
+      { fingerprint: UUID, email: "raced@example.com", started_at: daysAgo(12) }
+    ];
+    licenseRows = [];
+    racingClaim = true;
+    const res = await GET(request("Bearer sekrit"));
+    const body = await res.json();
+    expect(body.reminders).toBe(0);
+    expect(sent).toHaveLength(0);
+    racingClaim = false;
   });
 
   it("asks for a testimonial at D+3 but not a review until D+14", async () => {

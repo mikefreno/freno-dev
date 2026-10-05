@@ -53,10 +53,18 @@ async function runLifecycle(): Promise<{
     started_at: string;
   }[]) {
     if (ageDays(row.started_at) < 11) continue;
-    await conn.execute({
-      sql: "UPDATE trials SET reminder_sent_at = ? WHERE fingerprint = ?",
+    // Claim-then-send: the conditional UPDATE wins exactly once even when
+    // two invocations race (cron + manual hit) — the loser sees
+    // rowsAffected 0 and never sends. An unconditional mark-then-send let
+    // both invocations pass the SELECT and mail the same user twice.
+    const claim = await conn.execute({
+      sql: `
+        UPDATE trials SET reminder_sent_at = ?
+        WHERE fingerprint = ? AND reminder_sent_at IS NULL
+      `,
       args: [new Date().toISOString(), row.fingerprint]
     });
+    if (claim.rowsAffected === 0) continue;
     // A trial that ended in a purchase gets no buy reminder. The address
     // comparison is on the raw stored values; both writes lowercase.
     const owned = await conn.execute({
@@ -83,18 +91,26 @@ async function runLifecycle(): Promise<{
     if (age < 0) continue;
 
     if (age >= 3 && !row.testimonial_asked_at) {
-      await conn.execute({
-        sql: "UPDATE licenses SET testimonial_asked_at = ? WHERE id = ?",
+      const claim = await conn.execute({
+        sql: `
+          UPDATE licenses SET testimonial_asked_at = ?
+          WHERE id = ? AND testimonial_asked_at IS NULL
+        `,
         args: [new Date().toISOString(), row.id]
       });
+      if (claim.rowsAffected === 0) continue;
       if (await emailTestimonialAsk(row.email)) counts.testimonials++;
     }
 
     if (age >= 14 && !row.review_asked_at) {
-      await conn.execute({
-        sql: "UPDATE licenses SET review_asked_at = ? WHERE id = ?",
+      const claim = await conn.execute({
+        sql: `
+          UPDATE licenses SET review_asked_at = ?
+          WHERE id = ? AND review_asked_at IS NULL
+        `,
         args: [new Date().toISOString(), row.id]
       });
+      if (claim.rowsAffected === 0) continue;
       if (await emailReviewAsk(row.email)) counts.reviews++;
     }
   }
