@@ -17,19 +17,39 @@ import { PageHead } from "~/components/PageHead";
 import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import { fetchAppcastReleases } from "~/routes/api/the-nook/_appcast";
+import { ARCHIVED_RELEASES } from "~/routes/nook/changelog-archive";
 
 const getReleases = query(async () => {
   "use server";
-  return fetchAppcastReleases();
+  // Appcast items are authoritative (they carry build numbers); releases
+  // older than the appcast's retention come from the checked-in archive,
+  // recovered from the changelog file's git history. Both normalize to
+  // AppcastRelease so the page renders one shape.
+  const live = await fetchAppcastReleases();
+  const liveVersions = new Set(live.map((r) => r.version));
+  const archived = ARCHIVED_RELEASES.filter(
+    (r) => !liveVersions.has(r.version)
+  ).map((r) => ({ ...r, build: null }));
+  return [...live, ...archived];
 }, "nook-changelog-releases");
 
 export default function NookChangelogPage() {
   const releases = createAsync(() => getReleases());
-  // Newest release starts open; every other row starts collapsed.
+  // Newest release starts open; every other row starts collapsed. `null`
+  // means "the user hasn't touched the accordion yet"; after any click the
+  // signal holds a version or the NONE sentinel — collapsing the open row
+  // sets NONE, so all sections stay closed instead of snapping back open.
+  const NONE = "__none__";
   const [openVersion, setOpenVersion] = createSignal<string | null>(null);
 
-  const isOpen = (version: string, index: number) =>
-    openVersion() === null ? index === 0 : openVersion() === version;
+  const isOpen = (version: string, index: number) => {
+    const open = openVersion();
+    if (open === null) return index === 0;
+    return open !== NONE && open === version;
+  };
+
+  const toggle = (version: string, index: number) =>
+    setOpenVersion(isOpen(version, index) ? NONE : version);
 
   return (
     <>
@@ -65,11 +85,7 @@ export default function NookChangelogPage() {
                     type="button"
                     class="hover:bg-base flex w-full items-baseline gap-x-3 gap-y-1 p-5 text-left transition-colors"
                     aria-expanded={isOpen(release.version, i())}
-                    onClick={() =>
-                      setOpenVersion(
-                        isOpen(release.version, i()) ? null : release.version
-                      )
-                    }
+                    onClick={() => toggle(release.version, i())}
                   >
                     <span class="text-subtext1 w-4 shrink-0 font-mono text-sm">
                       {isOpen(release.version, i()) ? "−" : "+"}
