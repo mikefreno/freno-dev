@@ -65,8 +65,7 @@ export default function NookChangelogPage() {
           Changelog
         </h1>
         <p class="text-subtext0 mb-10 max-w-2xl text-lg">
-          What changed in each release. The app updates through Sparkle —
-          every entry here is what the updater shows.
+          What changed in each release.
         </p>
 
         <Show
@@ -112,7 +111,7 @@ export default function NookChangelogPage() {
                       rendering a blank expanse. */}
                   <div
                     classList={{ hidden: !isOpen(release.version, i()) }}
-                    class="text-subtext0 px-5 pb-5 pl-14 text-sm [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-text [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-2 [&_ul]:mb-2"
+                    class="text-subtext0 [&_h2]:text-text px-5 pb-5 pl-14 text-sm [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-2 [&_ul]:mb-2"
                   >
                     <Show
                       when={release.notesHtml}
