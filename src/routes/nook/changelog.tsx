@@ -92,11 +92,6 @@ export default function NookChangelogPage() {
                     <h2 class="text-text text-lg font-semibold">
                       Version {release.version}
                     </h2>
-                    <Show when={release.build}>
-                      <span class="text-subtext1 font-mono text-xs">
-                        build {release.build}
-                      </span>
-                    </Show>
                     <Show when={release.date}>
                       <span class="text-subtext1 ml-auto text-xs">
                         {release.date}
