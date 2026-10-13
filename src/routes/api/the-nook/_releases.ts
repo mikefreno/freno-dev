@@ -5,9 +5,11 @@
  * assembles the list inside the route component. A native client must not
  * couple to that markup, and the appcast alone is not the full story: releases
  * older than the appcast's retention live only in the checked-in archive. So
- * this module mirrors the page's merge — live appcast items, then archived
- * releases the appcast has aged out — and normalizes it into data a client can
- * render without parsing HTML.
+ * this module owns that merge — live appcast items, their notes filled from the
+ * archive wherever the feed lost them, then archived releases the appcast has
+ * aged out — and normalizes it into data a client can render without parsing
+ * HTML. `withArchivedNotes` is exported so /changelog runs the identical rule
+ * rather than a second copy of it.
  *
  * Underscore-prefixed file — not a route.
  */
@@ -123,16 +125,44 @@ type ArchivedReleaseShape = {
 };
 
 /**
+ * Notes the appcast lost, filled from the archive.
+ *
+ * An item with no notes renders as a version header over a blank row, in the
+ * app and on /changelog alike. That is not hypothetical: Sparkle rebuilds every
+ * item from its DMG and removes the description of one whose DMG carries no
+ * notes file, so 0.8.0 and 0.7.0 published with notes and reached both
+ * surfaces with none (NOOK-304).
+ *
+ * The archive copy is used only where the live one is missing. Where both
+ * exist the published item wins, because that is the text the updater itself
+ * showed, and it carries the build number the archive does not have.
+ */
+export function withArchivedNotes<
+  T extends { version: string; notesHtml: string }
+>(
+  live: readonly T[],
+  archived: readonly { version: string; notesHtml: string }[]
+): T[] {
+  const notesByVersion = new Map(archived.map((r) => [r.version, r.notesHtml]));
+  return live.map((release) => {
+    if (release.notesHtml.trim()) return release;
+    const fallback = notesByVersion.get(release.version);
+    return fallback ? { ...release, notesHtml: fallback } : release;
+  });
+}
+
+/**
  * Live releases first, newest first, then any archived release the appcast no
  * longer lists. Order is concatenation rather than a sort because both inputs
- * are newest-first and the archive only ever holds older releases — matching
- * how /changelog builds its list.
+ * are newest-first and the archive only ever holds older releases — and because
+ * /changelog renders this same list, the page and this feed cannot disagree
+ * about what a release said.
  */
 export function mergeReleases(
   live: readonly AppcastRelease[],
   archived: readonly ArchivedReleaseShape[]
 ): AppRelease[] {
-  const releases = live.map(toAppRelease);
+  const releases = withArchivedNotes(live, archived).map(toAppRelease);
   const seen = new Set(releases.map((r) => r.version));
   for (const release of archived) {
     if (seen.has(release.version)) continue;

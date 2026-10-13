@@ -3,8 +3,12 @@
  *
  * The appcast already ships HTML release notes to the updater on every
  * launch, so this page renders exactly what Sparkle publishes: one source
- * of truth, no second place to write release notes. Doubles as the raw
- * material for the release-announcement job (marketing/README.md).
+ * of truth, no second place to write release notes. The checked-in archive
+ * fills an item the appcast lost its notes to — the feed is rebuilt from the
+ * DMGs on every publish, and Sparkle drops the notes of an item whose DMG
+ * carries none, which is how 0.8.0 and 0.7.0 came to render as blank rows.
+ * Doubles as the raw material for the release-announcement job
+ * (marketing/README.md).
  *
  * Layout: the version list lives in a fixed-height vertical scroller, so
  * expanding a release never shifts the page — history is browsed inside
@@ -17,15 +21,20 @@ import { PageHead } from "~/components/PageHead";
 import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import { fetchAppcastReleases } from "~/routes/api/the-nook/_appcast";
+import { withArchivedNotes } from "~/routes/api/the-nook/_releases";
 import { ARCHIVED_RELEASES } from "~/routes/nook/changelog-archive";
 
 const getReleases = query(async () => {
   "use server";
-  // Appcast items are authoritative (they carry build numbers); releases
-  // older than the appcast's retention come from the checked-in archive,
-  // recovered from the changelog file's git history. Both normalize to
-  // AppcastRelease so the page renders one shape.
-  const live = await fetchAppcastReleases();
+  // Appcast items are authoritative (they carry build numbers), with the
+  // archive filling any item whose notes the rebuilt feed lost. Releases the
+  // appcast no longer lists at all come from the archive. Both normalize to
+  // AppcastRelease so the page renders one shape, and the fill is the same
+  // helper releases.json runs, so the two cannot tell different stories.
+  const live = withArchivedNotes(
+    await fetchAppcastReleases(),
+    ARCHIVED_RELEASES
+  );
   const liveVersions = new Set(live.map((r) => r.version));
   const archived = ARCHIVED_RELEASES.filter(
     (r) => !liveVersions.has(r.version)

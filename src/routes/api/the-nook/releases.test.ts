@@ -79,6 +79,9 @@ async function body(): Promise<{ releases: Release[] }> {
   return (await res.json()) as { releases: Release[] };
 }
 
+// The fixture appcast: two releases it lists live, newest first.
+const LIVE = ["0.6.3", "0.6.2"];
+
 beforeEach(() => {
   appcastXml = appcast(
     item("0.6.3", "Fri, 02 Oct 2026 23:29:42 -0400", NOTES) +
@@ -97,7 +100,7 @@ describe("GET /api/the-nook/releases.json", () => {
     expect(res.headers.get("Cache-Control")).toBe("public, max-age=300");
 
     const { releases } = await body();
-    expect(releases.map((r) => r.version)).toEqual(["0.6.3", "0.6.2", ...archivedVersions]);
+    expect(releases.map((r) => r.version)).toEqual([...LIVE, ...agedOut(...LIVE)]);
     expect(releases[0].build).toBe("10");
   });
 
@@ -125,9 +128,9 @@ describe("GET /api/the-nook/releases.json", () => {
 
   it("appends the archived releases the appcast has aged out", async () => {
     const releases = (await body()).releases;
-    const archived = releases.filter((r) => !["0.6.3", "0.6.2"].includes(r.version));
+    const archived = releases.filter((r) => !LIVE.includes(r.version));
 
-    expect(archived.map((r) => r.version)).toEqual(archivedVersions);
+    expect(archived.map((r) => r.version)).toEqual(agedOut(...LIVE));
     expect(archived[0]!.build).toBeNull();
     // Archive dates are already calendar dates and pass through untouched.
     expect(archived[0]!.date).toBe(ARCHIVED_RELEASES[0]!.date);
@@ -155,6 +158,82 @@ describe("GET /api/the-nook/releases.json", () => {
     expect(((await res.json()) as { error: string }).error).toBe(
       "Release list unavailable"
     );
+  });
+});
+
+describe("notes the appcast lost", () => {
+  // Sparkle rebuilds every item from its DMG and removes the description of an
+  // item whose DMG carries no notes file, so a release the appcast still lists
+  // can arrive with nothing to show. 0.8.0 and 0.7.0 did exactly that, in both
+  // this feed and /changelog (NOOK-304): a version header over an empty row.
+  const itemWithoutNotes = (version: string) => `
+  <item>
+    <title>${version}</title>
+    <pubDate>Fri, 02 Oct 2026 23:29:42 -0400</pubDate>
+    <sparkle:version>9</sparkle:version>
+    <sparkle:shortVersionString>${version}</sparkle:shortVersionString>
+    <enclosure url="https://cdn.example/TheNook-${version}.dmg" type="application/octet-stream"/>
+  </item>`;
+
+  it("falls back to the archive's copy for a release listed without notes", async () => {
+    appcastXml = appcast(
+      item("0.6.3", "Fri, 02 Oct 2026 23:29:42 -0400", NOTES) +
+        itemWithoutNotes("0.5.0")
+    );
+    invalidateAppcastCache();
+
+    const lost = (await body()).releases.find((r) => r.version === "0.5.0")!;
+
+    expect(lost.sections).toEqual(
+      sectionsFromHtml(
+        ARCHIVED_RELEASES.find((r) => r.version === "0.5.0")!.notesHtml
+      )
+    );
+    expect(lost.sections.length).toBeGreaterThan(0);
+    // Still the live row, not the archived one: it carries the build number.
+    expect(lost.build).toBe("9");
+  });
+
+  it("keeps the published notes when the archive has them too", async () => {
+    appcastXml = appcast(item("0.5.0", "Mon, 07 Sep 2026 16:11:44 -0400", NOTES));
+    invalidateAppcastCache();
+
+    const [release] = (await body()).releases;
+
+    expect(release!.sections).toEqual(sectionsFromHtml(NOTES));
+  });
+});
+
+describe("the checked-in archive", () => {
+  // The durable copy of what every release said. The appcast carries only the
+  // DMGs the release machine still holds, and it loses notes when it rebuilds,
+  // so a release missing here is a release the changelog can blank out later
+  // with nothing left to fall back to.
+  it("holds every release that shipped notes, newest first", () => {
+    expect(ARCHIVED_RELEASES.map((r) => r.version)).toEqual([
+      "0.9.0",
+      "0.8.0",
+      "0.7.0",
+      "0.6.3",
+      "0.6.2",
+      "0.6.0",
+      "0.5.0",
+      "0.4.1",
+      "0.4.0",
+      "0.3.0",
+      "0.2.0"
+      // 0.6.1 and 0.3.1 shipped without written notes and are absent by design.
+    ]);
+  });
+
+  it("holds notes for every release it lists, and a date for each", () => {
+    for (const release of ARCHIVED_RELEASES) {
+      expect(
+        sectionsFromHtml(release.notesHtml).length,
+        `${release.version} has no notes`
+      ).toBeGreaterThan(0);
+      expect(isoDateOrNull(release.date), release.version).not.toBeNull();
+    }
   });
 });
 
@@ -194,5 +273,11 @@ describe("isoDateOrNull", () => {
   });
 });
 
-/** The archive in full, in file order (newest first) — the tail of the list. */
-const archivedVersions = ARCHIVED_RELEASES.map((r) => r.version);
+/**
+ * The tail a case should expect: the whole archive in file order (newest
+ * first) minus the versions its fixture appcast lists live. A version is
+ * listed once, from the appcast, and the archive copy behind it only fills
+ * notes the feed lost — so the tail shrinks as the archive grows.
+ */
+const agedOut = (...live: string[]) =>
+  ARCHIVED_RELEASES.map((r) => r.version).filter((v) => !live.includes(v));
