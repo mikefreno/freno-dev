@@ -3,7 +3,6 @@ import { env } from "~/env/server";
 
 let mainDBConnection: Client | null = null;
 let lineageDBConnection: Client | null = null;
-let nessaDBConnection: Client | null = null;
 let nookDBConnection: Client | null = null;
 
 export function ConnectionFactory() {
@@ -26,17 +25,6 @@ export function LineageConnectionFactory() {
     lineageDBConnection = createClient(config);
   }
   return lineageDBConnection;
-}
-
-export function NessaConnectionFactory() {
-  if (!nessaDBConnection) {
-    const config = {
-      url: env.NESSA_DB_URL,
-      authToken: env.NESSA_DB_TOKEN
-    };
-    nessaDBConnection = createClient(config);
-  }
-  return nessaDBConnection;
 }
 
 export function NookConnectionFactory() {

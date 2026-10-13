@@ -14,14 +14,12 @@ import {
 import {
   ConnectionFactory,
   LineageConnectionFactory,
-  NessaConnectionFactory,
   NookConnectionFactory
 } from "~/server/db-connections";
 // Re-export connection factories to avoid circular import with auth.ts
 export {
   ConnectionFactory,
   LineageConnectionFactory,
-  NessaConnectionFactory,
   NookConnectionFactory
 };
 

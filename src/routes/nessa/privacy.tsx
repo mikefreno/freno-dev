@@ -4,17 +4,16 @@
  * Net-new privacy policy for the Nessa subdomain. Modeled on the Life and
  * Lineage policy (the template for products with user accounts) but scoped to Nessa's real data practices:
  *
- *  - Authentication: user accounts are managed by Clerk
- *    (`src/server/nessa-auth.ts` verifies Clerk session JWTs via the Clerk
- *    Backend JWKS endpoint). Nessa itself does not store passwords — Clerk is
- *    the identity provider.
+ *  - Authentication: user accounts are managed by Clerk (the Nessa API server
+ *    verifies Clerk session JWTs). Nessa itself does not store passwords —
+ *    Clerk is the identity provider.
  *  - Community content: clubs, club challenges, club posts, post likes, and
- *    post comments (see `src/server/api/routers/nessa-community.ts`,
- *    `clubMemberships`, `clubChallenges`, `clubChallengeParticipations`,
- *    `clubPosts`, `clubPostLikes`, `clubPostComments`).
- *  - Storage: the Nessa data lives in a dedicated Turso (libSQL) database
- *    (`NessaConnectionFactory` in `src/server/db-connections.ts`), separate
- *    from the freno.me main DB and the Lineage DB.
+ *    post comments (`clubMemberships`, `clubChallenges`,
+ *    `clubChallengeParticipations`, `clubPosts`, `clubPostLikes`,
+ *    `clubPostComments`).
+ *  - Storage: the Nessa data lives in a dedicated Turso (libSQL) database,
+ *    served by the Nessa API (`nessa-api.freno.me`, the Nessa repo's
+ *    `server/`), separate from the freno.me main DB and the Lineage DB.
  *
  * PageHead is site-aware: only the base title is supplied; the
  * ` | Nessa` suffix, `https://nessa.freno.me/privacy` canonical, and OG image

@@ -137,7 +137,7 @@ describe("p8-001 / p8-008 static source audit", () => {
     it(`${proc} is not declared as publicProcedure`, () => {
       // Match the procedure declaration line and ensure it is not publicProcedure.
       const re = new RegExp(
-        `\\b${proc}\\s*:\\s*(publicProcedure|csrfProtectedProcedure|protectedProcedure|adminProcedure|nessaProcedure)`
+        `\\b${proc}\\s*:\\s*(publicProcedure|csrfProtectedProcedure|protectedProcedure|adminProcedure)`
       );
       const m = SOURCE.match(re);
       expect(m, `${proc} declaration not found`).not.toBeNull();

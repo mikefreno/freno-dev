@@ -5,7 +5,7 @@ import { databaseRouter } from "./routers/database";
 import { lineageRouter } from "./routers/lineage";
 // Re-exported so the REST shim (src/routes/api/lineage/[...path].ts) can mount
 // ONLY the lineage sub-router as the trpc-openapi REST surface — not the
-// whole appRouter. Keeps nessa/community/auth/audit routers unreachable via
+// whole appRouter. Keeps auth/audit routers unreachable via
 // `/api/lineage/*`.
 export { lineageRouter };
 import { miscRouter } from "./routers/misc";
@@ -16,8 +16,6 @@ import { postHistoryRouter } from "./routers/post-history";
 import { infillRouter } from "./routers/infill";
 import { accountRouter } from "./routers/account";
 import { downloadsRouter } from "./routers/downloads";
-import { nessaDbRouter } from "./routers/nessa";
-import { nessaCommunityRouter } from "./routers/nessa-community";
 import { appleNotificationsRouter } from "./routers/apple-notifications";
 import { createTRPCRouter, createTRPCContext, t } from "./utils";
 import type { H3Event } from "h3";
@@ -37,10 +35,6 @@ export const appRouter = createTRPCRouter({
   infill: infillRouter,
   account: accountRouter,
   downloads: downloadsRouter,
-  nessaDb: nessaDbRouter,
-  // Community features (clubs, challenges, social feed) — ported from the
-  // standalone nessa-api Express prototype. Exposes nessa.community.*.
-  nessa: createTRPCRouter({ community: nessaCommunityRouter }),
   appleNotifications: appleNotificationsRouter
 });
 
