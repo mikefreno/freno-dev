@@ -8,7 +8,10 @@ import { env } from "~/env/server";
  *
  * Handles:
  * - Full DMG files: /api/downloads/Gaze-0.2.2.dmg, /api/downloads/InputHalo-0.1.0.dmg
- * - Delta updates: /api/downloads/Gaze3-2.delta, /api/downloads/InputHalo3-2.delta
+ * - Delta updates: /api/downloads/Gaze3-2.delta, /api/downloads/Nook17-9.delta
+ *
+ * The Nook delta files are named after the app bundle ("Nook"), not the DMG
+ * ("TheNook"), so both prefixes must be allowed (NOOK-337).
  *
  * URL: https://freno.me/api/downloads/[filename]
  */
@@ -24,7 +27,7 @@ export async function GET(event: APIEvent) {
     });
   }
 
-  const validPrefixes = ["Gaze", "InputHalo", "TheNook"];
+  const validPrefixes = ["Gaze", "InputHalo", "TheNook", "Nook"];
   const isValidPrefix = validPrefixes.some((prefix) => filename.startsWith(prefix));
   if (
     !isValidPrefix ||
