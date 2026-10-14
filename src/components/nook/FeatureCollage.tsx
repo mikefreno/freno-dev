@@ -1,13 +1,12 @@
-import { For, type JSX } from "solid-js";
+import { For, createSignal, onCleanup, onMount, type JSX } from "solid-js";
+import { IslandPill, STATUS, CALM, CRITICAL, ModuleCard } from "./IslandMock";
 import {
-  IslandPill,
-  AgentDotGrid,
-  STATUS,
-  CALM,
-  CRITICAL,
-  ACCENT,
-  ModuleCard
-} from "./IslandMock";
+  ApprovalCardMock,
+  SessionRowMock,
+  DieLine,
+  CLAUDE,
+  CODEX
+} from "./ModuleMocks";
 
 /**
  * Feature collage: five cells sold as the app's actual UI. The hero cell
@@ -16,7 +15,7 @@ import {
  * module chrome, status palette, and metric language.
  */
 
-function CollageCell(props: {
+export function CollageCell(props: {
   class?: string;
   kicker: string;
   title: string;
@@ -44,57 +43,13 @@ function CollageCell(props: {
  * is always dark (preferredColorScheme .dark), so the mocks read correctly
  * in both site themes.
  */
-function InkStage(props: { children: JSX.Element; class?: string }) {
+export function InkStage(props: { children: JSX.Element; class?: string }) {
   return (
     <div
       class={`flex justify-center rounded-xl py-5 ${props.class ?? ""}`}
       style={{ background: "#0d0d0f" }}
     >
       {props.children}
-    </div>
-  );
-}
-
-/** The approvals mock rebuilt on the app's PermissionCard anatomy. */
-function ApprovalCardMock() {
-  return (
-    <div
-      class="mx-auto w-full max-w-sm rounded-[10px] p-2.5 text-left"
-      style={{ background: "rgba(234,179,8,0.08)" }}
-    >
-      <div class="mb-1.5 flex items-center gap-1.5">
-        <span
-          class="inline-block h-[13px] w-[13px] rounded-[3px]"
-          style={{ background: "#D97742" }}
-        />
-        <span class="text-[12px] font-semibold text-white">
-          the-nook · bridge
-        </span>
-        <span
-          class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white"
-          style={{ background: "rgba(234,179,8,0.25)" }}
-        >
-          approval
-        </span>
-      </div>
-      <p class="text-[13px] font-medium text-white">Run Edit</p>
-      <p class="mt-0.5 font-mono text-[11px] text-white/50">
-        server/routes.ts +12 −4
-      </p>
-      <div class="mt-2.5 flex gap-2">
-        <span
-          class="rounded-md px-3 py-1 text-[11px] font-semibold"
-          style={{ background: ACCENT }}
-        >
-          Allow
-        </span>
-        <span class="rounded-md border border-white/20 px-3 py-1 text-[11px] font-semibold text-white/80">
-          Deny
-        </span>
-        <span class="px-1 py-1 text-[11px] text-white/50">
-          Deny with reason…
-        </span>
-      </div>
     </div>
   );
 }
@@ -150,99 +105,62 @@ function FansPanelMock() {
   );
 }
 
-/** Remote agents: two session rows like the expanded agents panel. */
+/**
+ * Remote agents as the panel draws them: ordinary session rows whose agent
+ * chip names the machine ("Claude Code · build-box").
+ */
 function RemoteMock() {
   return (
     <div class="space-y-1.5">
-      <div
-        class="rounded-[10px] p-2.5"
-        style={{
-          background: "rgba(255,255,255,0.055)",
-          "box-shadow": "inset 0 0 0 1px rgba(255,255,255,0.07)"
-        }}
-      >
-        <div class="flex items-center gap-2">
-          <span
-            class="inline-block h-[7px] w-[7px] rounded-full"
-            style={{ background: STATUS.running }}
-          />
-          <span class="text-[13px] font-semibold text-white">build-box</span>
-          <span
-            class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white/75"
-            style={{ background: "rgba(255,255,255,0.08)" }}
-          >
-            ssh
-          </span>
-        </div>
-        <p class="mt-0.5 text-[11px] text-white/50">You: fix flaky test</p>
-      </div>
-      <div
-        class="rounded-[10px] p-2.5"
-        style={{
-          background: "rgba(255,255,255,0.055)",
-          "box-shadow": "inset 0 0 0 1px rgba(255,255,255,0.07)"
-        }}
-      >
-        <div class="flex items-center gap-2">
-          <span
-            class="inline-block h-[7px] w-[7px] rounded-full"
-            style={{ background: STATUS.ready }}
-          />
-          <span class="text-[13px] font-semibold text-white">gpu-rig</span>
-          <span
-            class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white/75"
-            style={{ background: "rgba(255,255,255,0.08)" }}
-          >
-            ssh
-          </span>
-        </div>
-        <p class="mt-0.5 text-[11px] text-white/50">Ready</p>
-      </div>
+      <SessionRowMock
+        title="api · main"
+        prompt="fix the flaky test"
+        state="Running pytest -x…"
+        status="running"
+        agent={CLAUDE}
+        host="build-box"
+        age="4m"
+      />
+      <SessionRowMock
+        title="trainer · fp16"
+        prompt="benchmark fp16"
+        state="Done · replied 1m ago"
+        status="ready"
+        agent={CODEX}
+        host="gpu-rig"
+        age="12m"
+      />
     </div>
   );
 }
 
-/** System gauges: temp die blocks + memory, in module cards. */
+/* Deterministic usage wander for the traces. */
+const wander = (n: number, k: number) =>
+  0.42 + 0.22 * Math.sin(n * 0.45 + k * 1.7) + 0.12 * Math.sin(n * 1.3 + k);
+
+/**
+ * The Temperatures module: one line per die — label, its 60 s usage trace,
+ * its temperature. The GPU climbs past the 70 ° warn line and tints amber.
+ */
 function GaugesMock() {
+  const [n, setN] = createSignal(0);
+  onMount(() => {
+    const interval = setInterval(() => setN((v) => v + 1), 700);
+    onCleanup(() => clearInterval(interval));
+  });
+  const trace = (k: number) =>
+    Array.from({ length: 30 }, (_, i) => Math.max(0.04, Math.min(0.97, wander(n() + i, k))));
+  const gpuCelsius = () => 62 + 12 * (0.5 + 0.5 * Math.sin(n() * 0.18));
   return (
-    <div class="grid grid-cols-2 gap-2">
-      <ModuleCard>
-        <div class="flex items-baseline justify-between">
-          <span class="text-[9px] font-semibold text-white/50">CPU</span>
-          <span class="font-mono text-white" style={{ "font-size": "15px" }}>
-            72°
-          </span>
-        </div>
-        <div
-          class="mt-1.5 h-1 overflow-hidden rounded-full"
-          style={{ background: "rgba(255,255,255,0.08)" }}
-        >
-          <div
-            class="h-full rounded-full"
-            style={{ width: "64%", background: CALM }}
-          />
-        </div>
-      </ModuleCard>
-      <ModuleCard>
-        <div class="flex items-baseline justify-between">
-          <span class="text-[9px] font-semibold text-white/50">GPU</span>
-          <span class="font-mono text-white" style={{ "font-size": "15px" }}>
-            58°
-          </span>
-        </div>
-        <div
-          class="mt-1.5 h-1 overflow-hidden rounded-full"
-          style={{ background: "rgba(255,255,255,0.08)" }}
-        >
-          <div
-            class="h-full rounded-full"
-            style={{ width: "31%", background: CALM }}
-          />
-        </div>
-      </ModuleCard>
-    </div>
+    <ModuleCard>
+      <div class="space-y-2">
+        <DieLine label="CPU" usage={trace(0)} celsius={58 + 4 * Math.sin(n() * 0.3)} />
+        <DieLine label="GPU" usage={trace(2)} celsius={gpuCelsius()} />
+      </div>
+    </ModuleCard>
   );
 }
+
 export default function FeatureCollage() {
   return (
     <section
@@ -311,11 +229,16 @@ export default function FeatureCollage() {
           <CollageCell
             kicker="Approvals"
             title="Unblock agents, anywhere"
-            body="Permission prompts surface as cards in the panel — Allow once, always, or deny. Away from the desk, push them to your phone and answer from there (coming soon)."
+            body="Permission prompts pin as cards above your sessions — Allow, Allow for session, or Deny. Away from the desk, answer from your iPhone or Apple Watch (beta)."
           >
             <InkStage>
               <div class="w-full max-w-sm px-3">
-                <ApprovalCardMock />
+                <ApprovalCardMock
+                  agent={CLAUDE}
+                  title="the-nook · bridge"
+                  tool="Edit"
+                  input="server/routes.ts"
+                />
               </div>
             </InkStage>
           </CollageCell>
@@ -340,7 +263,7 @@ export default function FeatureCollage() {
             body="Run agents on Linux boxes and SSH servers — one click installs the nook-hook, and their sessions join the same island."
           >
             <InkStage class="w-full">
-              <div class="w-full max-w-[280px] text-left">
+              <div class="w-full px-3 text-left">
                 <RemoteMock />
               </div>
             </InkStage>
@@ -350,7 +273,7 @@ export default function FeatureCollage() {
           <CollageCell
             kicker="Your Mac"
             title="The gauges that matter"
-            body="CPU and GPU die temps, memory pressure, live network throughput — the same tier palette the island uses, warning before a compile cooks your lap."
+            body="Each die's temperature beside its 60-second usage trace, tinted amber from 70° and red at 85°, so you see a compile heating up before the fans do."
           >
             <InkStage class="w-full">
               <div class="w-full max-w-[300px] text-left">
@@ -361,8 +284,13 @@ export default function FeatureCollage() {
         </div>
 
         <p class="text-subtext1 mt-6 text-center text-xs">
-          Plus calendar, reminders, calls, and Now Playing — all in the same
-          island, all one-time purchase.
+          Plus a mixer, capture, timers, weather, and a dozen more modules —{" "}
+          <a
+            href="#island-extras"
+            class="underline decoration-dotted hover:opacity-80"
+          >
+            see them all ↓
+          </a>
         </p>
       </div>
     </section>
