@@ -27,13 +27,14 @@ interface AgentEntry {
 const AGENTS: AgentEntry[] = [
   {
     name: "Claude Code",
-    wiring: "Hook entries in settings.json pointing at the shared hook binary",
+    wiring: "Hook entries in its settings, calling the shared hook binary",
     events: [
       "UserPromptSubmit",
       "SessionStart",
       "SessionEnd",
       "Stop",
       "StopFailure",
+      "SessionError",
       "SubagentStart",
       "SubagentStop",
       "Notification",
@@ -49,14 +50,23 @@ const AGENTS: AgentEntry[] = [
   },
   {
     name: "Codex",
-    wiring: "Hook entries in hooks.json (+ hooks enabled in config.toml)",
-    events: ["SessionStart", "UserPromptSubmit", "PermissionRequest", "Stop"],
-    gating: "Full — permission prompts can be allowed or denied from a card"
+    wiring: "Hook entries in its config, with its hooks feature enabled",
+    events: [
+      "SessionStart",
+      "SessionEnd",
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PermissionRequest",
+      "PostToolUse",
+      "Stop",
+      "SessionError"
+    ],
+    gating:
+      "Full — command/file approvals and user-input questions can be answered from a card"
   },
   {
     name: "OpenCode",
-    wiring:
-      "In-process plugin (~/.config/opencode/plugins/nook.js) on the server bus",
+    wiring: "In-process plugin on its server bus",
     events: [
       "SessionStart",
       "SessionEnd",
@@ -64,6 +74,7 @@ const AGENTS: AgentEntry[] = [
       "PreToolUse",
       "PostToolUse",
       "Stop",
+      "SessionError",
       "MessageUpdate",
       "PermissionRequest",
       "QuestionAsked"
@@ -73,14 +84,16 @@ const AGENTS: AgentEntry[] = [
   },
   {
     name: "Pi",
-    wiring: "In-process extension (~/.pi/agent/extensions/nook.ts)",
+    wiring: "In-process extension registered in its settings",
     events: [
       "SessionStart",
       "SessionEnd",
+      "AgentStart",
       "UserPromptSubmit",
       "PreToolUse",
       "PostToolUse",
       "Stop",
+      "SessionError",
       "MessageUpdate",
       "QuestionAsked",
       "QuestionResolved"
@@ -90,14 +103,18 @@ const AGENTS: AgentEntry[] = [
   },
   {
     name: "Oh My Pi",
-    wiring: "In-process extension package (~/.omp/agent/extensions/nook/)",
+    wiring: "In-process extension package",
     events: [
       "SessionStart",
       "SessionEnd",
+      "AgentStart",
       "UserPromptSubmit",
       "PreToolUse",
+      "PermissionRequest",
+      "PermissionResolved",
       "PostToolUse",
       "Stop",
+      "SessionError",
       "MessageUpdate",
       "QuestionAsked",
       "QuestionResolved"
@@ -108,7 +125,7 @@ const AGENTS: AgentEntry[] = [
   {
     name: "Muse",
     wiring:
-      "Plugin at ~/.nook/plugins/muse, installed, approved and enabled through Muse's own plugins CLI; each hook calls the shared hook binary. This Mac only — remote hosts skip it",
+      "Plugin installed, approved and enabled through Muse's own plugins CLI; each hook calls the shared hook binary. This Mac only — remote hosts skip it",
     events: [
       "SessionStart",
       "SessionEnd",
@@ -140,18 +157,20 @@ const AGENTS: AgentEntry[] = [
       "PreToolUse",
       "PostToolUse",
       "SubagentStart",
-      "SubagentStop"
+      "SubagentStop",
+      "QuestionAsked"
     ],
     gating:
       "Observation — every event appears as a card; the agent keeps its own prompting"
   },
   {
     name: "OpenClaw",
-    wiring: "Hook handler package (~/.openclaw/hooks/nook/)",
+    wiring: "Hook handler package in its hooks directory",
     events: [
       "SessionStart",
       "UserPromptSubmit",
-      "AgentResponse",
+      "Stop",
+      "SessionError",
       "PreCompact",
       "SessionEnd"
     ],
@@ -160,7 +179,7 @@ const AGENTS: AgentEntry[] = [
   },
   {
     name: "Z.ai (ZCode)",
-    wiring: "Hook entries in ~/.zcode/cli/config.json",
+    wiring: "Hook entries in its CLI config",
     events: [
       "SessionStart",
       "UserPromptSubmit",
@@ -175,12 +194,13 @@ const AGENTS: AgentEntry[] = [
   },
   {
     name: "Gemini CLI",
-    wiring: "Hook entries in settings.json",
+    wiring: "Hook entries in its settings",
     events: [
       "SessionStart",
       "SessionEnd",
       "AgentStart",
       "Stop",
+      "SessionError",
       "Notification"
     ],
     gating:
@@ -188,7 +208,7 @@ const AGENTS: AgentEntry[] = [
   },
   {
     name: "Cline",
-    wiring: "One hook file per event in ~/Documents/Cline/Hooks",
+    wiring: "One hook file per event in its hooks directory",
     events: [
       "SessionStart",
       "SessionEnd",
@@ -205,7 +225,7 @@ const AGENTS: AgentEntry[] = [
   {
     name: "Qwen Code",
     wiring:
-      "Hook entries in settings.json (same surface as the Claude-style schema)",
+      "Hook entries in its settings (same surface as the Claude-style schema)",
     events: [
       "UserPromptSubmit",
       "SessionStart",
@@ -227,7 +247,7 @@ const AGENTS: AgentEntry[] = [
   },
   {
     name: "DeepSeek",
-    wiring: "Standalone hooks.json at ~/.dsh",
+    wiring: "A standalone hooks file its bridge is pointed at",
     events: [
       "SessionStart",
       "UserPromptSubmit",
