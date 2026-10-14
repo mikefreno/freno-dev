@@ -3,6 +3,8 @@ import { EdgeCacheHeaders } from "~/components/EdgeCacheHeaders";
 import SubdomainHeader from "~/components/SubdomainHeader";
 import FeatureCollage from "~/components/nook/FeatureCollage";
 import FeatureBreakdowns from "~/components/nook/FeatureBreakdowns";
+import IslandExtras from "~/components/nook/IslandExtras";
+import PhoneBeta from "~/components/nook/PhoneBeta";
 import Button from "~/components/ui/Button";
 import Input from "~/components/ui/Input";
 import { createSignal, Show } from "solid-js";
@@ -149,6 +151,12 @@ export default function NookLanding() {
         </div>
       </section>
 
+      {/* ── Everything else: marquee + live module bento ───────────── */}
+      <IslandExtras />
+
+      {/* ── iPhone + Watch companion, TestFlight beta ──────────────── */}
+      <PhoneBeta brandColor={brandColor()} />
+
       {/* ── CTA ──────────────────────────────────────────────────────── */}
       <section class="bg-surface0 relative z-20 px-4 py-20 md:px-8">
         <div class="mx-auto max-w-4xl text-center">
@@ -156,10 +164,10 @@ export default function NookLanding() {
             Try it free for 14 days
           </h2>
           <p class="text-subtext0 mx-auto mb-10 max-w-2xl leading-relaxed">
-            Orchestrate your coding agents, watch temperatures, take control of
-            your fans, and keep background services quiet. When the trial ends,
-            unlock everything with a single one-time payment — no subscription,
-            ever.
+            Orchestrate your coding agents, take control of your fans and
+            battery, give every app its own volume, capture your screen, and
+            keep your day in the notch. When the trial ends, unlock everything
+            with a single one-time payment — no subscription, ever.
           </p>
           <div class="flex flex-col items-center justify-center gap-4 sm:flex-row sm:space-x-4">
             <Button

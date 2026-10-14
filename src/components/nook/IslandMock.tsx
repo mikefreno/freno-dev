@@ -85,9 +85,10 @@ function IslandSurface(props: { children: JSX.Element; class?: string }) {
   onMount(() => {
     const node = el;
     if (!node) return;
+    // Layout size, not getBoundingClientRect: a scaled-down mock (the
+    // Capture demo's island row) would otherwise clip itself to a corner.
     const apply = () => {
-      const r = node.getBoundingClientRect();
-      node.style.clipPath = `path("${islandPath(r.width, r.height)}")`;
+      node.style.clipPath = `path("${islandPath(node.offsetWidth, node.offsetHeight)}")`;
     };
     apply();
     const observer = new ResizeObserver(apply);
@@ -259,5 +260,36 @@ export function IslandExpanded(props: {
         <div class="px-[18px] py-4">{props.children}</div>
       </IslandSurface>
     </div>
+  );
+}
+
+/** Fake cursor dot: rests on a target, presses, exits. */
+export function FakeCursor(props: {
+  phase: "idle" | "press" | "live";
+  at: { x: number; y: number };
+  exit?: { x: number; y: number };
+}) {
+  const p = () =>
+    props.phase === "press"
+      ? { ...props.at, scale: 0.62, o: 1 }
+      : props.phase === "idle"
+        ? { ...props.at, scale: 1, o: 1 }
+        : { ...(props.exit ?? { x: 106, y: 8 }), scale: 1, o: 0 };
+  return (
+    <span
+      class="pointer-events-none absolute z-10 rounded-full bg-white"
+      style={{
+        width: "9px",
+        height: "9px",
+        "box-shadow":
+          "0 1px 4px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,255,255,0.18)",
+        left: `${p().x}%`,
+        top: `${p().y}%`,
+        opacity: p().o,
+        transform: `translate(-50%, -50%) scale(${p().scale})`,
+        transition:
+          "left 0.8s cubic-bezier(0.35,0,0.25,1), top 0.8s cubic-bezier(0.35,0,0.25,1), opacity 0.4s, transform 0.3s"
+      }}
+    />
   );
 }

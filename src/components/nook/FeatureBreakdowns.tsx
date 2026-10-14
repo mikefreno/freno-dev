@@ -1,5 +1,6 @@
 import {
   For,
+  Show,
   createEffect,
   createSignal,
   onCleanup,
@@ -9,20 +10,35 @@ import {
 import {
   IslandPill,
   AgentDotGrid,
-  STATUS,
   CALM,
   WARM,
   ACCENT,
   CRITICAL,
-  ModuleCard
+  ModuleCard,
+  FakeCursor
 } from "./IslandMock";
 import { Campfire, type CampfireState } from "./Campfire";
+import {
+  ApprovalCardMock,
+  SessionRowMock,
+  Glyph,
+  CLAUDE,
+  CODEX
+} from "./ModuleMocks";
+import { useDemoLoop } from "./useDemoLoop";
+import {
+  TerminalReplyDemo,
+  MixerDemo,
+  CaptureDemo,
+  FloatingActionsDemo
+} from "./MoreDemos";
 
 /**
  * Detailed feature breakdowns: alternating copy + live-demo sections.
  * Each demo stages the real interaction loop: attention flares, approval
  * resolves, fans throttle, the charge ceiling holds, meetings surface,
- * the camera wakes, the hook installs.
+ * the camera wakes, a remote host goes live. Newer demos live in
+ * MoreDemos.tsx; app-anatomy pieces in ModuleMocks.tsx.
  */
 
 /* Scroll-triggered reveal: adds `in` once the element crosses 25%. */
@@ -165,99 +181,87 @@ function FleetDemo() {
   );
 }
 
-/* ── Demo 2: permission card resolves, phone push follows ─────────── */
+/* ── Demo 2: an approval surfaces the island; Allow resumes the run ── */
 
 function ApprovalDemo() {
-  const [allowed, setAllowed] = createSignal(false);
-  onMount(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const loop = () => {
-      setAllowed(false);
-      timers.push(setTimeout(() => setAllowed(true), 4200));
-    };
-    loop();
-    const interval = setInterval(loop, 8400);
-    onCleanup(() => {
-      clearInterval(interval);
-      timers.forEach(clearTimeout);
-    });
-  });
-
+  const [phase, setPhase] = createSignal<"calm" | "ask" | "press" | "resumed">("calm");
+  useDemoLoop(10400, [
+    [0, () => setPhase("calm")],
+    [1400, () => setPhase("ask")],
+    [4600, () => setPhase("press")],
+    [4950, () => setPhase("resumed")],
+    [8800, () => setPhase("calm")]
+  ]);
+  const asking = () => phase() === "ask" || phase() === "press";
+  const open = () => phase() !== "calm";
   return (
-    <div class="flex flex-col items-center gap-5 sm:flex-row sm:items-end sm:justify-center">
-      {/* island card */}
-      <div
-        class="w-full max-w-[300px] rounded-[10px] p-2.5 text-left transition-opacity duration-500"
-        style={{
-          background: "rgba(234,179,8,0.08)",
-          opacity: allowed() ? 0.45 : 1
-        }}
-      >
-        <div class="mb-1.5 flex items-center gap-1.5">
-          <span
-            class="inline-block h-[13px] w-[13px] rounded-[3px]"
-            style={{ background: "#D97742" }}
+    <div class="relative flex h-[390px] flex-col items-center gap-3">
+      <IslandPill
+        campfire={asking() ? "question" : "running"}
+        right={
+          <AgentDotGrid
+            states={asking() ? ["attention", "running", "ready"] : ["running", "running", "ready"]}
           />
-          <span class="text-[12px] font-semibold text-white">
-            the-nook · bridge
-          </span>
-          <span
-            class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white"
-            style={{
-              background: allowed()
-                ? "rgba(150,220,150,0.25)"
-                : "rgba(234,179,8,0.25)"
-            }}
-          >
-            {allowed() ? "allowed" : "approval"}
-          </span>
-        </div>
-        <p class="text-[13px] font-medium text-white">Run Edit</p>
-        <p class="mt-0.5 font-mono text-[11px] text-white/50">
-          server/routes.ts +12 −4
-        </p>
-        <div class="mt-2.5 flex gap-2">
-          <span
-            class="rounded-md px-3 py-1 text-[11px] font-semibold text-white transition-all duration-300"
-            style={{ background: ACCENT, opacity: allowed() ? 0.4 : 1 }}
-          >
-            Allow
-          </span>
-          <span class="rounded-md border border-white/20 px-3 py-1 text-[11px] font-semibold text-white/80">
-            Deny
-          </span>
-        </div>
-      </div>
-      {/* phone */}
+        }
+      />
+      {/* the island opens: approval pinned above the session rows */}
       <div
-        class="w-[150px] rounded-2xl border border-white/15 p-2 text-left"
+        class="w-full max-w-[380px] overflow-hidden rounded-[14px] bg-black transition-all duration-700"
         style={{
-          background: "rgba(255,255,255,0.04)",
-          transform: allowed() ? "translateY(-4px)" : "translateY(0)",
-          transition: "transform 0.5s ease"
+          "max-height": open() ? "320px" : "0px",
+          opacity: open() ? 1 : 0,
+          transform: open() ? "translateY(0)" : "translateY(-8px)"
         }}
       >
-        <div class="mx-auto mb-1.5 h-1 w-10 rounded-full bg-white/20" />
-        <div class="space-y-1.5">
-          <p class="px-1 text-[9px] font-semibold tracking-wide text-white/40 uppercase">
-            The Nook
-          </p>
+        <div class="p-2.5">
           <div
-            class="rounded-lg p-2"
-            style={{
-              background: allowed()
-                ? "rgba(111,185,130,0.14)"
-                : "rgba(231,167,98,0.14)"
-            }}
+            class="grid transition-all duration-500"
+            style={{ "grid-template-rows": asking() ? "1fr" : "0fr", opacity: asking() ? 1 : 0 }}
           >
-            <p class="text-[10px] font-semibold text-white">
-              {allowed() ? "Allowed ✓" : "Claude Code wants to edit"}
-            </p>
-            <p class="text-[9px] text-white/50">
-              {allowed() ? "resumed" : "tap to Allow or Deny"}
-            </p>
+            <div class="overflow-hidden">
+              <div class="pb-1.5">
+                <ApprovalCardMock
+                  agent={CLAUDE}
+                  title="the-nook · harden the bridge"
+                  tool="Bash"
+                  input="swift test --filter Bridge"
+                  pressed={phase() === "press" ? "allow" : undefined}
+                />
+              </div>
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <SessionRowMock
+              title="the-nook · main"
+              prompt="harden the bridge"
+              state={
+                asking()
+                  ? "Approve Bash — swift test --filter Bridge?"
+                  : "Running swift test --filter Bridge…"
+              }
+              status={asking() ? "attention" : "running"}
+              agent={CLAUDE}
+              origin="iTerm2"
+              age="6m"
+            />
+            <SessionRowMock
+              title="site · nook-334"
+              prompt="match the mocks to the app"
+              state="Reading ModuleMocks.tsx…"
+              status="running"
+              agent={CODEX}
+              origin="kitty-tmux"
+              age="2m"
+            />
           </div>
         </div>
+      </div>
+      <div class="pointer-events-none absolute inset-y-0 left-1/2 w-[380px] -translate-x-1/2">
+        <FakeCursor
+          phase={phase() === "press" ? "press" : asking() ? "idle" : "live"}
+          at={{ x: 9.5, y: 41 }}
+          exit={{ x: 30, y: 70 }}
+        />
       </div>
     </div>
   );
@@ -403,37 +407,6 @@ function FansDemo() {
         </For>
       </div>
     </div>
-  );
-}
-
-/** Fake cursor dot: rests on a target, presses, exits. */
-function FakeCursor(props: {
-  phase: "idle" | "press" | "live";
-  at: { x: number; y: number };
-  exit?: { x: number; y: number };
-}) {
-  const p = () =>
-    props.phase === "press"
-      ? { ...props.at, scale: 0.62, o: 1 }
-      : props.phase === "idle"
-        ? { ...props.at, scale: 1, o: 1 }
-        : { ...(props.exit ?? { x: 106, y: 8 }), scale: 1, o: 0 };
-  return (
-    <span
-      class="pointer-events-none absolute z-10 rounded-full bg-white"
-      style={{
-        width: "9px",
-        height: "9px",
-        "box-shadow":
-          "0 1px 4px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,255,255,0.18)",
-        left: `${p().x}%`,
-        top: `${p().y}%`,
-        opacity: p().o,
-        transform: `translate(-50%, -50%) scale(${p().scale})`,
-        transition:
-          "left 0.8s cubic-bezier(0.35,0,0.25,1), top 0.8s cubic-bezier(0.35,0,0.25,1), opacity 0.4s, transform 0.3s"
-      }}
-    />
   );
 }
 
@@ -834,142 +807,109 @@ function CameraDemo() {
   );
 }
 
-/* ── Demo 7: one click copies, sets up, probes — pong ─────── */
+/* ── Demo 7: Settings ▸ Remote hosts — one click to Live ──────────── */
 
-const SSH_LINES = [
-  { at: 1, text: "scp nook-hook gpu-rig:~/.nook/bin/" },
-  { at: 2, text: "setup: bake NOOK_HOST, write ~/.nook/endpoint" },
-  { at: 3, text: "nook-hook --probe → pong" }
+/** RemoteMirror's progress steps, in order. */
+const SETUP_STEPS = [
+  "connecting",
+  "pushing the hook binary",
+  "configuring agents",
+  "checking the host can reach this Mac"
 ];
 
-function SshInstallDemo() {
-  const [step, setStep] = createSignal(0);
-  onMount(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const loop = () => {
-      setStep(0);
-      timers.push(setTimeout(() => setStep(1), 1600));
-      timers.push(setTimeout(() => setStep(2), 3000));
-      timers.push(setTimeout(() => setStep(3), 4200));
-      timers.push(setTimeout(() => setStep(4), 5400));
-    };
-    loop();
-    const interval = setInterval(loop, 11000);
-    onCleanup(() => {
-      clearInterval(interval);
-      timers.forEach(clearTimeout);
-    });
-  });
-  const cursorPhase = () =>
-    step() === 0
-      ? ("idle" as const)
-      : step() === 1
-        ? ("press" as const)
-        : ("live" as const);
+function RemoteHostDemo() {
+  /* -1 not set up · 0…3 setting up · 4 live */
+  const [step, setStep] = createSignal(-1);
+  const [pressed, setPressed] = createSignal(false);
+  useDemoLoop(11000, [
+    [0, () => (setStep(-1), setPressed(false))],
+    [1400, () => setPressed(true)],
+    [1700, () => (setPressed(false), setStep(0))],
+    [2700, () => setStep(1)],
+    [3700, () => setStep(2)],
+    [4700, () => setStep(3)],
+    [5800, () => setStep(4)]
+  ]);
+  const live = () => step() === 4;
+  const working = () => step() >= 0 && step() < 4;
+  const chip = () =>
+    live()
+      ? { color: "rgb(48,209,88)", label: "Live" }
+      : working()
+        ? { color: "rgba(255,255,255,0.55)", label: "Setting up" }
+        : { color: "rgba(255,255,255,0.35)", label: "Not set up" };
+
   return (
-    <ModuleCard class="relative mx-auto w-full max-w-[330px]">
-      <div class="space-y-2.5 text-left">
-        <div class="flex items-center gap-2">
-          <div class="min-w-0 flex-1">
-            <p class="text-[13px] font-semibold text-white">gpu-rig</p>
-            <p class="truncate font-mono text-[10px] text-white/40">
-              mike@192.168.64.3 · linux
-            </p>
-          </div>
-          <span
-            class="rounded-md px-2.5 py-1 text-[11px] font-semibold text-white transition-all duration-300"
-            style={{
-              background: step() === 0 ? ACCENT : "rgba(255,255,255,0.08)",
-              opacity: step() >= 4 ? 0 : 1,
-              transform: step() === 1 ? "scale(0.94)" : "scale(1)"
-            }}
-          >
-            {step() === 0 ? "Install hook" : "installing…"}
-          </span>
-        </div>
-        <div class="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-        <div class="relative" style={{ "min-height": "86px" }}>
-          <div
-            class="space-y-1.5 transition-opacity duration-500"
-            style={{ opacity: step() >= 4 ? 0 : 1 }}
-          >
-            {step() === 0 && (
-              <p class="pt-2 text-center text-[10px] text-white/35">
-                one click: copy → setup → probe
-              </p>
-            )}
-            <For each={SSH_LINES}>
-              {(l) => (
-                <div
-                  class="flex items-center gap-1.5 transition-all duration-500"
-                  style={{
-                    opacity: step() >= l.at ? 1 : 0,
-                    transform:
-                      step() >= l.at ? "translateY(0)" : "translateY(4px)"
-                  }}
-                >
-                  <span
-                    class="font-mono text-[10px]"
-                    style={{
-                      color:
-                        step() > l.at
-                          ? "rgba(150,220,150,0.9)"
-                          : "rgba(255,255,255,0.45)"
-                    }}
-                  >
-                    {step() > l.at ? "✓" : "…"}
-                  </span>
-                  <span class="truncate font-mono text-[10px] text-white/70">
-                    {l.text}
-                  </span>
-                </div>
-              )}
-            </For>
-          </div>
-          <div
-            class="absolute inset-0 flex flex-col justify-center transition-all duration-500"
-            style={{
-              opacity: step() >= 4 ? 1 : 0,
-              transform: step() >= 4 ? "translateY(0)" : "translateY(6px)"
-            }}
-          >
-            <div
-              class="rounded-[10px] p-2.5"
-              style={{
-                background: "rgba(255,255,255,0.055)",
-                "box-shadow": "inset 0 0 0 1px rgba(255,255,255,0.07)"
-              }}
-            >
-              <div class="flex items-center gap-2">
-                <span
-                  class="inline-block h-[7px] w-[7px] rounded-full"
-                  style={{ background: STATUS.running }}
-                />
-                <span class="text-[13px] font-semibold text-white">
-                  gpu-rig
-                </span>
-                <span
-                  class="ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                  style={{
-                    background: "rgba(110,167,255,0.22)",
-                    color: "#9cc3ff"
-                  }}
-                >
-                  remote
-                </span>
-              </div>
-              <p class="mt-0.5 text-[11px] text-white/50">
-                You: benchmark fp16
-              </p>
+    <div class="relative mx-auto w-full max-w-[360px] space-y-3">
+      {/* the host's card in Settings ▸ Agents ▸ Remote hosts */}
+      <ModuleCard>
+        <div class="space-y-2 text-left">
+          <div class="flex items-center gap-2.5">
+            <div class="min-w-0 flex-1">
+              <p class="text-[13px] font-semibold text-white">gpu-rig</p>
+              <p class="truncate text-[11px] text-white/45">tailnet peer</p>
             </div>
-            <p class="pt-1.5 text-center text-[10px] text-white/40">
-              agents join the same dot grid
-            </p>
+            <Show when={working()}>
+              <span class="h-3 w-3 animate-spin rounded-full border-[1.5px] border-white/25 border-t-white/80" />
+            </Show>
+            <span class="flex items-center gap-1.5 text-[10.5px] font-medium text-white/85">
+              <span
+                class="h-[7px] w-[7px] rounded-full transition-colors duration-300"
+                style={{ background: chip().color }}
+              />
+              {chip().label}
+            </span>
+            <Show
+              when={live()}
+              fallback={
+                <span
+                  class="rounded-md px-2.5 py-1 text-[11px] font-semibold text-white transition-all duration-200"
+                  style={{
+                    background: ACCENT,
+                    opacity: working() ? 0 : 1,
+                    transform: pressed() ? "scale(0.92)" : "scale(1)"
+                  }}
+                >
+                  Set up
+                </span>
+              }
+            >
+              <Glyph name="refresh" size={11} class="text-white/50" />
+              <span class="rounded-md bg-white/10 px-2 py-1 text-[11px] font-semibold text-[#ff6961]">
+                Remove
+              </span>
+            </Show>
           </div>
+          <p class="h-4 text-[11px] text-white/50">
+            {working() ? SETUP_STEPS[step()] : " "}
+          </p>
         </div>
+      </ModuleCard>
+
+      {/* its agents arrive as ordinary rows, the machine named in the chip */}
+      <div
+        class="transition-all duration-500"
+        style={{
+          opacity: live() ? 1 : 0,
+          transform: live() ? "translateY(0)" : "translateY(6px)"
+        }}
+      >
+        <SessionRowMock
+          title="trainer · fp16"
+          prompt="benchmark fp16"
+          state="Running python bench.py…"
+          status="running"
+          agent={CODEX}
+          host="gpu-rig"
+          origin="iTerm2"
+          age="now"
+        />
       </div>
-      <FakeCursor phase={cursorPhase()} at={{ x: 90, y: 14 }} />
-    </ModuleCard>
+      <FakeCursor
+        phase={pressed() ? "press" : step() === -1 ? "idle" : "live"}
+        at={{ x: 88, y: 16 }}
+      />
+    </div>
   );
 }
 
@@ -1019,8 +959,8 @@ export default function FeatureBreakdowns() {
         title="Your whole fleet, in one pixel strip"
         body="Every session, every agent, one square each. The pill never wraps, never grows — an arriving question flashes the fire and swaps the slot, then hands the notch back."
         bullets={[
-          "12 agents: Claude Code, Codex, Gemini CLI, OpenCode, Pi, and more",
-          "The campfire dances while work runs, simmers when all is calm",
+          "13 agents: Claude Code, Codex, Gemini CLI, OpenCode, Pi, Muse, and more",
+          "Custom agents: your own coding agent can wire itself in from the published contract",
           "Slot rankings — you choose which data earns the notch",
           "You don't need a notch — external displays get the same island, floating top-center"
         ]}
@@ -1031,15 +971,56 @@ export default function FeatureBreakdowns() {
       <BreakdownSection
         kicker="Approvals"
         title="Answer from the island — or your phone"
-        body="Gated tool calls hold right in the panel. Allow, deny, or demand a reason. Walking away? The same request lands on your phone and your tap flies back to the agent."
+        body="A gated tool call surfaces the island: the fire turns to a question, the card pins above your sessions, and the row says what it's waiting on. Allow, Allow for session, Deny, or deny with a reason, and the run picks up where it stopped."
         bullets={[
-          "Permission and question cards pin above the session list",
-          "Push-to-phone over your own network — no cloud middleman (coming soon)",
+          "Approval cards pin above the session list; questions answer inside their row",
+          "Allow for session waves through the rest of that session's requests",
+          "Answer from iPhone or Apple Watch too, now in TestFlight beta",
           "Works across every hooked agent, local or remote"
         ]}
         reversed
       >
         <ApprovalDemo />
+      </BreakdownSection>
+
+      <BreakdownSection
+        kicker="Terminals"
+        title="Reply without hunting for the tab"
+        body="Every session knows the terminal it runs in. Type a reply in the island and it lands in that exact pane; click Jump and the right window comes forward."
+        bullets={[
+          "Replies reach agents in tmux, iTerm2, Terminal, and kitty",
+          "Jump focuses the exact window, even for sessions over SSH",
+          "Per-turn replies render as Markdown, with tables and code"
+        ]}
+      >
+        <TerminalReplyDemo />
+      </BreakdownSection>
+
+      <BreakdownSection
+        kicker="Remote"
+        title="Any SSH box, one click away"
+        body="Pick a host from your ssh config or your tailnet and click once — the nook-hook installs itself and its agents appear beside your local ones, indistinguishable."
+        bullets={[
+          "One click: connect, push the hook, configure agents, check it can reach this Mac",
+          "Hosts mirror this Mac's installed integrations automatically",
+          "Remote sessions are ordinary rows; the agent chip names the machine"
+        ]}
+        reversed
+      >
+        <RemoteHostDemo />
+      </BreakdownSection>
+
+      <BreakdownSection
+        kicker="The campfire"
+        title="A hearth that tells the truth"
+        body="Stop-motion pixel art, four frames a step. It dances when tokens stream, putters blue when an agent asks, and goes to dead embers the moment something breaks."
+        bullets={[
+          "Idle, running, ready, question, and error — at a glance",
+          "Hand-drawn 14×14 sprites, no tweening",
+          "Six chiptunes you can assign to any agent event"
+        ]}
+      >
+        <CampfireDemo />
       </BreakdownSection>
 
       <BreakdownSection
@@ -1052,6 +1033,7 @@ export default function FeatureBreakdowns() {
           "CPU/GPU die temps tier-color before things get loud",
           "All local: your hardware data never leaves the device"
         ]}
+        reversed
       >
         <FansDemo />
       </BreakdownSection>
@@ -1067,9 +1049,36 @@ export default function FeatureBreakdowns() {
           "Thermal protection pauses charging when the pack runs hot",
           "Energy flow figure: adapter → battery → system, live watts"
         ]}
-        reversed
       >
         <BatteryDemo />
+      </BreakdownSection>
+
+      <BreakdownSection
+        kicker="Sound"
+        title="Every app gets its own fader"
+        body="A real volume mixer: set each app's level, mute the noisy one, and send any app to its own output — music to headphones while the meeting stays on the speakers."
+        bullets={[
+          "Per-app volume, mute, and output routing",
+          "Master output, system sounds, and microphone pickers in one panel",
+          "Catches players that aren't apps, like command-line podcast tools"
+        ]}
+        reversed
+      >
+        <MixerDemo />
+      </BreakdownSection>
+
+      <BreakdownSection
+        kicker="Capture"
+        title="Screenshots and recordings from the notch"
+        body="Drag out an area, pick a screen, or choose one app. While a recording runs, Wings unfold beside the island: pause and stop on the right, system audio and microphone on the left."
+        bullets={[
+          "Area, screen, or single-app capture",
+          "Screenshots save to your screenshot folder and copy to the clipboard",
+          "System audio and microphone tracks for recordings",
+          "The Nook's own windows never show up in a capture"
+        ]}
+      >
+        <CaptureDemo />
       </BreakdownSection>
 
       <BreakdownSection
@@ -1082,6 +1091,7 @@ export default function FeatureBreakdowns() {
           "Meeting links get an Open button in the row",
           "Real calendars and reminders — no sync service"
         ]}
+        reversed
       >
         <CalendarDemo />
       </BreakdownSection>
@@ -1096,35 +1106,23 @@ export default function FeatureBreakdowns() {
           "A device picker for every connected camera",
           "Opt-in module — in no default panel"
         ]}
-        reversed
       >
         <CameraDemo />
       </BreakdownSection>
 
       <BreakdownSection
-        kicker="Remote"
-        title="Any SSH box, one click away"
-        body="Point at any SSH-reachable box and click once — the nook-hook installs itself and its agents appear beside your local ones, indistinguishable."
+        kicker="Floating actions"
+        title="Your buttons, orbiting the island"
+        body="Pin up to seven one-tap actions around the expanded island. They ride its expansion in and out, so the things you reach for most are always one click away."
         bullets={[
-          "One click: copy the hook, run setup, probe answers pong",
-          "Remote agents wear a blue badge in the same dot grid",
-          "Works for Claude, Codex, Pi and many more"
+          "Run an Apple Shortcut, open an app or URL, or run a shell command",
+          "Toggle Low Power Mode, top-up, or overheat protection",
+          "Set the charge limit, cycle audio outputs, or start a timer",
+          "Cycle the approval mode without opening Settings"
         ]}
+        reversed
       >
-        <SshInstallDemo />
-      </BreakdownSection>
-
-      <BreakdownSection
-        kicker="The campfire"
-        title="A hearth that tells the truth"
-        body="Stop-motion pixel art, four frames a step. It dances when tokens stream, putters blue when an agent asks, and goes to dead embers the moment something breaks."
-        bullets={[
-          "Idle, running, ready, question, and error — at a glance",
-          "Hand-drawn 14×14 sprites, no tweening",
-          "The fire is the fleet's pulse: glanceable from across the room"
-        ]}
-      >
-        <CampfireDemo />
+        <FloatingActionsDemo />
       </BreakdownSection>
     </div>
   );

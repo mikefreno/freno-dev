@@ -5,6 +5,7 @@ import { describe, expect, it, mock, beforeEach } from "bun:test";
 //      and description, HTML-escaped.
 //   2. Invalid payloads never reach the mailer.
 //   3. The rate limiter halts floods per fingerprint (falling back to IP).
+//   4. The landing page's iPhone beta request (email only) gets through.
 // sendEmail and the limiter are mocked so the test sends no real mail.
 
 const sentEmails: { to: string; subject: string; html: string }[] = [];
@@ -22,6 +23,9 @@ mock.module("~/server/bug-report-rate-limit", () => ({
 }));
 
 const { POST } = await import("./report");
+const { betaRequestPayload } = await import(
+  "~/components/nook/betaRequest"
+);
 
 /** A minimal APIEvent double: JSON body plus optional headers. */
 function request(body: unknown, headers: Record<string, string> = {}) {
@@ -133,5 +137,18 @@ describe("POST /api/the-nook/report", () => {
     );
     expect(res.status).toBe(200);
     expect(sentEmails).toHaveLength(1);
+  });
+
+  it("delivers the landing page's beta request with only the email", async () => {
+    const res = await POST(request(betaRequestPayload("tester@example.com")));
+    expect(res.status).toBe(200);
+
+    expect(sentEmails).toHaveLength(1);
+    const email = sentEmails[0]!;
+    expect(email.subject).toBe(
+      "The Nook bug report: iPhone app beta access request"
+    );
+    expect(email.html).toContain("<b>Reply-to:</b> tester@example.com");
+    expect(email.html).not.toContain("<h3>Displays</h3>");
   });
 });
