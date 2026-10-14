@@ -106,6 +106,29 @@ const AGENTS: AgentEntry[] = [
       "Full — honors the agent's own approval tiers, per-tool policies included"
   },
   {
+    name: "Muse",
+    wiring:
+      "Plugin at ~/.nook/plugins/muse, installed, approved and enabled through Muse's own plugins CLI; each hook calls the shared hook binary. This Mac only — remote hosts skip it",
+    events: [
+      "SessionStart",
+      "SessionEnd",
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PermissionRequest",
+      "PostToolUse",
+      "PostToolUseFailure",
+      "Stop",
+      "StopFailure",
+      "Notification",
+      "PreCompact",
+      "PostCompact",
+      "SubagentStart",
+      "SubagentStop"
+    ],
+    gating:
+      "Full — permission prompts can be allowed or denied from a card, and every tool call under Verify"
+  },
+  {
     name: "Hermes",
     wiring:
       "Shell-hook entries in the agent's config, consent-gated by allowlist",
@@ -240,8 +263,8 @@ export default function NookAgentsPage() {
       <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Supported agents"
-        description="Every coding agent The Nook supports — all twelve, with each hook's exact event coverage and what you can do from a card: watch sessions live, answer permission prompts, unblock work."
-        ogTitle="The 12 agents The Nook supports, and what each hook sees"
+        description="Every coding agent The Nook supports — all thirteen, with each hook's exact event coverage and what you can do from a card: watch sessions live, answer permission prompts, unblock work."
+        ogTitle="The 13 agents The Nook supports, and what each hook sees"
       />
       <SubdomainHeader />
       <main class="min-h-screen px-[8vw] py-[8vh]">
@@ -249,7 +272,7 @@ export default function NookAgentsPage() {
           Supported agents
         </h1>
         <p class="text-subtext0 mb-2 max-w-2xl text-lg">
-          The Nook watches twelve coding agents in one place — your menu bar and
+          The Nook watches thirteen coding agents in one place — your menu bar and
           notch show every session that is running, thinking, or blocked, and a
           card answers permission prompts without leaving your keyboard.
         </p>
