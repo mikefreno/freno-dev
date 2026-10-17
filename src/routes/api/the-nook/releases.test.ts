@@ -256,6 +256,21 @@ describe("sectionsFromHtml", () => {
     expect(sectionsFromHtml("")).toEqual([]);
     expect(sectionsFromHtml("<p><b>Added</b></p>")).toEqual([]);
   });
+
+  it("decodes the entities embed_release_notes.py's html.escape writes", () => {
+    // Python's html.escape prefers the hex form for apostrophes; this is what
+    // the live appcast actually carries (NOOK-565).
+    expect(
+      sectionsFromHtml(
+        "<p><b>Added</b></p><ul><li>Each app&#x27;s meter &amp; the icon</li><li>don&#x27;t expand</li></ul>"
+      )
+    ).toEqual([
+      {
+        title: "Added",
+        bullets: ["Each app's meter & the icon", "don't expand"]
+      }
+    ]);
+  });
 });
 
 describe("isoDateOrNull", () => {
