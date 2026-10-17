@@ -35,7 +35,11 @@ const ENTITY_REPLACEMENTS: [RegExp, string][] = [
   [/&lt;/g, "<"],
   [/&gt;/g, ">"],
   [/&quot;/g, '"'],
+  // Python's html.escape, which embed_release_notes.py writes the appcast
+  // with, prefers the hex form for apostrophes (NOOK-565).
+  [/&#x27;/g, "'"],
   [/&#39;/g, "'"],
+  [/&apos;/g, "'"],
   [/&nbsp;/g, " "],
   // Last, so "&amp;lt;" cannot decode twice.
   [/&amp;/g, "&"]
