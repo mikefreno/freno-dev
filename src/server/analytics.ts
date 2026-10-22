@@ -1,6 +1,7 @@
 import { ConnectionFactory } from "./database";
 import { v4 as uuid } from "uuid";
 import type { VisitorAnalytics, AnalyticsQuery } from "~/db/types";
+import { DOWNLOAD_PATH_PREFIX, summariseDownloads } from "~/lib/download-asset";
 import { CACHE_CONFIG } from "~/config";
 import {
   VISITOR_ANALYTICS_ADDED_COLUMNS,
@@ -272,6 +273,10 @@ export async function getAnalyticsSummary(days: number = 30): Promise<{
   topReferrers: Array<{ referrer: string; count: number }>;
   deviceTypes: Array<{ type: string; count: number }>;
   browsers: Array<{ browser: string; count: number }>;
+  downloads: {
+    total: number;
+    byAsset: Array<{ asset: string; count: number }>;
+  };
   topCampaigns: Array<{
     source: string | null;
     medium: string | null;
@@ -409,6 +414,24 @@ export async function getAnalyticsSummary(days: number = 30): Promise<{
     count: row.count as number
   }));
 
+  // Downloads: every door records one row under `/api/downloads/<asset>` via
+  // `trackDownload`, so the asset is the path suffix and nothing has to be
+  // parsed out of a query string.
+  const downloadsResult = await conn.execute({
+    sql: `SELECT path, COUNT(*) as count FROM VisitorAnalytics
+          WHERE path LIKE '${DOWNLOAD_PATH_PREFIX}%'
+          AND created_at >= datetime('now', '-${days} days')
+          GROUP BY path
+          ORDER BY count DESC`,
+    args: []
+  });
+  const downloads = summariseDownloads(
+    downloadsResult.rows.map((row) => ({
+      path: String(row.path),
+      count: row.count as number
+    }))
+  );
+
   return {
     totalVisits,
     totalPageVisits,
@@ -420,7 +443,8 @@ export async function getAnalyticsSummary(days: number = 30): Promise<{
     topReferrers,
     deviceTypes,
     browsers,
-    topCampaigns
+    topCampaigns,
+    downloads
   };
 }
 

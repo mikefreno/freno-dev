@@ -19,14 +19,24 @@ const SOURCE = readFileSync(
   "utf8"
 );
 
+/**
+ * The allowlist moved from an array to a `prefix → asset key` map when download
+ * tracking was added, so read the keys out of the map rather than matching
+ * quoted strings.
+ */
+const ALLOWLIST_KEYS = [
+  ...(/const assetKeys: Record<string, string> = \{([^}]*)\}/.exec(SOURCE)?.[1] ?? "")
+    .matchAll(/"?([A-Za-z]+)"?\s*:/g)
+].map((match) => match[1]);
+
 describe("Downloads proxy filename allowlist (NOOK-337)", () => {
   it("allows the Nook app-bundle prefix used by Sparkle delta names", () => {
-    expect(SOURCE).toContain('"Nook"');
+    expect(ALLOWLIST_KEYS).toContain("Nook");
   });
 
   it("still allows every previously served prefix", () => {
     for (const prefix of ["Gaze", "InputHalo", "TheNook"]) {
-      expect(SOURCE).toContain(`"${prefix}"`);
+      expect(ALLOWLIST_KEYS).toContain(prefix);
     }
   });
 

@@ -8,6 +8,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "~/env/server";
 import { TRPCError } from "@trpc/server";
+import { trackDownload } from "~/server/track-download";
 
 const assets: Record<string, string> = {
   lineage: "Life and Lineage.apk",
@@ -73,7 +74,14 @@ const latestAssets: Record<
 export const downloadsRouter = createTRPCRouter({
   getDownloadUrl: publicProcedure
     .input(z.object({ asset_name: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // Logged before signing: a click on a door that then fails to sign is
+      // exactly the event the funnel needs to show. Unknown asset names are
+      // skipped rather than recorded as a download that never happened.
+      if (assets[input.asset_name] || latestAssets[input.asset_name]) {
+        await trackDownload(ctx.event, input.asset_name);
+      }
+
       const bucket = env.VITE_DOWNLOAD_BUCKET_STRING;
 
       const credentials = {

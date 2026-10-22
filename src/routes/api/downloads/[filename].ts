@@ -1,6 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { env } from "~/env/server";
+import { trackDownload } from "~/server/track-download";
 
 /**
  * Serves macOS app DMG files and delta updates from S3
@@ -27,10 +28,20 @@ export async function GET(event: APIEvent) {
     });
   }
 
-  const validPrefixes = ["Gaze", "InputHalo", "TheNook", "Nook"];
-  const isValidPrefix = validPrefixes.some((prefix) => filename.startsWith(prefix));
+  // Prefix → canonical asset key, so a version bump stays one asset in
+  // analytics rather than one per release.
+  const assetKeys: Record<string, string> = {
+    Gaze: "gaze",
+    InputHalo: "inputhalo",
+    TheNook: "thenook",
+    Nook: "thenook"
+  };
+
+  const asset = Object.keys(assetKeys).find((prefix) =>
+    filename.startsWith(prefix)
+  );
   if (
-    !isValidPrefix ||
+    !asset ||
     (!filename.endsWith(".dmg") &&
       !filename.endsWith(".delta") &&
       !filename.endsWith(".zip"))
@@ -84,13 +95,20 @@ export async function GET(event: APIEvent) {
 
     console.log(`✓ Serving ${filename} (${body.length} bytes)`);
 
-    return new Response(body, {
+    await trackDownload(event, assetKeys[asset]!);
+
+    // SAFETY: `transformToByteArray` yields `Uint8Array<ArrayBufferLike>`, which the
+    // DOM lib's `BufferSource` (ArrayBuffer-backed) does not accept, though undici
+    // takes it as-is at runtime. State the intent at the one boundary it hits.
+    return new Response(body as unknown as BodyInit, {
       status: 200,
       headers: {
         "Content-Type": contentType,
         "Content-Length": body.length.toString(),
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "public, max-age=86400", // Cache for 24 hours
+        // Deliberately open: these are public installer files with no cookies or
+        // credentials, fetched by Sparkle and by direct browser navigation.
         "Access-Control-Allow-Origin": "*"
       }
     });
