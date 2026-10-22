@@ -202,6 +202,32 @@ function FrenomePanel(props: FrenomePanelProps) {
             />
           </div>
 
+          {/* Downloads — every door logs one row at /api/downloads/<asset> */}
+          <Show when={data.downloads.total > 0}>
+            <div class="bg-surface0 border-surface1 mb-8 rounded-lg border shadow">
+              <div class="border-surface1 border-b p-6">
+                <h2 class="text-text text-2xl font-bold">Downloads</h2>
+                <p class="text-subtext0 mt-1 text-sm">
+                  {formatNumber(data.downloads.total)} events in the last
+                  {props.days === 1 ? " 24 hours" : ` ${props.days} days`} —
+                  landing page clicks and files served, by product
+                </p>
+              </div>
+              <div class="space-y-3 p-6">
+                <For each={data.downloads.byAsset}>
+                  {(download) => (
+                    <StatBar
+                      label={download.asset}
+                      count={download.count}
+                      total={data.downloads.total}
+                      color="bg-teal-600"
+                    />
+                  )}
+                </For>
+              </div>
+            </div>
+          </Show>
+
           {/* Performance */}
           <Show when={performanceStats()} keyed>
             {(ps) => (

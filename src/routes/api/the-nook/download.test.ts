@@ -111,7 +111,7 @@ describe("GET /api/the-nook/download", () => {
 
     expect(logged.length).toBe(1);
     expect(logged[0]).toMatchObject({
-      path: "/api/the-nook/download",
+      path: "/api/downloads/thenook",
       method: "GET",
       referrer: "https://nook.freno.me/"
     });

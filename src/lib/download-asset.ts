@@ -12,6 +12,35 @@
  * Tests inject a fake `api` and a capture sink.
  */
 
+/** Canonical analytics path for one download event. One label per asset, so a
+ * click on a landing page and a Sparkle update of the same app land in the
+ * same bucket on the analytics page. */
+export const DOWNLOAD_PATH_PREFIX = "/api/downloads/";
+
+export function downloadPath(asset: string): string {
+  return `${DOWNLOAD_PATH_PREFIX}${asset}`;
+}
+
+/**
+ * Group download rows by the asset named in their canonical path, and total
+ * them. Split out from the query so the labelling has a unit test without a
+ * database — the writer and the reader share `DOWNLOAD_PATH_PREFIX`, so the
+ * two cannot drift apart.
+ */
+export function summariseDownloads(
+  rows: Array<{ path: string; count: number }>
+): { total: number; byAsset: Array<{ asset: string; count: number }> } {
+  const byAsset = rows.map((row) => ({
+    asset: row.path.slice(DOWNLOAD_PATH_PREFIX.length),
+    count: row.count
+  }));
+
+  return {
+    total: byAsset.reduce((sum, row) => sum + row.count, 0),
+    byAsset
+  };
+}
+
 /** Structural shape of the tRPC downloads proxy this helper depends on. */
 export interface DownloadApi {
   downloads: {
