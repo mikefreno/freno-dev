@@ -110,7 +110,7 @@ function MainDownloadsPage() {
 
               <div class="flex flex-col items-center gap-3">
                 <span class="text-subtext0 font-mono text-sm">
-                  platform: macOS (14.6+)
+                  platform: macOS (14.2+)
                 </span>
                 <Button
                   variant="download"

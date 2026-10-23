@@ -37,9 +37,9 @@ const FAQ: FaqEntry[] = [
       "The app itself runs unprivileged. Fan control and charge limiting go through a small helper component that macOS requires to run as root for hardware access — the app installs it on first use and you approve it once with your password. The hooks live in each agent's own config directory; you can inspect or remove every file it writes."
   },
   {
-    question: "Why macOS 14 or later?",
+    question: "Why macOS 14.2 or later?",
     answer:
-      "The interface is built on Apple's current observation framework, which ships with macOS 14 (Sonoma)."
+      "The audio mixer listens to each app's own sound stream, and Apple only shipped that API in macOS 14.2 (Sonoma)."
   },
   {
     question: "Does it work offline?",
@@ -56,7 +56,7 @@ export default function NookFaqPage() {
       <EdgeCacheHeaders maxAge={300} />
       <PageHead
         title="Frequently asked questions"
-        description="Does The Nook read your prompts? Do you need a notch? Battery cost, permissions, the macOS 14 requirement, offline use — answered straight."
+        description="Does The Nook read your prompts? Do you need a notch? Battery cost, permissions, the macOS 14.2 requirement, offline use — answered straight."
         ogTitle="The Nook — FAQ"
       />
       <SubdomainHeader />

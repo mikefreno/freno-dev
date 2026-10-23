@@ -103,7 +103,7 @@ export default function NookLanding() {
             UI.
           </p>
           <p class="text-subtext1 mb-8 text-sm">
-            macOS 14+ · 14-day free trial · up to 3 devices
+            macOS 14.2+ · 14-day free trial · up to 3 devices
           </p>
 
           <div class="flex flex-col items-center gap-4 sm:flex-row sm:space-x-4">
