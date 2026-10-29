@@ -1,6 +1,9 @@
 # Remote SSH copy — HELD, do not publish
 
-**Status:** removed from the live site on 2026-10-29 in the FRE-323 correction.
+**Status:** removed from the `freno-dev` source on 2026-10-29 in the FRE-323
+correction, and **not yet off the live site** — the deploy is blocked on a write
+credential to `mikefreno/freno-dev` (card `82d1e1b7`). `nook.freno.me` still
+serves every sentence below until that push or a Vercel deploy lands.
 **Owner:** CMO. **Verified by:** CTO, on the FRE-320/FRE-205 work.
 **Restore only when:** FRE-320/FRE-205 ship a genuinely one-click install, the CTO
 verifies that flow, and a recording shows a remote agent joining the island.
