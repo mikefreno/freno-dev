@@ -1,12 +1,6 @@
 import { For, createSignal, onCleanup, onMount, type JSX } from "solid-js";
 import { IslandPill, STATUS, CALM, CRITICAL, ModuleCard } from "./IslandMock";
-import {
-  ApprovalCardMock,
-  SessionRowMock,
-  DieLine,
-  CLAUDE,
-  CODEX
-} from "./ModuleMocks";
+import { ApprovalCardMock, DieLine, CLAUDE } from "./ModuleMocks";
 
 /**
  * Feature collage: five cells sold as the app's actual UI. The hero cell
@@ -102,35 +96,6 @@ function FansPanelMock() {
         </div>
       </div>
     </ModuleCard>
-  );
-}
-
-/**
- * Remote agents as the panel draws them: ordinary session rows whose agent
- * chip names the machine ("Claude Code · build-box").
- */
-function RemoteMock() {
-  return (
-    <div class="space-y-1.5">
-      <SessionRowMock
-        title="api · main"
-        prompt="fix the flaky test"
-        state="Running pytest -x…"
-        status="running"
-        agent={CLAUDE}
-        host="build-box"
-        age="4m"
-      />
-      <SessionRowMock
-        title="trainer · fp16"
-        prompt="benchmark fp16"
-        state="Done · replied 1m ago"
-        status="ready"
-        agent={CODEX}
-        host="gpu-rig"
-        age="12m"
-      />
-    </div>
   );
 }
 
@@ -252,19 +217,6 @@ export default function FeatureCollage() {
             <InkStage class="w-full">
               <div class="w-full max-w-[260px] text-left">
                 <FansPanelMock />
-              </div>
-            </InkStage>
-          </CollageCell>
-
-          {/* Remote agents */}
-          <CollageCell
-            kicker="Remote"
-            title="Agents on other machines"
-            body="Run agents on Linux boxes and SSH servers — one click installs the nook-hook, and their sessions join the same island."
-          >
-            <InkStage class="w-full">
-              <div class="w-full px-3 text-left">
-                <RemoteMock />
               </div>
             </InkStage>
           </CollageCell>

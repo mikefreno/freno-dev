@@ -1,6 +1,5 @@
 import {
   For,
-  Show,
   createEffect,
   createSignal,
   onCleanup,
@@ -21,7 +20,6 @@ import { Campfire, type CampfireState } from "./Campfire";
 import {
   ApprovalCardMock,
   SessionRowMock,
-  Glyph,
   CLAUDE,
   CODEX
 } from "./ModuleMocks";
@@ -37,7 +35,7 @@ import {
  * Detailed feature breakdowns: alternating copy + live-demo sections.
  * Each demo stages the real interaction loop: attention flares, approval
  * resolves, fans throttle, the charge ceiling holds, meetings surface,
- * the camera wakes, a remote host goes live. Newer demos live in
+ * the camera wakes. Newer demos live in
  * MoreDemos.tsx; app-anatomy pieces in ModuleMocks.tsx.
  */
 
@@ -807,112 +805,6 @@ function CameraDemo() {
   );
 }
 
-/* ── Demo 7: Settings ▸ Remote hosts — one click to Live ──────────── */
-
-/** RemoteMirror's progress steps, in order. */
-const SETUP_STEPS = [
-  "connecting",
-  "pushing the hook binary",
-  "configuring agents",
-  "checking the host can reach this Mac"
-];
-
-function RemoteHostDemo() {
-  /* -1 not set up · 0…3 setting up · 4 live */
-  const [step, setStep] = createSignal(-1);
-  const [pressed, setPressed] = createSignal(false);
-  useDemoLoop(11000, [
-    [0, () => (setStep(-1), setPressed(false))],
-    [1400, () => setPressed(true)],
-    [1700, () => (setPressed(false), setStep(0))],
-    [2700, () => setStep(1)],
-    [3700, () => setStep(2)],
-    [4700, () => setStep(3)],
-    [5800, () => setStep(4)]
-  ]);
-  const live = () => step() === 4;
-  const working = () => step() >= 0 && step() < 4;
-  const chip = () =>
-    live()
-      ? { color: "rgb(48,209,88)", label: "Live" }
-      : working()
-        ? { color: "rgba(255,255,255,0.55)", label: "Setting up" }
-        : { color: "rgba(255,255,255,0.35)", label: "Not set up" };
-
-  return (
-    <div class="relative mx-auto w-full max-w-[360px] space-y-3">
-      {/* the host's card in Settings ▸ Agents ▸ Remote hosts */}
-      <ModuleCard>
-        <div class="space-y-2 text-left">
-          <div class="flex items-center gap-2.5">
-            <div class="min-w-0 flex-1">
-              <p class="text-[13px] font-semibold text-white">gpu-rig</p>
-              <p class="truncate text-[11px] text-white/45">tailnet peer</p>
-            </div>
-            <Show when={working()}>
-              <span class="h-3 w-3 animate-spin rounded-full border-[1.5px] border-white/25 border-t-white/80" />
-            </Show>
-            <span class="flex items-center gap-1.5 text-[10.5px] font-medium text-white/85">
-              <span
-                class="h-[7px] w-[7px] rounded-full transition-colors duration-300"
-                style={{ background: chip().color }}
-              />
-              {chip().label}
-            </span>
-            <Show
-              when={live()}
-              fallback={
-                <span
-                  class="rounded-md px-2.5 py-1 text-[11px] font-semibold text-white transition-all duration-200"
-                  style={{
-                    background: ACCENT,
-                    opacity: working() ? 0 : 1,
-                    transform: pressed() ? "scale(0.92)" : "scale(1)"
-                  }}
-                >
-                  Set up
-                </span>
-              }
-            >
-              <Glyph name="refresh" size={11} class="text-white/50" />
-              <span class="rounded-md bg-white/10 px-2 py-1 text-[11px] font-semibold text-[#ff6961]">
-                Remove
-              </span>
-            </Show>
-          </div>
-          <p class="h-4 text-[11px] text-white/50">
-            {working() ? SETUP_STEPS[step()] : " "}
-          </p>
-        </div>
-      </ModuleCard>
-
-      {/* its agents arrive as ordinary rows, the machine named in the chip */}
-      <div
-        class="transition-all duration-500"
-        style={{
-          opacity: live() ? 1 : 0,
-          transform: live() ? "translateY(0)" : "translateY(6px)"
-        }}
-      >
-        <SessionRowMock
-          title="trainer · fp16"
-          prompt="benchmark fp16"
-          state="Running python bench.py…"
-          status="running"
-          agent={CODEX}
-          host="gpu-rig"
-          origin="iTerm2"
-          age="now"
-        />
-      </div>
-      <FakeCursor
-        phase={pressed() ? "press" : step() === -1 ? "idle" : "live"}
-        at={{ x: 88, y: 16 }}
-      />
-    </div>
-  );
-}
-
 /* ── Demo 8: campfire states ───────────────────────────────────────── */
 
 function CampfireDemo() {
@@ -976,7 +868,6 @@ export default function FeatureBreakdowns() {
           "Approval cards pin above the session list; questions answer inside their row",
           "Allow for session waves through the rest of that session's requests",
           "Answer from iPhone or Apple Watch too, now in TestFlight beta",
-          "Works across every hooked agent, local or remote"
         ]}
         reversed
       >
@@ -994,20 +885,6 @@ export default function FeatureBreakdowns() {
         ]}
       >
         <TerminalReplyDemo />
-      </BreakdownSection>
-
-      <BreakdownSection
-        kicker="Remote"
-        title="Any SSH box, one click away"
-        body="Pick a host from your ssh config or your tailnet and click once — the nook-hook installs itself and its agents appear beside your local ones, indistinguishable."
-        bullets={[
-          "One click: connect, push the hook, configure agents, check it can reach this Mac",
-          "Hosts mirror this Mac's installed integrations automatically",
-          "Remote sessions are ordinary rows; the agent chip names the machine"
-        ]}
-        reversed
-      >
-        <RemoteHostDemo />
       </BreakdownSection>
 
       <BreakdownSection

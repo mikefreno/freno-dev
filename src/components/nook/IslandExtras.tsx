@@ -740,7 +740,6 @@ const CHIPS_B = [
   "tmux · iTerm2 · kitty",
   "Markdown replies",
   "Tailscale hosts",
-  "One-click SSH setup",
   "iPhone widgets",
   "Watch-face widgets",
   "Screenshots to clipboard",
