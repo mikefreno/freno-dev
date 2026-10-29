@@ -300,8 +300,7 @@ export default function NookAgentsPage() {
           Each agent reports its own set of events. "Allow / Deny from a card"
           means the agent hands the decision to The Nook while it waits;
           "Observe" means every event still appears live, but the agent keeps
-          its own prompting. Agents can run on this Mac or on remote machines
-          over SSH — remote sessions report into the same grid.
+          its own prompting.
         </p>
 
         <div class="grid gap-4 lg:grid-cols-2">
