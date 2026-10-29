@@ -851,7 +851,7 @@ export default function FeatureBreakdowns() {
         title="Your whole fleet, in one pixel strip"
         body="Every session, every agent, one square each. The pill never wraps, never grows — an arriving question flashes the fire and swaps the slot, then hands the notch back."
         bullets={[
-          "13 agents: Claude Code, Codex, Gemini CLI, OpenCode, Pi, Muse, and more",
+          "Claude Code, Codex, Gemini CLI, OpenCode, Pi, Muse, Cursor and more",
           "Custom agents: your own coding agent can wire itself in from the published contract",
           "Slot rankings — you choose which data earns the notch",
           "You don't need a notch — external displays get the same island, floating top-center"

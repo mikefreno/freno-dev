@@ -722,7 +722,7 @@ function LayoutMock() {
 /* ── Marquee ─────────────────────────────────────────────────────── */
 
 const CHIPS_A = [
-  "13 agents",
+  "Agents wired in",
   "Custom agents",
   "Six chiptunes",
   "Focus-aware slots",

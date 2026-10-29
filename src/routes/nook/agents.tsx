@@ -1,5 +1,7 @@
 /**
- * `/agents` on the Nook subdomain — supported agents and their event coverage.
+ * `/agents` on the Nook subdomain — the agent roster and each row's event
+ * coverage. It states no agent count and claims no completeness over the
+ * registry (FRE-359 verdict B).
  *
  * The registry below mirrors `AgentSpec.all` in the app
  * (~/Code/the-nook/Sources/NookCore/Agents/AgentSpec.swift) and each agent's
@@ -282,19 +284,19 @@ export default function NookAgentsPage() {
     <>
       <EdgeCacheHeaders maxAge={300} />
       <PageHead
-        title="Supported agents"
-        description="Every coding agent The Nook supports — all thirteen, with each hook's exact event coverage and what you can do from a card: watch sessions live, answer permission prompts, unblock work."
-        ogTitle="The 13 agents The Nook supports, and what each hook sees"
+        title="Agent coverage"
+        description="The coding agents The Nook connects to, with the events each hook reports and what you can do from a card: watch sessions live, answer permission prompts, unblock work."
+        ogTitle="The coding agents The Nook connects to, and what each hook sees"
       />
       <SubdomainHeader />
       <main class="min-h-screen px-[8vw] py-[8vh]">
         <h1 class="text-text mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
-          Supported agents
+          Agent coverage
         </h1>
         <p class="text-subtext0 mb-2 max-w-2xl text-lg">
-          The Nook watches thirteen coding agents in one place — your menu bar and
-          notch show every session that is running, thinking, or blocked, and a
-          card answers permission prompts without leaving your keyboard.
+          The Nook watches coding agents in one place — your menu bar and notch
+          show sessions that are running, thinking, or blocked, and a card can
+          answer a permission prompt without leaving your keyboard.
         </p>
         <p class="text-subtext1 mb-10 max-w-2xl text-sm">
           Each agent reports its own set of events. "Allow / Deny from a card"
