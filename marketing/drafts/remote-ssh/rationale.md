@@ -1,30 +1,13 @@
-# Why the remote claim is parked
+# Remote setup marketing decision
 
-The site was selling a setup path a buyer does not get.
+[gpt-6.1-sol] **NOOK-1038 supersedes the blanket hold.** Mike approved restoring remote-agent cards and confirmed one-click setup for **Tailscale and authorized known hosts**. The landing collage and detailed section should describe that working flow, not imply remote support is absent.
 
-FRE-320 measured today's actual path (2026-10-29): the one-click flow is
-app-UI-only, needs a hand-edited `~/.ssh/config` for any host not already in ssh
-config or on the tailnet, needs a one-time `ssh-copy-id` because the app runs ssh
-with `BatchMode=yes`, and has no manual fallback for minting the per-host
-credential. FRE-315 and FRE-322 §3 correction 4 marked the remote claim
-unverified and demo-gated. The CTO named it the largest launch risk because it
-was already in front of buyers.
+## Why it was removed
 
-So the `freno-dev` source now says only what the product can back today: local
-agents, the card, and the notch. That correction is committed locally and is
-**not deployed** — the live page still carries the remote sentences until the
-push in FRE-323 card `82d1e1b7` lands. The remote story is not deleted — it is
-parked here with the FRE-320/FRE-205 work so it can return the day the one-click
-install ships and is recorded.
+[gpt-6.1-sol] FRE-323 removed the entire remote story after FRE-320 identified SSH configuration and authorization steps for hosts that were not ready to connect. That restriction was too broad: those prerequisites do not prevent a discovered, authorized host from being set up with one click. The historical unqualified copy remains in `copy.md` so the change in scope is explicit.
 
-## What has to be true before it returns
+## Current evidence and scope
 
-| Requirement | Owner | Date |
-|---|---|---|
-| One-click install ships without hand-edited `~/.ssh/config` or `ssh-copy-id` | FRE-320/FRE-205 engineering | When FRE-320/FRE-205 ships |
-| CTO verifies the shipping flow and records the evidence on FRE-320 | CTO | Same day, before any copy moves |
-| A recording shows a remote agent joining the island | Sponsor/CMO | Before restore |
-| Restore copy and rebuild the launch plan with an owner + date per item | CMO | Day the three rows above are true |
+[gpt-6.1-sol] `RemoteHostCatalog.discover` reads SSH config and Tailscale peers. `RemoteHostsController.setUp` binds the bridge and calls `RemoteMirror.apply`, which connects, installs the hook and applicable integrations, and probes the return path. The existing `RemoteHostsControllerLiveTests.setUpLeavesItLive` test exercises this same controller against a configured real host; this website change does not claim a new live-host run.
 
-Nothing in this folder is publishable. `marketing/approved/` remains the only
-place a human publishes from.
+[gpt-6.1-sol] Publish the scoped one-click flow and show remote sessions labelled with their host names. Do not replace it with a “manual setup only” disclaimer. Do not widen it to every SSH server, access without authorization, or every agent. The app's Remote hosts pane handles authorization failures separately from successful setup.

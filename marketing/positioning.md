@@ -113,11 +113,13 @@ one thing forbidden: say "TestFlight beta" when the phone exists in a sentence a
 all, and never claim approvals-from-phone as a shipped capability without its own
 CTO verdict — no "(coming soon)" parentheticals either way.
 
-Remote SSH is **held**, not approved: the one-click install has not
-been verified end to end ([FRE-315] §1) and the shipped path needs hand-edited
-`~/.ssh/config` and a one-time `ssh-copy-id` ([FRE-320]). Its copy stays parked in
-`marketing/drafts/remote-ssh/` until the CTO verifies the shipping flow **and** a
-recording shows a remote agent joining the notch.
+[gpt-6.1-sol] **NOOK-1038:** Mike approved restoring remote-agent marketing.
+One-click setup works for **Tailscale and authorized known hosts**. Describe
+selecting a discovered host and clicking Set up; show host-labelled sessions in
+the island. `RemoteHostsController.setUp` runs installation and a return-path
+probe. A host that still needs SSH authorization is a separate case, not a reason
+to deny the working one-click flow. `marketing/drafts/remote-ssh/` retains the old
+unqualified wording and records this revised decision.
 
 ### 5. Humans hold every account
 
@@ -138,7 +140,7 @@ Each row names the evidence, not a feeling. Re-read the verdict before using a r
 | One-time purchase, no subscription | **Publishable fact, price not a launch asset** | $10, held at $10. No dated rise, no discount framing, no pricing copy. |
 | Agent coverage numbers ("thirteen agents", "8 agents", "all your agents") | **Excluded — verdict B, count removed** | [FRE-359] verdict B (2026-10-29): the page's 13 rows are the registry's first 13 of 18, so no number is publishable and `every` / `all` / `the agents The Nook supports` are banned. Removed from `agents.tsx`, the landing island section and the marquee. [FRE-322] §1 matrix for the sets. |
 | macOS 14.2 or later | **Publishable fact** | The app cannot start below 14.2 (`freno-dev` `881190d`, site `134f41e`). "macOS 14+" is false and was fixed on the site. |
-| Remote agents over SSH, one click to install | **Held** | [FRE-315] §1, [FRE-320], [FRE-323]. Needs a verified one-click install plus a recording. |
+| One-click remote setup for Tailscale and authorized known hosts | **Approved by Mike — NOOK-1038** | [gpt-6.1-sol] Restores the scoped flow: host discovery, `RemoteHostsController.setUp`, `RemoteMirror.apply`, and host-labelled sessions. Supersedes the blanket FRE-323 hold, not the requirement for SSH authorization. |
 | "Nothing leaves your Mac", "no telemetry", "local-only", "no account" | **False today — banned** | Sentry unconditional, licence check with hardware fingerprint ([FRE-322] §2.4). |
 | Approvals from the iPhone or Apple Watch | **No verdict — not a launch claim** | The companion is a TestFlight beta ([FRE-354]); the approval-from-phone claim has no CTO verdict and stays out of launch copy. |
 

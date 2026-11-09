@@ -26,6 +26,7 @@ import { useDemoLoop } from "./useDemoLoop";
 import { BatteryDemo, CalendarDemo, MixerDemo } from "./UtilityDemos";
 import {
   TerminalReplyDemo,
+  RemoteHostDemo,
   CaptureDemo,
   FloatingActionsDemo
 } from "./MoreDemos";
@@ -577,6 +578,21 @@ export default function FeatureBreakdowns() {
         ]}
       >
         <TerminalReplyDemo />
+      </BreakdownSection>
+
+      <BreakdownSection
+        kicker="Remote"
+        title="Set up remote agents in one click"
+        body="Choose a Tailscale peer or an authorized host from your SSH config and click Set up. The Nook installs its integrations and checks that the host can reach your Mac."
+        bullets={[
+          "Local and remote sessions in the same island, labelled by host",
+          "Remote integrations follow the agents installed on this Mac",
+          "Direct connections over Tailscale, or an SSH tunnel for other hosts",
+          "Uses the host\'s existing SSH authorization"
+        ]}
+        reversed
+      >
+        <RemoteHostDemo />
       </BreakdownSection>
 
       <BreakdownSection

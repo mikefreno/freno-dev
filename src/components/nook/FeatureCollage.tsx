@@ -1,6 +1,6 @@
 import { For, createSignal, onCleanup, onMount, type JSX } from "solid-js";
 import { IslandPill, STATUS, CALM, CRITICAL, ModuleCard } from "./IslandMock";
-import { ApprovalCardMock, DieLine, CLAUDE } from "./ModuleMocks";
+import { ApprovalCardMock, SessionRowMock, DieLine, CLAUDE, CODEX } from "./ModuleMocks";
 
 /**
  * Feature collage: five cells sold as the app's actual UI. The hero cell
@@ -96,6 +96,31 @@ function FansPanelMock() {
         </div>
       </div>
     </ModuleCard>
+  );
+}
+
+function RemoteMock() {
+  return (
+    <div class="space-y-1.5">
+      <SessionRowMock
+        title="api · main"
+        prompt="fix the flaky test"
+        state="Running pytest -x…"
+        status="running"
+        agent={CLAUDE}
+        host="build-box"
+        age="4m"
+      />
+      <SessionRowMock
+        title="trainer · fp16"
+        prompt="benchmark fp16"
+        state="Done · replied 1m ago"
+        status="ready"
+        agent={CODEX}
+        host="gpu-rig"
+        age="12m"
+      />
+    </div>
   );
 }
 
@@ -230,6 +255,18 @@ export default function FeatureCollage() {
             <InkStage class="w-full">
               <div class="w-full max-w-[300px] text-left">
                 <GaugesMock />
+              </div>
+            </InkStage>
+          </CollageCell>
+
+          <CollageCell
+            kicker="Remote"
+            title="Agents on other machines"
+            body="One-click setup for Tailscale and authorized known hosts. Remote sessions appear in the island with the host name beside the agent."
+          >
+            <InkStage class="w-full">
+              <div class="w-full min-w-0 px-3" role="img" aria-label="Remote agent sessions on build-box and gpu-rig">
+                <RemoteMock />
               </div>
             </InkStage>
           </CollageCell>

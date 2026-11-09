@@ -1,13 +1,8 @@
-# Remote SSH copy — HELD, do not publish
+# Remote SSH copy — historical unqualified wording
 
-**Status:** removed from the `freno-dev` source on 2026-10-29 in the FRE-323
-correction, and **not yet off the live site** — the deploy is blocked on a write
-credential to `mikefreno/freno-dev` (card `82d1e1b7`). `nook.freno.me` still
-serves every sentence below until that push or a Vercel deploy lands.
-**Owner:** CMO. **Verified by:** CTO, on the FRE-320/FRE-205 work.
-**Restore only when:** FRE-320/FRE-205 ship a genuinely one-click install, the CTO
-verifies that flow, and a recording shows a remote agent joining the island.
-Until then this file is the only home for these sentences.
+[gpt-6.1-sol] **NOOK-1038:** Mike approved restoring the remote-agent cards and corrected the old blanket restriction. One-click setup works for **Tailscale and authorized known hosts**. The current page describes that scope; this file preserves the old unqualified wording for reference, not for verbatim reuse.
+
+[gpt-6.1-sol] The earlier FRE-323 removal treated SSH authorization needed by a new host as though it prevented one-click setup for hosts already authorized. Current evidence is `RemoteHostCatalog.discover`, `RemoteHostsController.setUp`, `RemoteMirror.apply`, and the existing `RemoteHostsControllerLiveTests.setUpLeavesItLive` test. No new live-host test run is claimed by this website change.
 
 ## What was removed
 
@@ -62,18 +57,8 @@ Source: `src/components/nook/IslandExtras.tsx` (removed 2026-10-29).
 One-click SSH setup
 ```
 
-## What replaced it
+## Current restoration
 
-Nothing. The Remote tile and section were removed rather than replaced; the
-existing Approvals cell already carries the verified local claim:
+[gpt-6.1-sol] NOOK-1038 restores the collage's Remote tile, host-labelled session examples, and the detailed setup section. The collage says: “One-click setup for Tailscale and authorized known hosts.” The detailed section shows choosing a discovered host, clicking Set up, installation progress, and Live status.
 
-> Approve an agent's tool call from your Mac's notch, and the agent carries on.
-
-## Restore checklist
-
-1. FRE-320/FRE-205 have shipped the one-click install and removed the
-   `~/.ssh/config` / `ssh-copy-id` friction described in FRE-320.
-2. The CTO has verified the shipping flow and the evidence is on FRE-320.
-3. A recording exists showing a remote agent joining the island.
-4. CMO restores the copy above, then owns the launch plan for it — with an
-   owner and date per item — before anything goes back on the site.
+[gpt-6.1-sol] The historical “Any SSH box” claim, universal agent-coverage bullet, and unqualified setup chip above are not restored. Discovery and an existing authorization path are not the same as granting access to a new machine. This does not limit or deny the working one-click flow for authorized hosts.
