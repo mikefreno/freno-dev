@@ -761,6 +761,14 @@ a.hover-underline-animation:hover::after {
   animation: nook-pulse 0.8s steps(2, jump-none) infinite;
 }
 
+/* Directional dashes in the power-flow preview. */
+.nook-power-flow {
+  animation: nook-power-flow 1.6s linear infinite;
+}
+@keyframes nook-power-flow {
+  to { stroke-dashoffset: -21; }
+}
+
 /* Live signal inside a mixer fader */
 .nook-meter {
   transform-origin: left center;
@@ -840,6 +848,7 @@ a.hover-underline-animation:hover::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .nook-power-flow,
   .nook-meter,
   .nook-wave,
   .nook-progress,

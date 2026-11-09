@@ -96,7 +96,7 @@ function CompanionDemo() {
             {allowed() ? "Allowed ✓" : "Claude Code · the-nook"}
           </p>
           <p class="text-[9px] leading-snug text-white/60">
-            {allowed() ? "Back to work." : "Run Bash: swift test"}
+            {allowed() ? "Agent running." : "Run Bash: swift test"}
           </p>
           <Show when={!allowed()}>
             <div class="mt-1.5 flex gap-1">
@@ -139,7 +139,7 @@ function CompanionDemo() {
           >
             <p class="text-[8px] font-semibold text-white/50">Codex asks</p>
             <p class="mt-0.5 text-[9.5px] leading-snug font-semibold text-white">
-              Ship it to staging?
+              Deploy to staging?
             </p>
             <div class="mt-2 space-y-1">
               <For each={["Yes", "Not yet"]}>
@@ -194,19 +194,19 @@ export default function PhoneBeta(props: { brandColor: string }) {
             TestFlight beta
           </span>
           <h2 class="text-text mb-3 text-3xl font-bold tracking-tight">
-            Your fleet, in your pocket
+            Use The Nook on iPhone and Apple Watch
           </h2>
           <p class="text-subtext0 mb-5 leading-relaxed">
-            The iPhone and Apple Watch companion is in beta. Approvals,
-            questions, and replies reach you away from the desk, and your
-            answer goes straight back to the agent.
+            The companion app is in TestFlight beta. Check your agents,
+            respond to permission requests, and answer questions when you're
+            away from your Mac.
           </p>
           <ul class="mb-8 space-y-2.5">
             <For
               each={[
                 "Allow, deny, answer, and reply from iPhone or Apple Watch",
                 "Connects over an end-to-end encrypted relay, your tailnet, or your LAN",
-                "Home Screen, Lock Screen, and watch-face widgets for fleet status",
+                "Agent status widgets for your Home Screen, Lock Screen, and watch face",
                 "Mute notifications for a while, or while you're active at the Mac"
               ]}
             >
@@ -255,7 +255,7 @@ export default function PhoneBeta(props: { brandColor: string }) {
             </form>
             <Show when={state() === "sent"}>
               <p class="text-subtext1 mt-4 text-sm">
-                Thanks. Watch your inbox for a TestFlight invite.
+                Thanks. We'll email you a TestFlight invite.
               </p>
             </Show>
             <Show when={state() === "limited"}>

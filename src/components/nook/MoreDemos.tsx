@@ -7,7 +7,6 @@ import {
   STATUS,
   ACCENT,
   CALM,
-  CRITICAL,
   CARD_STROKE
 } from "./IslandMock";
 import { useDemoLoop } from "./useDemoLoop";
@@ -15,13 +14,13 @@ import { Glyph, WingCapsule, type GlyphName } from "./ModuleMocks";
 
 /**
  * Live demos for the breakdowns added with the 0.6–0.10 feature set:
- * terminal replies, the volume mixer, Capture (module + Wings), and
+ * terminal replies, Capture (module + Wings), and
  * floating actions. Same ink chrome and status palette as the originals.
  */
 
 /* ── Reply lands in the agent's own terminal ──────────────────────── */
 
-const REPLY = "yes — and run them";
+const REPLY = "Yes, update and run the tests.";
 
 export function TerminalReplyDemo() {
   const [typed, setTyped] = createSignal(0);
@@ -150,127 +149,6 @@ export function TerminalReplyDemo() {
         </div>
       </div>
     </div>
-  );
-}
-
-/* ── Volume mixer: every app its own level and output ─────────────── */
-
-interface MixerApp {
-  name: string;
-  color: string;
-  glyph: string;
-}
-
-const MIXER_APPS: MixerApp[] = [
-  { name: "Music", color: "#fa5c7c", glyph: "♫" },
-  { name: "Browser", color: "#6EA7FF", glyph: "◎" },
-  { name: "Meeting", color: "#6FB982", glyph: "●" },
-  { name: "podcast-cli", color: "#E7A762", glyph: ">_" }
-];
-
-export function MixerDemo() {
-  const [step, setStep] = createSignal(0);
-  useDemoLoop(9600, [
-    [0, () => setStep(0)],
-    [1800, () => setStep(1)],
-    [3800, () => setStep(2)],
-    [5800, () => setStep(3)]
-  ]);
-
-  const level = (i: number) => {
-    if (i === 0) return step() >= 3 ? 0.38 : 0.72;
-    if (i === 1) return 0.55;
-    if (i === 2) return 0.86;
-    return 0.46;
-  };
-  const muted = (i: number) => i === 1 && step() >= 1;
-  const route = (i: number) =>
-    i === 0 && step() >= 2 ? "Headphones" : i === 2 ? "Display" : "Speakers";
-
-  return (
-    <ModuleCard class="mx-auto w-full max-w-[340px]">
-      <div class="space-y-2.5 text-left">
-        <div class="flex items-center">
-          <span class="text-[11px] font-semibold text-white/50">
-            Volume mixer
-          </span>
-          <span class="ml-auto font-mono text-[10px] text-white/40">
-            out · Speakers
-          </span>
-        </div>
-        <For each={MIXER_APPS}>
-          {(app, i) => (
-            <div class="flex items-center gap-2">
-              <span
-                class="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] text-[8px] font-bold text-black/70"
-                style={{ background: app.color }}
-              >
-                {app.glyph}
-              </span>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1.5">
-                  <span class="truncate text-[11px] font-semibold text-white/85">
-                    {app.name}
-                  </span>
-                  <span
-                    class="ml-auto shrink-0 rounded px-1.5 text-[9px] text-white/55 transition-colors duration-500"
-                    style={{
-                      background:
-                        i() === 0 && step() === 2
-                          ? `${ACCENT}55`
-                          : "rgba(255,255,255,0.07)"
-                    }}
-                  >
-                    {route(i())}
-                  </span>
-                </div>
-                <div
-                  class="relative mt-1 h-[5px] overflow-hidden rounded-full"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
-                >
-                  <div
-                    class="h-full rounded-full"
-                    style={{
-                      width: `${level(i()) * 100}%`,
-                      background: muted(i()) ? "rgba(255,255,255,0.18)" : CALM,
-                      transition: "width 0.9s cubic-bezier(0.22,1,0.36,1), background 0.3s"
-                    }}
-                  />
-                  {/* live signal riding inside the level */}
-                  <div
-                    class="nook-meter absolute top-0 left-0 h-full rounded-full"
-                    style={{
-                      width: `${level(i()) * 100}%`,
-                      background: "rgba(255,255,255,0.35)",
-                      opacity: muted(i()) ? 0 : 1,
-                      "animation-duration": `${0.5 + i() * 0.17}s`,
-                      transition: "width 0.9s cubic-bezier(0.22,1,0.36,1), opacity 0.3s"
-                    }}
-                  />
-                </div>
-              </div>
-              <span
-                class="w-4 shrink-0 text-center text-[11px] transition-colors duration-300"
-                style={{ color: muted(i()) ? CRITICAL : "rgba(255,255,255,0.4)" }}
-              >
-                {muted(i()) ? "✕" : "♪"}
-              </span>
-            </div>
-          )}
-        </For>
-        <div class="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-        <p class="text-[10px] text-white/40">
-          {
-            [
-              "every app on its own fader",
-              "browser muted — the rest keep playing",
-              "music routed to headphones, meeting stays on the display",
-              "music down, nothing else moved"
-            ][step()]
-          }
-        </p>
-      </div>
-    </ModuleCard>
   );
 }
 

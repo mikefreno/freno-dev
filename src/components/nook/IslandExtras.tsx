@@ -13,7 +13,6 @@ import {
   ACCENT,
   CALM,
   WARM,
-  CRITICAL,
   CARD_FILL,
   CARD_STROKE
 } from "./IslandMock";
@@ -571,8 +570,8 @@ function KeepAwakeMock() {
 
 const MODES = [
   { name: "Auto", note: "follows each agent's own settings", card: "asks", tint: "rgba(234,179,8,0.10)" },
-  { name: "Yolo", note: "gated tools pass straight through", card: "passed", tint: "rgba(111,185,130,0.12)" },
-  { name: "Verify", note: "every gated tool waits for you", card: "held", tint: "rgba(229,72,77,0.12)" }
+  { name: "Yolo", note: "automatically allows received requests", card: "passed", tint: "rgba(111,185,130,0.12)" },
+  { name: "Verify", note: "received requests wait for approval", card: "held", tint: "rgba(229,72,77,0.12)" }
 ];
 
 function ApprovalModesMock() {
@@ -773,14 +772,14 @@ export default function IslandExtras() {
     <section class="bg-base relative z-20 py-16" id="island-extras">
       <div class="px-4 md:px-8">
         <p class="text-subtext1 mb-2 text-center text-xs font-semibold tracking-[0.18em] uppercase">
-          And everything else
+          More modules
         </p>
         <h2 class="text-text mb-3 text-center text-3xl font-bold">
-          One island instead of a menu bar full of utilities
+          Other tools in the island
         </h2>
         <p class="text-subtext0 mx-auto mb-10 max-w-2xl text-center leading-relaxed">
-          Every module below lives in the same notch, arranged however you
-          like, under the same one-time license.
+          Add the modules you need and arrange them in your panels.
+          They're all included with your license.
         </p>
       </div>
 
@@ -793,8 +792,8 @@ export default function IslandExtras() {
         <CollageCell
           class="md:col-span-2"
           kicker="Now Playing"
-          title="Music in the notch"
-          body="Track, source, and transport controls in a module. Sources without artwork, like some browsers, get a live waveform in the slot instead."
+          title="Playback controls and track information"
+          body="See what's playing and control playback. For sources without artwork, including some browsers, the compact view shows an audio waveform."
         >
           <InkStage class="h-full w-full items-center">
             <NowPlayingMock />
@@ -803,8 +802,8 @@ export default function IslandExtras() {
 
         <CollageCell
           kicker="Timers"
-          title="Timers that stack"
-          body="A readout over a tick tape that drains with a soft crest. Run several at once; finished timers ring and hold the island open until you dismiss them."
+          title="Run several timers at once"
+          body="Keep multiple timers running and check their progress in the island. When a timer finishes, it rings and keeps the island open until you dismiss it."
         >
           <InkStage class="h-full w-full items-center px-3">
             <TimersMock />
@@ -813,8 +812,8 @@ export default function IslandExtras() {
 
         <CollageCell
           kicker="Weather"
-          title="The sky, in the slot"
-          body="Saved places with hourly and daily forecasts. The compact slot stacks the sky over the temperature."
+          title="Weather for your saved places"
+          body="Check hourly and daily forecasts for saved places. The compact view shows the current conditions and temperature."
         >
           <InkStage class="h-full w-full items-center px-3">
             <WeatherMock />
@@ -824,8 +823,8 @@ export default function IslandExtras() {
         <CollageCell
           class="md:col-span-2"
           kicker="Interceptions"
-          title="Volume and brightness, under the notch"
-          body="An optional takeover of the system HUD: levels peek out below the island. Extra brightness spends an XDR panel's HDR headroom past the usual maximum, and external displays get real brightness control."
+          title="Volume and brightness controls"
+          body="Show volume and brightness changes below the island instead of the system overlay. Adjust supported external displays and use extra brightness on compatible XDR displays."
         >
           <InkStage class="h-full w-full items-center">
             <div class="flex min-h-[110px] w-full justify-center pt-2">
@@ -836,8 +835,8 @@ export default function IslandExtras() {
 
         <CollageCell
           kicker="Approval modes"
-          title="One stance for every agent"
-          body="Auto follows each agent's own settings, Yolo waves gated tools through, and Verify holds every one until you decide."
+          title="Choose how approvals are handled"
+          body="Auto follows each agent's settings. Yolo automatically allows requests that reach The Nook. Verify waits for your decision on each request it receives."
         >
           <InkStage class="h-full w-full items-center px-3">
             <ApprovalModesMock />
@@ -846,8 +845,8 @@ export default function IslandExtras() {
 
         <CollageCell
           kicker="Network"
-          title="Know your connection"
-          body="Public IP, ISP, gateway, and DNS one click from your clipboard. VPN routes get flagged, and a speed test is always a click away."
+          title="Network information and speed tests"
+          body="View and copy your public IP, ISP, gateway, and DNS details. Check for VPN routes or run a speed test."
         >
           <InkStage class="h-full w-full items-center px-3">
             <NetworkMock />
@@ -856,8 +855,8 @@ export default function IslandExtras() {
 
         <CollageCell
           kicker="Disks"
-          title="Storage, measured"
-          body="Live read and write throughput, capacity that matches Finder, and SMART health for your drives."
+          title="Disk usage and drive health"
+          body="Check read and write speeds, free space, and SMART health information for supported drives."
         >
           <InkStage class="h-full w-full items-center px-3">
             <DiskMock />
@@ -866,8 +865,8 @@ export default function IslandExtras() {
 
         <CollageCell
           kicker="Keep Awake"
-          title="Sleep when you say"
-          body="Stay awake for a set time, while plugged in, with the lid closed, or only while your agents are working."
+          title="Keep your Mac awake"
+          body="Keep your Mac awake for a set time, while plugged in, with the lid closed, or while your agents are working."
         >
           <InkStage class="h-full w-full items-center px-3">
             <KeepAwakeMock />
@@ -876,7 +875,7 @@ export default function IslandExtras() {
 
         <CollageCell
           kicker="Lock Screen"
-          title="Visible while locked"
+          title="Agent status on the Lock Screen"
           body="The island stays on your Lock Screen, so you can see how many agents are working or waiting without unlocking."
         >
           <InkStage class="h-full w-full items-center px-3">
@@ -886,8 +885,8 @@ export default function IslandExtras() {
 
         <CollageCell
           kicker="Layout"
-          title="Panels you shape"
-          body="Drag and resize modules in the mosaic editor, pick a density, and let slot rankings switch with your Focus mode."
+          title="Arrange your panels"
+          body="Drag and resize modules, choose how much detail they show, and change compact-view priorities with your Focus mode."
         >
           <InkStage class="h-full w-full items-center px-3">
             <LayoutMock />

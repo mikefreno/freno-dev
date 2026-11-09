@@ -137,7 +137,7 @@ export default function FeatureCollage() {
           Why the Nook
         </p>
         <h2 class="text-text mb-12 text-center text-3xl font-bold">
-          One glance. Everything your agents are doing.
+          Keep track of your agents while you work
         </h2>
 
         <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -148,12 +148,12 @@ export default function FeatureCollage() {
                 The island
               </p>
               <h3 class="text-text mb-2 text-2xl font-bold tracking-tight">
-                Every agent, one glance
+                Agent status at the top of your screen
               </h3>
               <p class="text-subtext0 max-w-sm text-sm leading-relaxed">
-                A pill tucked into your notch — a campfire for your whole fleet
-                on the left, live data on the right. Blue running, green ready,
-                amber needs you.
+                The island sits around your Mac's notch, with agent activity on
+                the left and your choice of information on the right. Blue means
+                running, green means ready, and amber means an agent needs you.
               </p>
             </div>
             <div class="my-10 flex w-full justify-center">
@@ -186,15 +186,15 @@ export default function FeatureCollage() {
               />
             </div>
             <p class="text-subtext0 -mb-1 text-center text-xs">
-              expand for the full panel ↓
+              Open the island to see your sessions
             </p>
           </div>
 
           {/* Approvals */}
           <CollageCell
             kicker="Approvals"
-            title="Unblock agents, anywhere"
-            body="Permission prompts pin as cards above your sessions — Allow, Allow for session, or Deny. Away from the desk, answer from your iPhone or Apple Watch (beta)."
+            title="Review permission requests"
+            body="Review permission requests above your sessions and choose Allow, Allow for session, or Deny. The iPhone and Apple Watch beta lets you respond away from your Mac."
           >
             <InkStage>
               <div class="w-full max-w-sm px-3">
@@ -211,8 +211,8 @@ export default function FeatureCollage() {
           {/* Fans */}
           <CollageCell
             kicker="Cooling"
-            title="Silence it or max it"
-            body="Read both fans live, then take over the curve completely. Flip to MAX before a compile, whisper-quiet when the fleet idles."
+            title="Fan speeds and cooling modes"
+            body="Monitor each fan's speed and choose a cooling mode. Keep automatic control or start a MAX session before a demanding task."
           >
             <InkStage class="w-full">
               <div class="w-full max-w-[260px] text-left">
@@ -224,8 +224,8 @@ export default function FeatureCollage() {
           {/* Gauges */}
           <CollageCell
             kicker="Your Mac"
-            title="The gauges that matter"
-            body="Each die's temperature beside its 60-second usage trace, tinted amber from 70° and red at 85°, so you see a compile heating up before the fans do."
+            title="CPU and GPU monitoring"
+            body="See CPU and GPU temperatures beside their last 60 seconds of usage. Temperature readings turn amber at 70°C and red at 85°C."
           >
             <InkStage class="w-full">
               <div class="w-full max-w-[300px] text-left">
@@ -236,12 +236,12 @@ export default function FeatureCollage() {
         </div>
 
         <p class="text-subtext1 mt-6 text-center text-xs">
-          Plus a mixer, capture, timers, weather, and a dozen more modules —{" "}
+          Also includes a volume mixer, screen capture, timers, weather, and more.{" "}
           <a
             href="#island-extras"
             class="underline decoration-dotted hover:opacity-80"
           >
-            see them all ↓
+            Browse the other modules
           </a>
         </p>
       </div>

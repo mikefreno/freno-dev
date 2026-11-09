@@ -59,9 +59,9 @@ export default function NookLanding() {
       <PageHead
         title="Agent control for your Mac"
         ogTitle="The Nook — agent control for your Mac"
-        description="The Nook — a native macOS utility for coding-agent orchestration, fan and thermal control."
+        description="Monitor coding agents, respond to permission requests, and manage your Mac\'s cooling, battery, and audio with The Nook."
         ogImage={`https://${site().domain}/nook/og.png`}
-        ogDescription="A one-time-purchase macOS app for coding-agent orchestration, fan control, and thermal insight."
+        ogDescription="A macOS app for coding agents, fan control, battery charging, and per-app audio. Includes a 14-day trial and a one-time license."
       />
 
       <SubdomainHeader />
@@ -96,11 +96,11 @@ export default function NookLanding() {
             The Nook
           </div>
           <h1 class="text-text mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-            Your Mac and Agents, under control
+            Manage your coding agents and your Mac
           </h1>
           <p class="text-subtext0 mb-2 max-w-xl text-xl">
-            Agent orchestration, fan and thermal control in a beautiful native
-            UI.
+            Follow your agents, respond to requests, and manage cooling,
+            charging, and audio from the top of your screen.
           </p>
           <p class="text-subtext1 mb-8 text-sm">
             macOS 14.2+ · 14-day free trial · up to 3 devices
@@ -145,7 +145,7 @@ export default function NookLanding() {
             In action
           </p>
           <h2 class="text-text mb-16 text-center text-3xl font-bold">
-            Built for the way you actually run agents
+            What you can do with The Nook
           </h2>
           <FeatureBreakdowns />
         </div>
@@ -164,10 +164,9 @@ export default function NookLanding() {
             Try it free for 14 days
           </h2>
           <p class="text-subtext0 mx-auto mb-10 max-w-2xl leading-relaxed">
-            Orchestrate your coding agents, take control of your fans and
-            battery, give every app its own volume, capture your screen, and
-            keep your day in the notch. When the trial ends, unlock everything
-            with a single one-time payment — no subscription, ever.
+            The trial includes every module. After 14 days, a one-time
+            purchase lets you keep using The Nook on up to three of your Macs.
+            There is no subscription.
           </p>
           <div class="flex flex-col items-center justify-center gap-4 sm:flex-row sm:space-x-4">
             <Button
@@ -187,7 +186,7 @@ export default function NookLanding() {
             </a>
           </div>
           <p class="text-subtext1 mt-6 text-xs">
-            Beta pricing — full price will be $15. One license covers up to 3 of
+            The beta price is $10. The regular price will be $15. One license covers up to 3 of
             your own Macs.
           </p>
         </div>
@@ -229,8 +228,7 @@ export default function NookLanding() {
           </form>
           <Show when={resendSent()}>
             <p class="text-subtext1 mt-4 text-center text-sm">
-              Check your inbox — if a license is registered to that email, your
-              key is on its way.
+              If a license is registered to that email, we'll send you the key.
             </p>
           </Show>
           <Show when={resendError()}>

@@ -10,7 +10,6 @@ import {
   IslandPill,
   AgentDotGrid,
   CALM,
-  WARM,
   ACCENT,
   CRITICAL,
   ModuleCard,
@@ -24,9 +23,9 @@ import {
   CODEX
 } from "./ModuleMocks";
 import { useDemoLoop } from "./useDemoLoop";
+import { BatteryDemo, CalendarDemo, MixerDemo } from "./UtilityDemos";
 import {
   TerminalReplyDemo,
-  MixerDemo,
   CaptureDemo,
   FloatingActionsDemo
 } from "./MoreDemos";
@@ -168,11 +167,11 @@ function FleetDemo() {
           {phase() === "flare"
             ? "Codex needs your input"
             : phase() === "resolve"
-              ? "Answer delivered — agents back to work"
-              : "Fleet running calmly"}
+              ? "Reply sent. Agents running."
+              : "Agents running"}
         </p>
         <p class="mt-0.5 text-[11px] text-white/50">
-          {phase() === "flare" ? "question · in the island now" : "\u00a0"}
+          {phase() === "flare" ? "Question waiting in the island" : "\u00a0"}
         </p>
       </div>
     </div>
@@ -234,7 +233,7 @@ function ApprovalDemo() {
               prompt="harden the bridge"
               state={
                 asking()
-                  ? "Approve Bash — swift test --filter Bridge?"
+                  ? "Approve Bash: swift test --filter Bridge?"
                   : "Running swift test --filter Bridge…"
               }
               status={asking() ? "attention" : "running"}
@@ -408,313 +407,6 @@ function FansDemo() {
   );
 }
 
-/* ── Demo 4: the charge ceiling holds, top-up overrules ───── */
-
-function BatteryDemo() {
-  const [level, setLevel] = createSignal(62);
-  const [phase, setPhase] = createSignal<"charge" | "held" | "topup">("charge");
-  onMount(() => {
-    let frame = 0;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const ramp = (target: number, durationMs: number) => {
-      cancelAnimationFrame(frame);
-      const start = level();
-      const startTime = performance.now();
-      const tick = (now: number) => {
-        const t = Math.min((now - startTime) / durationMs, 1);
-        setLevel(start + (target - start) * t);
-        if (t < 1) frame = requestAnimationFrame(tick);
-      };
-      frame = requestAnimationFrame(tick);
-    };
-    const loop = () => {
-      setLevel(62);
-      setPhase("charge");
-      ramp(80, 2600);
-      timers.push(setTimeout(() => setPhase("held"), 2800));
-      timers.push(
-        setTimeout(() => {
-          setPhase("topup");
-          ramp(100, 2600);
-        }, 5200)
-      );
-    };
-    loop();
-    const interval = setInterval(loop, 9600);
-    onCleanup(() => {
-      clearInterval(interval);
-      timers.forEach(clearTimeout);
-      cancelAnimationFrame(frame);
-    });
-  });
-
-  const pct = () => Math.round(level());
-  const watts = () => (phase() === "held" ? null : pct() >= 100 ? 9 : 38);
-  const subline = () =>
-    phase() === "held"
-      ? "charging paused — at the limit"
-      : pct() >= 100
-        ? "topped up — re-arms on unplug"
-        : phase() === "topup"
-          ? `${watts()} W · top-up past the limit`
-          : `${watts()} W · ${Math.max(1, Math.round((100 - pct()) * 1.5))} min to full`;
-  return (
-    <ModuleCard class="mx-auto w-full max-w-[320px]">
-      <div class="space-y-3 text-left">
-        <div class="flex items-center gap-2">
-          <span class="text-[10px] font-semibold tracking-wide text-white/40 uppercase">
-            Battery
-          </span>
-          <span
-            class="ml-auto rounded-md px-2 py-0.5 font-mono text-[10px] font-semibold transition-transform duration-300"
-            style={{
-              color: "rgba(255,255,255,0.75)",
-              background: "rgba(255,255,255,0.08)",
-              transform: phase() === "held" ? "scale(1.12)" : "scale(1)"
-            }}
-          >
-            Limit 80%
-          </span>
-        </div>
-        <div class="flex items-baseline gap-1.5">
-          <span class="font-mono text-[22px] font-semibold text-white">
-            {pct()}%
-          </span>
-          <span class="text-[11px] text-white/50">{subline()}</span>
-        </div>
-        <div
-          class="relative h-[6px] overflow-hidden rounded-full"
-          style={{ background: "rgba(255,255,255,0.08)" }}
-        >
-          <div
-            class="h-full rounded-full"
-            style={{
-              width: `${pct()}%`,
-              background: pct() > 80 ? WARM : CALM,
-              transition: "background 0.4s"
-            }}
-          />
-          <span
-            class="absolute top-0 h-full w-px"
-            style={{ left: "80%", background: "rgba(255,255,255,0.5)" }}
-          />
-        </div>
-        <div
-          class="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors duration-500"
-          style={{
-            background:
-              phase() === "topup" ? "rgba(110,167,255,0.10)" : "transparent"
-          }}
-        >
-          <div class="flex-1">
-            <p class="text-[11px] font-semibold text-white/85">Top-up mode</p>
-            <p class="text-[9px] text-white/40">
-              charge past the limit while plugged in
-            </p>
-          </div>
-          <span
-            class="relative inline-flex h-[16px] w-[30px] items-center rounded-full transition-colors duration-300"
-            style={{
-              background:
-                phase() === "topup" ? ACCENT : "rgba(255,255,255,0.15)"
-            }}
-          >
-            <span
-              class="absolute h-[12px] w-[12px] rounded-full bg-white transition-all duration-300"
-              style={{ left: phase() === "topup" ? "16px" : "2px" }}
-            />
-          </span>
-        </div>
-        <div class="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-        <div class="flex items-center gap-2">
-          <svg
-            width="10"
-            height="13"
-            viewBox="0 0 10 13"
-            style={{
-              animation: watts()
-                ? "nook-pulse 1.1s ease-in-out infinite"
-                : "none",
-              opacity: watts() ? 1 : 0.3
-            }}
-          >
-            <path
-              d="M6.2 0 0.8 7h2.6l-1 5.2L7.8 5.4H5l1.2-5.4z"
-              fill="#FFD23F"
-            />
-          </svg>
-          <span class="text-[10px] text-white/50">
-            {phase() === "held"
-              ? "holding — the pack stays young longer"
-              : phase() === "topup"
-                ? "topping up — re-arms when you unplug"
-                : "on the way to the ceiling"}
-          </span>
-        </div>
-      </div>
-    </ModuleCard>
-  );
-}
-
-/* ── Demo 5: the slot counts down, then opens the day ──────── */
-
-const WEEK_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
-const DAY_EVENTS = [
-  { time: "09:30–09:45", title: "Standup", loc: "Daily", meeting: true },
-  { time: "15:30–16:00", title: "Design review", loc: "4th floor", meeting: false }
-];
-
-function CalendarDemo() {
-  const [mins, setMins] = createSignal(14);
-  const [today, setToday] = createSignal(new Date());
-  onMount(() => {
-    setToday(new Date());
-    const interval = setInterval(
-      () => setMins((m) => (m <= 0 ? 14 : m - 1)),
-      900
-    );
-    onCleanup(() => clearInterval(interval));
-  });
-  const imminent = () => mins() <= 5;
-  const dialDays = () => {
-    const base = today();
-    return [-4, -3, -2, -1, 0, 1, 2, 3, 4].map((off) => {
-      const d = new Date(
-        base.getFullYear(),
-        base.getMonth(),
-        base.getDate() + off
-      );
-      return {
-        letter: WEEK_LETTERS[d.getDay()],
-        num: d.getDate(),
-        today: off === 0,
-        past: off < 0,
-        dots: (d.getDate() * 7 + d.getDay() * 3) % 4
-      };
-    });
-  };
-  return (
-    /* Fixed height: the day panel expands into reserved space, never
-       shifts the page (matters most on mobile's stacked layout). */
-    <div class="flex h-[316px] flex-col items-center gap-4">
-      <IslandPill
-        campfire="running"
-        right={
-                    <div class="flex items-center gap-1">
-            <svg width="10" height="8" viewBox="0 0 12 9" class="shrink-0">
-              <path
-                d="M0 2A1.4 1.4 0 0 1 1.4 0.6h5.6A1.4 1.4 0 0 1 8.4 2v5A1.4 1.4 0 0 1 7 8.4H1.4A1.4 1.4 0 0 1 0 7z M12 2.6 9 4.5l3 1.9z"
-                fill="rgba(255,255,255,0.75)"
-              />
-            </svg>
-            <span
-              class="whitespace-nowrap font-mono text-[9.5px] font-semibold text-white/90"
-              style={{ color: imminent() ? "#ff9e42" : "rgba(255,255,255,0.9)" }}
-            >
-              {mins() === 0 ? "now" : `${mins()}m`}
-            </span>
-          </div>
-        }
-      />
-      {/* the island opening onto the day panel */}
-      <div
-        class="w-full max-w-[380px] overflow-hidden rounded-[14px] bg-black transition-all duration-700"
-        style={{
-          "max-height": imminent() ? "240px" : "0px",
-          opacity: imminent() ? 1 : 0,
-          transform: imminent() ? "translateY(0)" : "translateY(-8px)"
-        }}
-      >
-        <div class="px-4 pt-3 pb-3 text-left">
-          <div class="mb-2 flex items-center">
-            <span class="text-[11px] font-semibold text-white/50">
-              Calendar
-            </span>
-            <span class="ml-auto flex h-4 w-4 items-center justify-center text-[12px] font-semibold text-white/50">
-              +
-            </span>
-          </div>
-          <div class="mb-2 flex gap-1">
-            <For each={dialDays()}>
-              {(d) => (
-                <div
-                  class="flex flex-1 flex-col items-center gap-[3px]"
-                  style={{ opacity: d.today ? 1 : d.past ? 0.55 : 0.8 }}
-                >
-                  <span class="text-[8px] font-semibold text-white/45">
-                    {d.letter}
-                  </span>
-                  <span
-                    class="flex h-[20px] w-[20px] items-center justify-center rounded-full text-[10px]"
-                    style={{
-                      background: d.today
-                        ? "rgb(255,158,66)"
-                        : "rgba(255,255,255,0.06)",
-                      color: "rgba(255,255,255,0.95)",
-                      "font-weight": d.today ? 700 : 500
-                    }}
-                  >
-                    {d.num}
-                  </span>
-                  <span class="flex h-[4px] gap-[2px]">
-                    <For each={Array.from({ length: Math.min(d.dots, 3) })}>
-                      {() => (
-                        <span
-                          class="rounded-full"
-                          style={{
-                            width: "3.5px",
-                            height: "3.5px",
-                            background: d.today
-                              ? "rgb(255,158,66)"
-                              : "rgba(255,255,255,0.55)"
-                          }}
-                        />
-                      )}
-                    </For>
-                  </span>
-                </div>
-              )}
-            </For>
-          </div>
-          <div
-            class="mb-1 h-px"
-            style={{ background: "rgba(255,255,255,0.06)" }}
-          />
-          <For each={DAY_EVENTS}>
-            {(ev) => (
-              <div
-                class="flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors duration-500"
-                style={{
-                  background:
-                    ev.meeting && imminent()
-                      ? "rgba(72,151,178,0.16)"
-                      : "transparent"
-                }}
-              >
-                <div>
-                  <p class="font-mono text-[10px] text-white/45">{ev.time}</p>
-                  <p class="text-[11px] font-semibold text-white">{ev.title}</p>
-                  {ev.loc && <p class="text-[10px] text-white/35">{ev.loc}</p>}
-                </div>
-                {ev.meeting && (
-                  <span
-                    class="ml-auto rounded-md px-2 py-0.5 text-[10px] font-semibold text-white transition-colors duration-500"
-                    style={{
-                      background: imminent() ? ACCENT : "rgba(255,255,255,0.10)"
-                    }}
-                  >
-                    Open
-                  </span>
-                )}
-              </div>
-            )}
-          </For>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── Demo 6: the lens only wakes for a click ──────────────── */
 
 function CameraDemo() {
@@ -797,8 +489,8 @@ function CameraDemo() {
         </div>
         <p class="text-[10px] text-white/40">
           {phase() === "live"
-            ? "live — stops the moment you leave the panel"
-            : "inert — the lens stays dark until you click"}
+            ? "Camera on while this panel is open"
+            : "Camera off until you click Start"}
         </p>
       </div>
     </ModuleCard>
@@ -816,11 +508,11 @@ function CampfireDemo() {
     "error"
   ];
   const labels = [
-    "fleet running",
-    "pending question",
-    "ready to review",
-    "all quiet",
-    "something failed"
+    "Running",
+    "Question",
+    "Ready",
+    "Idle",
+    "Error"
   ];
   return (
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
@@ -848,13 +540,13 @@ export default function FeatureBreakdowns() {
     <div class="space-y-24">
       <BreakdownSection
         kicker="The island"
-        title="Your whole fleet, in one pixel strip"
-        body="Every session, every agent, one square each. The pill never wraps, never grows — an arriving question flashes the fire and swaps the slot, then hands the notch back."
+        title="See which agents need your attention"
+        body="Each square represents an agent session. Its color shows whether the agent is working, finished, or waiting for you. Questions appear in the island so you can respond without switching windows."
         bullets={[
           "Claude Code, Codex, Gemini CLI, OpenCode, Pi, Muse, Cursor and more",
-          "Custom agents: your own coding agent can wire itself in from the published contract",
-          "Slot rankings — you choose which data earns the notch",
-          "You don't need a notch — external displays get the same island, floating top-center"
+          "Connect custom agents using the published integration contract",
+          "Choose which information appears in the compact view",
+          "Works on displays without a notch, centered at the top of the screen"
         ]}
       >
         <FleetDemo />
@@ -862,12 +554,12 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Approvals"
-        title="Answer from the island — or your phone"
-        body="A gated tool call surfaces the island: the fire turns to a question, the card pins above your sessions, and the row says what it's waiting on. Allow, Allow for session, Deny, or deny with a reason, and the run picks up where it stopped."
+        title="Approve agent requests"
+        body="When an agent needs permission, the island opens with a request card above your sessions. Review the tool and its input, then allow or deny it. You can include a reason when you deny a request."
         bullets={[
-          "Approval cards pin above the session list; questions answer inside their row",
-          "Allow for session waves through the rest of that session's requests",
-          "Answer from iPhone or Apple Watch too, now in TestFlight beta",
+          "Review permissions above the session list and answer questions in the session row",
+          "Allow for session approves subsequent requests in that session",
+          "Respond from iPhone or Apple Watch with the TestFlight beta",
         ]}
         reversed
       >
@@ -876,8 +568,8 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Terminals"
-        title="Reply without hunting for the tab"
-        body="Every session knows the terminal it runs in. Type a reply in the island and it lands in that exact pane; click Jump and the right window comes forward."
+        title="Reply to agents and open their terminals"
+        body="Send a reply from the island to the terminal pane running that session. Use Jump to bring its window forward when you want to work in the terminal."
         bullets={[
           "Replies reach agents in tmux, iTerm2, Terminal, and kitty",
           "Jump focuses the exact window, even for sessions over SSH",
@@ -889,10 +581,10 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="The campfire"
-        title="A hearth that tells the truth"
-        body="Stop-motion pixel art, four frames a step. It dances when tokens stream, putters blue when an agent asks, and goes to dead embers the moment something breaks."
+        title="Agent status in the campfire"
+        body="The pixel-art campfire changes with your agents' activity. Different animations indicate work in progress, a question waiting for you, or an error."
         bullets={[
-          "Idle, running, ready, question, and error — at a glance",
+          "Separate animations for idle, running, ready, question, and error states",
           "Hand-drawn 14×14 sprites, no tweening",
           "Six chiptunes you can assign to any agent event"
         ]}
@@ -902,13 +594,13 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Cooling"
-        title="Fans that answer to you, not the scheduler"
-        body="Live RPM for every fan, and the curve is yours. Apple's stock curve waits until you're already cooking — swap to Aggressive and it climbs earlier and harder, or slam MAX before the compile."
+        title="Monitor and control your Mac's fans"
+        body="Check each fan's speed and choose how cooling responds to load. Keep the stock fan curve, use Aggressive for earlier cooling, or start a MAX session to run the fans at full speed."
         bullets={[
-          "Stock, Aggressive, and MAX — swap curves in one click",
-          "MAX and COOL sessions surface right in the pill",
-          "CPU/GPU die temps tier-color before things get loud",
-          "All local: your hardware data never leaves the device"
+          "Switch between Stock, Aggressive, and MAX",
+          "See active MAX and COOL sessions in the compact view",
+          "CPU and GPU temperature readings change color as they rise",
+          "Hardware monitoring runs locally on your Mac"
         ]}
         reversed
       >
@@ -917,14 +609,14 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Power"
-        title="Wall power, on your terms"
-        body="Live watts from the adapter to the battery to the chassis — and a charge ceiling you set yourself. On recent macOS The Nook drives the system's own limiter; below that it enforces the limit itself. One slider, 50–100%, any version."
+        title="Set a battery charge limit"
+        body="Set the charge limit on the battery bar, or enter a percentage. The power diagram shows how much power goes to your Mac and battery. Turn on Top-up mode when you need a full charge."
         bullets={[
-          "One slider, 50–100%, on any macOS version",
-          "Hooks the system limiter where it exists, enforces elsewhere",
-          "Top-up mode charges past, then re-arms on unplug",
-          "Thermal protection pauses charging when the pack runs hot",
-          "Energy flow figure: adapter → battery → system, live watts"
+          "Drag the limit marker or type a percentage; available limits depend on your Mac",
+          "Uses macOS charge limits where available, with helper-based control on supported Macs",
+          "Top-up mode allows charging past the limit and turns off when you unplug",
+          "Overheat protection can pause charging when the battery gets hot",
+          "Separate readings for system draw and battery charging, not a wall-power measurement"
         ]}
       >
         <BatteryDemo />
@@ -932,12 +624,12 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Sound"
-        title="Every app gets its own fader"
-        body="A real volume mixer: set each app's level, mute the noisy one, and send any app to its own output — music to headphones while the meeting stays on the speakers."
+        title="Adjust volume and output for each app"
+        body="Set an app's volume without changing the others, mute it, or choose a different output. You can play music through headphones and keep a meeting on the speakers."
         bullets={[
           "Per-app volume, mute, and output routing",
           "Master output, system sounds, and microphone pickers in one panel",
-          "Catches players that aren't apps, like command-line podcast tools"
+          "Includes audio from command-line players"
         ]}
         reversed
       >
@@ -946,8 +638,8 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Capture"
-        title="Screenshots and recordings from the notch"
-        body="Drag out an area, pick a screen, or choose one app. While a recording runs, Wings unfold beside the island: pause and stop on the right, system audio and microphone on the left."
+        title="Take screenshots and record your screen"
+        body="Capture an area, a whole screen, or one app. During a recording, controls beside the island let you pause, stop, and toggle system audio or your microphone."
         bullets={[
           "Area, screen, or single-app capture",
           "Screenshots save to your screenshot folder and copy to the clipboard",
@@ -960,13 +652,13 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Your day"
-        title="Meetings come to the notch"
-        body="Today sits in a dial — days behind, days ahead, dots where things happen. The slot counts your next call down, and when it gets close the island opens the day on its own."
+        title="Check your calendar and join meetings"
+        body="Browse your calendar from the day strip and open a meeting from its event row. The compact view shows today's date, a countdown before an event, and an ON AIR indicator while a meeting is in progress."
         bullets={[
-          "Next meeting counts down right in the slot",
-          "Near a call, the island opens the day itself",
-          "Meeting links get an Open button in the row",
-          "Real calendars and reminders — no sync service"
+          "Date, countdown, and meeting progress in the compact view",
+          "Choose how early the island opens before a meeting",
+          "Join meetings from the video button beside an event",
+          "Uses your Mac's calendars and reminders"
         ]}
         reversed
       >
@@ -975,13 +667,13 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Camera"
-        title="A lens that stays asleep"
-        body="A live camera preview in the island for the seconds before a call. It never wakes on its own: permission-gated, inert until you click Start, and dead the moment you leave the panel."
+        title="Preview your camera before a call"
+        body="Check your camera in the island before joining a call. The preview starts only when you click Start camera and stops when you leave the panel."
         bullets={[
-          "Nothing watches until Start camera gets a click",
-          "Live only while the panel sits open",
+          "Requires camera permission and a click on Start camera",
+          "Preview runs only while the panel is open",
           "A device picker for every connected camera",
-          "Opt-in module — in no default panel"
+          "Add the camera module to a panel when you want it"
         ]}
       >
         <CameraDemo />
@@ -989,8 +681,8 @@ export default function FeatureBreakdowns() {
 
       <BreakdownSection
         kicker="Floating actions"
-        title="Your buttons, orbiting the island"
-        body="Pin up to seven one-tap actions around the expanded island. They ride its expansion in and out, so the things you reach for most are always one click away."
+        title="Add shortcuts beside the island"
+        body="Add up to seven actions beside the expanded island. Use them to open apps, run shortcuts, or change settings without opening a panel."
         bullets={[
           "Run an Apple Shortcut, open an app or URL, or run a shell command",
           "Toggle Low Power Mode, top-up, or overheat protection",

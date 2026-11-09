@@ -77,6 +77,12 @@ const GLYPHS: Record<string, () => JSX.Element> = {
     <path d="M3.5 8a4.5 4.5 0 1 0 1.4-3.3M3.2 2.2v2.8H6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
   ),
   plus: () => <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />,
+  video: () => <path d="M2 4h8v8H2Z m9 3 3-2v6l-3-2Z" fill="currentColor" />,
+  pin: () => <path d="m6 2 6 6-3 1-2 3-1-2-4 4m2-8 2-2Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round" />,
+  eye: () => <><path d="M1 8s2.5-4 7-4 7 4 7 4-2.5 4-7 4-7-4-7-4Z" stroke="currentColor" stroke-width="1.2" fill="none" /><circle cx="8" cy="8" r="2" fill="currentColor" /></>,
+  plug: () => <path d="M5 1v4m6-4v4M3 5h10v3a5 5 0 0 1-4 4.9V16H7v-3.1A5 5 0 0 1 3 8Z" stroke="currentColor" stroke-width="1.3" fill="none" />,
+  battery: () => <><rect x="1" y="4" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none" /><path d="M14 6v4M3 6h5v4H3Z" stroke="currentColor" stroke-width="1.2" /></>,
+  laptop: () => <path d="M3 2.5h10v9H3Z M1 13.5h14" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round" />,
   refresh: () => (
     <path d="M12.5 8A4.5 4.5 0 1 1 11 4.6M11.6 2v2.8H8.8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
   )
